@@ -1,5 +1,5 @@
 Installation (Unix only for now)
-============
+------------
 
 1. Fork the G-PhoCS repository
 
@@ -10,6 +10,7 @@ Installation (Unix only for now)
 3. Compile G-PhoCS
 
     make
+
 
 The G-PhoCS binaries (GPoCS-1-2-3 and readTrace) can be now found in the bin/ subdirectory.
 The .o files are placed in the obj/ subdirectory. Those are:
