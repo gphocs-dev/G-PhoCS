@@ -6,9 +6,9 @@ GENERAL-INFO-START
 #	num-pop-partitions	1
 	locus-mut-rate		CONST
 
-	mcmc-iterations	  5000
-	iterations-per-log  50
-	logs-per-line       100
+	mcmc-iterations	  50
+	iterations-per-log  5
+	logs-per-line       10
 
 
 	find-finetunes		FALSE
@@ -82,11 +82,13 @@ ANCESTRAL-POPS-START
 
 ANCESTRAL-POPS-END
 
+
 MIG-BANDS-START	
-	BAND-START		
-       source  D
-       target  B
-       mig-rate-print 0.1
-	BAND-END
+
+#	BAND-START		
+#       source  D
+#       target  B
+#       mig-rate-print 0.1
+#	BAND-END
 
 MIG-BANDS-END

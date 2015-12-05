@@ -772,7 +772,10 @@ double getLogPrior ()		{
 }
 /** end of getLogPrior **/
 
-
+double getRootTheta(){
+	int root_pop = dataSetup.popTree->numPops -1; //TODO - ask Ilan if this is Legal
+	return dataSetup.popTree->pops[root_pop]->theta;
+}
 
 
 /***********************************************************************************
@@ -783,97 +786,103 @@ double getLogPrior ()		{
  ***********************************************************************************/
 int printCoalStats (int iteration)		{
 
-	int leaf1, leaf2, pop, partition;
+	int leaf1, leaf2, pop, partition, root_pop;
 	char* sampleName1;
 	char* sampleName2;
 	char* popName;
 	char  noName[10] = "NA";
 	double logPrior = 0;
+	float root_theta = 0.0;
 
 	// print header
 	if(iteration<0) {
-		fprintf(ioSetup.coalStatsFile, "iter\tcoalStatFlat\tnumCoalFlat\tmigStatFlat\tnumMigFlat\tlogPrior\tgenLogLikelihood\tdataLogLikelihood");
-//		for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
-//			popName = dataSetup.popTree->pops[pop]->name;
-//			for(partition=1; partition<=dataSetup.numPopPartitions; partition++){
-//				fprintf(ioSetup.coalStatsFile, "\tnumCoal_%s:%d\tdeltaT_%s:%d",popName,partition,popName,partition);
-//			}
-//
-//			fprintf(ioSetup.nodeStatsFile[3*pop]  , "iter");
-//			fprintf(ioSetup.nodeStatsFile[3*pop+1], "iter");
-//			fprintf(ioSetup.nodeStatsFile[3*pop+2], "iter");
-//			for(leaf1=0; leaf1<dataSetup.numSamples; leaf1++) {
-//				sampleName1 = dataSetup.sampleNames[leaf1];
-//				if(sampleName1 == NULL) {
-//					if(leaf1 <=0 || dataSetup.sampleNames[leaf1-1] == NULL) {
-//						sampleName1 = noName;
-//					} else {
-//						sampleName1 = dataSetup.sampleNames[leaf1-1];
-//					}
-//				}
-//				for(leaf2=0; leaf2<dataSetup.numSamples; leaf2++) {
-//					sampleName2 = dataSetup.sampleNames[leaf2];
-//					if(sampleName2 == NULL) {
-//						if(leaf2 <=0 || dataSetup.sampleNames[leaf2-1] == NULL) {
-//							sampleName2 = noName;
-//						} else {
-//							sampleName2 = dataSetup.sampleNames[leaf2-1];
-//						}
-//					}
-//					fprintf(ioSetup.nodeStatsFile[3*pop]  , "\t%s|%s|%s|probCoal", sampleName1, sampleName2, popName);
-//					fprintf(ioSetup.nodeStatsFile[3*pop+1], "\t%s|%s|%s|probFirstCoal", sampleName1, sampleName2, popName);
-//					fprintf(ioSetup.nodeStatsFile[3*pop+2], "\t%s|%s|%s|meanCoal", sampleName1, sampleName2, popName);
-//				}// end of for(leaf2)
-//			}// end of for(leaf1)
-//			fprintf(ioSetup.nodeStatsFile[3*pop]  , "\n");
-//			fprintf(ioSetup.nodeStatsFile[3*pop+1], "\n");
-//			fprintf(ioSetup.nodeStatsFile[3*pop+2], "\n");
-//		}// end of for(pop)
+		fprintf(ioSetup.coalStatsFile, "iter\tcoalStatFlat\tnumCoalFlat\tmigStatFlat\tnumMigFlat\tlogPrior\troot_theta\tlogLikelihood\tdataLogLikelihood\tgenealogyLogLikelihood");
+		//		for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
+		//			popName = dataSetup.popTree->pops[pop]->name;
+		//			for(partition=1; partition<=dataSetup.numPopPartitions; partition++){
+		//				fprintf(ioSetup.coalStatsFile, "\tnumCoal_%s:%d\tdeltaT_%s:%d",popName,partition,popName,partition);
+		//			}
+		//
+		//			fprintf(ioSetup.nodeStatsFile[3*pop]  , "iter");
+		//			fprintf(ioSetup.nodeStatsFile[3*pop+1], "iter");
+		//			fprintf(ioSetup.nodeStatsFile[3*pop+2], "iter");
+		//			for(leaf1=0; leaf1<dataSetup.numSamples; leaf1++) {
+		//				sampleName1 = dataSetup.sampleNames[leaf1];
+		//				if(sampleName1 == NULL) {
+		//					if(leaf1 <=0 || dataSetup.sampleNames[leaf1-1] == NULL) {
+		//						sampleName1 = noName;
+		//					} else {
+		//						sampleName1 = dataSetup.sampleNames[leaf1-1];
+		//					}
+		//				}
+		//				for(leaf2=0; leaf2<dataSetup.numSamples; leaf2++) {
+		//					sampleName2 = dataSetup.sampleNames[leaf2];
+		//					if(sampleName2 == NULL) {
+		//						if(leaf2 <=0 || dataSetup.sampleNames[leaf2-1] == NULL) {
+		//							sampleName2 = noName;
+		//						} else {
+		//							sampleName2 = dataSetup.sampleNames[leaf2-1];
+		//						}
+		//					}
+		//					fprintf(ioSetup.nodeStatsFile[3*pop]  , "\t%s|%s|%s|probCoal", sampleName1, sampleName2, popName);
+		//					fprintf(ioSetup.nodeStatsFile[3*pop+1], "\t%s|%s|%s|probFirstCoal", sampleName1, sampleName2, popName);
+		//					fprintf(ioSetup.nodeStatsFile[3*pop+2], "\t%s|%s|%s|meanCoal", sampleName1, sampleName2, popName);
+		//				}// end of for(leaf2)
+		//			}// end of for(leaf1)
+		//			fprintf(ioSetup.nodeStatsFile[3*pop]  , "\n");
+		//			fprintf(ioSetup.nodeStatsFile[3*pop+1], "\n");
+		//			fprintf(ioSetup.nodeStatsFile[3*pop+2], "\n");
+		//		}// end of for(pop)
 		fprintf(ioSetup.coalStatsFile, "\n");
 
 		return 0;
 	}// end of if(iteration<0)
 
 	logPrior = getLogPrior();
+	root_theta = getRootTheta();
+
 
 	fprintf(ioSetup.coalStatsFile, "%7d", iteration);
-	fprintf(ioSetup.coalStatsFile, "\t%8f\t%9d\t%8f\t%9d\t%8f\t%8f\t%8f",
-			genetree_stats_flat.coal_stats_flat ,
-			genetree_stats_flat.num_coals_total ,
-			genetree_stats_flat.mig_stats_flat ,
+	fprintf(ioSetup.coalStatsFile, "\t%8f\t%9d\t%8f\t%9d\t%8f\t%8f\t%8f\t%8f\t%8f",
+			genetree_stats_flat.coal_stats_flat,
+			genetree_stats_flat.num_coals_total,
+			genetree_stats_flat.mig_stats_flat,
 			genetree_stats_flat.num_migs_total,
 			logPrior,
+			root_theta,
 			dataState.logLikelihood*dataSetup.numLoci,
-			dataState.dataLogLikelihood
+			dataState.dataLogLikelihood,
+			dataState.genealogyLogLikelihood
 	);
-//	for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
-//		popName = dataSetup.popTree->pops[pop]->name;
-//		for(partition=0; partition<dataSetup.numPopPartitions; partition++){
-//			fprintf(ioSetup.coalStatsFile, "\t%9d\t%8f",
-//					genetree_stats_total_partitioned[partition].num_coals[pop], genetree_stats_total_partitioned[partition].coal_stats[pop]);
-//		}
-//	}
+
+	//	for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
+	//		popName = dataSetup.popTree->pops[pop]->name;
+	//		for(partition=0; partition<dataSetup.numPopPartitions; partition++){
+	//			fprintf(ioSetup.coalStatsFile, "\t%9d\t%8f",
+	//					genetree_stats_total_partitioned[partition].num_coals[pop], genetree_stats_total_partitioned[partition].coal_stats[pop]);
+	//		}
+	//	}
 	fprintf(ioSetup.coalStatsFile, "\n");
 	fflush(ioSetup.coalStatsFile);
 
-//	for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
-//		fprintf(ioSetup.nodeStatsFile[3*pop]  , "%7d", iteration);
-//		fprintf(ioSetup.nodeStatsFile[3*pop+1], "%7d", iteration);
-//		fprintf(ioSetup.nodeStatsFile[3*pop+2], "%7d", iteration);
-//		for(leaf1=0; leaf1<dataSetup.numSamples; leaf1++) {
-//			for(leaf2=0; leaf2<dataSetup.numSamples; leaf2++) {
-//				fprintf(ioSetup.nodeStatsFile[3*pop]  , "\t%8f", genetree_node_stats.probCoalMatrix[leaf1][leaf2][pop]);
-//				fprintf(ioSetup.nodeStatsFile[3*pop+1], "\t%8f", genetree_node_stats.probFirstCoalMatrix[leaf1][leaf2][pop]);
-//				fprintf(ioSetup.nodeStatsFile[3*pop+2], "\t%8f", genetree_node_stats.coalTimeMatrix[leaf1][leaf2][pop]   );
-//			}
-//		}
-//		fprintf(ioSetup.nodeStatsFile[3*pop]  , "\n");
-//		fprintf(ioSetup.nodeStatsFile[3*pop+1], "\n");
-//		fprintf(ioSetup.nodeStatsFile[3*pop+2], "\n");
-//		fflush(ioSetup.nodeStatsFile[3*pop]);
-//		fflush(ioSetup.nodeStatsFile[3*pop+1]);
-//		fflush(ioSetup.nodeStatsFile[3*pop+2]);
-//	}
+	//	for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
+	//		fprintf(ioSetup.nodeStatsFile[3*pop]  , "%7d", iteration);
+	//		fprintf(ioSetup.nodeStatsFile[3*pop+1], "%7d", iteration);
+	//		fprintf(ioSetup.nodeStatsFile[3*pop+2], "%7d", iteration);
+	//		for(leaf1=0; leaf1<dataSetup.numSamples; leaf1++) {
+	//			for(leaf2=0; leaf2<dataSetup.numSamples; leaf2++) {
+	//				fprintf(ioSetup.nodeStatsFile[3*pop]  , "\t%8f", genetree_node_stats.probCoalMatrix[leaf1][leaf2][pop]);
+	//				fprintf(ioSetup.nodeStatsFile[3*pop+1], "\t%8f", genetree_node_stats.probFirstCoalMatrix[leaf1][leaf2][pop]);
+	//				fprintf(ioSetup.nodeStatsFile[3*pop+2], "\t%8f", genetree_node_stats.coalTimeMatrix[leaf1][leaf2][pop]   );
+	//			}
+	//		}
+	//		fprintf(ioSetup.nodeStatsFile[3*pop]  , "\n");
+	//		fprintf(ioSetup.nodeStatsFile[3*pop+1], "\n");
+	//		fprintf(ioSetup.nodeStatsFile[3*pop+2], "\n");
+	//		fflush(ioSetup.nodeStatsFile[3*pop]);
+	//		fflush(ioSetup.nodeStatsFile[3*pop+1]);
+	//		fflush(ioSetup.nodeStatsFile[3*pop+2]);
+	//	}
 
 	return 0;
 }
@@ -1094,30 +1103,30 @@ int performMCMC()	{
 	}
 
 	if(recordCoalStats) {
-//		sprintf(fileName,"%s.coalStats.tsv", ioSetup.nodeStatsFileName);
+		//		sprintf(fileName,"%s.coalStats.tsv", ioSetup.nodeStatsFileName);
 		ioSetup.coalStatsFile = fopen(ioSetup.nodeStatsFileName,"w");
 		if(ioSetup.coalStatsFile == NULL) {
 			fprintf(stderr, "Error: Could not open coal stats file %s.\n", fileName);
 			return(-1);
 		}
-//		ioSetup.nodeStatsFile=(FILE**)malloc(3*dataSetup.popTree->numPops*sizeof(FILE*));
-//		if(ioSetup.nodeStatsFile == NULL) {
-//			fprintf(stderr, "memory allocation for node coal file %s.\n", fileName);
-//			return(-1);
-//		}
-//		for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
-//			sprintf(fileName,"%s.probCoalPop_%s.txt", ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
-//			ioSetup.nodeStatsFile[3*pop] = fopen(fileName,"w");
-//			sprintf(fileName,"%s.probFirstCoalPop_%s.txt", ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
-//			ioSetup.nodeStatsFile[3*pop+1] = fopen(fileName,"w");
-//			sprintf(fileName,"%s.coalTimePop_%s.txt", ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
-//			ioSetup.nodeStatsFile[3*pop+2] = fopen(fileName,"w");
-//			if(ioSetup.nodeStatsFile[3*pop] == NULL ||ioSetup.nodeStatsFile[3*pop+1] == NULL || ioSetup.nodeStatsFile[3*pop+2] == NULL) {
-//				sprintf(fileName,"%s.XXXPop_%s.txt", ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
-//				fprintf(stderr, "Error: Could not open node coalescence file %s.\n", fileName);
-//				return(-1);
-//			}
-//		}
+		//		ioSetup.nodeStatsFile=(FILE**)malloc(3*dataSetup.popTree->numPops*sizeof(FILE*));
+		//		if(ioSetup.nodeStatsFile == NULL) {
+		//			fprintf(stderr, "memory allocation for node coal file %s.\n", fileName);
+		//			return(-1);
+		//		}
+		//		for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
+		//			sprintf(fileName,"%s.probCoalPop_%s.txt", ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
+		//			ioSetup.nodeStatsFile[3*pop] = fopen(fileName,"w");
+		//			sprintf(fileName,"%s.probFirstCoalPop_%s.txt", ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
+		//			ioSetup.nodeStatsFile[3*pop+1] = fopen(fileName,"w");
+		//			sprintf(fileName,"%s.coalTimePop_%s.txt", ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
+		//			ioSetup.nodeStatsFile[3*pop+2] = fopen(fileName,"w");
+		//			if(ioSetup.nodeStatsFile[3*pop] == NULL ||ioSetup.nodeStatsFile[3*pop+1] == NULL || ioSetup.nodeStatsFile[3*pop+2] == NULL) {
+		//				sprintf(fileName,"%s.XXXPop_%s.txt", ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
+		//				fprintf(stderr, "Error: Could not open node coalescence file %s.\n", fileName);
+		//				return(-1);
+		//			}
+		//		}
 		printCoalStats(-1);
 	}
 
