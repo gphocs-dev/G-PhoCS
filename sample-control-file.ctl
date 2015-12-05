@@ -1,8 +1,8 @@
 GENERAL-INFO-START
 
 	seq-file            seqs-sample.txt
-	trace-file          logs\sample-mcmc.tsv		
-	coal-stats-file		logs\sample-data.coalStats.tsv
+	trace-file          logs\sample-data.trace.tsv		
+	coal-stats-file		logs\sample-data.flatStats.tsv
 #	num-pop-partitions	1
 	locus-mut-rate		CONST
 
@@ -54,6 +54,7 @@ CURRENT-POPS-START
 	
 CURRENT-POPS-END
 
+#!! ROOT population must be placed last!
 ANCESTRAL-POPS-START
 
 	POP-START
