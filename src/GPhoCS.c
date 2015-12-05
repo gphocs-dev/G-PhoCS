@@ -772,11 +772,10 @@ double getLogPrior ()		{
 }
 /** end of getLogPrior **/
 
-double getRootTheta(){
+double getPrintableRootTheta(){
 	int root_pop = dataSetup.popTree->numPops -1; //TODO - ask Ilan if this is Legal
-	return dataSetup.popTree->pops[root_pop]->theta;
+	return dataSetup.popTree->pops[root_pop]->theta * mcmcSetup.printFactors[root_pop];
 }
-
 
 /***********************************************************************************
  *	printCoalStats
@@ -839,7 +838,7 @@ int printCoalStats (int iteration)		{
 	}// end of if(iteration<0)
 
 	logPrior = getLogPrior();
-	root_theta = getRootTheta();
+	root_theta = getPrintableRootTheta();
 
 
 	fprintf(ioSetup.coalStatsFile, "%7d", iteration);
