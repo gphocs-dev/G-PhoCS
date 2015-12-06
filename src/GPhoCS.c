@@ -773,7 +773,7 @@ double getLogPrior ()		{
 /** end of getLogPrior **/
 
 double getPrintableRootTheta(){
-	int root_pop = dataSetup.popTree->numPops -1; //TODO - ask Ilan if this is Legal
+	int root_pop = (dataSetup.popTree->numPops -1); //TODO - ask Ilan if this is Legal
 	return dataSetup.popTree->pops[root_pop]->theta * mcmcSetup.printFactors[root_pop];
 }
 
