@@ -1,8 +1,3 @@
-
-# coding: utf-8
-
-# In[83]:
-
 get_ipython().magic('matplotlib inline')
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,12 +7,11 @@ pd.set_option('display.width', 5000)
 pd.set_option('display.max_columns', 60)
 
 
-# In[84]:
 
 flat_coalescence_stats =     pd.read_csv        ('../logs/sample-data.flatStats.tsv',         sep='\t')
 
 
-# In[85]:
+
 
 flat_coalescence_stats = flat_coalescence_stats[['logPrior','coalStatFlat', 'numCoalFlat', 'root_theta', 'genealogyLogLikelihood' ]]
 flat_coalescence_stats.columns = ['logPrior','time_stats', 'num_coal', 'root_ϴ', 'P_Z_ϴM' ]
@@ -28,7 +22,7 @@ flat_coalescence_stats['root_ϴ'] = flat_coalescence_stats[['root_ϴ']].apply(la
 flat_coalescence_stats[:5]
 
 
-# In[86]:
+
 
 def P_Z_ϴM0(theta, num_coal, time_stats):
     result = num_coal*np.log(2.0/theta) -(time_stats/theta)
@@ -36,7 +30,7 @@ def P_Z_ϴM0(theta, num_coal, time_stats):
 P_Z_ϴM0(0.00282063, 7000, 3.442481)
 
 
-# In[90]:
+
 
 flat_coalescence_stats['root_ϴ'] = flat_coalescence_stats[['root_ϴ']].apply(lambda x:x/1000.0)
 root_ϴ = flat_coalescence_stats['root_ϴ'] 
