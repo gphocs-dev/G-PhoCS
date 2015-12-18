@@ -18,7 +18,7 @@ GENERAL-INFO-START
 	finetune-mig-rate	0.02
 	finetune-tau		0.0000008
 	finetune-mixing		0.003
-#   finetune-locus-rate 0.3
+#	finetune-locus-rate 0.3
 	
 	tau-theta-print		10000.0
 	tau-theta-alpha		1.0			# for STD/mean ratio of 100%
