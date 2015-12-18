@@ -86,10 +86,10 @@ ANCESTRAL-POPS-END
 
 MIG-BANDS-START	
 
-#	BAND-START		
-#       source  D
-#       target  B
-#       mig-rate-print 0.1
-#	BAND-END
+	BAND-START		
+       source  D
+       target  B
+       mig-rate-print 0.1
+	BAND-END
 
 MIG-BANDS-END
