@@ -2463,30 +2463,6 @@ int computeGenetreeStats(int gen) {
 }
 
 
-/*	computeGenetreeStats_partitioned
-	Computes the statistics of all gene trees assuming all event chains are built
-*/
-
-int computeGenetreeStats_partitioned() {
-
-  int partition, pop, gen;
-
-  // initialize
-  for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
-		for(partition=0; partition<dataSetup.numPopPartitions; partition++) {
-         genetree_stats_total_partitioned[partition].coal_stats[pop] = 0.0;
-         genetree_stats_total_partitioned[partition].num_coals[pop] = 0;
-      }
-  }
-
-  for(gen=0; gen<dataSetup.numLoci; gen++) {
-     for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
-        recalcStats_partitioned(gen,pop);
-     }
-  }
-  return 0;
-}
-
 /* recalcStats
    Re-calculates stats for given population in given gen.
    Writes down stats in genetree_stats_check and then compares to prior stats to return the log-likelihood.

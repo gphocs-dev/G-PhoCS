@@ -1442,7 +1442,7 @@ int performMCMC()	{
 			}
 		}
 
-		dataState.genealogyLogLikelihood = dataState.dataLogLikelihood - dataState.logLikelihood*dataSetup.numLoci;
+		dataState.genealogyLogLikelihood = dataState.logLikelihood*dataSetup.numLoci - dataState.dataLogLikelihood;
 
 		if(iteration >= 0 && iteration%(mcmcSetup.sampleSkip+1) == 0) {
 
@@ -1456,7 +1456,6 @@ int performMCMC()	{
 			if(recordCoalStats) {
 				computeFlatStats();
 				computeNodeStats();
-				//computeGenetreeStats_partitioned();
 				printCoalStats(iteration);
 			}
 
