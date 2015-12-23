@@ -46,7 +46,7 @@ int typeCount[NUM_TYPES];
  * data setup
  *********/
 struct DATA_STATE {
-	double	logLikelihood;			// average log-likelihood per genealogy of data given pop tree - ln[P(X|Z)]/numLoci
+	double	logLikelihood;			// average log-likelihood per genealogy of data given pop tree - {ln[P(X|Z)]+ln[P(Z|M)]}/numLoci
 	double	dataLogLikelihood;		// log likelihood (not averaged) of data given all genealogies - ln[P(X|Z,M,T)]
 	double	genealogyLogLikelihood;	// log likelihood of all genealogies given model & parameters - ln[P(Z|M,T)]
 	double	rateVar;				// the actual variance in locus-specific mutation rate
@@ -1450,6 +1450,8 @@ int performMCMC()	{
 			printParamVals(paramVals,0,mcmcSetup.numParameters, ioSetup.traceFile);
 			fprintf(ioSetup.traceFile,"%.6f\t%.6f\t%.6f\n", dataState.logLikelihood, dataState.dataLogLikelihood, dataState.genealogyLogLikelihood);
 			fflush(ioSetup.traceFile);
+
+
 
 			if(recordCoalStats) {
 				computeFlatStats();
