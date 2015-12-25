@@ -222,7 +222,6 @@ int computeTotalStats();
 double recalcStats(int gen, int pop);
 int recalcStats_partitioned(int gen, int pop);
 int computeGenetreeStats(int gen);
-int computeGenetreeStats_partitioned(void);
 double gtreeLnLikelihood(int gen);
 double computeDeltaLnLd(int gen, int instance);
 int computeMigStatsDelta(int instance, double bottom_age, int bottom_pop, double top_age, int num_lins_delta);

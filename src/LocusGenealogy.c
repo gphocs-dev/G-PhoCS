@@ -197,7 +197,7 @@ int maxMigrations;		// global maximum number of migration events (set by setMaxM
 
 
 /****  generating proposed changes in genealogy  ****/
-int		prueGenSubtree(LocusGenealogy* locusGen, int branchId);
+int		pruneGenSubtree(LocusGenealogy* locusGen, int branchId);
 Event*	findLineageInInterval(PopulationTree* popTree, Event* event, int targetNum);
 int		migrateAndCoalesceLineage(LocusGenealogy* locusGen, int branchId);
 int 	proposeEventMove(LocusGenealogy* locusGen, Event* event, double newAge);
@@ -897,7 +897,7 @@ Event* findLineageInInterval(PopulationTree* popTree, Event* event, int targetNu
 
 
 /***********************************************************************************
- *	prueGenSubtree
+ *	pruneGenSubtree
  *	- propose a genalogy modification which prunes the subtree below a given branch.
  *	- records in genChanges the following things:
  * 		* affected pops and mig bands
@@ -955,7 +955,7 @@ int pruneGenSubtree(LocusGenealogy* locusGen, int branchId) {
       addAffectedMigBandSet(locusGen,event->migBands);
       break;
     default:
-      fprintf(stderr, "\nError: prueGenSubtree: locus %d, branch %d\n", locusGen->locusId, branchId);
+      fprintf(stderr, "\nError: pruneGenSubtree: locus %d, branch %d\n", locusGen->locusId, branchId);
       fprintf(stderr, "Illegal type of father event.\n");
       printEvent(event);
       printGenealogy(locusGen);
@@ -964,12 +964,12 @@ int pruneGenSubtree(LocusGenealogy* locusGen, int branchId) {
 		
   }
 	
-  fprintf(stderr, "\nError: prueGenSubtree: locus %d, branch %d\n", locusGen->locusId, branchId);
+  fprintf(stderr, "\nError: pruneGenSubtree: locus %d, branch %d\n", locusGen->locusId, branchId);
   fprintf(stderr, "Unknown reason for leaving while(1) loop.\n");
   printGenealogy(locusGen);
   exit(-1);
 }
-/** end of prueGenSubtree **/
+/** end of pruneGenSubtree **/
 
 
 
