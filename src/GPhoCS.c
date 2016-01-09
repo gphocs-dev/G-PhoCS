@@ -1027,30 +1027,12 @@ int performMCMC()	{
 	}
 
 	if(recordCoalStats) {
-		//		sprintf(fileName,"%s.coalStats.tsv", ioSetup.nodeStatsFileName);
 		ioSetup.coalStatsFile = fopen(ioSetup.nodeStatsFileName,"w");
 		if(ioSetup.coalStatsFile == NULL) {
 			fprintf(stderr, "Error: Could not open coal stats file %s.\n", fileName);
 			return(-1);
 		}
-		//		ioSetup.nodeStatsFile=(FILE**)malloc(3*dataSetup.popTree->numPops*sizeof(FILE*));
-		//		if(ioSetup.nodeStatsFile == NULL) {
-		//			fprintf(stderr, "memory allocation for node coal file %s.\n", fileName);
-		//			return(-1);
-		//		}
-		//		for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
-		//			sprintf(fileName,"%s.probCoalPop_%s.txt", ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
-		//			ioSetup.nodeStatsFile[3*pop] = fopen(fileName,"w");
-		//			sprintf(fileName,"%s.probFirstCoalPop_%s.txt", ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
-		//			ioSetup.nodeStatsFile[3*pop+1] = fopen(fileName,"w");
-		//			sprintf(fileName,"%s.coalTimePop_%s.txt", ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
-		//			ioSetup.nodeStatsFile[3*pop+2] = fopen(fileName,"w");
-		//			if(ioSetup.nodeStatsFile[3*pop] == NULL ||ioSetup.nodeStatsFile[3*pop+1] == NULL || ioSetup.nodeStatsFile[3*pop+2] == NULL) {
-		//				sprintf(fileName,"%s.XXXPop_%s.txt", ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
-		//				fprintf(stderr, "Error: Could not open node coalescence file %s.\n", fileName);
-		//				return(-1);
-		//			}
-		//		}
+
 		printCoalStats(-1);
 	}
 
