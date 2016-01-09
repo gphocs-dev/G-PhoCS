@@ -649,7 +649,6 @@ int recordTypes ()	{
 void printParamVals (double* paramVals, int startParam, int endParam, FILE* out)	{
 	int i;
 	for(i=startParam; i<endParam; i++) {
-		//		fprintf(out, " %9.7f",paramVals[i]*mcmcSetup.printFactors[i]);
 		fprintf(out, "%8.5f\t",paramVals[i]*mcmcSetup.printFactors[i]);
 	}
 }
@@ -795,7 +794,7 @@ int printCoalStats (int iteration)		{
 
 
 	fprintf(ioSetup.coalStatsFile, "%7d", iteration);
-	fprintf(ioSetup.coalStatsFile, "\t%8f\t%9d\t%8f\t%9d\t%8f\t%8f\t%8f\t%8f",
+	fprintf(ioSetup.coalStatsFile, "\t%9f\t%9d\t%9f\t%9d\t%9f\t%9f\t%9f\t%9f",
 			genetree_stats_flat.coal_stats_flat,
 			genetree_stats_flat.num_coals_total,
 			genetree_stats_flat.mig_stats_flat,
@@ -1374,7 +1373,7 @@ int performMCMC()	{
 
 			fprintf(ioSetup.traceFile, "%d\t", iteration);
 			printParamVals(paramVals,0,mcmcSetup.numParameters, ioSetup.traceFile);
-			fprintf(ioSetup.traceFile,"%.6f\t%.6f\t%.6f\n", dataState.logLikelihood, dataState.dataLogLikelihood, dataState.genealogyLogLikelihood);
+			fprintf(ioSetup.traceFile,"%.9f\t%.9f\t%.9f\n", dataState.logLikelihood, dataState.dataLogLikelihood, dataState.genealogyLogLikelihood);
 			fflush(ioSetup.traceFile);
 
 
