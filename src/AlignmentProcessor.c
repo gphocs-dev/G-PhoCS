@@ -2535,7 +2535,6 @@ int	twoSiteFourGameteTest(int patternId1, int patternId2) {
       optionalConfigs[1] = optionalConfigs[2];
     } else {
       //			printf("choosing pair (%d,%d).\n",optionalConfigs[0],optionalConfigs[3]);
-      optionalConfigs[0] = optionalConfigs[0];
       optionalConfigs[1] = optionalConfigs[3];
     }
 			

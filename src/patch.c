@@ -469,7 +469,7 @@ int GetRandomGtree(GenericBinaryTree* tree, int gen)		{
 		fprintf(stderr, "\nError: Out Of Memory living lineages at gen %d.\n",gen);
 		exit(-1);
 	}
-	// convert numSamplesPerPop to coommulative form
+	// convert numSamplesPerPop to cumulative form
 	for(pop=1; pop<dataSetup.popTree->numCurPops; pop++) {
 		dataSetup.numSamplesPerPop[pop] += dataSetup.numSamplesPerPop[pop-1];
 	}
