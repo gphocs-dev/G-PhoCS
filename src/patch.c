@@ -37,7 +37,7 @@ int**	nodeEvents;			// a 2D array (numLoci X numNodes) for event ids per genealo
 struct ADMIXTURE_STATUS {
 	int 	numSampledLoci;				// number of loci for which to show admixture status
 	int*	sampledLoci;				// array of sampled loci
-	double** sampleLocusAdmixRate;			// array of admixture rates (up to the curent point of sampling) for each locus and each admixed sample
+	double** sampleLocusAdmixRate;		// array of admixture rates (up to the curent point of sampling) for each locus and each admixed sample
 	int*	admixtureCounts;			// number of loci in which sample is in alternative population
 	double* admixtureCoefficients;		// estimated coefficients for all samples
 } admixture_status;

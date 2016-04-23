@@ -21,12 +21,12 @@
 #define LOG_STEPS_NOT
 #define CHECKALL_NOT
 
-#define NUM_TYPES				5
+#define NUM_TYPES						5
 #define TARGET_ACCEPTANCE_PERCENT       35
 #define TARGET_ACCEPTANCE_RANGE		    5
 #define FINETUNE_RESOLUTION             0.0000001
-#define MAX_FINETUNE 10
-#define ACCEPTANCE_FUDGE 2
+#define MAX_FINETUNE					10
+#define ACCEPTANCE_FUDGE 				2
 
 int typeCount[NUM_TYPES];
 
@@ -53,11 +53,6 @@ struct DATA_STATE {
 
 	LocusData**	lociData;			// array of LocusData data structures (of length numLoci). (allocated in processAlignments)
 } dataState;
-
-
-/*
-   double  = ;
- */
 
 
 /*********
@@ -1326,12 +1321,7 @@ int performMCMC()	{
 			exit(-1);
 		}
 #endif
-		/**
-		else {
-			printf("iteration %d OK\n",iteration);
-			fflush(stdout);
-		}
-		 **/
+
 		// record parameters, means, and print to trace, if appropriate
 		recordParamVals(paramVals);
 		for(i=0; i<mcmcSetup.numParameters; i++) {
