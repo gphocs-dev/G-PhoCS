@@ -244,7 +244,6 @@ int main (int argc, char*argv[]) {
 	//	fprintf(fout,"\nSummary of MCMC results:\n");
 	//	DescriptiveStatistics(fout, mcmcout, 50, 20, 0);
 
-	//printf("Exit through main.\n");
 
 	freeAlignmentData();
 	freeAllMemory();
@@ -991,6 +990,16 @@ void printTraceFileHeader() {
 	fprintf(ioSetup.traceFile, "\tData-ld-ln\tFull-ld-ln\tGene-ld-ln\n");
 }
 
+
+/* shortcut to checkall(), print error message and exit
+ */
+void checkAllAndExit(char errorMessage[], int iteration) {
+	if (!checkAll()) {
+		fprintf(stderr, errorMessage, iteration);
+		exit(-1);
+	}
+}
+
 /***********************************************************************************
  *	performMCMC
  * 	- main procedure in program.
@@ -1163,10 +1172,7 @@ int performMCMC()	{
 
 
 #ifdef CHECKALL
-	if (!checkAll()) {
-		fprintf(stderr, "\nError:  --   Aborting before starting MCMC.\n\n");
-		exit(-1);
-	}
+	checkAllAndExit(stderr, "\nError:  --   Aborting before starting MCMC.\n\n");
 #endif
 
 
@@ -1182,10 +1188,7 @@ int performMCMC()	{
 			acceptanceCounts.coalTime += acceptCount;
 
 #ifdef CHECKALL
-			if (!checkAll()) {
-				fprintf(stderr, "\nERROR:  --  Aborting after UpdateGB_InternalNode in MCMC iteration %d.\n\n",iteration);
-				exit(-1);
-			}
+			checkAllAndExit(stderr, "\nERROR:  --  Aborting after UpdateGB_InternalNode in MCMC iteration %d.\n\n",iteration);
 #endif
 
 			// update MIGRATION NODE ages
@@ -1197,10 +1200,7 @@ int performMCMC()	{
 			}
 
 #ifdef CHECKALL
-			if (!checkAll()) {
-				fprintf(stderr, "\nError:  --  Aborting after UpdateGB_MigrationNode in MCMC iteration %d.\n\n",iteration);
-				exit(-1);
-			}
+			checkAllAndExit(stderr, "\nError:  --  Aborting after UpdateGB_MigrationNode in MCMC iteration %d.\n\n",iteration);
 #endif
 
 			// update GENEALOGY TOPOLOGY (including migration events)
@@ -1208,10 +1208,7 @@ int performMCMC()	{
 			acceptanceCounts.SPR += acceptCount;
 
 #ifdef CHECKALL
-			if (!checkAll()) {
-				fprintf(stderr, "\nError:  --  Aborting after UpdateGB_MigSPR in MCMC iteration %d.\n\n",iteration);
-				exit(-1);
-			}
+			checkAllAndExit(stderr, "\nError:  --  Aborting after UpdateGB_MigSPR in MCMC iteration %d.\n\n",iteration);
 #endif
 
 			// update individual LOCUS MUTATION rates
@@ -1220,10 +1217,7 @@ int performMCMC()	{
 				acceptanceCounts.locusRate += acceptCount;
 
 #ifdef CHECKALL
-				if (!checkAll()) {
-					fprintf(stderr, "\nError:  --  Aborting after UpdateLocusRate in MCMC iteration %d.\n\n",iteration);
-					exit(-1);
-				}
+				checkAllAndExit(stderr, "\nError:  --  Aborting after UpdateLocusRate in MCMC iteration %d.\n\n",iteration);
 #endif
 			}
 		}// end of for(j)
@@ -1234,10 +1228,7 @@ int performMCMC()	{
 		acceptanceCounts.theta += acceptCount;
 
 #ifdef CHECKALL
-		if (!checkAll()) {
-			fprintf(stderr, "\nError:  --  Aborting after UpdateTheta in MCMC iteration %d.\n\n",iteration);
-			exit(-1);
-		}
+		checkAllAndExit(stderr, "\nError:  --  Aborting after UpdateTheta in MCMC iteration %d.\n\n",iteration);
 #endif
 
 		// update MIGRATION RATEs
@@ -1246,10 +1237,7 @@ int performMCMC()	{
 			acceptanceCounts.migRate += acceptCount;
 
 #ifdef CHECKALL
-			if (!checkAll()) {
-				fprintf(stderr, "\nError:  --  Aborting after UpdateMigRates in MCMC iteration %d.\n\n",iteration);
-				exit(-1);
-			}
+			checkAllAndExit(stderr, "\nError:  --  Aborting after UpdateMigRates in MCMC iteration %d.\n\n",iteration);
 #endif
 		}
 
@@ -1261,10 +1249,7 @@ int performMCMC()	{
 		}
 
 #ifdef CHECKALL
-		if (!checkAll()) {
-			fprintf(stderr, "\nError:  --  Aborting after UpdateTau in MCMC iteration %d.\n\n",iteration);
-			exit(-1);
-		}
+		checkAllAndExit(stderr, "\nError:  --  Aborting after UpdateTau in MCMC iteration %d.\n\n",iteration);
 #endif
 
 		UpdateSampleAge(mcmcSetup.finetunes.taus, acceptCountArray);
@@ -1273,10 +1258,7 @@ int performMCMC()	{
 		}
 
 #ifdef CHECKALL
-		if (!checkAll()) {
-			fprintf(stderr, "\nError:  --  Aborting after UpdateSampleAge in MCMC iteration %d.\n\n",iteration);
-			exit(-1);
-		}
+		checkAllAndExit(stderr, "\nError:  --  Aborting after UpdateSampleAge in MCMC iteration %d.\n\n",iteration);
 #endif
 
 
@@ -1285,10 +1267,7 @@ int performMCMC()	{
 		acceptanceCounts.admix += acceptCount;
 
 #ifdef CHECKALL
-		if (!checkAll()) {
-			fprintf(stderr, "\nError:  --  Aborting after AdmixtureCoefficients in MCMC iteration %d.\n\n",iteration);
-			exit(-1);
-		}
+		checkAllAndExit("\nError:  --  Aborting after AdmixtureCoefficients in MCMC iteration %d.\n\n",iteration);
 #endif
 
 
@@ -1302,10 +1281,7 @@ int performMCMC()	{
 
 
 #ifdef CHECKALL
-		if (!checkAll()) {
-			printf("\n  --  Aborting after mixing() in iteration %d.\n\n",iteration);
-			exit(-1);
-		}
+		checkAllAndExit("\n  --  Aborting after mixing() in iteration %d.\n\n",iteration);
 #endif
 
 		// synchronize events due to possible inconsistencies caused by rescaling of ages (mixing and rubber band).
@@ -1317,11 +1293,9 @@ int performMCMC()	{
 		}
 
 #ifdef CHECKALL
-		if (!checkAll()) {
-			printf("\n  --  Aborting after MCMC iteration %d.\n\n",iteration);
-			exit(-1);
-		}
+		checkAllAndExit("\n  --  Aborting after MCMC iteration %d.\n\n", iteration);
 #endif
+
 
 		// record parameters, means, and print to trace, if appropriate
 		recordParamVals(paramVals);
@@ -1739,7 +1713,6 @@ int UpdateGB_InternalNode (double finetune) {
 			adjustGenNodeAge(dataState.lociData[gen], inode, tnew);
 			lnLd = -getLocusDataLikelihood(dataState.lociData[gen]);
 			lnLd += computeLocusDataLikelihood(dataState.lociData[gen], /*reuse old conditionals*/ 1);
-			//			printf("computing delta in genealogy likelihood...\n");
 
 			genetree_lnLd_delta = considerEventMove(gen, 0, nodeEvents[gen][inode], pop, t, pop, tnew);
 			lnacceptance = genetree_lnLd_delta + lnLd;

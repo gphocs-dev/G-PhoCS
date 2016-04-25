@@ -23,8 +23,6 @@
 /***************************************************************************************************************/
 
 
-// for debugging purposes   ELIMINATE LATER !!!!
-
 double* genLogLikelihood;
 double* genDeltaLogLikelihood;			// for updateTau
 double averageMigTimes[MAX_MIG_BANDS];
@@ -193,17 +191,12 @@ struct RUBBERBAND_MIGS{
 
 
 
-int analyzeGenetreeFile(char* genetree_file);
-int writeMScommandLine(char* outfile);
 int findLastMig(int gen, int node_id, double time);
 int findFirstMig(int gen, int node_id, double time);
 int Coalescence1Pop (PopulationTree* popTree, GenericBinaryTree* tree, int gen, int pop, int* livingLineages);
 int removeEvent(int gen, int event);
 
 // auxiliary functions
-int findInconsistency(int gen, int node);
-int getSptreeNodeByName(const char* name);
-int orderByAge(int subtree_root, int* ordered_nodes);
 int getLineagesAtInterval(int gen, int start_event, int pop, int exc_node, int* out_array);
 int getEdgesForTimePop(int gen, double time, int pop, int exc_node, int* out_array);
 int populationPostOrder(int pop, int* ordered_pops);
@@ -2402,7 +2395,6 @@ int computeFlatStats() {
 	migStat = 0.0;
 	for(gen=0; gen<dataSetup.numLoci; gen++) {
 
-
 		if(0 == getSortedAges(dataState.lociData[gen], genetree_stats_flat.sortedAgesArray)) {
 			if(debug) {
 				fprintf(stderr, "\nError: computeFlatStats: error sorting node ages for gen %d.\n", gen);
@@ -2417,7 +2409,6 @@ int computeFlatStats() {
 			migStat += deltaT*numLins;
 			coalStat += deltaT*numLins*(numLins-1);
 		}
-
 
 	}
 	genetree_stats_flat.coal_stats_flat = coalStat / heredity_factor;

@@ -69,7 +69,7 @@ int main_analyze_patterns(int argc, char*argv[]) {
   if(argc == 4) {
     res=sscanf(argv[3],"%d",&numLoci);
     if(res < 1) {
-      fprintf(sterr, "Error: 3rd option (%s) cannot act as number of loci.\n",argv[3]);
+      fprintf(stderr, "Error: 3rd option (%s) cannot act as number of loci.\n",argv[3]);
       return 1;
     }
   }
