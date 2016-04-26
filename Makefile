@@ -16,7 +16,10 @@ ifeq ($(TARGETOS), Windows)
 endif
 
 
-all: bin/G-PhoCS-1-2-3 bin/readTrace
+all: bin/G-PhoCS-1-2-3 bin/readTrace bin/G-PhoCS-Tests
+
+bin/G-PhoCS-Tests: obj/gphocsTests.o
+	$(CC) $(CFLAGS) obj/gphocsTests.o -o bin/G-PhoCS-Tests
 
 bin/readTrace: obj/readTrace.o 
 	$(CC) $(CFLAGS) obj/readTrace.o -o bin/readTrace
@@ -26,6 +29,9 @@ bin/G-PhoCS-1-2-3: obj/GPhoCS.o obj/MCMCcontrol.o obj/utils.o obj/GenericTree.o 
 
 bin/AlignmentProcessor: obj/utils.o obj/AlignmentProcessor.o obj/AlignmentMain.o
 	$(CC) $(CFLAGS) obj/utils.o obj/AlignmentProcessor.o obj/AlignmentMain.o $(CFLAGS) -lm -o bin/AlignmentProcessor
+
+obj/gphocsTests.o: tst/gphocsTests.c 
+	$(CC) $(CFLAGS) -c tst/gphocsTests.c -o obj/gphocsTests.o
 
 obj/readTrace.o: src/readTrace.c 
 	$(CC) $(CFLAGS) -c src/readTrace.c -o obj/readTrace.o
@@ -55,4 +61,4 @@ obj/AlignmentMain.o: src/AlignmentMain.c src/AlignmentProcessor.h
 	$(CC) $(CFLAGS) -c src/AlignmentMain.c -o obj/AlignmentMain.o
 
 clean:
-	rm -rf obj/*.o bin/readTrace bin/G-PhoCS-1-2-3
+	rm -rf obj/*.o bin/readTrace bin/G-PhoCS-1-2-3 bin/G-PhoCS-Tests
