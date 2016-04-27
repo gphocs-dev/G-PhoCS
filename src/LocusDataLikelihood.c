@@ -1752,26 +1752,15 @@ int getSortedAges_rec (LocusData* locusData, int nodeId, double* sortedAges, dou
   if(!res) {
 	return 0;
   }
+
   res = getSortedAges_rec (locusData, node->rightSon, sortedAges, sortedAges_aux, arrayOffset + numLeftInternalNodes, &numRightInternalNodes);
   if(!res) {
 	return 0;
   }
-  /***  DEBUGGING
-  printf("Sorted ages for left node %d:",node->leftSon);
-  for(i=arrayOffset; i<arrayOffset+numLeftInternalNodes; i++) {
-	  printf(" %g",sortedAges[i]);
-  }
-  printf("\nSorted ages for right node %d:",node->rightSon);
-  for(i=arrayOffset+numLeftInternalNodes; i<arrayOffset+numLeftInternalNodes+numRightInternalNodes; i++) {
-	  printf(" %g",sortedAges[i]);
-  }
-  ***/
+
   sortedAges[arrayOffset + numLeftInternalNodes + numRightInternalNodes] = locusData->nodeArray[nodeId]->age;
   *numInternalNodes_out = numLeftInternalNodes + numRightInternalNodes + 1;
-  /***  DEBUGGING  
-  printf("\nAge of node node %d: %g\n",nodeId, locusData->nodeArray[nodeId]->age);
-  ***/
-  
+
   if(numLeftInternalNodes == 0 || numRightInternalNodes == 0) {
 	  return 1;
   }

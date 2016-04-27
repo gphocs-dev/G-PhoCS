@@ -2183,11 +2183,11 @@ int UpdateAdmixCoeffs (double finetune)	{
  *	UpdateTheta
  *	- perturbs all population thetas
  *	- this step does not affect data likelihood
- *	- this step doe not affect any other recorded statistic as well
+ *	- this step does not affect any other recorded statistic as well
  ***********************************************************************************/
 int UpdateTheta (double finetune)	{
 	int pop, gen, accepted=0;
-	double thetaold, thetanew, c,lnc, lnacceptance;
+	double thetaold, thetanew, c, lnc, lnacceptance;
 
 	double deltaLogLikelihood;
 
@@ -2202,9 +2202,11 @@ int UpdateTheta (double finetune)	{
 		lnc = finetune*rnd2normal8();
 		c = exp(lnc);
 		thetanew = thetaold * c;
-#ifdef LOG_STEPS
-		fprintf(ioSetup.debugFile, "  pop %d, proposing theta shift: %g-->%g, ",pop, thetaold,thetanew);
-#endif
+
+		#ifdef LOG_STEPS
+				fprintf(ioSetup.debugFile, "  pop %d, proposing theta shift: %g-->%g, ",pop, thetaold,thetanew);
+		#endif
+
 		// acceptance ratio according to proposal prior
 		lnacceptance = lnc + lnc * (dataSetup.popTree->pops[pop]->thetaPrior.alpha - 1) - (thetanew-thetaold) * dataSetup.popTree->pops[pop]->thetaPrior.beta;
 
@@ -2215,13 +2217,14 @@ int UpdateTheta (double finetune)	{
 
 		lnacceptance += deltaLogLikelihood;
 
-#ifdef LOG_STEPS
-		fprintf(ioSetup.debugFile, "lnacceptance = %g, ",lnacceptance);
-#endif
-		if(lnacceptance>=0 || rndu()<exp(lnacceptance)) {
-#ifdef LOG_STEPS
-			fprintf(ioSetup.debugFile, "accepting.\n");
-#endif
+		#ifdef LOG_STEPS
+				fprintf(ioSetup.debugFile, "lnacceptance = %g, ",lnacceptance);
+		#endif
+
+		if (lnacceptance>=0 || rndu()<exp(lnacceptance)) {
+			#ifdef LOG_STEPS
+						fprintf(ioSetup.debugFile, "accepting.\n");
+			#endif
 			accepted++;
 			for(gen=0; gen<dataSetup.numLoci; gen++) {
 				genLogLikelihood[gen] -= ( lnc * genetree_stats[gen].num_coals[pop] + (1/thetanew - 1/thetaold) * genetree_stats[gen].coal_stats[pop] );
@@ -2229,9 +2232,9 @@ int UpdateTheta (double finetune)	{
 			dataState.logLikelihood += deltaLogLikelihood/dataSetup.numLoci;
 			dataSetup.popTree->pops[pop]->theta = thetanew;
 		} else {
-#ifdef LOG_STEPS
-			fprintf(ioSetup.debugFile, "rejecting.\n");
-#endif
+		#ifdef LOG_STEPS
+					fprintf(ioSetup.debugFile, "rejecting.\n");
+		#endif
 		}
 
 	}// end of for(pop)
