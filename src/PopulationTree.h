@@ -77,6 +77,9 @@ typedef struct MIGRATION_BAND {
 ***********************************************************************************/
 typedef struct POPULATION Population;
 
+#define	LEFT	0 // index of left son population in sons array
+#define	RIGHT	1 // index of right son population in sons array
+
 struct POPULATION {
 	char	name[STRING_LENGTH];		// name of population
 	int 	id;					// population identifier

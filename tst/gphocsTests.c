@@ -2,17 +2,7 @@
 
 int main(int argc, char*argv[])
 {
-	printf("hello world!\n");
-	printf("hello world!\n");
-	printf("hello world!\n");
-	printf("hello world!\n");
-
-//	char line[BUFSIZ];
-//	for (i=0; i<3; i++){
-//		if (fgets(line, BUFSIZ, stdin) != NULL){
-//			/* Do something with the line of text*/
-//		}
-//	}
+	//TODO - code to execute G-PhoCS main with multiple test configurations and validate output
 
 	return 0;
 }
