@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+
 
 #define TRUE 1
 #define FALSE 0
@@ -37,17 +39,24 @@ int areFilesEqual(char fname1[40], char fname2[40]) {
 
 int main(int argc, char*argv[]) {
 
+	system("pwd");
+	system(".\\bin\\G-PhoCS-1-2-3 .\\tst\\test-control-file.ctl");
 
 
-	printf("1) Trace test result:\t\t");
-	if (areFilesEqual("./logs/sample-data.trace.tsv", "./tst/logs/test-data.trace.tsv")){
+	printf("\n");
+	printf("===============================================\n");
+	printf("=======             TESTING             =======\n");
+	printf("===============================================\n\n");
+
+	printf("1) Compare Trace files:\t\t");
+	if (areFilesEqual("./tst/logs/expected/sample-data.trace.tsv", "./tst/logs/test-data.trace.tsv")){
 		printf("SUCCESS\n");
 	} else {
 		printf("FAILURE\n");
 	}
 
-	printf("2) FlatStats test result:\t");
-	if (areFilesEqual("./logs/sample-data.flatstats.tsv", "./tst/logs/test-data.flatstats.tsv")){
+	printf("2) Compare FlatStats files:\t");
+	if (areFilesEqual("./tst/logs/expected/sample-data.flatstats.tsv", "./tst/logs/test-data.flatstats.tsv")){
 		printf("SUCCESS\n");
 	} else {
 		printf("FAILURE\n");
