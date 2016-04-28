@@ -55,7 +55,7 @@ typedef struct LIKELIHOOD_NODE {
   int father;							// father of node in genealogy (-1 for root)
   int leftSon, rightSon;				// sons of node in genealogy
   double age;							// age of node
-  double* conditionalProbs;			// array conditional probabilities for base assignment at node (array of length CODE_SIZE * numPatterns)
+  double* conditionalProbs;				// array conditional probabilities for base assignment at node (array of length CODE_SIZE * numPatterns)
 } LikelihoodNode;
 
 
@@ -87,12 +87,12 @@ typedef struct PREVIOUS_VERSION {
  * 	- typedef is done in LocusDataLikelihood.h
  ***********************************************************************************/
 struct LOCUS_LIKELIHOOD {
-  unsigned short hetMode;			// mode for computing likelihood of het alignment columns (0, 1, or 2)
-  int numLeaves;					// number of leaves in genealogy
+  unsigned short hetMode;		// mode for computing likelihood of het alignment columns (0, 1, or 2)
+  int numLeaves;				// number of leaves in genealogy
   double dataLogLikelihood;		// log-likelihood of data, given genealogy
   double mutationRate;			// relative locus-specific mutation rate
   int root;						// index of root in nodeArray[]
-  LikelihoodNode** nodeArray;		// array of pointers to nodes
+  LikelihoodNode** nodeArray;	// array of pointers to nodes
   LocusSeqData seqData;			// holds sequence data for locus
   PreviousVersion savedVersion;	// notes on changes proposed to genealogy
 	
@@ -1230,7 +1230,7 @@ int computePairwiseLCAs (LocusData* locusData, int** lcaMatrix, int* leafArray_a
  ***********************************************************************************/
 int getSortedAges (LocusData* locusData, double* ageArray){
   int numInternalNodes;
-  int res = getSortedAges_rec (locusData, locusData->root, ageArray, ageArray+locusData->numLeaves-1, 0, &numInternalNodes);
+  int res = getSortedAges_rec(locusData, locusData->root, ageArray, ageArray+locusData->numLeaves-1, 0, &numInternalNodes);
 	
   if(!res || numInternalNodes != locusData->numLeaves-1) {
     return 0;
@@ -1723,7 +1723,7 @@ int computePairwiseLCAs_rec (LocusData* locusData, int nodeId, int** lcaMatrix, 
  *	- recursive procedure for computing sorted list of node ages
  *  - starts with a designated internal node (nodeID)
  *  - recursively computes the set of right / left leaves under that node (leafArray, arrayOffset,  numLeaves_out)
- *  - assumes array is doubled for auxilliary space
+ *  - assumes array is doubled for auxiliary space
  *  - returns 1 if successful, 0 otherwise
  ***********************************************************************************/
 int getSortedAges_rec (LocusData* locusData, int nodeId, double* sortedAges, double* sortedAges_aux, int arrayOffset, int* numInternalNodes_out){
@@ -1748,12 +1748,12 @@ int getSortedAges_rec (LocusData* locusData, int nodeId, double* sortedAges, dou
   
   // recursively call for left and right sons and aggregate children list
   numLeftInternalNodes = numRightInternalNodes = 0;
-  res = getSortedAges_rec (locusData, node->leftSon,  sortedAges, sortedAges_aux, arrayOffset, &numLeftInternalNodes);
+  res = getSortedAges_rec(locusData, node->leftSon,  sortedAges, sortedAges_aux, arrayOffset, &numLeftInternalNodes);
   if(!res) {
 	return 0;
   }
 
-  res = getSortedAges_rec (locusData, node->rightSon, sortedAges, sortedAges_aux, arrayOffset + numLeftInternalNodes, &numRightInternalNodes);
+  res = getSortedAges_rec(locusData, node->rightSon, sortedAges, sortedAges_aux, arrayOffset + numLeftInternalNodes, &numRightInternalNodes);
   if(!res) {
 	return 0;
   }
@@ -1761,7 +1761,7 @@ int getSortedAges_rec (LocusData* locusData, int nodeId, double* sortedAges, dou
   sortedAges[arrayOffset + numLeftInternalNodes + numRightInternalNodes] = locusData->nodeArray[nodeId]->age;
   *numInternalNodes_out = numLeftInternalNodes + numRightInternalNodes + 1;
 
-  if(numLeftInternalNodes == 0 || numRightInternalNodes == 0) {
+  if (numLeftInternalNodes == 0 || numRightInternalNodes == 0){
 	  return 1;
   }
 
@@ -1783,7 +1783,7 @@ int getSortedAges_rec (LocusData* locusData, int nodeId, double* sortedAges, dou
 		  i++;
 		  r++;
 	  }
-  }// end of while()
+  }
   if(l>=numLeftInternalNodes) {
 	  while(i<=arrayOffset+numLeftInternalNodes+numRightInternalNodes && r<=numLeftInternalNodes+numRightInternalNodes) {
 		  sortedAges[i] = sortedAges_aux[r];

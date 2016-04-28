@@ -2382,8 +2382,8 @@ int computeNodeStats() {
 	Computes all statistics needed for flat likelihood of
 	every clade of the hypothesis model.
 	saves statistics in ???????????
-
-	TODO - where should this method be?!
+ *	TODO - document method
+ *  TODO - where should this method be?!
  */
 int computeCladeStats() {
 
@@ -2420,14 +2420,14 @@ int computeCladeStats_rec(Population *pop){
 
 		printf("calcing clade stats for population %s-%s-%s\n", pop->name, left_son->name, right_son->name);
 
-		left_son_sorted_ages = getPopulationSortedAges(left_son)
-		right_son_sorted_ages = getPopulationSortedAges(right_son)
-		pop_sorted_ages = getPopulationSortedAges(pop)
-
-		sons_sorted_ages = merge_sorted_arrays(right_son_sorted_ages, left_son_sorted_ages)
-		clade_sorted_ages = merge_sorted_arrays(pop_sorted_ages, sons_sorted_ages)
-
-		computeCladeFlatStats(clade_sorted_ages)
+//		left_son_sorted_ages = getPopulationSortedAges(left_son)
+//		right_son_sorted_ages = getPopulationSortedAges(right_son)
+//		pop_sorted_ages = getPopulationSortedAges(pop)
+//
+//		sons_sorted_ages = merge_sorted_arrays(right_son_sorted_ages, left_son_sorted_ages)
+//		clade_sorted_ages = merge_sorted_arrays(pop_sorted_ages, sons_sorted_ages)
+//
+//		computeCladeFlatStats(clade_sorted_ages)
 	}
 
 	return 0;
@@ -2452,6 +2452,44 @@ int computeLeafStats(Population *leaf){
 	printf("calcing clade stats for leaf %s\n", leaf->name);
 	return 0;
 }
+
+void merge(double a[], int m, double b[], int n, double sorted[]) {
+  int i, j, k;
+
+  j = k = 0;
+
+  for (i = 0; i < m + n;) {
+    if (j < m && k < n) {
+      if (a[j] < b[k]) {
+        sorted[i] = a[j];
+        j++;
+      }
+      else {
+        sorted[i] = b[k];
+        k++;
+      }
+      i++;
+    }
+    else if (j == m) {
+      for (; i < m + n;) {
+        sorted[i] = b[k];
+        k++;
+        i++;
+      }
+    }
+    else {
+      for (; i < m + n;) {
+        sorted[i] = a[j];
+        j++;
+        i++;
+      }
+    }
+  }
+}
+
+
+
+
 
 
 

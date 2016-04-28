@@ -2,9 +2,9 @@ GENERAL-INFO-START
 
 	random-seed			1234
 
-	seq-file            seqs-sample.txt
-	trace-file          logs\sample-data.trace.tsv		
-	coal-stats-file		logs\sample-data.flatStats.tsv
+	seq-file            tst\seqs-test.txt
+	trace-file          tst\logs\test-data.trace.tsv		
+	coal-stats-file		tst\logs\test-data.flatStats.tsv
 #	num-pop-partitions	1
 	locus-mut-rate		CONST
 

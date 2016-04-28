@@ -82,23 +82,23 @@ typedef struct POPULATION Population;
 
 struct POPULATION {
 	char	name[STRING_LENGTH];		// name of population
-	int 	id;					// population identifier
-	int     numSamples;         // number of samples for current population (leaf in tree).
-	double	age;				// start time for population (for ancestral population)
-	double	sampleAge;			// age of samples in current population - used for extinct populations
-	unsigned short updateSampleAge;			// set to 1 iff algorithm is to update the sample age
-	double	theta;				// theta parameter for population
-	GammaPrior	thetaPrior;		// parameters for gamma-prior of theta
-	GammaPrior	agePrior;		// parameters for gamma-prior of age (for ancestral population)
-	Population*	father;			// father population
-	Population*	sons[2];		// two child populations (for ancestral population)
-	unsigned short*	isAncestralTo;	// a boolean array indicating all descendant populations
+	int 	id;							// population identifier
+	int     numSamples;         		// number of samples for current population (leaf in tree).
+	double	age;						// start time for population (for ancestral population)
+	double	sampleAge;					// age of samples in current population - used for extinct populations
+	unsigned short updateSampleAge;		// set to 1 iff algorithm is to update the sample age
+	double	theta;						// theta parameter for population
+	GammaPrior	thetaPrior;				// parameters for gamma-prior of theta
+	GammaPrior	agePrior;				// parameters for gamma-prior of age (for ancestral population)
+	Population*	father;					// father population
+	Population*	sons[2];				// two child populations (for ancestral population)
+	unsigned short*	isAncestralTo;		// a boolean array indicating all descendant populations
 
 	// migration bands
-	int 	numInMigBands;		// length of inMigBands[] array
-	int* 	inMigBands;			// array of in migration band id's
-	int 	numOutMigBands;		// length of outMigBands[] array
-	int* 	outMigBands;		// array of out migration band id's
+	int 	numInMigBands;				// length of inMigBands[] array
+	int* 	inMigBands;					// array of in migration band id's
+	int 	numOutMigBands;				// length of outMigBands[] array
+	int* 	outMigBands;				// array of out migration band id's
 	MigrationBandSet* migBandSequence;	// pointer to first migration band set in the sequence
 										// of (incoming) sets active along the population
 };
