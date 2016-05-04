@@ -333,14 +333,14 @@ int initLocusGenealogy(LocusGenealogy* locusGen, PopulationTree* popTree, int id
   locusGen->genChanges.prunedCoalEvent = NULL;
   locusGen->genChanges.newCoalEvent = NULL;
 
-  for(pop=0; pop<popTree->numPops, pop++) {
+  for(pop=0; pop<popTree->numPops; pop++) {
     locusGen->genStats.popNumCoals[pop] = 0;
     locusGen->genStats.popCoalStats[pop] = 0.0;
     locusGen->genChanges.newStats.popNumCoals[pop] = 0;
     locusGen->genChanges.newStats.popCoalStats[pop] = 0.0;
     locusGen->genChanges.isAffectedPop[pop] = 0;
   }
-  for(migBand=0; migBand<popTree->numMigBands, migBand++) {
+  for(migBand=0; migBand<popTree->numMigBands; migBand++) {
     locusGen->genStats.migBandNumMigs[migBand] = 0;
     locusGen->genStats.migBandStats[migBand] = 0.0;
     locusGen->genChanges.newStats.migBandNumMigs[migBand] = 0;
@@ -853,6 +853,7 @@ int migrateAndCoalesceLineage(LocusGenealogy* locusGen, int branchId) {
     printGenealogy(locusGen);
     exit(-1);
   }
+  return 0;
 }
 /** end of migrateAndCoalesceLineage **/
 
@@ -1405,6 +1406,7 @@ int changeNumLineages(LocusGenealogy* locusGen, Event* event, int deltaNumLins){
     event->numLineages_bak = -event->numLineages_bak;
   }
   event->numLineages += deltaNumLins;
+  return 0;
 }
 /** end of changeNumLineages **/
 

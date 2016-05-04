@@ -1328,7 +1328,7 @@ int performMCMC()	{
 			if(recordCoalStats) {
 				computeFlatStats();
 				computeNodeStats();
-				computeCladeStats();
+//				computeCladeStats();
 				printCoalStats(iteration);
 			}
 

@@ -434,7 +434,6 @@ double computeLocusDataLikelihood (LocusData* locusData, unsigned short useOldCo
     }
   }
 	
-  //	printf("saving old likelihood %g.\n",locusData->dataLogLikelihood);
   locusData->savedVersion.dataLogLikelihood = locusData->dataLogLikelihood;
 
   for(pattId=0, numLivePatterns=0; pattId<locusData->seqData.numPatterns; pattId++) {
@@ -455,15 +454,13 @@ double computeLocusDataLikelihood (LocusData* locusData, unsigned short useOldCo
 #ifdef OPT1	
 res = computeConditionalJC_new(locusData, locusData->root, numLivePatterns, locusData->seqData.patternList, !useOldConditionals);
 #else
-res = computeConditionalJC(locusData, locusData->root, numLivePatterns, locusData->seqData.patternList, !useOldConditionals);
+res = computeConditionalJC    (locusData, locusData->root, numLivePatterns, locusData->seqData.patternList, !useOldConditionals);
 #endif
 	
 
   if(!res)	return locusData->dataLogLikelihood;
 	
   locusData->dataLogLikelihood = 0.0; 
-	
-  //	printf("Locus likelihood computation:\n");
 	
   // sum over root conditionals assuming uniform distribution at root
   for(patt=0; patt<numLivePatterns; patt+=locusData->seqData.numPhases[pattId]) {
@@ -476,7 +473,6 @@ res = computeConditionalJC(locusData, locusData->root, numLivePatterns, locusDat
     locusData->dataLogLikelihood += log(prob/numConditionals) * locusData->seqData.patternCount[pattId];
   }
 	
-  //	printf("new likelihood is %g.\n",locusData->dataLogLikelihood);
   return locusData->dataLogLikelihood;
 }
 /** end of computeLocusDataLikelihood **/
@@ -1240,6 +1236,8 @@ int getSortedAges (LocusData* locusData, double* ageArray){
 /** end of getSortedAges **/
 
 
+
+
 /***********************************************************************************
  *	getLocusDataLikelihood
  *	- returns the log likelihood of the locus as last recorded (no new computations are performed)
@@ -1336,11 +1334,9 @@ int computeLeafConditionals(LocusData* locusData, char* patternString)	{
       conditionals[1] = 1.0;
       break;
     case('A'):
-//		printf("AAAAA - Error!!\n");
       conditionals[2] = 1.0;
       break;
     case('G'):
-//		printf("GGGGG - Error!!\n");
       conditionals[3] = 1.0;
       break;
       /*			case('Y'):
@@ -1424,7 +1420,6 @@ int computeConditionalJC (LocusData* locusData, int nodeId, int numPatterns, int
   res = computeConditionalJC(locusData, node->leftSon, numPatterns, patternIds, overideOld);
   res = computeConditionalJC(locusData, node->rightSon, numPatterns, patternIds, overideOld) || res;
 	
-  //	printf("Computing conditionals for node %d:\n",nodeId);
 
   if(!overideOld && !res && !locusData->savedVersion.recalcConditionals[nodeId])
     return 0;
@@ -1453,11 +1448,8 @@ int computeConditionalJC (LocusData* locusData, int nodeId, int numPatterns, int
     for(base=0; base<CODE_SIZE; base++)  {
       node->conditionalProbs[CODE_SIZE*pattId + base] = 1.0;
     }
-    //		printf("edge (%d,%d)", nodeId,node->leftSon);
     computeSubtreeConditionals(&(leftSon->conditionalProbs[CODE_SIZE*pattId]),&(node->conditionalProbs[CODE_SIZE*pattId]),leftEdgeConditionalProb);
-    //		printf(", edge (%d,%d)", nodeId,node->rightSon);
     computeSubtreeConditionals(&(rightSon->conditionalProbs[CODE_SIZE*pattId]),&(node->conditionalProbs[CODE_SIZE*pattId]),rightEdgeConditionalProb);
-    //		printf(".\n");
   }
                
   return 1;
@@ -1729,7 +1721,7 @@ int computePairwiseLCAs_rec (LocusData* locusData, int nodeId, int** lcaMatrix, 
 int getSortedAges_rec (LocusData* locusData, int nodeId, double* sortedAges, double* sortedAges_aux, int arrayOffset, int* numInternalNodes_out){
   LikelihoodNode *node;
   int res, numLeftInternalNodes, numRightInternalNodes, l, r, i;
-	
+	printf("nodeId %d===", nodeId);
   if(nodeId < 0) {
 	return 0;
   }
@@ -1743,7 +1735,8 @@ int getSortedAges_rec (LocusData* locusData, int nodeId, double* sortedAges, dou
   if(arrayOffset >= locusData->numLeaves-1) {
 	return 0;
   }
-	
+
+
   node = locusData->nodeArray[nodeId];
   
   // recursively call for left and right sons and aggregate children list
@@ -1807,7 +1800,7 @@ int getSortedAges_rec (LocusData* locusData, int nodeId, double* sortedAges, dou
 
 /***********************************************************************************
  *	computeEdgeConditionalJC
- *	- computes probability of seeing a specific transition along a given egde
+ *	- computes probability of seeing a specific transition along a given edge
  *	- edgeLength is the length of the edge
  ***********************************************************************************/
 double computeEdgeConditionalJC (double edgeLength)		{
