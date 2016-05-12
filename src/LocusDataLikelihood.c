@@ -1721,7 +1721,6 @@ int computePairwiseLCAs_rec (LocusData* locusData, int nodeId, int** lcaMatrix, 
 int getSortedAges_rec (LocusData* locusData, int nodeId, double* sortedAges, double* sortedAges_aux, int arrayOffset, int* numInternalNodes_out){
 	LikelihoodNode *node;
 	int res1,res2, numLeftInternalNodes, numRightInternalNodes, l, r, i;
-	printf("nodeId %d===", nodeId);
 	if(nodeId < 0) {
 		return 0;
 	}

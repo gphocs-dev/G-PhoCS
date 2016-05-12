@@ -2428,7 +2428,10 @@ int	isLeafPopulation(Population *pop){
 
 
 
-/*	computeFlatStats
+/***
+ * author - Ron visbord
+ *
+ * computeFlatStats
 	Computes all statistics in genetree_stats_flat needed for likelihood of
 	gene trees under null model with single population
  */
@@ -2474,15 +2477,19 @@ int computeFlatStats() {
 	return 0;
 
 }
+//TODO - document computeCladeStats
 void computeCladeStats() {
 //	computeCladeNumMigs();
 	computeCladeNumCoals();
 	computeCladeCoalStatsTotal();
 }
 
+//TODO - document computeCladeNumCoals
 int computeCladeNumCoals(){
 	return computeCladeNumCoals_rec(dataSetup.popTree->rootPop);
 }
+
+//TODO - document computeCladeNumCoals_rec
 int computeCladeNumCoals_rec(int pop){
 	int pop_num_coals=0, gen, leftSon, rightSon;
 
@@ -2506,6 +2513,7 @@ int computeCladeNumCoals_rec(int pop){
 	return 0;
 }
 
+//TODO - document computeCladeCoalStatsTotal
 int computeCladeCoalStatsTotal() {
 	double heredity_factor = 1, deltaT, coalStat;
 	int pop, gen, i, numLins, numInternalNodes, firstEvent;
