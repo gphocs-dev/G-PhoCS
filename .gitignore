@@ -31,6 +31,9 @@
 # Debug files
 *.dSYM/
 
-# App Log Files
+# App Log files
 *.log
 *.tsv
+
+# Ide files
+*.prefs
