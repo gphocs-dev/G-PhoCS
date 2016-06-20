@@ -1,8 +1,9 @@
 GENERAL-INFO-START
 
 	seq-file            seqs-sample.txt
-	trace-file          logs\sample-data.trace.tsv		
+	trace-file          logs\sample-data.trace.tsv
 	coal-stats-file		logs\sample-data.flatStats.tsv
+#	num-loci			100
 #	num-pop-partitions	1
 	locus-mut-rate		CONST
 

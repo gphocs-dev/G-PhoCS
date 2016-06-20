@@ -2481,7 +2481,7 @@ int computeFlatStats() {
 void computeCladeStats() {
 //	computeCladeNumMigs();
 	computeCladeNumCoals();
-	computeCladeCoalStatsTotal();
+//	computeCladeCoalStatsTotal();
 }
 
 //TODO - document computeCladeNumCoals
@@ -2499,17 +2499,15 @@ int computeCladeNumCoals_rec(int pop){
 
 	if (isLeafPopulation(dataSetup.popTree->pops[pop])){
 		clade_stats[pop].num_coals_total = pop_num_coals;
-		return 0;
+	} else{
+		leftSon = dataSetup.popTree->pops[pop]->sons[LEFT]->id;
+		rightSon = dataSetup.popTree->pops[pop]->sons[RIGHT]->id;
+
+		computeCladeNumCoals_rec(leftSon);
+		computeCladeNumCoals_rec(rightSon);
+
+		clade_stats[pop].num_coals_total = pop_num_coals + clade_stats[leftSon].num_coals_total + clade_stats[rightSon].num_coals_total;
 	}
-
-	leftSon = dataSetup.popTree->pops[pop]->sons[LEFT]->id;
-	rightSon = dataSetup.popTree->pops[pop]->sons[RIGHT]->id;
-
-	computeCladeNumCoals_rec(leftSon);
-	computeCladeNumCoals_rec(rightSon);
-
-	clade_stats[pop].num_coals_total = pop_num_coals + clade_stats[leftSon].num_coals_total + clade_stats[rightSon].num_coals_total;
-
 	return 0;
 }
 
@@ -2531,7 +2529,6 @@ int computeCladeCoalStatsTotal() {
 			if (firstEvent == 20){
 				//DEBUGGGGGG
 				printf("pop name %s", dataSetup.popTree->pops[pop]->name);
-				Population *popsicle = dataSetup.popTree->pops[pop];
 			}
 			if(0 == getSortedAges_rec(locusData, firstEvent, clade_stats[pop].sortedAges, clade_stats[pop].sortedAges_aux, 0, &numInternalNodes)) {
 				fprintf(stderr, "\nError: computeCladeCoalStatsTotal: error sorting node ages for pop %d, gen %d.\n", pop, gen);

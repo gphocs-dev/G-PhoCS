@@ -1328,7 +1328,7 @@ int performMCMC()	{
 			if(recordCoalStats) {
 				computeFlatStats();
 				computeNodeStats();
-//				computeCladeStats(); // added comment to test develop branch // fixed first comment to test pullness from dev branch
+				computeCladeStats();
 				printCoalStats(iteration);
 			}
 
