@@ -61,4 +61,4 @@ obj/AlignmentMain.o: src/AlignmentMain.c src/AlignmentProcessor.h
 	$(CC) $(CFLAGS) -c src/AlignmentMain.c -o obj/AlignmentMain.o
 
 clean:
-	rm -rf obj/*.o bin/readTrace bin/G-PhoCS-1-2-3 bin/G-PhoCS-Tests
+	rm -rf obj/*.o bin/*.exe
