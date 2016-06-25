@@ -1,6 +1,6 @@
 # Object files
 *.o
-./obj/*.o
+obj/*.o
 *.ko
 *.obj
 *.elf
