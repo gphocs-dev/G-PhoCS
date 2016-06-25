@@ -1,13 +1,13 @@
 GENERAL-INFO-START
 
-	seq-file            seqs-sample.txt
-	trace-file          logs\sample-data.trace.tsv
+	seq-file			seqs-sample.txt
+	trace-file			logs\sample-data.trace.tsv
 	coal-stats-file		logs\sample-data.flatStats.tsv
-#	num-loci			100
+	num-loci			100
 #	num-pop-partitions	1
 	locus-mut-rate		CONST
-
-	mcmc-iterations	  200
+	
+	mcmc-iterations		100
 	iterations-per-log  5
 	logs-per-line       10
 
@@ -27,7 +27,7 @@ GENERAL-INFO-START
 
 	mig-rate-print		0.001
 	mig-rate-alpha		0.002
-	mig-rate-beta		0.00001
+	mig-rate-beta		0.00001 
 
 GENERAL-INFO-END
 
@@ -85,12 +85,12 @@ ANCESTRAL-POPS-START
 ANCESTRAL-POPS-END
 
 
-MIG-BANDS-START	
-
-	BAND-START		
-       source  D
-       target  B
-       mig-rate-print 0.1
-	BAND-END
-
-MIG-BANDS-END
+#MIG-BANDS-START	
+#
+#	BAND-START		
+#       source  D
+#       target  B
+#       mig-rate-print 0.1
+#	BAND-END
+#
+#MIG-BANDS-END

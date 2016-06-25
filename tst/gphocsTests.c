@@ -39,6 +39,7 @@ int areFilesEqual(char fname1[40], char fname2[40]) {
 
 int main(int argc, char*argv[]) {
 
+	//TODO - delete old test files!!
 	system("pwd");
 	system(".\\bin\\G-PhoCS-1-2-3 .\\tst\\test-control-file.ctl");
 

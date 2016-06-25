@@ -6,4 +6,4 @@ This README would normally document whatever steps are necessary to get your app
 
 #### Development Environment Setup ####
 
-[This Guide ](http://www.badprog.com/c-eclipse-installation-of-c-c-development-tools-cdt-and-cygwin-for-windows#comment-724)
+[This Guide ](http://www.badprog.com/c-eclipse-installation-of-c-c-development-tools-cdt-and-cygwin-for-windows)

@@ -1,5 +1,6 @@
 # Object files
 *.o
+./obj/*.o
 *.ko
 *.obj
 *.elf
@@ -34,6 +35,7 @@
 # App Log files
 *.log
 *.tsv
+*.stackdump
 
 # Ide files
 *.prefs
