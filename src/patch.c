@@ -108,6 +108,27 @@ struct GENETREE_STATS{
 	int num_coals[2*NSPECIES-1], num_migs[MAX_MIG_BANDS];
 } *genetree_stats, *genetree_stats_total_partitioned, genetree_stats_total, genetree_stats_check, genetree_stats_total_check;						
 
+
+
+
+
+
+//FILE* getFileForDebug(char* outputFilename){ // DEBUG VARIABLE! DELETE after gphocsVsClade Bug!
+//	FILE *ofp;
+//
+//	ofp = fopen(outputFilename, "w");
+//
+//	if (ofp == NULL) {
+//	  fprintf(stderr, "Can't open output file %s!\n",
+//	          outputFilename);
+//	  exit(1);
+//	}
+//
+//	return ofp;
+//}
+//FILE* debugStream = getFileForDebug("tmp\debug.out"); // DEBUG VARIABLE! DELETE after gphocsVsClade Bug!
+
+
 /*	genetree stats flat
 	holds relevant statistics for fast computation of probability of tree
 	given a null model (single population).
@@ -128,13 +149,23 @@ struct CLADE_STATS{
 	double coal_stats_total, mig_stats_total;
 	int num_coals_total, num_migs_total;
 
-	int num_events; // total number of events in clade. used as a "length" variable for the sortedAges & num_lineages arrays
+	double* sorted_ages; 	// temporary array to hold sorted node ages of a specific genealogy.
+	double* elapsed_times;	// temporary array to hold elapsed_time between adjacent events of a specific genealogy.
+	int* num_lineages; 		// temporary array to hold num of lineages of a specific genealogy.
+	int* event_types; 		// temporary array to hold event types
 
-	double* sorted_ages; //temporary array to hold sorted node ages in a specific genealogy.
-	int* num_lineages; //temporary array to hold num of lineages in a specific genealogy.
-	int* event_types; //temporary array to hold event types
+	double* debug_should_contribute; // DEBUG VARIABLE! DELETE after gphocsVsClade Bug!
+
+	int num_events; 		// temporary number of events in clade.
+	// used as an "array length" variable for sortedAges, event_types & num_lineages arrays
 
 } *clade_stats;
+
+
+
+
+
+
 
 
 /*	genetree node stats
@@ -370,12 +401,20 @@ int GetMem (void)		{
 		exit(-1);
 	}
 	clade_stats=(struct CLADE_STATS*)malloc(dataSetup.popTree->numPops*sizeof(struct CLADE_STATS));
-	for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-		clade_stats[pop].sorted_ages = (double*)malloc(max_events*sizeof(double));
-		clade_stats[pop].num_lineages = (int*)malloc(max_events*sizeof(int));
-		clade_stats[pop].event_types = (int*)malloc(max_events*sizeof(int));
+	for (int clade = 0; clade < dataSetup.popTree->numPops; clade++) {
+		clade_stats[clade].sorted_ages = (double*)malloc(max_events*sizeof(double));
+		clade_stats[clade].elapsed_times = (double*)malloc(max_events*sizeof(double));
+		clade_stats[clade].num_lineages = (int*)malloc(max_events*sizeof(int));
+		clade_stats[clade].event_types = (int*)malloc(max_events*sizeof(int));
+		clade_stats[clade].debug_should_contribute = (double*)malloc(max_events*sizeof(double));
+		clade_stats[clade].coal_stats_total = 0;
 
-		if((clade_stats == NULL) || (!clade_stats[pop].sorted_ages) || (!clade_stats[pop].num_lineages)|| (!clade_stats[pop].event_types)) {
+		clade_stats[clade].mig_stats_total = 0;
+
+
+		if((clade_stats == NULL) ||
+				(!clade_stats[clade].sorted_ages) || (!clade_stats[clade].elapsed_times) ||
+				(!clade_stats[clade].num_lineages)|| (!clade_stats[clade].event_types)) {
 			fprintf(stderr, "\nError: Out Of Memory clade_stats\n");
 			exit(-1);
 		}
@@ -683,7 +722,7 @@ int getLineagesAtInterval_UNUSED(int gen, int start_event, int pop, int exc_node
 		id = event_chains[gen].events[event].node_id;
 		switch(event_chains[gen].events[event].type) {
 			case(COAL):
-																										node = getNodeSon(dataState.lociData[gen], id, 0);
+																														node = getNodeSon(dataState.lociData[gen], id, 0);
 			//node = nodes[id].sons[0];
 			if(!exc_nodes[node]) {
 				out_array[--num_targets] = node;
@@ -696,13 +735,13 @@ int getLineagesAtInterval_UNUSED(int gen, int start_event, int pop, int exc_node
 			exc_nodes[id] = 1;
 			break;
 			case(IN_MIG):
-																										node = genetree_migs[gen].mignodes[id].gtree_branch;
+																														node = genetree_migs[gen].mignodes[id].gtree_branch;
 			if(!exc_nodes[node]) {
 				out_array[--num_targets] = node;
 			}
 			break;
 			case(OUT_MIG):
-    																									exc_nodes[ genetree_migs[gen].mignodes[id].gtree_branch ] = 1;
+    																													exc_nodes[ genetree_migs[gen].mignodes[id].gtree_branch ] = 1;
 			break;
 			case(MIG_BAND_START):
 			case(SAMPLES_START):
@@ -930,57 +969,57 @@ double rubberBand(int gen, int pop, double static_point, double moving_point, do
 		switch(event_chains[gen].events[event].type) {
 			// modify event counts and rescale node ages, if necessary
 			case(COAL):
-        																																								if(flag) {
-        																																									count_events++;
-        																																									// if done after acceptance, no need to do anything
-        																																									if(!postORpre) {
-        																																										age1 = getNodeAge(dataState.lociData[gen], node_id);
-        																																										age1 += (age1 - static_point)*factor_minus_one;
-        																																										// fprintf(stderr,"node %d, gen %d, age %g-->%g, static point %g \n", node_id, gen, getNodeAge(dataState.lociData[gen], node_id), age1,static_point);
+			if(flag) {
+				count_events++;
+				// if done after acceptance, no need to do anything
+				if(!postORpre) {
+					age1 = getNodeAge(dataState.lociData[gen], node_id);
+					age1 += (age1 - static_point)*factor_minus_one;
+					// fprintf(stderr,"node %d, gen %d, age %g-->%g, static point %g \n", node_id, gen, getNodeAge(dataState.lociData[gen], node_id), age1,static_point);
 #ifdef DEBUG_RUBBERBAND
-        																																										printf("age %g-->%g | ", getNodeAge(dataState.lociData[gen], node_id), age1);
+					printf("age %g-->%g | ", getNodeAge(dataState.lociData[gen], node_id), age1);
 #endif
-        																																										adjustGenNodeAge(dataState.lociData[gen], node_id, age1);
-        																																									}
-        																																								}// end of if(flag)
+					adjustGenNodeAge(dataState.lociData[gen], node_id, age1);
+				}
+			}// end of if(flag)
 			break;
 			case(SAMPLES_START):
-        																																								if(flag && dataSetup.popTree->pops[pop]->sampleAge > 0) {
-        																																									// if done after acceptance or if update is below, no need to do anything
-        																																									if(static_point < moving_point && !postORpre) {
-        																																										age1 = dataSetup.popTree->pops[pop]->sampleAge;
-        																																										age1 += (age1 - static_point)*factor_minus_one;
-        																																										//printf("-->sample age %g-->%g \n", dataSetup.popTree->pops[pop]->sampleAge, age1);
+			if(flag && dataSetup.popTree->pops[pop]->sampleAge > 0) {
+				// if done after acceptance or if update is below, no need to do anything
+				if(static_point < moving_point && !postORpre) {
+					age1 = dataSetup.popTree->pops[pop]->sampleAge;
+					age1 += (age1 - static_point)*factor_minus_one;
+					//printf("-->sample age %g-->%g \n", dataSetup.popTree->pops[pop]->sampleAge, age1);
 #ifdef DEBUG_RUBBERBAND
-        																																										printf("sample age %g-->%g | ", dataSetup.popTree->pops[pop]->sampleAge, age1);
+					printf("sample age %g-->%g | ", dataSetup.popTree->pops[pop]->sampleAge, age1);
 #endif
-        																																										for(i=0; i<dataSetup.numSamples; i++) {
-        																																											if(nodePops[gen][i] == pop) {
-        																																												//printf("-->adjusting age of node %d in gen %4d to %g.\n",i,gen, age1);
-        																																												adjustGenNodeAge(dataState.lociData[gen], i, age1);
-        																																											}
-        																																										}
-        																																									}
-        																																								}
+					for(i=0; i<dataSetup.numSamples; i++) {
+						if(nodePops[gen][i] == pop) {
+							//printf("-->adjusting age of node %d in gen %4d to %g.\n",i,gen, age1);
+							adjustGenNodeAge(dataState.lociData[gen], i, age1);
+						}
+					}
+				}
+			}
 			break;
 			// case(OUT_MIG):
 			case(IN_MIG):
-        																																								if(flag) {
-        																																									// change ages of mignodes for in-migs
-        																																									if(postORpre) {
-        																																										// fprintf(stderr,"switching mig node %d in gen %d from age %g to age ",node_id,gen,genetree_migs[gen].mignodes[node_id].age);
-        																																										genetree_migs[gen].mignodes[node_id].age += (genetree_migs[gen].mignodes[node_id].age - static_point)*factor_minus_one;
-        																																										// fprintf(stderr,"%g, static point %g\n",genetree_migs[gen].mignodes[node_id].age, static_point);
-        																																									}
-        																																								}
+			if(flag) {
+				// change ages of mignodes for in-migs
+				if(postORpre) {
+					// fprintf(stderr,"switching mig node %d in gen %d from age %g to age ",node_id,gen,genetree_migs[gen].mignodes[node_id].age);
+					genetree_migs[gen].mignodes[node_id].age += (genetree_migs[gen].mignodes[node_id].age - static_point)*factor_minus_one;
+					// fprintf(stderr,"%g, static point %g\n",genetree_migs[gen].mignodes[node_id].age, static_point);
+				}
+			}
 			break;
 			// modify living migration bands and accumulative migration rate
 			case(MIG_BAND_START):
-        																																								mig_rate += dataSetup.popTree->migBands[node_id].migRate;
+			mig_rate += dataSetup.popTree->migBands[node_id].migRate;
 			living_mig_bands[num_mig_bands++] = node_id;
 			break;
 			case(MIG_BAND_END):
-        																																								mig_rate -= dataSetup.popTree->migBands[node_id].migRate;
+			mig_rate -= dataSetup.popTree->migBands[node_id].migRate;
 			for(i=0; i<num_mig_bands; i++) {
 				if(node_id == living_mig_bands[i])
 					break;
@@ -997,7 +1036,7 @@ double rubberBand(int gen, int pop, double static_point, double moving_point, do
 			break;
 			case(END_CHAIN):
 #ifdef DEBUG_RUBBERBAND
-																														if(age < end_time) printf("\nrubber band for pop %d, gen %d ended at end-chain (%g time to go).\n",pop,gen, end_time- age);
+											if(age < end_time) printf("\nrubber band for pop %d, gen %d ended at end-chain (%g time to go).\n",pop,gen, end_time- age);
 #endif
 			age = end_time;
 			break;
@@ -1737,22 +1776,22 @@ int acceptEventChainChanges(int gen, int instance) {
 		switch(event_chains[gen].events[genetree_stats_delta[instance].updated_event].type) {
 			case(COAL):
 #ifdef DEBUG_NODE_CHANGE
-    																																								  printf("Node %d in gen %d corresponds now to event %d (rather than event %d).\n",
-    																																										  event_chains[gen].events[genetree_stats_delta[instance].updated_event].node_id,
-																																											  gen,
-																																											  genetree_stats_delta[instance].updated_event,
-																																											  genetree_stats_delta[instance].original_event);
+    																																												  printf("Node %d in gen %d corresponds now to event %d (rather than event %d).\n",
+    																																														  event_chains[gen].events[genetree_stats_delta[instance].updated_event].node_id,
+																																															  gen,
+																																															  genetree_stats_delta[instance].updated_event,
+																																															  genetree_stats_delta[instance].original_event);
 #endif
 			nodeEvents[gen][ event_chains[gen].events[genetree_stats_delta[instance].updated_event].node_id ] = genetree_stats_delta[instance].updated_event;
 			//nodes[event_chains[gen].events[genetree_stats_delta[instance].updated_event].node_id].event_id = genetree_stats_delta[instance].updated_event;
 			break;
 			case(OUT_MIG):
-    																																								  genetree_migs[gen].mignodes[event_chains[gen].events[genetree_stats_delta[instance].updated_event].node_id].source_event =
-    																																										  genetree_stats_delta[instance].updated_event;
+    																																												  genetree_migs[gen].mignodes[event_chains[gen].events[genetree_stats_delta[instance].updated_event].node_id].source_event =
+    																																														  genetree_stats_delta[instance].updated_event;
 			break;
 			case(IN_MIG):
-    																																								  genetree_migs[gen].mignodes[event_chains[gen].events[genetree_stats_delta[instance].updated_event].node_id].target_event =
-    																																										  genetree_stats_delta[instance].updated_event;
+    																																												  genetree_migs[gen].mignodes[event_chains[gen].events[genetree_stats_delta[instance].updated_event].node_id].target_event =
+    																																														  genetree_stats_delta[instance].updated_event;
 			break;
 			default:
 				if(debug) {
@@ -2428,6 +2467,63 @@ int computeNodeStats() {
 
 
 
+
+void debug_print_cladestats(int clade, int gen, char* methodName){
+	printf("=== %s, clade:%s, gen:%d, num_events:%d, num_coals_total:%d === >>\n",
+			methodName, dataSetup.popTree->pops[clade]->name, gen, clade_stats[clade].num_events, clade_stats[clade].num_coals_total);
+	fflush(stdout);
+	for (int i = 0 ; i < clade_stats[clade].num_events ; i++){
+		printf("age:%0.25f, elapsed_time:%0.25f, num_lin:%d, type:%s \n",
+				clade_stats[clade].sorted_ages[i], clade_stats[clade].elapsed_times[i],
+				clade_stats[clade].num_lineages[i],	getEventTypeName(clade_stats[clade].event_types[i]));
+		fflush(stdout);
+	}
+	printf("====================================================================================\n");
+}
+
+#define TRUE 1 //TODO - where should these consts be?!
+#define FALSE 0
+int	isLeafPopulation(int pop){
+	Population *population, *left_son, *right_son;
+
+	population = dataSetup.popTree->pops[pop];
+
+	left_son = population->sons[LEFT];
+	right_son = population->sons[RIGHT];
+
+	if (left_son || right_son){
+		return FALSE;
+	} else {
+		return TRUE;
+	}
+}
+
+void test_validateRootCladeVsFlatStats(){
+	int rootPop = dataSetup.popTree->rootPop;
+	double rootCladeCoalStats = clade_stats[rootPop].coal_stats_total;
+	double flatCoalStats = genetree_stats_flat.coal_stats_flat;
+
+	if (rootCladeCoalStats != flatCoalStats) {
+		fprintf(stderr, "Error: got root_clade_stats=%0.25f and flat_stats=%0.25f but expected same result.\n",
+				rootCladeCoalStats, flatCoalStats);
+		exit(-1);
+	}
+}
+
+double getCoalStats(double* elapsed_times, int* num_lineages, int size){
+	int n;
+	double t;
+	double result = 0.0;
+	for( int i = 0 ; i < size ; i++) {
+		n = num_lineages[i];
+		t = elapsed_times[i];
+		result += n*(n-1)*t;
+	}
+	return result;
+}
+
+
+
 /***
  * author - Ron visbord
  *
@@ -2437,7 +2533,7 @@ int computeNodeStats() {
  */
 
 int computeFlatStats() {
-	double heredity_factor = 1, deltaT, coalStat, migStat;
+	double deltaT, coalStat, migStat;
 	int gen, pop, mig_band, i, numLins;
 
 	// number of events (migration, coalescent)
@@ -2468,28 +2564,30 @@ int computeFlatStats() {
 			deltaT = (i==0) ? genetree_stats_flat.sortedAgesArray[0] : genetree_stats_flat.sortedAgesArray[i] - genetree_stats_flat.sortedAgesArray[i-1];
 			migStat += deltaT*numLins;
 			coalStat += deltaT*numLins*(numLins-1);
+			printf("age:###########################, elapsed_time:%0.25f, num_lin:%d#########################, type:#############, gen:%d\n", deltaT, numLins, gen);
 		}
+		fflush(stdout);
 
 	}
-	genetree_stats_flat.coal_stats_flat = coalStat / heredity_factor;
+	genetree_stats_flat.coal_stats_flat = coalStat;
 	genetree_stats_flat.mig_stats_flat  = migStat;
 
 	return 0;
 
 }
-//TODO - document computeCladeStats
+
 void computeCladeStats() {
 	//	computeCladeNumMigs();
+
 	computeCladeNumCoals();
 	computeCladeCoalStats();
 }
 
-//TODO - document computeCladeNumCoals
+
 void computeCladeNumCoals(){
 	computeCladeNumCoals_rec(dataSetup.popTree->rootPop);
 }
 
-//TODO - document computeCladeNumCoals_rec
 void computeCladeNumCoals_rec(int pop){
 	int leftSon, rightSon;
 
@@ -2512,12 +2610,9 @@ void computeCladeCoalStats(){
 	for(int gen=0; gen<dataSetup.numLoci; gen++) {
 		computeCladeCoalStats_rec(dataSetup.popTree->rootPop, gen);
 	}
-	printf("====END====");
-	exit(-1);
 }
 
 void computeCladeCoalStats_rec(int clade, int gen) {
-
 	int leftSon, rightSon;
 
 	if (isLeafPopulation(clade)){
@@ -2531,16 +2626,15 @@ void computeCladeCoalStats_rec(int clade, int gen) {
 
 		fillup_cladeStats(clade, gen);
 	}
-
 	debug_print_cladestats(clade, gen, "computeCladeCoalStats_rec");
 }
 
 void fillup_leafCladeStats(int clade, int gen){
-	appendPopToCladeArrays(clade, gen, 0); // since this is a leaf, start filling the clade_stats arrays from the start (0)
+	appendPopToClade(clade, gen, 0); // since this is a leaf, starting point of the clade_stats arrays should be 0
 }
 
-void appendPopToCladeArrays(int clade, int gen, int startPointer){
-	int i = startPointer;
+void appendPopToClade(int clade, int gen, int startingPoint){
+	int i = startingPoint;
 	int event = event_chains[gen].first_event[clade];
 	double cladeStartTime = dataSetup.popTree->pops[clade]->age;
 	double eventAge = cladeStartTime;
@@ -2548,27 +2642,49 @@ void appendPopToCladeArrays(int clade, int gen, int startPointer){
 	for ( ; event >= 0 ; i++, event = event_chains[gen].events[event].next){
 		eventAge += event_chains[gen].events[event].elapsed_time;
 		clade_stats[clade].sorted_ages[i] = eventAge;
+		clade_stats[clade].elapsed_times[i] = event_chains[gen].events[event].elapsed_time;
 		clade_stats[clade].num_lineages[i] = event_chains[gen].events[event].num_lineages;
 		clade_stats[clade].event_types[i] = event_chains[gen].events[event].type;
 	}
 	clade_stats[clade].num_events = i;
+	clade_stats[clade].coal_stats_total += genetree_stats[gen].coal_stats[clade];
+
+#ifdef CHECKCLADE
+	test_compareGphocsVsCladePopCoalStats(clade, gen, startingPoint);
+#endif
+}
+
+void test_compareGphocsVsCladePopCoalStats(int clade, int gen, int startingPoint){
+	double gphocsValue = genetree_stats[gen].coal_stats[clade];
+	double cladeValue = getCoalStats(clade_stats[clade].elapsed_times + startingPoint,
+			clade_stats[clade].num_lineages + startingPoint, clade_stats[clade].num_events);
+
+	if (gphocsValue != cladeValue) {
+		fprintf(stderr, "Error when comparing gphocs pop_coal_stats with clade pop_coal_stats:\n"
+				"got gphocs value:%0.25f and clade value:%0.25f but expected same result.\n",
+				gphocsValue, cladeValue);
+//		exit(-1);
+	}
 }
 
 void fillup_cladeStats(int clade, int gen){
-	mergeChildenIntoCladeStats(clade, gen);
+	addChildenIntoCladeStats(clade, gen);
 	addCurrentPopIntoCladeStats(clade, gen);
 }
 
-void mergeChildenIntoCladeStats(int clade, int gen){
+void addChildenIntoCladeStats(int clade, int gen){
+	mergeChildern(clade, gen);
+	addChildrenCladeStats(clade, gen);
+}
+
+void mergeChildern(int clade, int gen){
 	int i, j = 0, k = 0;
 	double leftAge, rightAge;
 	int leftSon, rightSon;
 	leftSon = dataSetup.popTree->pops[clade]->sons[LEFT]->id;
 	rightSon = dataSetup.popTree->pops[clade]->sons[RIGHT]->id;
-	int m, n;
-	m = clade_stats[leftSon].num_events;
-	n = clade_stats[rightSon].num_events;
-
+	int m = clade_stats[leftSon].num_events;
+	int n = clade_stats[rightSon].num_events;
 
 	for (i = 0 ; i < m + n; ) {
 		if ( j < m && k < n) {
@@ -2611,46 +2727,28 @@ void mergeChildenIntoCladeStats(int clade, int gen){
 			}
 		}
 	}
-	clade_stats[clade].num_events = clade_stats[leftSon].num_events + clade_stats[rightSon].num_events;
+	for (i = 0 ; i < m + n; i++ ) {
+		clade_stats[clade].elapsed_times[i] = (i==0) ? 0 :
+				clade_stats[clade].sorted_ages[i] - clade_stats[clade].sorted_ages[i-1];
+
+		//DEBUGDEBUGDEBUG
+		//TODO - scourge debug_should_contribute from code
+		double t = clade_stats[clade].elapsed_times[i];
+		int n = clade_stats[clade].num_lineages[i];
+		clade_stats[clade].debug_should_contribute[i] = n*(n-1)*t;
+	}
+
+	clade_stats[clade].num_events = m + n;
 }
 
+void addChildrenCladeStats(int clade, int gen){
+	clade_stats[clade].coal_stats_total += getCoalStats(clade_stats[clade].elapsed_times,
+			clade_stats[clade].num_lineages, clade_stats[clade].num_events);
+}
 
 void addCurrentPopIntoCladeStats(int clade, int gen){
-	appendPopToCladeArrays(clade, gen, clade_stats[clade].num_events); // start filling the clade_stats arrays from the last known event
+	appendPopToClade(clade, gen, clade_stats[clade].num_events); // start filling the clade_stats arrays from the last known event
 }
-
-
-
-void debug_print_cladestats(int clade, int gen, char* methodName){
-	printf("=== %s, clade:%s, gen:%d, num_events:%d, num_coals_total:%d === >>\n",
-			methodName, dataSetup.popTree->pops[clade]->name, gen, clade_stats[clade].num_events, clade_stats[clade].num_coals_total);
-	for (int i = 0 ; i < clade_stats[clade].num_events ; i++){
-		printf("age:%0.9f, num_lin:%d, type:%s \n",
-				clade_stats[clade].sorted_ages[i], clade_stats[clade].num_lineages[i], getEventTypeName(clade_stats[clade].event_types[i]));
-		fflush(stdout);
-	}
-	printf("====================================================================================\n");
-}
-
-#define TRUE 1 //TODO - where should these consts be?!
-#define FALSE 0
-int	isLeafPopulation(int pop){
-	Population *population, *left_son, *right_son;
-
-	population = dataSetup.popTree->pops[pop];
-
-	left_son = population->sons[LEFT];
-	right_son = population->sons[RIGHT];
-
-	if (left_son || right_son){
-		return FALSE;
-	} else {
-		return TRUE;
-	}
-}
-
-
-
 
 
 
@@ -2692,9 +2790,7 @@ int computeGenetreeStats(int gen) {
 		}
 
 		recalcStats(gen,pop);
-
 	}
-
 	return 0;
 }
 
@@ -2735,30 +2831,30 @@ double recalcStats(int gen, int pop) {
 
 		switch(event_chains[gen].events[event].type) {
 			case(SAMPLES_START):
-																										n += dataSetup.numSamplesPerPop[pop];
+																														n += dataSetup.numSamplesPerPop[pop];
 			break;
 			case(COAL):
-																										genetree_stats_check.num_coals[pop]++;
+																														genetree_stats_check.num_coals[pop]++;
 			n--;
 			break;
 			case(IN_MIG):
-    																									// figure out migration band and update its statistics
-    																									mig_band = genetree_migs[gen].mignodes[id].migration_band;
+    																													// figure out migration band and update its statistics
+    																													mig_band = genetree_migs[gen].mignodes[id].migration_band;
 			genetree_stats_check.num_migs[mig_band]++;
 			n--;
 			break;
 			case(OUT_MIG):
-																										n++;
+																														n++;
 			break;
 			case(MIG_BAND_START):
-    																									live_mig_bands[num_live_mig_bands++] = id;
+    																													live_mig_bands[num_live_mig_bands++] = id;
 			// initialize statistics for this new migration band
 			genetree_stats_check.num_migs[id] = 0;
 			genetree_stats_check.mig_stats[id] = 0.0;
 			break;
 			case(MIG_BAND_END):
-																										// compare and copy stats for mig band
-																										delta_lnLd -= (genetree_stats_check.mig_stats[id] - genetree_stats[gen].mig_stats[id]) * dataSetup.popTree->migBands[id].migRate;
+					// compare and copy stats for mig band
+					delta_lnLd -= (genetree_stats_check.mig_stats[id] - genetree_stats[gen].mig_stats[id]) * dataSetup.popTree->migBands[id].migRate;
 			genetree_stats_total.mig_stats[id] += genetree_stats_check.mig_stats[id] - genetree_stats[gen].mig_stats[id];
 			genetree_stats_total.num_migs[id]  += genetree_stats_check.num_migs[id] - genetree_stats[gen].num_migs[id];
 			genetree_stats[gen].mig_stats[id] = genetree_stats_check.mig_stats[id];
@@ -2906,59 +3002,59 @@ int recalcStats_partitioned(int gen, int pop) {
 
 		switch(event_chains[gen].events[event].type) {
 			case(SAMPLES_START):
-																																									  n += dataSetup.numSamplesPerPop[pop];
+				n += dataSetup.numSamplesPerPop[pop];
 			break;
 			case(COAL):
-    																																								  genetree_stats_total_partitioned[partition].num_coals[pop]++;
+				genetree_stats_total_partitioned[partition].num_coals[pop]++;
 			n--;
 			break;
 			case(IN_MIG):
-    																																								  // figure out migration band and update its statistics  --  do not record migration stats for now
-    																																								  //
-    																																								  // mig_band = genetree_migs[gen].mignodes[id].migration_band;
-    																																								  // genetree_stats_total_partitioned[partition].num_migs[mig_band]++;
-    																																								  n--;
+				  // figure out migration band and update its statistics  --  do not record migration stats for now
+				  //
+				  // mig_band = genetree_migs[gen].mignodes[id].migration_band;
+				  // genetree_stats_total_partitioned[partition].num_migs[mig_band]++;
+				  n--;
 			break;
 			case(OUT_MIG):
-    																																								  n++;
+				  n++;
 			break;
 			case(MIG_BAND_START):
-    																																								  // initialize statistics for this new migration band    --  do not record migration stats for now
-    																																								  //
-    																																								  // live_mig_bands[num_live_mig_bands++] = id;
-    																																								  // genetree_stats_total_partitioned[partition].num_migs[id] = 0;
-    																																								  // genetree_stats_total_partitioned[partition].mig_stats[id] = 0.0;
-    																																								  break;
+				  // initialize statistics for this new migration band    --  do not record migration stats for now
+				  //
+				  // live_mig_bands[num_live_mig_bands++] = id;
+				  // genetree_stats_total_partitioned[partition].num_migs[id] = 0;
+				  // genetree_stats_total_partitioned[partition].mig_stats[id] = 0.0;
+				  break;
 			case(MIG_BAND_END):
-    																																								  // compare and copy stats for mig band    --   DO NOT DO FOR NOW !!
-    																																								  /*
-      delta_lnLd -= (genetree_stats_check.mig_stats[id] - genetree_stats[gen].mig_stats[id]) * dataSetup.popTree->migBands[id].migRate;
-      genetree_stats_total.mig_stats[id] += genetree_stats_check.mig_stats[id] - genetree_stats[gen].mig_stats[id];
-      genetree_stats_total.num_migs[id]  += genetree_stats_check.num_migs[id] - genetree_stats[gen].num_migs[id];
-      genetree_stats[gen].mig_stats[id] = genetree_stats_check.mig_stats[id];
-      genetree_stats[gen].num_migs[id] = genetree_stats_check.num_migs[id];
-      //remove mig band from living list
-      for(mig_band=0; mig_band<num_live_mig_bands; mig_band++) {
-        if(live_mig_bands[mig_band] == id)
-          break;
-      }
-      if(mig_band == num_live_mig_bands) {
-		if(debug) {
-			fprintf(stderr, "\nError: recalcStats: migration band %d not alive in population %d, gen %d.\n",
-				event_chains[gen].events[event].node_id, pop, gen);
-			fprintf(stderr, "Live migration bands are:");
-			for(mig_band=0; mig_band<num_live_mig_bands; mig_band++) {
-				fprintf(stderr, " %d",live_mig_bands[mig_band]);
-			}
-			fprintf(stderr, "\n");
-		} else {
-			fprintf(stderr, "Fatal Error 0025.\n");
-		}
-        printGenealogyAndExit(gen,-1);
-      }
-      live_mig_bands[mig_band] = live_mig_bands[--num_live_mig_bands];
-    																																								   */
-    																																								  break;
+				  // compare and copy stats for mig band    --   DO NOT DO FOR NOW !!
+				  /*
+delta_lnLd -= (genetree_stats_check.mig_stats[id] - genetree_stats[gen].mig_stats[id]) * dataSetup.popTree->migBands[id].migRate;
+genetree_stats_total.mig_stats[id] += genetree_stats_check.mig_stats[id] - genetree_stats[gen].mig_stats[id];
+genetree_stats_total.num_migs[id]  += genetree_stats_check.num_migs[id] - genetree_stats[gen].num_migs[id];
+genetree_stats[gen].mig_stats[id] = genetree_stats_check.mig_stats[id];
+genetree_stats[gen].num_migs[id] = genetree_stats_check.num_migs[id];
+//remove mig band from living list
+for(mig_band=0; mig_band<num_live_mig_bands; mig_band++) {
+if(live_mig_bands[mig_band] == id)
+break;
+}
+if(mig_band == num_live_mig_bands) {
+if(debug) {
+fprintf(stderr, "\nError: recalcStats: migration band %d not alive in population %d, gen %d.\n",
+event_chains[gen].events[event].node_id, pop, gen);
+fprintf(stderr, "Live migration bands are:");
+for(mig_band=0; mig_band<num_live_mig_bands; mig_band++) {
+fprintf(stderr, " %d",live_mig_bands[mig_band]);
+}
+fprintf(stderr, "\n");
+} else {
+fprintf(stderr, "Fatal Error 0025.\n");
+}
+printGenealogyAndExit(gen,-1);
+}
+live_mig_bands[mig_band] = live_mig_bands[--num_live_mig_bands];
+				   */
+				  break;
 			case(DUMMY):
 			case(END_CHAIN):
 			break;
@@ -3270,7 +3366,7 @@ int checkGtreeStructure(int gen) {
 
 			switch(event_chains[gen].events[event].type) {
 				case(SAMPLES_START):
-																																										n += dataSetup.numSamplesPerPop[pop];
+																																														n += dataSetup.numSamplesPerPop[pop];
 				if(fabs(dataSetup.popTree->pops[pop]->sampleAge - age) > PERCISION) {
 					//					if(fabs(gnodes[gen][id].age - age) > PERCISION) {
 					if(debug) {
@@ -3283,7 +3379,7 @@ int checkGtreeStructure(int gen) {
 				}
 				break;
 				case(COAL):
-        																																								genetree_stats_check.num_coals[pop]++;
+        																																												genetree_stats_check.num_coals[pop]++;
 				n--;
 				if(fabs(getNodeAge(dataState.lociData[gen],id) - age) > PERCISION) {
 					//					if(fabs(gnodes[gen][id].age - age) > PERCISION) {
@@ -3317,8 +3413,8 @@ int checkGtreeStructure(int gen) {
 
 				break;
 				case(IN_MIG):
-        																																								// figure out migration band and update its statistics
-        																																								mig_band = genetree_migs[gen].mignodes[id].migration_band;
+        																																												// figure out migration band and update its statistics
+        																																												mig_band = genetree_migs[gen].mignodes[id].migration_band;
 				if(mig_band<0 || mig_band> dataSetup.popTree->numMigBands) {
 					if(debug) {
 						fprintf(stderr, "\nError: checking genetree for gen %d: ",gen);
@@ -3351,7 +3447,7 @@ int checkGtreeStructure(int gen) {
 				}
 				break;
 				case(OUT_MIG):
-        																																								n++;
+        																																												n++;
 				mig_band = genetree_migs[gen].mignodes[id].migration_band;
 				if(fabs(genetree_migs[gen].mignodes[id].age - age) > PERCISION) {
 					if(debug) {
@@ -3383,7 +3479,7 @@ int checkGtreeStructure(int gen) {
 				}
 				break;
 				case(MIG_BAND_START):
-        																																								living_mig_bands[num_living_mig_bands] = id;
+        																																												living_mig_bands[num_living_mig_bands] = id;
 				num_living_mig_bands++;
 				// initialize statistics for this new migration band
 				genetree_stats_check.num_migs[id] = 0;
@@ -3418,10 +3514,10 @@ int checkGtreeStructure(int gen) {
 				}
 				break;
 				case(MIG_BAND_END):
-        																																								for(mig_band=0; mig_band<num_living_mig_bands; mig_band++) {
-        																																									if(living_mig_bands[mig_band] == id)
-        																																										break;
-        																																								}
+        																																												for(mig_band=0; mig_band<num_living_mig_bands; mig_band++) {
+        																																													if(living_mig_bands[mig_band] == id)
+        																																														break;
+        																																												}
 				if(mig_band == num_living_mig_bands) {
 					if(debug) {
 						fprintf(stderr, "\nError: checking genetree for gen %d: ",gen);
@@ -3468,15 +3564,15 @@ int checkGtreeStructure(int gen) {
 
 				break;
 				case(END_CHAIN):
-        																																								if(id != pop) {
-        																																									if(debug) {
-        																																										fprintf(stderr, "\nError: checking genetree for gen %d: ",gen);
-        																																										fprintf(stderr, "id of end event %d for population %d doesn't match: %d.", event, pop, id);
-        																																									} else {
-        																																										fprintf(stderr, "Fatal Error 0051.\n");
-        																																									}
-        																																									res = 0;
-        																																								}
+        																																												if(id != pop) {
+        																																													if(debug) {
+        																																														fprintf(stderr, "\nError: checking genetree for gen %d: ",gen);
+        																																														fprintf(stderr, "id of end event %d for population %d doesn't match: %d.", event, pop, id);
+        																																													} else {
+        																																														fprintf(stderr, "Fatal Error 0051.\n");
+        																																													}
+        																																													res = 0;
+        																																												}
 				if(num_living_mig_bands != 0) {
 					if(debug) {
 						fprintf(stderr, "\nError: checking genetree for gen %d: ",gen);
@@ -3788,27 +3884,27 @@ int synchronizeEvents(int gen) {
 
 			switch(event_chains[gen].events[event].type) {
 				case(SAMPLES_START):
-																																													realAge = dataSetup.popTree->pops[pop]->sampleAge;
+																																																	realAge = dataSetup.popTree->pops[pop]->sampleAge;
 				break;
 				case(COAL):
-																																													realAge = getNodeAge(dataState.lociData[gen],id);
+																																																	realAge = getNodeAge(dataState.lociData[gen],id);
 				break;
 				case(IN_MIG):
 				case(OUT_MIG):
 				realAge = genetree_migs[gen].mignodes[id].age;
 				break;
 				case(MIG_BAND_START):
-																																													realAge = dataSetup.popTree->migBands[id].startTime;
+																																																	realAge = dataSetup.popTree->migBands[id].startTime;
 				break;
 				case(MIG_BAND_END):
-																																													realAge = dataSetup.popTree->migBands[id].endTime;
+																																																	realAge = dataSetup.popTree->migBands[id].endTime;
 				break;
 				case(END_CHAIN):
-																																													if(pop != dataSetup.popTree->rootPop) {
-																																														realAge = dataSetup.popTree->pops[pop]->father->age;
-																																													} else {
-																																														realAge = age;
-																																													}
+																																																	if(pop != dataSetup.popTree->rootPop) {
+																																																		realAge = dataSetup.popTree->pops[pop]->father->age;
+																																																	} else {
+																																																		realAge = age;
+																																																	}
 				break;
 				default:
 					realAge = age;

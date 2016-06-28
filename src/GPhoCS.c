@@ -20,6 +20,7 @@
 
 #define LOG_STEPS_NOT
 #define CHECKALL_NOT
+#define CHECKCLADE
 
 #define NUM_TYPES						5
 #define TARGET_ACCEPTANCE_PERCENT       35
@@ -1326,9 +1327,12 @@ int performMCMC()	{
 
 
 			if(recordCoalStats) {
-//				computeFlatStats();
+				computeFlatStats();
 //				computeNodeStats();
 				computeCladeStats();
+#ifdef CHECKCLADE
+				test_validateRootCladeVsFlatStats();
+#endif
 				printCoalStats(iteration);
 			}
 
