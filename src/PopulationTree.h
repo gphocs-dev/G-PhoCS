@@ -67,6 +67,7 @@ typedef struct MIGRATION_BAND {
 	double	endTime;			// end time for migration band
 	MigrationBandSet* firstSet;	// set of migration bands right after this one starts
 	MigrationBandSet* lastSet;	// set of migration bands right before this one ends
+	char name[STRING_LENGTH];
 } MigrationBand;
 
 

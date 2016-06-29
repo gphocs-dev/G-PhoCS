@@ -20,7 +20,7 @@
 
 #define LOG_STEPS_NOT
 #define CHECKALL_NOT
-#define CHECKCLADE
+#define CHECKCLADE_NOT
 
 #define NUM_TYPES						5
 #define TARGET_ACCEPTANCE_PERCENT       35
@@ -151,21 +151,21 @@ int main (int argc, char*argv[]) {
 			break;
 
 		switch (c) {
-		case 'v':
-			verbose = 1;
-			break;
+			case 'v':
+				verbose = 1;
+				break;
 
-		case 'h':
-			printUsage(argv[0]);
-			exit(-1);
-			break;
+			case 'h':
+				printUsage(argv[0]);
+				exit(-1);
+				break;
 
-		case '?':
-			// getopt_long already printed an error message.
-			break;
+			case '?':
+				// getopt_long already printed an error message.
+				break;
 
-		default:
-			abort();
+			default:
+				abort();
 		}
 	}
 
@@ -519,6 +519,7 @@ int	freeAllMemory() {
 	if(ioSetup.debugFile != NULL)	fclose(ioSetup.debugFile);
 	if(ioSetup.traceFile != NULL)	fclose(ioSetup.traceFile);
 	if(ioSetup.coalStatsFile != NULL)fclose(ioSetup.coalStatsFile);
+	if(ioSetup.cladeStatsFile != NULL)fclose(ioSetup.cladeStatsFile);
 	if(ioSetup.nodeStatsFile != NULL) {
 		for(i=0; i<3*dataSetup.popTree->numPops; i++) {
 			fclose(ioSetup.nodeStatsFile[i]);
@@ -774,14 +775,14 @@ double getLogPrior ()		{
  *  - this includes stats needed to compute null likelihood as well as stats on coal times
  *	- returns 0
  ***********************************************************************************/
-int printCoalStats (int iteration)		{
+int printCoalStats (int iteration, FILE* file)		{
 
 	double logPrior = 0;
 
 	// print header
 	if(iteration<0) {
-		fprintf(ioSetup.coalStatsFile, "iter\tcoalStatFlat\tnumCoalFlat\tmigStatFlat\tnumMigFlat\tlogPrior\tlogLikelihood\tdataLogLikelihood\tgenealogyLogLikelihood");
-		fprintf(ioSetup.coalStatsFile, "\n");
+		fprintf(file, "iter\tcoalStatFlat\tnumCoalFlat\tmigStatFlat\tnumMigFlat\tlogPrior\tlogLikelihood\tdataLogLikelihood\tgenealogyLogLikelihood");
+		fprintf(file, "\n");
 
 		return 0;
 	}// end of if(iteration<0)
@@ -789,8 +790,8 @@ int printCoalStats (int iteration)		{
 	logPrior = getLogPrior();
 
 
-	fprintf(ioSetup.coalStatsFile, "%7d", iteration);
-	fprintf(ioSetup.coalStatsFile, "\t%9f\t%9d\t%9f\t%9d\t%9f\t%9f\t%9f\t%9f",
+	fprintf(file, "%7d", iteration);
+	fprintf(file, "\t%9f\t%9d\t%9f\t%9d\t%9f\t%9f\t%9f\t%9f",
 			genetree_stats_flat.coal_stats_flat,
 			genetree_stats_flat.num_coals_total,
 			genetree_stats_flat.mig_stats_flat,
@@ -801,13 +802,81 @@ int printCoalStats (int iteration)		{
 			dataState.genealogyLogLikelihood
 	);
 
-	fprintf(ioSetup.coalStatsFile, "\n");
-	fflush(ioSetup.coalStatsFile);
+	fprintf(file, "\n");
+	fflush(file);
 
 	return 0;
 }
 /** end of printCoalStats **/
 
+void printCladeStatsHeader(FILE* file){
+	fprintf(file, "iteration\t");
+	for (int clade = 0; clade < dataSetup.popTree->numPops; clade++) {
+		printSpecificCladeHeader(clade, file);
+	}
+	for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+		printSpecificPopHeader(pop, file);
+	}
+	for(int mig_band=0; mig_band<dataSetup.popTree->numMigBands; mig_band++) {
+			printSpecificMigHeader(mig_band, file);
+	}
+
+	fprintf(file, "\n");
+}
+void printSpecificCladeHeader(int clade, FILE* file){
+	char* cladeName = dataSetup.popTree->popArray[clade].name;
+	fprintf(file, "%s_%s\t%s_%s\t",
+			cladeName, "coal_stats_total",
+			cladeName, "num_coals_total");
+}
+void printSpecificPopHeader(int pop, FILE* file){
+	char* popName = dataSetup.popTree->popArray[pop].name;
+	fprintf(file, "%s_%s\t%s_%s\t",
+			popName, "_pop_coal_stats_total",
+			popName, "_pop_num_coals_total");
+}
+void printSpecificMigHeader(int mig_band, FILE* file){
+	char* migBandName = dataSetup.popTree->migBands[mig_band].name;
+	fprintf(file, "%s_%s\t%s_%s\t",
+			migBandName, "_mig_stats",
+			migBandName, "_num_migs");
+}
+
+void printCladeStats(int iteration, FILE* file){
+	fprintf(file, "%d\t", iteration);
+	for (int clade = 0; clade < dataSetup.popTree->numPops; clade++) {
+		printSpecificCladeStats(clade, file);
+	}
+	for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+		printSpecificPopStats(pop, file);
+	}
+	for(int mig_band=0; mig_band<dataSetup.popTree->numMigBands; mig_band++) {
+		printSpecificMigBandStats(mig_band, file);
+	}
+	fprintf(file, "\n");
+	fflush(file);
+}
+
+void printSpecificCladeStats(int clade, FILE* file){
+	fprintf(file, "%0.35f\t%d\t",
+			clade_stats[clade].coal_stats_total,
+			clade_stats[clade].num_coals_total);
+}
+void printSpecificPopStats(int pop, FILE* file){
+	fprintf(file, "%0.35f\t%d\t",
+			genetree_stats_total.coal_stats[pop],
+			genetree_stats_total.num_coals[pop]);
+}
+void printSpecificMigBandStats(int mig_band, FILE* file){
+	fprintf(file, "%0.35f\t%d\t",
+			genetree_stats_total.mig_stats[mig_band],
+			genetree_stats_total.num_migs[mig_band]);
+
+}
+/*
+ * 	double coal_stats_total, mig_stats_total;
+	int num_coals_total, num_migs_total;
+ */
 
 /***********************************************************************************
  *	initializeAdmixtureStructures
@@ -1021,6 +1090,7 @@ int performMCMC()	{
 
 	unsigned short findingFinetunes = 0; // set to 1 while dynamically searching for finetunes
 	unsigned short recordCoalStats = (0 != strcmp(ioSetup.nodeStatsFileName,"NONE")); // set to 1 for recording coal stats
+	unsigned short recordCladeStats = (0 != strcmp(ioSetup.cladeStatsFileName,"NONE")); // set to 1 for recording clade stats
 
 	char timeString[STRING_LENGTH];
 	char fileName[NAME_LENGTH];
@@ -1034,13 +1104,22 @@ int performMCMC()	{
 
 	if(recordCoalStats) {
 		ioSetup.coalStatsFile = fopen(ioSetup.nodeStatsFileName,"w");
-		if(ioSetup.coalStatsFile == NULL) {
-			fprintf(stderr, "Error: Could not open coal stats file %s.\n", fileName);
+		if((ioSetup.coalStatsFile == NULL)) {
+			fprintf(stderr, "Error: Could not open coal stats file %s.\n", ioSetup.nodeStatsFileName);
 			return(-1);
 		}
-
-		printCoalStats(-1);
+		printCoalStats(-1, ioSetup.coalStatsFile);
 	}
+
+	if(recordCladeStats) {
+		ioSetup.cladeStatsFile = fopen(ioSetup.cladeStatsFileName,"w");
+		if((ioSetup.cladeStatsFile == NULL)) {
+			fprintf(stderr, "Error: Could not open clade stats file %s.\n", ioSetup.cladeStatsFileName);
+			return(-1);
+		}
+		printCladeStatsHeader(ioSetup.cladeStatsFile);
+	}
+
 
 #ifdef LOG_STEPS
 	ioSetup.debugFile = fopen("G-PhoCS-debug.txt","w");
@@ -1328,12 +1407,16 @@ int performMCMC()	{
 
 			if(recordCoalStats) {
 				computeFlatStats();
-//				computeNodeStats();
+				//				computeNodeStats();
+				printCoalStats(iteration, ioSetup.coalStatsFile);
+			}
+
+			if (recordCladeStats){
 				computeCladeStats();
 #ifdef CHECKCLADE
 				test_validateRootCladeVsFlatStats();
 #endif
-				printCoalStats(iteration);
+				printCladeStats(iteration, ioSetup.cladeStatsFile);
 			}
 
 			if(admixed_samples.number > 0 && iteration % 1000 == 0) {
@@ -2208,9 +2291,9 @@ int UpdateTheta (double finetune)	{
 		c = exp(lnc);
 		thetanew = thetaold * c;
 
-		#ifdef LOG_STEPS
-				fprintf(ioSetup.debugFile, "  pop %d, proposing theta shift: %g-->%g, ",pop, thetaold,thetanew);
-		#endif
+#ifdef LOG_STEPS
+		fprintf(ioSetup.debugFile, "  pop %d, proposing theta shift: %g-->%g, ",pop, thetaold,thetanew);
+#endif
 
 		// acceptance ratio according to proposal prior
 		lnacceptance = lnc + lnc * (dataSetup.popTree->pops[pop]->thetaPrior.alpha - 1) - (thetanew-thetaold) * dataSetup.popTree->pops[pop]->thetaPrior.beta;
@@ -2222,14 +2305,14 @@ int UpdateTheta (double finetune)	{
 
 		lnacceptance += deltaLogLikelihood;
 
-		#ifdef LOG_STEPS
-				fprintf(ioSetup.debugFile, "lnacceptance = %g, ",lnacceptance);
-		#endif
+#ifdef LOG_STEPS
+		fprintf(ioSetup.debugFile, "lnacceptance = %g, ",lnacceptance);
+#endif
 
 		if (lnacceptance>=0 || rndu()<exp(lnacceptance)) {
-			#ifdef LOG_STEPS
-						fprintf(ioSetup.debugFile, "accepting.\n");
-			#endif
+#ifdef LOG_STEPS
+			fprintf(ioSetup.debugFile, "accepting.\n");
+#endif
 			accepted++;
 			for(gen=0; gen<dataSetup.numLoci; gen++) {
 				genLogLikelihood[gen] -= ( lnc * genetree_stats[gen].num_coals[pop] + (1/thetanew - 1/thetaold) * genetree_stats[gen].coal_stats[pop] );
@@ -2237,9 +2320,9 @@ int UpdateTheta (double finetune)	{
 			dataState.logLikelihood += deltaLogLikelihood/dataSetup.numLoci;
 			dataSetup.popTree->pops[pop]->theta = thetanew;
 		} else {
-		#ifdef LOG_STEPS
-					fprintf(ioSetup.debugFile, "rejecting.\n");
-		#endif
+#ifdef LOG_STEPS
+			fprintf(ioSetup.debugFile, "rejecting.\n");
+#endif
 		}
 
 	}// end of for(pop)

@@ -12,10 +12,10 @@ int areFilesEqual(char fname1[40], char fname2[40]) {
 	fp1 = fopen(fname1, "r");
 	fp2 = fopen(fname2, "r");
 	if (fp1 == NULL) {
-		fprintf(stderr , "Cannot open %s for reading ", fname1);
+		fprintf(stderr , "Cannot open %s for reading\n", fname1);
 		result = FALSE;
 	} else if (fp2 == NULL) {
-		fprintf(stderr, "Cannot open %s for reading ", fname2);
+		fprintf(stderr, "Cannot open %s for reading\n", fname2);
 		result = FALSE;
 	} else {
 		ch1 = getc(fp1);
@@ -37,11 +37,11 @@ int areFilesEqual(char fname1[40], char fname2[40]) {
 }
 
 
-int main(int argc, char*argv[]) {
+int main(int argc, char* argv[]) {
 
 	//TODO - delete old test files!!
-	system("pwd");
-	system(".\\bin\\G-PhoCS-1-2-3 .\\tst\\test-control-file.ctl");
+
+	system("bin/G-PhoCS-1-2-3.exe tst/test-control-file.ctl");
 
 
 	printf("\n");
