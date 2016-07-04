@@ -20,7 +20,7 @@
 
 #define LOG_STEPS_NOT
 #define CHECKALL_NOT
-#define CHECKCLADE_NOT
+#define CHECKCLADE__NOT
 
 #define NUM_TYPES						5
 #define TARGET_ACCEPTANCE_PERCENT       35
@@ -1407,7 +1407,7 @@ int performMCMC()	{
 
 			if(recordCoalStats) {
 				computeFlatStats();
-				//				computeNodeStats();
+				//	computeNodeStats();
 				printCoalStats(iteration, ioSetup.coalStatsFile);
 			}
 
