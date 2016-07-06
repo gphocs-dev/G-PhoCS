@@ -74,9 +74,9 @@ struct EVENT {
   Event* sons[2];			// pointers to child(ren) interval in genealogy (for COAL IN/OUT_MIG)
   double age;				// end time of interval
   int popId;				// id of population where interval resides
-  MigrationBandSet* migBands;	// pointer to migration band set for this interval
-  int numLineages;		// number of lineages crossing interval
-  int numLineages_bak;	// number of lineages before proposed change (kept in negative format - see changeNumLineages())
+  MigrationBandSet* migBands;// pointer to migration band set for this interval
+  int numLineages;			// number of lineages crossing interval
+  int numLineages_bak;		// number of lineages before proposed change (kept in negative format - see changeNumLineages())
   int auxId;				// auxiliary id:
 							//	-for COAL events: id of branch above event
 							//	-for IN_MIG events: id of migration band

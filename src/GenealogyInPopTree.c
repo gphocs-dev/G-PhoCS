@@ -1153,8 +1153,6 @@ int	acceptGenChanges(LocusGenealogy* locusGen) {
       event->father->sons[i] = event1;
       event1->sons[0] = event->sons[0];
       event1->sons[1] = event->sons[1];
-      event->sons[0]->father - event1;
-      event->sons[1]->father - event1;
       recycleEvent(locusGen, event);
     }
     locusGen->genChanges.numMovedEvents = 0;		

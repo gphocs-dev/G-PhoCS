@@ -1,5 +1,5 @@
 GENERAL-INFO-START
-
+	random-seed			1359354017
 	seq-file			seqs-sample.txt
 	trace-file			logs\sample-data.trace.tsv
 	coal-stats-file		logs\sample-data.flatStats.tsv
@@ -89,10 +89,10 @@ ANCESTRAL-POPS-END
 MIG-BANDS-START	
 
 	BAND-START		
-	   name    D->B
-       source  D
-       target  B
-       mig-rate-print 0.1
+		name    D->B
+		source  D
+		target  B
+		mig-rate-print 0.1
 	BAND-END
 
 MIG-BANDS-END

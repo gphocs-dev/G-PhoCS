@@ -77,7 +77,7 @@ struct EVENT_CHAIN{
 	}* events;
 } *event_chains;
 
-char* getEventTypeName(enum event_type type){ //TODO - is this duplicate??
+char* getEventTypeName(enum event_type type){
 	switch (type)
 	{
 		case COAL: return "COAL";
@@ -137,6 +137,7 @@ struct CLADE_STATS{
 
 	int num_events; 		// temporary number of events in clade.
 	// used as an "array length" variable for sortedAges, event_types & num_lineages arrays
+	double debug_total_error;
 
 } *clade_stats;
 
@@ -241,7 +242,6 @@ int Coalescence1Pop (PopulationTree* popTree, GenericBinaryTree* tree, int gen, 
 int removeEvent(int gen, int event);
 
 // auxiliary functions
-int getLineagesAtInterval(int gen, int start_event, int pop, int exc_node, int* out_array);
 int getEdgesForTimePop(int gen, double time, int pop, int exc_node, int* out_array);
 int populationPostOrder(int pop, int* ordered_pops);
 
@@ -253,10 +253,27 @@ int printEventChains(FILE* stream, int gen);
 int createEvent(int gen, int pop, double age);
 int createEventBefore(int gen, int pop, int event, double elapsed_time);
 int constructEventChain(int gen);
+
 void computeFlatStats();
 int computeNodeStats();
 int computeTotalStats();
 
+// clade_stats calculation functions
+void initCladeStats();
+void initSpecificCladeStats(int clade);
+void computeCladeNumMigs();
+void computeCladeMigStats();
+void computeCladeNumCoals();
+void computeCladeNumCoals_rec(int pop);
+void computeCladeCoalStats();
+void computeCladeCoalStats_rec(int clade, int gen);
+void fillupLeafCladeStats(int clade, int gen);
+void appendPopToClade(int clade, int gen, int startingPoint);
+void fillupCladeStats(int clade, int gen);
+void addChildenIntoCladeStats(int clade, int gen);
+void mergeChildern(int clade, int gen);
+void addChildrenCladeStats(int clade, int gen);
+void addCurrentPopIntoCladeStats(int clade, int gen);
 
 
 
@@ -290,7 +307,6 @@ int traceLineage(int gen, int node, int reconnect);
 int GetMem (void)		{
 	int gen, count, i, maxNodes = 2*dataSetup.numSamples-1;
 	int leaf1, leaf2;
-	int pop;
 
 	genLogLikelihood = (double*)malloc(2*dataSetup.numLoci*sizeof(double));
 	if(genLogLikelihood == NULL) {
@@ -1027,7 +1043,7 @@ double rubberBand(int gen, int pop, double static_point, double moving_point, do
 
 	// after loop is done, consider coalescence stats
 	if(postORpre) {
-		genetree_stats[gen].coal_stats[pop] += coal_stats_delta;
+		genetree_stats[gen].coal_stats[pop] += coal_stats_delta; //RON DEBUG - last stop before test_clade
 		genetree_stats_total.coal_stats[pop]  += coal_stats_delta/heredity_factor;
 	}
 
@@ -2444,19 +2460,83 @@ int computeNodeStats() {
 
 
 
+void debug_print_errors(){
+	for (int clade = 0; clade < dataSetup.popTree->numPops; clade++) {
+		fprintf(stderr, "clade:%s, total_error=%0.35f, relative_error=%0.35f\n",
+				dataSetup.popTree->pops[clade]->name , clade_stats[clade].debug_total_error,
+				clade_stats[clade].debug_total_error / clade_stats[clade].coal_stats_total);
+	}
+	printf("\n");
+}
 
-
-
-void debug_print_cladestats(int clade, int gen, char* methodName){
-	printf("=== %s, clade:%s, gen:%d, num_events:%d, num_coals_total:%d === >>\n",
-			methodName, dataSetup.popTree->pops[clade]->name, gen, clade_stats[clade].num_events, clade_stats[clade].num_coals_total);
+void debug_print_cladestats(int clade, int gen){
+	printf("=== clade:%s, gen:%d, num_events:%d, num_coals_total:%d === >>\n",
+			dataSetup.popTree->pops[clade]->name, gen, clade_stats[clade].num_events, clade_stats[clade].num_coals_total);
 	for (int i = 0 ; i < clade_stats[clade].num_events ; i++){
 		printf("age:%0.25f, elapsed_time:%0.25f, num_lin:%d, type:%s \n",
 				clade_stats[clade].sorted_ages[i], clade_stats[clade].elapsed_times[i],
 				clade_stats[clade].num_lineages[i],	getEventTypeName(clade_stats[clade].event_types[i]));
 	}
 	printf("====================================================================================\n");
+	fflush(stdout);
 }
+
+
+
+double getCoalStats(double* elapsed_times, int* num_lineages, int size){
+	int n;
+	double t;
+	double result = 0.0;
+	for( int i = 0 ; i < size ; i++) {
+		n = num_lineages[i];
+		t = elapsed_times[i];
+		result += n*(n-1)*t;
+	}
+	return result;
+}
+
+/***
+ * This method is conjoined to "appendPopToClade".
+ * It must run inside it, so don't move it.
+ */
+void test_compareGphocsVsCladePopCoalStats(int clade, int gen, int startingPoint){
+	double gphocsValue = genetree_stats[gen].coal_stats[clade];
+	double cladeValue = getCoalStats(clade_stats[clade].elapsed_times + startingPoint,
+			clade_stats[clade].num_lineages + startingPoint, clade_stats[clade].num_events - startingPoint);
+
+	double absoluteError = gphocsValue - cladeValue;
+	double relativeError = absoluteError/cladeValue;
+	if (CLADE_PERCISION < fabs(relativeError)) {
+		debug_print_cladestats(clade, gen);
+		clade_stats[clade].debug_total_error += absoluteError;
+		fprintf(stderr, "Failed test_compareGphocsVsCladePopCoalStats:\n");
+		fprintf(stderr, "clade:%s, gen:%d, startingPoint:%d\n", dataSetup.popTree->pops[clade]->name, gen, startingPoint);
+		fprintf(stderr, "gphocs value  :%0.45f\n", gphocsValue);
+		fprintf(stderr, "clade  value  :%0.45f\n", cladeValue);
+		fprintf(stderr, "absolute error:%0.45f\n", absoluteError);
+		fprintf(stderr, "relative error:%0.45f\n", relativeError);
+		fprintf(stderr, "\nrandon seed   :%d\n", mcmcSetup.randomSeed);
+		fflush(stderr);
+		exit(-1);
+	}
+}
+void test_validateRootCladeVsFlatStats(){
+	int rootPop = dataSetup.popTree->rootPop;
+	double rootCladeCoalStats = clade_stats[rootPop].coal_stats_total;
+	double flatCoalStats = genetree_stats_flat.coal_stats_flat;
+	double absoluteError = rootCladeCoalStats - flatCoalStats;
+	double relativeError = absoluteError/rootCladeCoalStats;
+	if (CLADE_PERCISION*0.0001 < fabs(relativeError)) {
+		fprintf(stderr, "Failed test_validateRootCladeVsFlatStats:\n");
+		fprintf(stderr, "flat		:%0.45f\n", flatCoalStats);
+		fprintf(stderr, "rootClade	:%0.45f\n", rootCladeCoalStats);
+		fprintf(stderr, "absoluteError	:%0.45f\n", absoluteError);
+		fprintf(stderr, "relativeError	:%0.45f\n", relativeError);
+		fflush(stderr);
+		exit(-1);
+	}
+}
+
 
 #define TRUE 1 //TODO - where should these consts be?!
 #define FALSE 0
@@ -2475,48 +2555,6 @@ int	isLeafPopulation(int pop){
 	}
 }
 
-void test_validateRootCladeVsFlatStats(){
-	int rootPop = dataSetup.popTree->rootPop;
-	double rootCladeCoalStats = clade_stats[rootPop].coal_stats_total;
-	double flatCoalStats = genetree_stats_flat.coal_stats_flat;
-
-	if (rootCladeCoalStats != flatCoalStats) {
-		fprintf(stderr, "Error: got root_clade_stats=%0.35f and flat_stats=%0.35f but expected same result.\n",
-				rootCladeCoalStats, flatCoalStats);
-		exit(-1);
-	}
-}
-
-
-double getCoalStats(double* elapsed_times, int* num_lineages, int size){
-	int n;
-	double t;
-	double result = 0.0;
-	for( int i = 0 ; i < size ; i++) {
-		n = num_lineages[i];
-		t = elapsed_times[i];
-		result += n*(n-1)*t;
-	}
-	return result;
-}
-
-/***
- * This method is currently conjoined to "appendPopToClade". It must run inside it, so don't move it.
- * TODO - extract this test from "appendPopToClade"
- */
-void test_compareGphocsVsCladePopCoalStats(int clade, int gen, int startingPoint){
-	double gphocsValue = genetree_stats[gen].coal_stats[clade];
-	double cladeValue = getCoalStats(clade_stats[clade].elapsed_times + startingPoint,
-			clade_stats[clade].num_lineages + startingPoint, clade_stats[clade].num_events);
-
-	if (gphocsValue != cladeValue) {
-		printf("Error when comparing gphocs pop_coal_stats with clade pop_coal_stats:\n"
-				"got gphocs value:%0.35f and clade value:%0.35f but expected same result.\n",
-				gphocsValue, cladeValue);
-		exit(-1);
-	}
-}
-
 
 /***
  * cleans up all variables in clade_stats
@@ -2526,12 +2564,14 @@ void initCladeStats(){
 		initSpecificCladeStats(clade);
 	}
 }
+
 void initSpecificCladeStats(int clade){
 	clade_stats[clade].coal_stats_total = 0.0;
 	clade_stats[clade].mig_stats_total 	= 0.0;
 	clade_stats[clade].num_coals_total 	= 0;
 	clade_stats[clade].num_migs_total 	= 0;
 	clade_stats[clade].num_events 		= 0;
+	clade_stats[clade].debug_total_error= 0; //RON
 }
 
 
@@ -2586,10 +2626,8 @@ void computeFlatStats() {
 void computeCladeStats() {
 
 	initCladeStats();
-
 	computeCladeNumMigs();
 	computeCladeMigStats();
-
 	computeCladeNumCoals();
 	computeCladeCoalStats();
 }
@@ -2604,12 +2642,9 @@ void computeCladeMigStats(){
 		clade_stats[mig_band].mig_stats_total = genetree_stats_total.mig_stats[mig_band];
 	}
 }
-
 void computeCladeNumCoals(){
 	computeCladeNumCoals_rec(dataSetup.popTree->rootPop);
 }
-
-
 
 void computeCladeNumCoals_rec(int pop){
 	int leftSon, rightSon;
@@ -2648,10 +2683,9 @@ void computeCladeCoalStats_rec(int clade, int gen) {
 		computeCladeCoalStats_rec(rightSon, gen);
 
 		fillupCladeStats(clade, gen);
+
 	}
-#ifdef CHECKCLADE
-	debug_print_cladestats(clade, gen, "computeCladeCoalStats_rec");
-#endif
+//	debug_print_cladestats(clade, gen); //CAUTION! uncommenting this increases running time tenfold! (because of IO)
 }
 
 void fillupLeafCladeStats(int clade, int gen){
@@ -2672,7 +2706,8 @@ void appendPopToClade(int clade, int gen, int startingPoint){
 		clade_stats[clade].event_types[i] = event_chains[gen].events[event].type;
 	}
 	clade_stats[clade].num_events = i;
-	clade_stats[clade].coal_stats_total += genetree_stats[gen].coal_stats[clade];
+//	clade_stats[clade].coal_stats_total += genetree_stats[gen].coal_stats[clade];
+	clade_stats[clade].coal_stats_total += getCoalStats(clade_stats[clade].elapsed_times + startingPoint, clade_stats[clade].num_lineages + startingPoint, clade_stats[clade].num_events - startingPoint);
 
 #ifdef CHECKCLADE
 	test_compareGphocsVsCladePopCoalStats(clade, gen, startingPoint);
@@ -2689,6 +2724,8 @@ void addChildenIntoCladeStats(int clade, int gen){
 	mergeChildern(clade, gen);
 	addChildrenCladeStats(clade, gen);
 }
+
+
 
 void mergeChildern(int clade, int gen){
 	int i, j = 0, k = 0;

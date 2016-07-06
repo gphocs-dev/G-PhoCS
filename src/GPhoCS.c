@@ -20,7 +20,9 @@
 
 #define LOG_STEPS_NOT
 #define CHECKALL_NOT
-#define CHECKCLADE__NOT
+#define CHECKCLADE		//NOTE - when activated, flat stats calculation must be turned on (via control file)
+						// and no migration is allowed (as it is calculated separately in clade statistics)
+#define CLADE_PERCISION					0.0000000001
 
 #define NUM_TYPES						5
 #define TARGET_ACCEPTANCE_PERCENT       35
@@ -103,6 +105,18 @@ void UpdateSampleAge(double *finetunes, int *accepted);
 int UpdateLocusRate(double finetune);
 int UpdateAdmixCoeffs(double finetune);
 int mixing(double finetune);
+
+
+/** clade stats printing functions **/
+void printCladeStatsHeader(FILE* file);
+void printSpecificCladeHeader(int clade, FILE* file);
+void printSpecificPopHeader(int pop, FILE* file);
+void printSpecificMigHeader(int mig_band, FILE* file);
+void printCladeStats(int iteration, FILE* file);
+void printSpecificCladeStats(int clade, FILE* file);
+void printSpecificPopStats(int pop, FILE* file);
+void printSpecificMigBandStats(int mig_band, FILE* file);
+
 
 /** patch for intermediate G-PhoCS version **/
 #include "patch.c"
@@ -646,7 +660,7 @@ int recordTypes ()	{
 void printParamVals (double* paramVals, int startParam, int endParam, FILE* out)	{
 	int i;
 	for(i=startParam; i<endParam; i++) {
-		fprintf(out, "%8.5f\t",paramVals[i]*mcmcSetup.printFactors[i]);
+		fprintf(out, "%8.35f\t",paramVals[i]*mcmcSetup.printFactors[i]);
 	}
 }
 /** end of printParamVals **/
@@ -808,6 +822,7 @@ int printCoalStats (int iteration, FILE* file)		{
 	return 0;
 }
 /** end of printCoalStats **/
+
 
 void printCladeStatsHeader(FILE* file){
 	fprintf(file, "iteration\t");
@@ -1093,7 +1108,6 @@ int performMCMC()	{
 	unsigned short recordCladeStats = (0 != strcmp(ioSetup.cladeStatsFileName,"NONE")); // set to 1 for recording clade stats
 
 	char timeString[STRING_LENGTH];
-	char fileName[NAME_LENGTH];
 
 
 	ioSetup.traceFile = fopen(ioSetup.traceFileName,"w");
@@ -1400,7 +1414,7 @@ int performMCMC()	{
 
 			fprintf(ioSetup.traceFile, "%d\t", iteration);
 			printParamVals(paramVals,0,mcmcSetup.numParameters, ioSetup.traceFile);
-			fprintf(ioSetup.traceFile,"%.9f\t%.9f\t%.9f\n", dataState.logLikelihood, dataState.dataLogLikelihood, dataState.genealogyLogLikelihood);
+			fprintf(ioSetup.traceFile,"%.35f\t%.35f\t%.35f\n", dataState.logLikelihood, dataState.dataLogLikelihood, dataState.genealogyLogLikelihood);
 			fflush(ioSetup.traceFile);
 
 
@@ -1414,6 +1428,7 @@ int performMCMC()	{
 			if (recordCladeStats){
 				computeCladeStats();
 #ifdef CHECKCLADE
+//				debug_print_errors();
 				test_validateRootCladeVsFlatStats();
 #endif
 				printCladeStats(iteration, ioSetup.cladeStatsFile);
