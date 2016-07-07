@@ -20,7 +20,7 @@
 
 #define LOG_STEPS_NOT
 #define CHECKALL_NOT
-#define CHECKCLADE		//NOTE - when activated, flat stats calculation must be turned on (via control file)
+#define CHECKCLADE_NOT		//NOTE - when activated, flat stats calculation must be turned on (via control file)
 						// and no migration is allowed (as it is calculated separately in clade statistics)
 #define CLADE_PERCISION					0.0000000001
 
