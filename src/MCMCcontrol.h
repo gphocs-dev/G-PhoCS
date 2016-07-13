@@ -52,7 +52,7 @@ struct IO_SETUP {
 	char admixFileName[NAME_LENGTH];		// name of admixture trace file
 	char rateFileName[NAME_LENGTH];			// name of locus-rate file
 	char traceFileName[NAME_LENGTH];		// name of trace file (for MCMC trace output)
-	char nodeStatsFileName[NAME_LENGTH];	// name of coalescent stats file (for MCMC model evaluation)
+	char flatStatsFileName[NAME_LENGTH];	// name of coalescent stats file (for MCMC model evaluation)
 	char cladeStatsFileName[NAME_LENGTH];	// name of clade coalescent stats file
 	int samplesPerLog;						// number of samples for which to generate a log summary in stdout
 	int logsPerLine;						// number of sample logs per log line
@@ -60,7 +60,7 @@ struct IO_SETUP {
 	FILE*	traceFile;						// trace file
 	FILE*	debugFile;						// debugging file
 	FILE*	admixFile;						// admixture stats file
-	FILE*	coalStatsFile;					// coalescent stats file
+	FILE*	flatStatsFile;					// coalescent stats file
 	FILE*	cladeStatsFile;					// clade stats file
 	FILE**	nodeStatsFile;					// coalescent stats files for nodes (one per pop)
 }  ioSetup;

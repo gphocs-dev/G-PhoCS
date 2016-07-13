@@ -532,7 +532,7 @@ int	freeAllMemory() {
 	//Closing files
 	if(ioSetup.debugFile != NULL)	fclose(ioSetup.debugFile);
 	if(ioSetup.traceFile != NULL)	fclose(ioSetup.traceFile);
-	if(ioSetup.coalStatsFile != NULL)fclose(ioSetup.coalStatsFile);
+	if(ioSetup.flatStatsFile != NULL)fclose(ioSetup.flatStatsFile);
 	if(ioSetup.cladeStatsFile != NULL)fclose(ioSetup.cladeStatsFile);
 	if(ioSetup.nodeStatsFile != NULL) {
 		for(i=0; i<3*dataSetup.popTree->numPops; i++) {
@@ -1104,25 +1104,25 @@ int performMCMC()	{
 	int numSamplesPerLog, logsPerLine;
 
 	unsigned short findingFinetunes = 0; // set to 1 while dynamically searching for finetunes
-	unsigned short recordCoalStats = (0 != strcmp(ioSetup.nodeStatsFileName,"NONE")); // set to 1 for recording coal stats
+	unsigned short recordFlatStats = (0 != strcmp(ioSetup.flatStatsFileName,"NONE")); // set to 1 for recording coal stats
 	unsigned short recordCladeStats = (0 != strcmp(ioSetup.cladeStatsFileName,"NONE")); // set to 1 for recording clade stats
 
 	char timeString[STRING_LENGTH];
 
 
 	ioSetup.traceFile = fopen(ioSetup.traceFileName,"w");
-	if(ioSetup.traceFile == NULL) {
+	if(ioSetup.traceFile == NULL)  {
 		fprintf(stderr, "Error: Could not open trace file %s.\n", ioSetup.traceFileName);
 		return(-1);
 	}
 
-	if(recordCoalStats) {
-		ioSetup.coalStatsFile = fopen(ioSetup.nodeStatsFileName,"w");
-		if((ioSetup.coalStatsFile == NULL)) {
-			fprintf(stderr, "Error: Could not open coal stats file %s.\n", ioSetup.nodeStatsFileName);
+	if(recordFlatStats) {
+		ioSetup.flatStatsFile = fopen(ioSetup.flatStatsFileName,"w");
+		if((ioSetup.flatStatsFile == NULL)) {
+			fprintf(stderr, "Error: Could not open coal stats file %s.\n", ioSetup.flatStatsFileName);
 			return(-1);
 		}
-		printCoalStats(-1, ioSetup.coalStatsFile);
+		printCoalStats(-1, ioSetup.flatStatsFile);
 	}
 
 	if(recordCladeStats) {
@@ -1419,10 +1419,10 @@ int performMCMC()	{
 
 
 
-			if(recordCoalStats) {
+			if(recordFlatStats) {
 				computeFlatStats();
 				//	computeNodeStats();
-				printCoalStats(iteration, ioSetup.coalStatsFile);
+				printCoalStats(iteration, ioSetup.flatStatsFile);
 			}
 
 			if (recordCladeStats){

@@ -9,7 +9,7 @@ CC=gcc
 #Debugging
 CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG
 #Production
-#CFLAGS+= -fstack-protector-all -Wall -O3
+#CFLAGS += -fstack-protector-all -Wall -O3
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty

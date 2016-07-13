@@ -75,7 +75,7 @@ int initGeneralInfo() {
 
 	strcpy(ioSetup.seqFileName,"NONE");
 	strcpy(ioSetup.rateFileName,"NONE");
-	strcpy(ioSetup.nodeStatsFileName, "NONE");
+	strcpy(ioSetup.flatStatsFileName, "NONE");
 	strcpy(ioSetup.cladeStatsFileName, "NONE");
 	strcpy(ioSetup.traceFileName, "mcmc-trace.out");
 
@@ -227,7 +227,7 @@ int checkSettings() {
 		numErrors++;  
 	}
 
-	if(0 == strcmp("NONE",ioSetup.nodeStatsFileName) && dataSetup.numPopPartitions > 0) {
+	if(0 == strcmp("NONE",ioSetup.flatStatsFileName) && dataSetup.numPopPartitions > 0) {
 		fprintf(stderr, "Error: number of population partitions is %d, but no stats file name was specified.\n", dataSetup.numPopPartitions);
 		numErrors++;  
 	}
@@ -575,7 +575,7 @@ int readGeneralInfo(FILE* fctl) {
 
 		// read next token - value of some argument
 		if(NULL == fgets(line,STRING_LENGTH-1,fctl)) {
-			fprintf(stderr,"Error: unexpected end of file or other error inside GENERAL-INFO module.\n");
+			fprintf(stderr,"Error:  unexpected end of file or other error inside GENERAL-INFO module.\n");
 			return numErrors+1;
 		}
 		token2 = strtokCS(line,parseFileDelims);
@@ -589,8 +589,8 @@ int readGeneralInfo(FILE* fctl) {
 			strncpy(ioSetup.seqFileName, token2,  NAME_LENGTH-1);
 		} else if(0 == strcmp("trace-file",token)) {
 			strncpy(ioSetup.traceFileName, token2, NAME_LENGTH-1);
-		} else if(0 == strcmp("coal-stats-file",token)) {
-			strncpy(ioSetup.nodeStatsFileName, token2, NAME_LENGTH-1);
+		} else if(0 == strcmp("flat-stats-file",token)) {
+			strncpy(ioSetup.flatStatsFileName, token2, NAME_LENGTH-1);
 		} else if(0 == strcmp("clade-stats-file",token)) {
 			strncpy(ioSetup.cladeStatsFileName, token2, NAME_LENGTH-1);
 		} else if(0 == strcmp("num-pop-partitions",token)) {

@@ -2,7 +2,7 @@ GENERAL-INFO-START
 	random-seed			1359354017
 	seq-file			seqs-sample.txt
 	trace-file			logs\sample-data.trace.tsv
-	coal-stats-file		logs\sample-data.flatStats.tsv
+	flat-stats-file		logs\sample-data.flatStats.tsv
 	clade-stats-file	logs\sample-data.cladeStats.tsv
 	num-loci			1000
 #	num-pop-partitions	1

@@ -4,7 +4,7 @@ GENERAL-INFO-START
 
 	seq-file            tst\seqs-test.txt
 	trace-file          tst\logs\test-data.trace.tsv		
-	coal-stats-file		tst\logs\test-data.flatStats.tsv
+	flat-stats-file		tst\logs\test-data.flatStats.tsv
 #	num-pop-partitions	1
 	locus-mut-rate		CONST
 
