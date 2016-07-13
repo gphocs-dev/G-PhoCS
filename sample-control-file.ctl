@@ -4,7 +4,7 @@ GENERAL-INFO-START
 	trace-file			logs\sample-data.trace.tsv
 	flat-stats-file		logs\sample-data.flatStats.tsv
 	clade-stats-file	logs\sample-data.cladeStats.tsv
-	num-loci			1000
+	num-loci			100
 #	num-pop-partitions	1
 	locus-mut-rate		CONST
 	
