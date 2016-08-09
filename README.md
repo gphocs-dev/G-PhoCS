@@ -40,6 +40,7 @@ Installation (Unix only for now)
     * utils
    
 5. It is highly recommended to have a test run post-installation using the supplied sample files. Type this in the command line while still in the G-PhoCS directory.
+In order to more easily write control files, you are encouraged to use the Jar located in the Control File Generator folder.
 
     bin/G-PhoCS-1-2-3 sample-control-file.ctl
 
