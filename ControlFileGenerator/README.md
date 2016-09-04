@@ -10,7 +10,7 @@ The GUI consists of the following tabs: (follow them one by one to generate your
 
 4) Save - save your control file locally
 
-The ControlFileGenerator is written in Java and runs under JRE version XX and up
+The ControlFileGenerator is written in Java and runs under JRE version 7 and up
 If you don't have it installed on your computer, you may download it from https://java.com/en/download/
 
 To run the ControlFileGenerator just run the following from the command line (from the main G-PhoCS directory):
