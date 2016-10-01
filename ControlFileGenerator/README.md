@@ -10,6 +10,8 @@ The GUI consists of the following tabs: (follow them one by one to generate your
 
 4) Save - save your control file locally
 
+*) Load - Load the settings of a previous made control file into the GUI
+
 The ControlFileGenerator is written in Java and runs under JRE version 7 and up
 If you don't have it installed on your computer, you may download it from https://java.com/en/download/
 
