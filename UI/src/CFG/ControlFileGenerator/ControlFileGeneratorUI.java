@@ -6,18 +6,22 @@
 package CFG.ControlFileGenerator;
 
 import com.sun.glass.events.KeyEvent;
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.Font;
+import java.awt.List;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.scene.paint.Color;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -79,7 +83,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         tauThetaBetaLabel = new javax.swing.JLabel();
         tauThetaAlphaField = new javax.swing.JTextField();
         tauThetaBetaField = new javax.swing.JTextField();
-        thauThetaPrintField = new javax.swing.JTextField();
+        tauThetaPrintField = new javax.swing.JTextField();
         jPanel5 = new javax.swing.JPanel();
         migRatePrintLabel = new javax.swing.JLabel();
         migRateAlphaLabel = new javax.swing.JLabel();
@@ -180,6 +184,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         destinationFolderField = new javax.swing.JTextField();
         generateFileButton = new javax.swing.JButton();
         exitButton = new javax.swing.JButton();
+        CFGLoadButton = new javax.swing.JButton();
         jScrollPane6 = new javax.swing.JScrollPane();
         jPanel17 = new javax.swing.JPanel();
         jPanel19 = new javax.swing.JPanel();
@@ -294,7 +299,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addGap(0, 11, Short.MAX_VALUE)
+                .addGap(0, 0, Short.MAX_VALUE)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(seqFileLabel)
                     .addComponent(seqFileField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -448,7 +453,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(12, Short.MAX_VALUE)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(mcmcIterationsLabel)
                     .addComponent(mcmcIterationsField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -467,8 +472,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(logsPerLineLabel)
-                    .addComponent(logsPerLineField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(logsPerLineField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -486,10 +490,10 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(22, Short.MAX_VALUE))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Tau-theta", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 14), new java.awt.Color(51, 51, 255))); // NOI18N
@@ -540,20 +544,20 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
             }
         });
 
-        thauThetaPrintField.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
-        thauThetaPrintField.setForeground(java.awt.Color.lightGray);
-        thauThetaPrintField.setText("10000");
-        thauThetaPrintField.addFocusListener(new java.awt.event.FocusAdapter() {
+        tauThetaPrintField.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        tauThetaPrintField.setForeground(java.awt.Color.lightGray);
+        tauThetaPrintField.setText("10000");
+        tauThetaPrintField.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
-                thauThetaPrintFieldFocusGained(evt);
+                tauThetaPrintFieldFocusGained(evt);
             }
             public void focusLost(java.awt.event.FocusEvent evt) {
-                thauThetaPrintFieldFocusLost(evt);
+                tauThetaPrintFieldFocusLost(evt);
             }
         });
-        thauThetaPrintField.addKeyListener(new java.awt.event.KeyAdapter() {
+        tauThetaPrintField.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyTyped(java.awt.event.KeyEvent evt) {
-                thauThetaPrintFieldKeyTyped(evt);
+                tauThetaPrintFieldKeyTyped(evt);
             }
         });
 
@@ -567,7 +571,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(thauThetaPrintLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(thauThetaPrintField, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(tauThetaPrintField, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(tauThetaBetaLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -586,7 +590,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(thauThetaPrintLabel)
-                    .addComponent(thauThetaPrintField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(tauThetaPrintField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(tauThetaAlphaLabel)
@@ -851,7 +855,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         });
 
         findFinetunesNumStepLabel.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
-        findFinetunesNumStepLabel.setText("find-finetunes-num-step");
+        findFinetunesNumStepLabel.setText("find-finetunes-num-steps");
         findFinetunesNumStepLabel.setToolTipText("<html><p>The number of update steps for the automatic finetune finding procedure</p>\n<p><b>Optional,</b> default: 100</p></html>");
 
         findFinetunesNumStepField.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
@@ -924,7 +928,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         jPanel8Layout.setVerticalGroup(
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel8Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap(11, Short.MAX_VALUE)
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(findFinetunesLabel)
                     .addComponent(findFinetunesFalseRadioButton)
@@ -1063,8 +1067,8 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jPanel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(jPanel6Layout.createSequentialGroup()
-                .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, 0, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
 
         jPanel12.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Mixing", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 14), new java.awt.Color(51, 51, 255))); // NOI18N
@@ -1124,16 +1128,13 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
                 .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel15Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel15Layout.createSequentialGroup()
-                        .addGap(11, 11, 11)
-                        .addComponent(jPanel12, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel15Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanel12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(11, 11, 11)
                 .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(42, 42, 42))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jScrollPane3.setViewportView(jPanel15);
@@ -1565,7 +1566,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
                 .addComponent(jScrollPane8, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel27)
-                .addContainerGap(72, Short.MAX_VALUE))
+                .addContainerGap(260, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel18Layout = new javax.swing.GroupLayout(jPanel18);
@@ -1593,7 +1594,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Mig-Bands", jScrollPane7);
 
-        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Control File", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 14), new java.awt.Color(51, 51, 255))); // NOI18N
+        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Load/Save Control File", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 14), new java.awt.Color(51, 51, 255))); // NOI18N
 
         chooseDestinationFolderButton.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
         chooseDestinationFolderButton.setText("Browse");
@@ -1649,20 +1650,32 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
             }
         });
 
+        CFGLoadButton.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        CFGLoadButton.setText("Load");
+        CFGLoadButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                CFGLoadButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
         jPanel11.setLayout(jPanel11Layout);
         jPanel11Layout.setHorizontalGroup(
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel11Layout.createSequentialGroup()
                 .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel11Layout.createSequentialGroup()
-                        .addGap(346, 346, 346)
+                    .addGroup(jPanel11Layout.createSequentialGroup()
+                        .addComponent(CFGLoadButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(generateFileButton, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(exitButton, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jPanel10, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(51, 51, 51))
+                    .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
+
+        jPanel11Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {CFGLoadButton, exitButton, generateFileButton});
+
         jPanel11Layout.setVerticalGroup(
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel11Layout.createSequentialGroup()
@@ -1671,13 +1684,14 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(exitButton)
-                    .addComponent(generateFileButton))
+                    .addComponent(generateFileButton)
+                    .addComponent(CFGLoadButton))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jScrollPane1.setViewportView(jPanel11);
 
-        jTabbedPane1.addTab("Save Control File", jScrollPane1);
+        jTabbedPane1.addTab("Load / Save", jScrollPane1);
 
         jPanel19.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Help", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 14), new java.awt.Color(0, 0, 255))); // NOI18N
 
@@ -1759,10 +1773,6 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
 
     }//GEN-LAST:event_formMouseClicked
 
-    private void exitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitButtonActionPerformed
-        System.exit(0);
-    }//GEN-LAST:event_exitButtonActionPerformed
-
     // A helper function which checks the validation of the input in the General
     // section of the form. If no errors are found, the process will continue.
     // If there are errors, the program will output a message to the user and
@@ -1806,7 +1816,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
     // terminates the process.
     private boolean tauMigValidate(StringBuilder errorString) {
         boolean containErrors = false;
-        if (!Validate.validateDouble(thauThetaPrintField.getText())) {
+        if (!Validate.validateDouble(tauThetaPrintField.getText())) {
             errorString.append("The tau-theta-print input must be a positive number." + "\n");
             containErrors = true;
         }
@@ -1873,49 +1883,73 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         }
         return containErrors;
     }
-    
+
+    private boolean emptyTreeValidate() {
+        if (currentPopSamples == null) {
+            return true;
+        }
+        boolean allEmpty = true;
+        for (int i = 0; i < currentPopSamples.length; i++) {
+            if (!"".equals(currentPopSamples[i])) {
+                allEmpty = false;
+            }
+        }
+        if (allEmpty) {
+            return true;
+        }
+
+        return false;
+    }
+
     private boolean currentPopValidate() {
-        for(int i = 0; i < currentPopSamples.length; i++) {
-            if("".equals(currentPopSamples[i]))
+        if(currentPopSamples == null) return true;
+        for (int i = 0; i < currentPopSamples.length; i++) {
+            if ("".equals(currentPopSamples[i])) {
                 return true;
+            }
         }
         return false;
     }
-    
+
     private boolean ancestralPopValidate() {
-        for(int i = 0; i < ancestralTauInitial.length; i++) {
-            if("".equals(ancestralTauInitial[i]))
+        if(ancestralTauInitial == null) return true;
+        for (int i = 0; i < ancestralTauInitial.length; i++) {
+            if ("".equals(ancestralTauInitial[i])) {
                 return true;
+            }
         }
         return false;
     }
 
     private boolean migBandsValidate() {
-        for(int i = 0; i < migBandsSourceList.size(); i ++) {
+        for (int i = 0; i < migBandsSourceList.size(); i++) {
             boolean sourceBool = false;
             boolean targetBool = false;
-            for (int j = 0; j < currentPopArray.length; j ++) {
-                if (migBandsSourceList.get(i).equals(currentPopArray[j].data))
+            for (int j = 0; j < currentPopArray.length; j++) {
+                if (migBandsSourceList.get(i).equals(currentPopArray[j].data)) {
                     sourceBool = true;
-                if (migBandsTargetList.get(i).equals(currentPopArray[j].data))
+                }
+                if (migBandsTargetList.get(i).equals(currentPopArray[j].data)) {
                     targetBool = true;
+                }
             }
             for (int j = 0; j < ancestralPopArray.length; j++) {
-                if (migBandsSourceList.get(i).equals(ancestralPopArray[j].data))
+                if (migBandsSourceList.get(i).equals(ancestralPopArray[j].data)) {
                     sourceBool = true;
-                if (migBandsTargetList.get(i).equals(ancestralPopArray[j].data))
+                }
+                if (migBandsTargetList.get(i).equals(ancestralPopArray[j].data)) {
                     targetBool = true;
+                }
             }
-            
+
             if (!sourceBool || !targetBool) {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
-    
+
     // A method to check if there are any errors in the input the user places
     private boolean checkInputForErrors() {
         StringBuilder errorString = new StringBuilder();
@@ -1956,10 +1990,23 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, errorString.toString(), "message", JOptionPane.ERROR_MESSAGE);
             return true;
         }
+
         errorString = new StringBuilder();
-        errorString.append("There exist an Current-Pop without a sample.");
+        errorString.append("No tree was generated.");
+        foundErrors = emptyTreeValidate();
+        if (foundErrors) {
+            // if there are current populations without a sample,
+            // the program will send a message to the user that the input contains errors. It will then stop
+            // the operation without checking the rest of the input and without making a control file.
+            errorString.append("\nThe Control File was not made");
+            JOptionPane.showMessageDialog(null, errorString.toString(), "message", JOptionPane.ERROR_MESSAGE);
+            return true;
+        }
+
+        errorString = new StringBuilder();
+        errorString.append("There exist a Current-Pop without a sample.");
         foundErrors = currentPopValidate();
-        if(foundErrors) {
+        if (foundErrors) {
             // if there are current populations without a sample,
             // the program will send a message to the user that the input contains errors. It will then stop
             // the operation without checking the rest of the input and without making a control file.
@@ -1970,7 +2017,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         errorString = new StringBuilder();
         errorString.append("There exists an Ancestral-Pop without a tau-initial.");
         foundErrors = ancestralPopValidate();
-        if(foundErrors) {
+        if (foundErrors) {
             // if there are ancestral populations without a tau-initial,
             // the program will send a message to the user that the input contains errors. It will then stop
             // the operation without checking the rest of the input and without making a control file.
@@ -1993,8 +2040,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         // No errors were found in the user's input.
         return false;
     }
-    
-    
+
     // The method writes the General input to the control file
     private void writeGeneral(BufferedWriter output) throws IOException {
 
@@ -2042,8 +2088,8 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
 
     // The method writes the Tau-Theta input to the control file
     private void writeTauTheta(BufferedWriter output) throws IOException {
-        if (!"".equals(thauThetaPrintField.getText())) {
-            output.write(TAB + thauThetaPrintLabel.getText() + TAB + thauThetaPrintField.getText());
+        if (!"".equals(tauThetaPrintField.getText())) {
+            output.write(TAB + thauThetaPrintLabel.getText() + TAB + tauThetaPrintField.getText());
             output.newLine();
         }
         if (!"".equals(tauThetaAlphaField.getText())) {
@@ -2055,7 +2101,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
             output.newLine();
         }
     }
-    
+
     // The method writes the Mig-Rate input to the control file
     private void writeMigRate(BufferedWriter output) throws IOException {
         if (!"".equals(migRatePrintField.getText())) {
@@ -2087,7 +2133,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
             }
         }
     }
-    
+
     // The method writes the Finetune input to the control file
     private void writeFinetune(BufferedWriter output) throws IOException {
         if (findFinetunesFalseRadioButton.isSelected()) {
@@ -2138,7 +2184,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
             output.newLine();
         }
     }
-    
+
     // The method writes the No-Mixing input to the control file
     private void writeNoMixing(BufferedWriter output) throws IOException {
         if (noMixingCheckBox.isSelected()) {
@@ -2148,7 +2194,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
 
         }
     }
-    
+
     // Write the general-info to the control file.
     private void writeGeneralInfo(BufferedWriter output) throws IOException {
         // Starts here
@@ -2170,42 +2216,41 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         writeMigRate(output);
 
         output.newLine();
-        
+
         // Write the Locus-Mut-Rate input
         writeLocusMutRate(output);
-        
+
         output.newLine();
 
         // Write the Finetune input
         writeFinetune(output);
 
         output.newLine();
-        
+
         // Write the No-Mixing inoput
         writeNoMixing(output);
-        
+
         output.newLine();
-        
+
         // General-Info ends here
         output.write("GENERAL-INFO-END");
     }
-    
-    private String writeCurrentPopSample(int index)
-    {
+
+    private String writeCurrentPopSample(int index) {
         StringBuilder currentPopOutput = new StringBuilder();
-            currentPopOutput.append(
-                    TAB + TAB + "samples" +
-                    TAB + adjustedCurrentPopSamples[index]
-            );
+        currentPopOutput.append(
+                TAB + TAB + "samples"
+                + TAB + adjustedCurrentPopSamples[index]
+        );
         return currentPopOutput.toString();
     }
+
     // Write the current-pops info to the control file
     private void writeCurrentPops(BufferedWriter output, BSTNode[] nodeArray) throws IOException {
         output.write("CURRENT-POPS-START");
         output.newLine();
         output.newLine();
-        
-               
+
         for (int i = 0; i < nodeArray.length; i++) {
             output.write(TAB + "POP-START");
             output.newLine();
@@ -2223,7 +2268,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         output.newLine();
         output.newLine();
     }
-    
+
     // Write the ancestral-pops info to the control file
     private void writeAncestralPops(BufferedWriter output, BSTNode[] nodeArray) throws IOException {
         output.write("ANCESTRAL-POPS-START");
@@ -2247,7 +2292,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         output.newLine();
         output.newLine();
     }
-    
+
     // Write the Mig-Bands info to the control file
     private void writeMigBands(BufferedWriter output) throws IOException {
         output.write("MIG-BANDS-START");
@@ -2269,90 +2314,6 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         output.newLine();
         output.newLine();
     }
-
-    private void generateFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generateFileButtonActionPerformed
-
-        boolean executionFailed = false;
-
-        // Checking for errors in the General section of the form.
-        if (checkInputForErrors()) {
-            // If there was any error, a message was sent to the user and the
-            // operation stops.
-            return;
-        }
-        
-
-        BufferedWriter output = null;
-        File file;
-        try {
-            if (!"".equals(destinationFolderField.getText())) {
-                parentDir = new File(destinationFolderName);
-                if (parentDir.isDirectory()) {
-                    file = new File(parentDir, fileName);
-                } else {
-                    //Make a warning and cancel the execution.
-                    executionFailed = true;
-                    return;
-                }
-            } else {
-                file = new File("control-file");
-            }
-            
-            output = new BufferedWriter(new FileWriter(file));
-            
-            // Write the General-Info to the control file
-            writeGeneralInfo(output);
-            
-            output.newLine();
-            output.newLine();
-            output.newLine();
-
-            //Checking if there's an input in the tree field. If not, we skip it
-            if (!"".equals(treeField.getText())) {
-                // Writing the current-pops to the control file
-                writeCurrentPops(output, currentPopArray);
-                // Writing the ancestral-pops to the control file
-                writeAncestralPops(output, ancestralPopArray);
-            }
-            
-            // Checking if any mig-bands were inserted. If not, we skip it
-            if (migBandsSourceList.size() != 0) {
-                // If there are any, we write them as well
-                writeMigBands(output);
-            }
-
-        } catch (Exception e) {
-            executionFailed = true;
-            e.printStackTrace();
-        } finally {
-            if (!executionFailed) {
-                JOptionPane.showMessageDialog(null, "Control file was successfully saved", "message", JOptionPane.PLAIN_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(null, "Error", "message", JOptionPane.ERROR_MESSAGE);
-            }
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(ControlFileGeneratorUI.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
-    }//GEN-LAST:event_generateFileButtonActionPerformed
-
-    // Choose a destination folder for the output control file
-    private void chooseDestinationFolderButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chooseDestinationFolderButtonActionPerformed
-        JFrame parentFrame = new JFrame();
-        JFileChooser fileChooser = new JFileChooser();
-        // Demonstrate "Save" dialog:
-        int rVal = fileChooser.showSaveDialog(parentFrame);
-        if (rVal == JFileChooser.APPROVE_OPTION) {
-            selectedFile = fileChooser.getSelectedFile();
-            destinationFolderField.setText(selectedFile.getAbsolutePath());
-            fileName = fileChooser.getSelectedFile().getName();
-            destinationFolderName = fileChooser.getCurrentDirectory().toString();
-        }
-    }//GEN-LAST:event_chooseDestinationFolderButtonActionPerformed
 
     private void treeFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_treeFieldActionPerformed
         // TODO add your handling code here:
@@ -2411,6 +2372,24 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
     // the input they typed is correct or not.
     // If not, they recieve an error messege. Otherwise, they recieve a messege the input is valid.
     private void generateTreeInputButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generateTreeInputButtonActionPerformed
+        if (!firstTimeCreatingTree) {
+            JFrame frame = new JFrame();
+            Object[] options = {"Generate new tree", "Cancel"};
+            int n = JOptionPane.showOptionDialog(frame,
+                    "Generating a new tree will delete all the data of the previos tree, would you like to continue?",
+                    "Generate new tree",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    options,
+                    options[0]);
+            if (n == JOptionPane.NO_OPTION) {
+                return;
+            }
+
+            InitializeTreeData();
+        }
+
         StringBuilder errorString = new StringBuilder();
         errorString.append("Errors in the Tree input:\n\n");
         // Checking the tree input for errors on a basic level
@@ -2420,7 +2399,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
             // with the error it found (there may be more)
             JOptionPane.showMessageDialog(null, errorString.toString(), "message", JOptionPane.ERROR_MESSAGE);
         } else {
-            
+
             // If no errors were found, we'll check the tree on a deeper level.
             // we'll construct the tree and check if it is made right.
             nwtCreate = new NewickTree(treeField.getText());
@@ -2438,124 +2417,200 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
                 // If there are identical names for different pops, the program will
                 // send the user an error message
                 errorString.append("Duplicate names for POPs are not allowed!");
-            } else if(!checkForEmptyNames(nwtCreate)) {
+                JOptionPane.showMessageDialog(null, errorString.toString(), "message", JOptionPane.ERROR_MESSAGE);
+            } else if (!checkForEmptyNames(nwtCreate)) {
                 // If there are empty names for the pops, the program will
                 // send the user an error messag
                 errorString.append("Empty names for POPs are not allowed!");
                 JOptionPane.showMessageDialog(null, errorString.toString(), "message", JOptionPane.ERROR_MESSAGE);
             } else {
-                
-                // If no errors were found, the program will send a message to the user the input is valid
-                // and also the expected output of what the current and ancestral pops are.
-                
+
                 currentPopArray = nwtCreate.childArray;
                 ancestralPopArray = nwtCreate.parentArray;
-                
-                if (firstTimeCreatingTree == 0) {
+
+                // If no errors were found, the program will send a message to the user the input is valid
+                // and also the expected output of what the current and ancestral pops are.
+                if (firstTimeCreatingTree) {
+
                     // We create an array for the SAMPLES of each CURRENT-POP
                     currentPopSamples = new String[currentPopArray.length];
                     hiploidDiploid = new String[currentPopArray.length];
                     adjustedCurrentPopSamples = new String[currentPopArray.length];
                     for (int i = 0; i < currentPopSamples.length; i++) {
                         currentPopSamples[i] = "";
-                        hiploidDiploid[i]  = "";
+                        hiploidDiploid[i] = "";
                         adjustedCurrentPopSamples[i] = "";
                     }
-        
+
                     // The user fills the Samples on a seperate panel
-                
                     popCurrentLegal = InputPanel.insertCurrentLabel(currentPopArray, currentPopSamples, hiploidDiploid);
-                    if(!popCurrentLegal) {
+                    if (!popCurrentLegal) {
                         return;
                     }
-                }
-                
-                else {
+                } else {
+
                     // We create an array for the SAMPLES of each CURRENT-POP
                     String[] newPopSamples = new String[currentPopArray.length];
                     String[] newHiploidDiploid = new String[currentPopArray.length];
                     String[] newAdjustedCurrentPopSamples = new String[currentPopArray.length];
-                    for (int i = 0; i < currentPopSamples.length; i++) {
-                        newPopSamples[i] = "";
-                        newHiploidDiploid[i]  = "";
-                        newAdjustedCurrentPopSamples[i] = "";
-                    }
-        
-                    // The user fills the Samples on a seperate panel
-                
-                    popCurrentLegal = InputPanel.insertCurrentLabel(currentPopArray, newPopSamples, newHiploidDiploid);
-                    if(!popCurrentLegal) {
-                        return;
+                    if(currentPopSamples != null)
+                    {
+                        for (int i = 0; i < currentPopArray.length; i++) {
+                            newPopSamples[i] = "";
+                        }
                     }
                     
+                    if(hiploidDiploid != null)
+                    {
+                        for (int i = 0; i < currentPopArray.length; i++) {
+                            newHiploidDiploid[i] = "";
+                        }
+                    }
+                    
+                    if(adjustedCurrentPopSamples != null)
+                    {
+                        for (int i = 0; i < currentPopArray.length; i++) {
+                            newAdjustedCurrentPopSamples[i] = "";
+                        }
+                    }
+                            
+
+                    // The user fills the Samples on a seperate panel
+                    popCurrentLegal = InputPanel.insertCurrentLabel(currentPopArray, newPopSamples, newHiploidDiploid);
+                    if (!popCurrentLegal) {
+                        return;
+                    }
+
                     // We create an array for the SAMPLES of each CURRENT-POP
                     currentPopSamples = new String[currentPopArray.length];
                     hiploidDiploid = new String[currentPopArray.length];
                     adjustedCurrentPopSamples = new String[currentPopArray.length];
                     for (int i = 0; i < currentPopSamples.length; i++) {
                         currentPopSamples[i] = newPopSamples[i];
-                        hiploidDiploid[i]  = newHiploidDiploid[i];
+                        hiploidDiploid[i] = newHiploidDiploid[i];
                         adjustedCurrentPopSamples[i] = newAdjustedCurrentPopSamples[i];
                     }
                 }
+
                 for (int i = 0; i < currentPopSamples.length; i++) {
                     adjustedCurrentPopSamples[i] = adjustPopSample(currentPopSamples[i], hiploidDiploid[i]);
                 }
-                
-                
+
+                // Taking care of the migbands
+                migBandsSourceList.clear();
+                migBandsTargetList.clear();
+                migBandsIndexList.clear();
+                migBandsCounter = 0;
+                expectedMigBandsOutputTextArea.setText("");
+
                 // enabeling the modification button
                 updateSamplesButton.setEnabled(true);
                 updateTauInitialsButton.setEnabled(true);
                 expectedAncestralPOPsOutputTextArea.setText("");
-                firstTimeCreatingTree = 1;
-                
+                firstTimeCreatingTree = false;
+
                 // We create an array for the TAU-INITIAL of each ANCESTRAL-POP                
                 ancestralTauInitial = new String[ancestralPopArray.length];
                 for (int i = 0; i < ancestralTauInitial.length; i++) {
                     ancestralTauInitial[i] = "";
                 }
-                
+
                 // The user fills the tau-initial on a seperate panel
                 popAncestralLegal = InputPanel.insertAncestralTauInitial(ancestralPopArray, ancestralTauInitial);
-                if(!popAncestralLegal) {
+                if (!popAncestralLegal) {
                     return;
                 }
                 // Writing the expected output to the text area in the panels
-                
+
                 writeCurrentPopExpectedOutput();
                 writeAncestralPopExpectedOutput();
-          
-                
+
                 addNewMigBandButton.setEnabled(true);
                 sourceMigBandComboBox.setEnabled(true);
                 targetMigBandComboBox.setEnabled(true);
-                
+
                 sourceMigBandComboBox.removeAllItems();
                 targetMigBandComboBox.removeAllItems();
-                
-                for(int i = 0; i < currentPopArray.length; i++)
-                {
+
+                for (int i = 0; i < currentPopArray.length; i++) {
                     sourceMigBandComboBox.addItem(currentPopArray[i].data);
                     targetMigBandComboBox.addItem(currentPopArray[i].data);
                 }
-                
-                for(int i = 0; i < ancestralPopArray.length; i++)
-                {
+
+                for (int i = 0; i < ancestralPopArray.length; i++) {
                     sourceMigBandComboBox.addItem(ancestralPopArray[i].data);
                     targetMigBandComboBox.addItem(ancestralPopArray[i].data);
                 }
-                
+
             }
         }
     }//GEN-LAST:event_generateTreeInputButtonActionPerformed
+
+    private void InitializeTreeData() {
+        if (currentPopArray != null) {
+            for (int i = 0; i < currentPopArray.length; i++) {
+                currentPopArray[i] = null;
+            }
+        }
+
+        if (ancestralPopArray != null) {
+            for (int i = 0; i < ancestralPopArray.length; i++) {
+                ancestralPopArray[i] = null;
+            }
+        }
+
+        if (currentPopSamples != null) {
+            for (int i = 0; i < currentPopSamples.length; i++) {
+                currentPopSamples[i] = "";
+            }
+        }
+
+        if (adjustedCurrentPopSamples != null) {
+            for (int i = 0; i < adjustedCurrentPopSamples.length; i++) {
+                adjustedCurrentPopSamples[i] = "";
+            }
+        }
+
+        if (ancestralTauInitial != null) {
+            for (int i = 0; i < ancestralTauInitial.length; i++) {
+                ancestralTauInitial[i] = "";
+            }
+        }
+
+        if (hiploidDiploid != null) {
+            for (int i = 0; i < hiploidDiploid.length; i++) {
+                hiploidDiploid[i] = "";
+            }
+        }
+
+        migBandsSourceList.clear();
+        migBandsTargetList.clear();
+        migBandsIndexList.clear();
+        migBandsCounter = 0;
+
+        expectedCurrentPOPsOutputTextArea.setText("");
+        expectedAncestralPOPsOutputTextArea.setText("");
+        updateSamplesButton.setEnabled(false);
+        updateTauInitialsButton.setEnabled(false);
+
+        expectedMigBandsOutputTextArea.setText("");
+        migBandsStringBuilder = new StringBuilder();
+        sourceMigBandComboBox.setEnabled(false);
+        targetMigBandComboBox.setEnabled(false);
+        sourceMigBandComboBox.removeAllItems();
+        targetMigBandComboBox.removeAllItems();
+        addNewMigBandButton.setEnabled(false);
+        deleteMigBandsButton.setEnabled(false);
+        targetMigBandComboBox.setEnabled(false);
+    }
 
     private void writeCurrentPopExpectedOutput() {
 
         StringBuilder currentPopOutput = new StringBuilder();
         for (int i = 0; i < currentPopArray.length; i++) {
             currentPopOutput.append(
-                    "POP-START\n\t" +
-                    "name" + TAB + currentPopArray[i].data + "\n\t"
+                    "POP-START\n\t"
+                    + "name" + TAB + currentPopArray[i].data + "\n\t"
                     + "sample" + TAB + adjustedCurrentPopSamples[i] + "\nPOP-END\n\n"
             );
         }
@@ -2585,19 +2640,18 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         expectedAncestralPOPsOutputTextArea.setText(ancestralPopOutput.toString());
 
     }
-    
+
     // Handles if the sample has a few samples...or something
     private String adjustPopSample(String sample, String hiploidDiploid) {
         StringBuilder sb = new StringBuilder();
         char current;
         int spaceCounter = 0;
-        for(int i = 0; i < sample.length(); i++) {
+        for (int i = 0; i < sample.length(); i++) {
             current = sample.charAt(i);
-            if(current != ' ') {
+            if (current != ' ') {
                 sb.append(current);
                 spaceCounter = 0;
-            }
-            else if(spaceCounter == 0) {
+            } else if (spaceCounter == 0) {
                 sb.append(" " + hiploidDiploid + " ");
                 spaceCounter = 1;
             }
@@ -2607,11 +2661,8 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         }
         return sb.toString();
     }
-    
-    
-    
-    
-    
+
+
     private void finetuneMigRateFieldKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_finetuneMigRateFieldKeyTyped
         onlyNumericalValueAndDot(evt, finetuneMigRateField);
     }//GEN-LAST:event_finetuneMigRateFieldKeyTyped
@@ -2698,6 +2749,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
             parentDir = fileChooser.getSelectedFile();
             chooseLocusMutRateFileField.setText(parentDir.getAbsolutePath());
             fixedFileChosen = true;
+            chooseLocusMutRateFileField.setForeground(java.awt.Color.BLACK);
         }
     }//GEN-LAST:event_chooseFixedFileButtonActionPerformed
 
@@ -2768,17 +2820,17 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         focusGained(migRateAlphaField);
     }//GEN-LAST:event_migRateAlphaFieldFocusGained
 
-    private void thauThetaPrintFieldKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_thauThetaPrintFieldKeyTyped
-        onlyNumericalValueAndDot(evt, thauThetaPrintField);
-    }//GEN-LAST:event_thauThetaPrintFieldKeyTyped
+    private void tauThetaPrintFieldKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tauThetaPrintFieldKeyTyped
+        onlyNumericalValueAndDot(evt, tauThetaPrintField);
+    }//GEN-LAST:event_tauThetaPrintFieldKeyTyped
 
-    private void thauThetaPrintFieldFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_thauThetaPrintFieldFocusLost
-        focusLost(thauThetaPrintField, "10000");
-    }//GEN-LAST:event_thauThetaPrintFieldFocusLost
+    private void tauThetaPrintFieldFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_tauThetaPrintFieldFocusLost
+        focusLost(tauThetaPrintField, "10000");
+    }//GEN-LAST:event_tauThetaPrintFieldFocusLost
 
-    private void thauThetaPrintFieldFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_thauThetaPrintFieldFocusGained
-        focusGained(thauThetaPrintField);
-    }//GEN-LAST:event_thauThetaPrintFieldFocusGained
+    private void tauThetaPrintFieldFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_tauThetaPrintFieldFocusGained
+        focusGained(tauThetaPrintField);
+    }//GEN-LAST:event_tauThetaPrintFieldFocusGained
 
     private void tauThetaBetaFieldKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tauThetaBetaFieldKeyTyped
         onlyNumericalValueAndDot(evt, tauThetaBetaField);
@@ -2894,13 +2946,14 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
 
     private void updateTauInitialsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateTauInitialsButtonActionPerformed
         popAncestralLegal = InputPanel.insertAncestralTauInitial(ancestralPopArray, ancestralTauInitial);
-        if(popCurrentLegal && popAncestralLegal)
+        if (popCurrentLegal && popAncestralLegal) {
             writeAncestralPopExpectedOutput();
+        }
     }//GEN-LAST:event_updateTauInitialsButtonActionPerformed
 
     private void updateSamplesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateSamplesButtonActionPerformed
         popCurrentLegal = InputPanel.insertCurrentLabel(currentPopArray, currentPopSamples, hiploidDiploid);
-        if(popCurrentLegal) {
+        if (popCurrentLegal) {
             for (int i = 0; i < currentPopSamples.length; i++) {
                 adjustedCurrentPopSamples[i] = adjustPopSample(currentPopSamples[i], hiploidDiploid[i]);
             }
@@ -2913,7 +2966,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         if (updateSamplesButton.isEnabled()) {
             if (evt.getClickCount() == 2) {
                 popCurrentLegal = InputPanel.insertCurrentLabel(currentPopArray, currentPopSamples, hiploidDiploid);
-                if(popCurrentLegal) {
+                if (popCurrentLegal) {
                     for (int i = 0; i < currentPopSamples.length; i++) {
                         adjustedCurrentPopSamples[i] = adjustPopSample(currentPopSamples[i], hiploidDiploid[i]);
                     }
@@ -2927,14 +2980,15 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         if (updateTauInitialsButton.isEnabled()) {
             if (evt.getClickCount() == 2) {
                 popAncestralLegal = InputPanel.insertAncestralTauInitial(ancestralPopArray, ancestralTauInitial);
-                if(popCurrentLegal && popAncestralLegal)
+                if (popCurrentLegal && popAncestralLegal) {
                     writeAncestralPopExpectedOutput();
+                }
             }
         }
     }//GEN-LAST:event_expectedAncestralPOPsOutputTextAreaMouseClicked
 
     private void openWebManualLabelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_openWebManualLabelMouseClicked
-        OpenWebManual("https://github.com/gphocs-dev/G-PhoCS/blob/master/G-PhoCS/GPhoCS_Manual.pdf");
+        OpenWebManual("https://github.com/gphocs-dev/G-PhoCS/blob/master/GPhoCS_Manual.pdf");
     }//GEN-LAST:event_openWebManualLabelMouseClicked
 
     private void openWebManualLabelMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_openWebManualLabelMouseEntered
@@ -2945,7 +2999,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
 
     private void openWebManualLabelMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_openWebManualLabelMouseExited
         Font font = openWebManualLabel.getFont();
-        openWebManualLabel.setFont(new Font(font.getName(), font.getStyle(), font.getSize() - 2));        
+        openWebManualLabel.setFont(new Font(font.getName(), font.getStyle(), font.getSize() - 2));
     }//GEN-LAST:event_openWebManualLabelMouseExited
 
     private void addNewMigBandButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addNewMigBandButtonActionPerformed
@@ -2958,10 +3012,10 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
             migBandsTargetList.add(migBandNewInput[1]);
             migBandsIndexList.add(migBandsCounter);
             migBandsCounter++;
-            
+
             writeNewMigBand();
             deleteMigBandsButton.setEnabled(true);
-        }        
+        }
     }//GEN-LAST:event_addNewMigBandButtonActionPerformed
 
     private void deleteMigBandsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteMigBandsButtonActionPerformed
@@ -2970,44 +3024,1165 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         migBandsCounter = migBandsSourceList.size();
         migBandsStringBuilder = new StringBuilder();
         expectedMigBandsOutputTextArea.setText("");
-        
+
         writeMigBands();
     }//GEN-LAST:event_deleteMigBandsButtonActionPerformed
 
+    private void CFGLoadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CFGLoadButtonActionPerformed
+
+        // File CFGFile;
+        String path = destinationFolderField.getText();
+
+        boolean loadingFileFailed = false;
+
+        String errorMessage = "There was an error while importing the settings. Check the chosen file.";
+
+        try {
+            //CFGFile = new File(destinationFolderField.getText());
+            //path = destinationFolderField.getText();
+            InitializeGeneralFields();
+            String[] CFGLinesArray = readLines(path);
+            for (int i = 0; i < CFGLinesArray.length; i++) {
+                handleLine(CFGLinesArray[i]);
+            }
+            InitializeTreeData();
+            treeField.setText("");
+            CheckValidTags(path);
+            GetCurrentPopsFromSettings(path);
+            GetAncestralPopsFromSettings(path);
+        } catch (Exception e) {
+            loadingFileFailed = true;
+            //              e.printStackTrace();
+        } finally {
+            if (!loadingFileFailed) {
+                //                 JOptionPane.showMessageDialog(null, "General Settings were imported successfuly.", "message", JOptionPane.PLAIN_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                InitializeTreeData();
+                return;
+            }
+
+            errorMessage = "Error found while constructing the tree from the chosen Control File. Please check your populations.";
+            try {
+                firstTimeCreatingTree = false;
+                CreateBSTNodes();
+            } catch (Exception e) {
+                loadingFileFailed = true;
+                //                    e.printStackTrace();
+            } finally {
+                if (!loadingFileFailed) {
+                } else {
+                    JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                    InitializeTreeData();
+                    return;
+                }
+            }
+
+            errorMessage = "Error found in one or more of the populations. Please check your CURRENT and ANCESTRAL Pops.";
+
+            try {
+                WriteCurrentInField();
+                WriteAncestralInField();
+            } catch (Exception e) {
+                loadingFileFailed = true;
+                //                   e.printStackTrace();
+            } finally {
+                if (!loadingFileFailed) {
+                } else {
+                    JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                    InitializeTreeData();
+                    return;
+                }
+
+            }
+
+            errorMessage = "Error found in one or more of the populations. Check the samples of the CURRENT-POPs.";
+            try {
+                ValidateLoadingSettingsHiploidDiploid();
+                ValidateLoadingSettingsDuplicateSamples();
+            } catch (Exception e) {
+                loadingFileFailed = true;
+                //        e.printStackTrace();
+            } finally {
+                if (!loadingFileFailed) {
+                } else {
+                    JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                    InitializeTreeData();
+                    return;
+                }
+
+            }
+
+            errorMessage = "Error found in one or more of the populations. Check the tau-initial of the ANCESTRAL-POPs";
+            try {
+                ValidateLoadingSettingsTauInitial();
+                ValidateLoadingSettingsTauInitialParentBiggerThanChild();
+            } catch (Exception e) {
+                loadingFileFailed = true;
+                //           e.printStackTrace();
+            } finally {
+                if (!loadingFileFailed) {
+                    writeCurrentPopExpectedOutput();
+                    writeAncestralPopExpectedOutput();
+                    updateSamplesButton.setEnabled(true);
+                    updateTauInitialsButton.setEnabled(true);
+                    InitializeMigBands();
+                    SetActiveMigBands();
+                    AddPopsToMigBands();
+                    //                 JOptionPane.showMessageDialog(null, "Tree Settings were loaded successfuly.", "message", JOptionPane.PLAIN_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                    InitializeTreeData();
+                }
+
+            }
+
+            errorMessage = "Error found in one or more of the MIG-BANDS.";
+            try {
+                GetMigBandsFromSettings(path);
+            } catch (Exception e) {
+                loadingFileFailed = true;
+                //           e.printStackTrace();
+            } finally {
+                if (!loadingFileFailed) {
+                } else {
+                    JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                    InitializeMigBands();
+                    SetActiveMigBands();
+                    AddPopsToMigBands();
+                    return;
+                }
+
+            }
+
+            errorMessage = "Error found in one or more of the MIG-BANDS. One of the sources or targets is not a valid POP's name.";
+            try {
+                CheckValidMigBands();
+            } catch (Exception e) {
+                loadingFileFailed = true;
+                //           e.printStackTrace();
+            } finally {
+                if (!loadingFileFailed) {
+                } else {
+                    JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                    InitializeMigBands();
+                    SetActiveMigBands();
+                    AddPopsToMigBands();
+                    return;
+                }
+
+            }
+
+            errorMessage = "Error found in one or more of the MIG-BANDS. One or more of the Mig-Bands have an identical source and target.";
+            try {
+                CheckSameSourceTargeteMigBands();
+            } catch (Exception e) {
+                loadingFileFailed = true;
+                //           e.printStackTrace();
+            } finally {
+                if (!loadingFileFailed) {
+                } else {
+                    JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                    InitializeMigBands();
+                    SetActiveMigBands();
+                    AddPopsToMigBands();
+                    return;
+                }
+
+            }
+
+            errorMessage = "Error found in one or more of the MIG-BANDS. Two or more duplicated Mig-Bands.";
+            try {
+                CheckDuplicateMigBands();
+            } catch (Exception e) {
+                loadingFileFailed = true;
+                //           e.printStackTrace();
+            } finally {
+                if (!loadingFileFailed) {
+                } else {
+                    JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                    InitializeMigBands();
+                    SetActiveMigBands();
+                    AddPopsToMigBands();
+                    return;
+                }
+
+            }
+
+            errorMessage = "Error found in one or more of the MIG-BANDS. Two or more duplicated Mig-Bands.";
+            try {
+                CheckDuplicateMigBands();
+            } catch (Exception e) {
+                loadingFileFailed = true;
+                //           e.printStackTrace();
+            } finally {
+                if (!loadingFileFailed) {
+                } else {
+                    JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                    InitializeMigBands();
+                    SetActiveMigBands();
+                    AddPopsToMigBands();
+                    return;
+                }
+
+            }
+
+            errorMessage = "Error found in one or more of the MIG-BANDS. One of the Mig-Bands contains an ancestral POP of the other.";
+            try {
+                CheckFatherChildMigBands();
+            } catch (Exception e) {
+                loadingFileFailed = true;
+                //           e.printStackTrace();
+            } finally {
+                if (!loadingFileFailed) {
+                } else {
+                    JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                    InitializeMigBands();
+                    SetActiveMigBands();
+                    AddPopsToMigBands();
+                    return;
+                }
+
+            }
+
+            errorMessage = "Error found in one or more of the MIG-BANDS. One of the Mig-Bands contains an ancestral POP of the other.";
+            try {
+                CheckFatherChildMigBands();
+            } catch (Exception e) {
+                loadingFileFailed = true;
+         //       e.printStackTrace();
+            } finally {
+                if (!loadingFileFailed) {
+                } else {
+                    JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                    InitializeMigBands();
+                    SetActiveMigBands();
+                    AddPopsToMigBands();
+                    return;
+                }
+
+            }
+
+            errorMessage = "Found an error while writing the Mig-Bands input to the UI. Check the file's input and try again.";
+            try {
+                MigBandsWriteToUI();
+            } catch (Exception e) {
+                loadingFileFailed = true;
+      //          e.printStackTrace();
+            } finally {
+                if (!loadingFileFailed) {
+                    //               JOptionPane.showMessageDialog(null, "Mig-Bands Settings were loaded successfuly.", "message", JOptionPane.PLAIN_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "File Settings were loaded successfuly", "message", JOptionPane.PLAIN_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null, errorMessage, "message", JOptionPane.ERROR_MESSAGE);
+                    InitializeMigBands();
+                    SetActiveMigBands();
+                    AddPopsToMigBands();
+                    return;
+                }
+
+            }
+        }
+    }//GEN-LAST:event_CFGLoadButtonActionPerformed
+
+    private void exitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitButtonActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_exitButtonActionPerformed
+
+    private void generateFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generateFileButtonActionPerformed
+
+        boolean executionFailed = false;
+
+        // Checking for errors in the General section of the form.
+        if (checkInputForErrors()) {
+            // If there was any error, a message was sent to the user and the
+            // operation stops.
+            return;
+        }
+
+        BufferedWriter output = null;
+        File file;
+        try {
+            if (!"".equals(destinationFolderField.getText())) {
+                parentDir = new File(destinationFolderName);
+                if (parentDir.isDirectory()) {
+                    file = new File(destinationFolderField.getText());
+                } else {
+                    //Make a warning and cancel the execution.
+                    executionFailed = true;
+                    return;
+                }
+            } else {
+                file = new File("control-file");
+            }
+
+            output = new BufferedWriter(new FileWriter(file));
+
+            // Write the General-Info to the control file
+            writeGeneralInfo(output);
+
+            output.newLine();
+            output.newLine();
+            output.newLine();
+
+            // Writing the current-pops to the control file
+            writeCurrentPops(output, currentPopArray);
+            // Writing the ancestral-pops to the control file
+            writeAncestralPops(output, ancestralPopArray);
+
+            // Checking if any mig-bands were inserted. If not, we skip it
+            if (migBandsSourceList.size() != 0) {
+                // If there are any, we write them as well
+                writeMigBands(output);
+            }
+
+        } catch (Exception e) {
+            executionFailed = true;
+    //        e.printStackTrace();
+        } finally {
+            if (!executionFailed) {
+                JOptionPane.showMessageDialog(null, "Control file was successfully saved", "message", JOptionPane.PLAIN_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, "Error in creating the Control File. Check the file's path.", "message", JOptionPane.ERROR_MESSAGE);
+            }
+            if (output != null) {
+                try {
+                    output.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(ControlFileGeneratorUI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }//GEN-LAST:event_generateFileButtonActionPerformed
+
+    // Choose a destination folder for the output control file
+    private void chooseDestinationFolderButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chooseDestinationFolderButtonActionPerformed
+        JFrame parentFrame = new JFrame();
+        JFileChooser fileChooser = new JFileChooser();
+        if(destFolder != null)
+        {
+            fileChooser.setCurrentDirectory(destFolder);
+        }
+        // Demonstrate "Save" dialog:
+        int rVal = fileChooser.showSaveDialog(parentFrame);
+        if (rVal == JFileChooser.APPROVE_OPTION) {
+            selectedFile = fileChooser.getSelectedFile();
+            String path = selectedFile.getAbsolutePath();
+            destinationFolderField.setText(path);
+            fileName = fileChooser.getSelectedFile().getName();
+            destFolder = fileChooser.getCurrentDirectory();
+            destinationFolderName = destFolder.toString();
+        }
+
+    }//GEN-LAST:event_chooseDestinationFolderButtonActionPerformed
+
+    private String[] readLines(String filename) throws Exception {
+        FileReader fileReader = new FileReader(filename);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        ArrayList<String> lines = new ArrayList<String>();
+        String line = null;
+        while ((line = bufferedReader.readLine()) != null) {
+            lines.add(line);
+        }
+        bufferedReader.close();
+        return lines.toArray(new String[lines.size()]);
+    }
+
+    private void CreateBSTNodes() throws Exception {
+        ArrayList<BSTNode> nodesList = new ArrayList<BSTNode>();
+        for (int i = 0; i < currentPopsFromLoadedSettingsNAMES.size(); i++) {
+            nodesList.add(new BSTNode(currentPopsFromLoadedSettingsNAMES.get(i)));
+        }
+        for (int i = 0; i < ancestralPopsFromLoadedSettingsNAMES.size(); i++) {
+            nodesList.add(new BSTNode(ancestralPopsFromLoadedSettingsNAMES.get(i)));
+        }
+
+        for (int i = 0; i < nodesList.size(); i++) {
+            BSTNode curNode = nodesList.get(i);
+            BSTNode leftNode = null;
+            BSTNode rightNode = null;
+            String data = curNode.data;
+            for (int j = 0; j < ancestralPopsFromLoadedSettingsNAMES.size(); j++) {
+                if (data.equals(ancestralPopsFromLoadedSettingsNAMES.get(j))) {
+                    String leftData = ancestralPopsFromLoadedSettingsCHILDREN.get(j).get(0);
+                    String rightData = ancestralPopsFromLoadedSettingsCHILDREN.get(j).get(1);
+                    for (int h = 0; h < nodesList.size(); h++) {
+                        if (leftData.equals(nodesList.get(h).data)) {
+                            leftNode = nodesList.get(h);
+                        }
+                        if (rightData.equals(nodesList.get(h).data)) {
+                            rightNode = nodesList.get(h);
+                        }
+                    }
+                    
+                }
+            }
+            
+            curNode.setChildren(leftNode, rightNode);
+            if (leftNode != null) {
+                leftNode.setParent(curNode);
+            }
+            if (rightNode != null) {
+                rightNode.setParent(curNode);
+            }
+            
+        }
+
+        int curNum = 0;
+        int parentNum = 0;
+        for (int i = 0; i < nodesList.size(); i++) {
+            BSTNode node = nodesList.get(i);
+            if (node.left == null) {
+                curNum++;
+            } else {
+                parentNum++;
+            }
+        }
+
+        BSTNode[] settingsChildrenArray = new BSTNode[curNum];
+        BSTNode[] settingsParentsArray = new BSTNode[parentNum];
+        int counter = 0;
+        int nodeCounter = 0;
+        while (counter < curNum && nodeCounter < nodesList.size()) {
+            BSTNode node = nodesList.get(nodeCounter);
+            if (node.left == null) {
+                settingsChildrenArray[counter] = node;
+                counter++;
+            }
+            nodeCounter++;
+        }
+
+        counter = 0;
+        nodeCounter = 0;
+        while (counter < curNum && nodeCounter < nodesList.size()) {
+            BSTNode node = nodesList.get(nodeCounter);
+            if (node.left != null) {
+                settingsParentsArray[counter] = node;
+                counter++;
+            }
+            nodeCounter++;
+        }
+
+        nwtCreate = new NewickTree(settingsChildrenArray, settingsParentsArray);
+
+    }
+
+    //Going over the tags to see they are all valid
+    private void CheckValidTags(String filename) throws Exception {
+        FileReader fileReader = new FileReader(filename);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        String line = null;
+        Exception e = new Exception();
+        boolean curPopsStartTag = false;
+        boolean curPopsEndTag = false;
+        boolean ancPopsStartTag = false;
+        boolean ancPopsEndTag = false;
+        boolean migBandsStartTag = false;
+        boolean migBandsEndTag = false;
+        boolean migBandsEndBeforeStartTag = false;
+        while ((line = bufferedReader.readLine()) != null) {
+            if (line.toLowerCase().contains("CURRENT-POPS-START".toLowerCase())) {
+                curPopsStartTag = true;
+            }
+            if (line.toLowerCase().contains("CURRENT-POPS-END".toLowerCase()) && curPopsStartTag) {
+                curPopsEndTag = true;
+            }
+            if (line.toLowerCase().contains("ANCESTRAL-POPS-START".toLowerCase())) {
+                ancPopsStartTag = true;
+            }
+            if (line.toLowerCase().contains("ANCESTRAL-POPS-END".toLowerCase()) && ancPopsStartTag) {
+                ancPopsEndTag = true;
+            }
+            if (line.toLowerCase().contains("MIG-BANDS-START".toLowerCase())) {
+                migBandsStartTag = true;
+            }
+            if (line.toLowerCase().contains("MIG-BANDS-END".toLowerCase()) && migBandsStartTag) {
+                migBandsEndTag = true;
+            }
+            if (line.toLowerCase().contains("MIG-BANDS-END".toLowerCase()) && !migBandsStartTag) {
+                migBandsEndBeforeStartTag = true;
+            }
+        }
+        
+        if(!curPopsStartTag || !curPopsEndTag || !ancPopsStartTag || !ancPopsEndTag)
+        {
+            throw e;
+        }
+        if(migBandsEndBeforeStartTag)
+        {
+            throw e;
+        }
+        if(migBandsStartTag && !migBandsEndTag)
+        {
+            throw e;
+        }
+    }
+    // Reading the CURRENT POPs from the Settings file
+    private void GetCurrentPopsFromSettings(String filename) throws IOException {
+        FileReader fileReader = new FileReader(filename);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        currentPopsFromLoadedSettingsNAMES.clear();
+        currentPopsFromLoadedSettingsSAMPLES.clear();
+        String[] lineArray;
+        ArrayList<String> samplesLinkedList = new ArrayList<String>();
+        String line = null;
+        while ((line = bufferedReader.readLine()) != null) {
+            if (line.toLowerCase().contains("CURRENT-POPS-START".toLowerCase())) {
+                while ((line = bufferedReader.readLine()) != null && !(line.toLowerCase().contains("CURRENT-POPS-END".toLowerCase()))) {
+                    if (line.toLowerCase().contains("POP-START".toLowerCase())) {
+                        boolean currentPopSectionName = false;
+                        boolean currentPopSectionSamples = false;
+                        String currentPopNameString = "";
+                        ArrayList<String> currentPopSamplesString = new ArrayList<String>();
+                        while ((line = bufferedReader.readLine()) != null && !(line.toLowerCase().contains("POP-END".toLowerCase()))) {
+                            if (line.toLowerCase().contains("name".toLowerCase())) {
+                                lineArray = line.split("\\s+");
+                                for (int i = 0; i < lineArray.length; i++) {
+                                    if (lineArray[i].toLowerCase().equals("name".toLowerCase())) {
+                                        if (i + 1 != lineArray.length) {
+                                            currentPopNameString = lineArray[i+1];
+                                            currentPopSectionName = true;
+                                            //currentPopsFromLoadedSettingsNAMES.add(lineArray[i + 1]);
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (line.toLowerCase().contains("samples".toLowerCase())) {
+                                samplesLinkedList = new ArrayList<String>();
+                                lineArray = line.split("\\s+");
+                                for (int i = 0; i < lineArray.length; i++) {
+                                    if (lineArray[i].toLowerCase().equals("samples".toLowerCase())) {
+                                        for (int j = i + 1; j < lineArray.length; j++) {
+                                            samplesLinkedList.add(lineArray[j]);
+                                        }
+                                        currentPopSamplesString = samplesLinkedList;
+                                        currentPopSectionSamples = true;
+                                        //currentPopsFromLoadedSettingsSAMPLES.add(samplesLinkedList);
+                                    }
+                                }
+                            }
+                            
+                            if(currentPopSectionName && currentPopSectionSamples) {
+                                currentPopsFromLoadedSettingsNAMES.add(currentPopNameString);
+                                currentPopsFromLoadedSettingsSAMPLES.add(currentPopSamplesString);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        bufferedReader.close();
+    }
+
+    // Reading the ANCESTRAL POPs from the settings file
+    private void GetAncestralPopsFromSettings(String filename) throws IOException {
+        FileReader fileReader = new FileReader(filename);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        ancestralPopsFromLoadedSettingsNAMES.clear();
+        ancestralPopsFromLoadedSettingsCHILDREN.clear();
+        ancestralPopsFromLoadedSettingsTAU.clear();
+        String[] lineArray;
+        ArrayList<String> childrenLinkedList = new ArrayList<String>();
+        String line = null;
+        while ((line = bufferedReader.readLine()) != null) {
+            if (line.toLowerCase().contains("ANCESTRAL-POPS-START".toLowerCase())) {
+                while ((line = bufferedReader.readLine()) != null && !(line.toLowerCase().contains("ANCESTRAL-POPS-END".toLowerCase()))) {
+                    if (line.toLowerCase().contains("POP-START".toLowerCase())) {
+                        while ((line = bufferedReader.readLine()) != null && !(line.toLowerCase().contains("POP-END".toLowerCase()))) {
+                            if (line.toLowerCase().contains("name".toLowerCase())) {
+                                lineArray = line.split("\\s+");
+                                for (int i = 0; i < lineArray.length; i++) {
+                                    if (lineArray[i].toLowerCase().equals("name".toLowerCase())) {
+                                        if (i + 1 != lineArray.length) {
+                                            ancestralPopsFromLoadedSettingsNAMES.add(lineArray[i + 1]);
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (line.toLowerCase().contains("children".toLowerCase())) {
+                                childrenLinkedList = new ArrayList<String>();
+                                lineArray = line.split("\\s+");
+                                for (int i = 0; i < lineArray.length; i++) {
+                                    if (lineArray[i].toLowerCase().equals("children".toLowerCase())) {
+                                        for (int j = i + 1; j < lineArray.length; j++) {
+                                            childrenLinkedList.add(lineArray[j]);
+                                        }
+                                        ancestralPopsFromLoadedSettingsCHILDREN.add(childrenLinkedList);
+                                    }
+                                }
+                            }
+
+                            if (line.toLowerCase().contains("tau-initial".toLowerCase())) {
+                                lineArray = line.split("\\s+");
+                                for (int i = 0; i < lineArray.length; i++) {
+                                    if (lineArray[i].toLowerCase().equals("tau-initial".toLowerCase())) {
+                                        if (i + 1 != lineArray.length) {
+                                            ancestralPopsFromLoadedSettingsTAU.add(lineArray[i + 1]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        bufferedReader.close();
+    }
+    
+    // Reading the CURRENT POPs from the Settings file
+    private void GetMigBandsFromSettings(String filename) throws IOException {
+        FileReader fileReader = new FileReader(filename);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        sorcesMigBandsFromLoadedSettingsNAMES.clear();
+        targetsMigBandsFromLoadedSettingsNAMES.clear();
+        String[] lineArray;
+        ArrayList<String> samplesLinkedList = new ArrayList<String>();
+        String line = null;
+        while ((line = bufferedReader.readLine()) != null) {
+            if (line.toLowerCase().contains("MIG-BANDS-START".toLowerCase())) {
+                while ((line = bufferedReader.readLine()) != null && !(line.toLowerCase().contains("MIG-BANDS-END".toLowerCase()))) {
+                    if (line.toLowerCase().contains("BAND-START".toLowerCase())) {
+                        boolean currentBandSectionSource = false;
+                        boolean currentBandSectiontarget = false;
+                        String currentBandSourceString = "";
+                        String currentBandTargetString = "";
+                        while ((line = bufferedReader.readLine()) != null && !(line.toLowerCase().contains("BAND-END".toLowerCase()))) {
+                            if (line.toLowerCase().contains("source".toLowerCase())) {
+                                lineArray = line.split("\\s+");
+                                for (int i = 0; i < lineArray.length; i++) {
+                                    if (lineArray[i].toLowerCase().equals("source".toLowerCase())) {
+                                        if (i + 1 != lineArray.length) {
+                                            currentBandSourceString = lineArray[i+1];
+                                            currentBandSectionSource = true;
+                                            //currentPopsFromLoadedSettingsNAMES.add(lineArray[i + 1]);
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            if (line.toLowerCase().contains("target".toLowerCase())) {
+                                lineArray = line.split("\\s+");
+                                for (int i = 0; i < lineArray.length; i++) {
+                                    if (lineArray[i].toLowerCase().equals("target".toLowerCase())) {
+                                        if (i + 1 != lineArray.length) {
+                                            currentBandTargetString = lineArray[i+1];
+                                            currentBandSectiontarget = true;
+                                            //currentPopsFromLoadedSettingsNAMES.add(lineArray[i + 1]);
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            if(currentBandSectionSource && currentBandSectiontarget) {
+                                sorcesMigBandsFromLoadedSettingsNAMES.add(currentBandSourceString);
+                                targetsMigBandsFromLoadedSettingsNAMES.add(currentBandTargetString);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        bufferedReader.close();
+    }
+
+    private void WriteCurrentInField() throws Exception {
+
+        currentPopArray = nwtCreate.childArray;
+
+        String[] newPopSamples = new String[currentPopArray.length];
+        String[] newAdjustedCurrentPopSamples = new String[currentPopArray.length];
+        hiploidDiploid = new String[newAdjustedCurrentPopSamples.length];
+        for (int i = 0; i < newPopSamples.length; i++) {
+            newPopSamples[i] = "";
+            newAdjustedCurrentPopSamples[i] = "";
+        }
+
+        for (int i = 0; i < currentPopArray.length; i++) {
+            StringBuilder sb = new StringBuilder();
+            for(int j = 0; j < currentPopsFromLoadedSettingsSAMPLES.get(i).size(); j++) {
+                if(j % 2 == 0) {
+                    sb.append(currentPopsFromLoadedSettingsSAMPLES.get(i).get(j));
+                    if (j + 2 < currentPopsFromLoadedSettingsSAMPLES.get(i).size()) {
+                        sb.append(" ");
+                    }
+                }
+            }
+            newPopSamples[i] = sb.toString();
+            sb = new StringBuilder();
+            for (int j = 0; j < currentPopsFromLoadedSettingsSAMPLES.get(i).size(); j++) {
+                sb.append(currentPopsFromLoadedSettingsSAMPLES.get(i).get(j));
+                if (j + 1 < currentPopsFromLoadedSettingsSAMPLES.get(i).size()) {
+                    sb.append(" ");
+                }
+            }
+            newAdjustedCurrentPopSamples[i] = sb.toString();
+        }
+        // We create an array for the SAMPLES of each CURRENT-POP
+        currentPopSamples = new String[currentPopArray.length];
+        adjustedCurrentPopSamples = new String[currentPopArray.length];
+        for (int i = 0; i < currentPopSamples.length; i++) {
+            currentPopSamples[i] = newPopSamples[i];
+            adjustedCurrentPopSamples[i] = newAdjustedCurrentPopSamples[i];
+        }
+    }
+
+    private void WriteAncestralInField() throws Exception{
+        ancestralPopArray = nwtCreate.parentArray;
+        ancestralTauInitial = new String[ancestralPopArray.length];
+        for (int i = 0; i < ancestralTauInitial.length; i++) {
+            ancestralTauInitial[i] = "";
+        }
+        for (int i = 0; i < ancestralTauInitial.length; i++) {
+            ancestralTauInitial[i] = ancestralPopsFromLoadedSettingsTAU.get(i);
+        }
+    }
+
+    private void ValidateLoadingSettingsHiploidDiploid() throws Exception {
+        int samples = adjustedCurrentPopSamples.length;
+        for (int i = 0; i < samples; i++) {
+            String[] sampleArray = adjustedCurrentPopSamples[i].split("\\s+");
+            Exception e = new Exception();
+            int sampleLength = sampleArray.length;
+            if (sampleLength % 2 != 0) {
+                throw e;
+            }
+            for (int j = 0; j < sampleLength; j++) {
+                if (j % 2 != 0) {
+                    if (!(sampleArray[j].equals("d") || sampleArray[j].equals("h"))) {
+                        throw e;
+                    }
+                }
+                hiploidDiploid[i] = sampleArray[j];
+            }
+        }
+        
+        for(int i = 0; i < hiploidDiploid.length; i++) {
+        }
+    }
+    
+    private void ValidateLoadingSettingsDuplicateSamples() throws Exception {
+        int samples = adjustedCurrentPopSamples.length;
+        ArrayList<String> samplesList = new ArrayList<String>();
+        Exception e = new Exception();
+        for (int i = 0; i < samples; i++) {
+            String[] sampleArray = adjustedCurrentPopSamples[i].split("\\s+");
+            int sampleLength = sampleArray.length;
+            for (int j = 0; j < sampleLength; j++) {
+                if (j % 2 == 0) {
+                    samplesList.add(sampleArray[j]);
+                }
+            }
+        }
+        
+        for(int i = 0; i < samplesList.size(); i++) {
+            for(int j = 0; j < samplesList.size(); j++) {
+                if(i != j) {
+                    if(samplesList.get(i).equals(samplesList.get(j))) {
+                        throw e;
+                    }
+                }
+            }
+        }
+    }
+    
+    private void ValidateLoadingSettingsTauInitial() throws Exception{
+        Exception e = new Exception();
+        for(int i = 0; i < ancestralTauInitial.length; i++) {
+            if(!Validate.validateDouble(ancestralTauInitial[i])) {
+                throw e;
+            }
+        }
+    }
+    
+    private void ValidateLoadingSettingsTauInitialParentBiggerThanChild() throws Exception{
+        Exception e = new Exception();
+        for(int i = 0; i < ancestralPopArray.length; i++) {
+            BSTNode curNode = ancestralPopArray[i];
+            BSTNode left = curNode.left;
+            BSTNode right = curNode.right;
+            double currentTau = Double.parseDouble(ancestralTauInitial[i]);
+            for(int j = 0; j < ancestralPopArray.length; j++) {
+                BSTNode secNode = ancestralPopArray[j];
+                if(left.data.equals(secNode.data) || right.data.equals(secNode.data)) {
+                    double childTau = Double.parseDouble(ancestralTauInitial[j]);
+                    if(currentTau < childTau)
+                        throw e;
+                }
+            }
+        }
+    }
+
+    private void InitializeMigBands() {
+        sourceMigBandComboBox.setEnabled(false);
+        targetMigBandComboBox.setEnabled(false);
+        addNewMigBandButton.setEnabled(false);
+        deleteMigBandsButton.setEnabled(false);
+        sourceMigBandComboBox.removeAllItems();
+        targetMigBandComboBox.removeAllItems();
+        migBandsSourceList.clear();
+        migBandsTargetList.clear();
+        migBandsIndexList.clear();
+        migBandsCounter = 0;
+        expectedMigBandsOutputTextArea.setText("");
+        sorcesMigBandsFromLoadedSettingsNAMES.clear();
+        targetsMigBandsFromLoadedSettingsNAMES.clear();
+        
+    }
+    
+    private void SetActiveMigBands() {
+        sourceMigBandComboBox.setEnabled(true);
+        targetMigBandComboBox.setEnabled(true);
+        addNewMigBandButton.setEnabled(true);
+//        deleteMigBandsButton.setEnabled(true);
+    }
+    
+    private void AddPopsToMigBands() {
+        for (int i = 0; i < currentPopArray.length; i++) {
+            sourceMigBandComboBox.addItem(currentPopArray[i].data);
+            targetMigBandComboBox.addItem(currentPopArray[i].data);
+        }
+
+        for (int i = 0; i < ancestralPopArray.length; i++) {
+            sourceMigBandComboBox.addItem(ancestralPopArray[i].data);
+            targetMigBandComboBox.addItem(ancestralPopArray[i].data);
+        }
+    }
+    
+    private void CheckValidMigBands() throws Exception {
+        
+        Exception e = new Exception();
+        for(int i = 0; i < sorcesMigBandsFromLoadedSettingsNAMES.size(); i++) {
+            boolean exists = false;
+            for(int j = 0; j < ancestralPopArray.length; j++) {
+                if(sorcesMigBandsFromLoadedSettingsNAMES.get(i).equals(ancestralPopArray[j].data)) {
+                    exists = true;
+                }
+            }
+            for(int j = 0; j < currentPopArray.length; j++) {
+                if(sorcesMigBandsFromLoadedSettingsNAMES.get(i).equals(currentPopArray[j].data)) {
+                    exists = true;
+                }
+            }
+            if(!exists) {
+                throw e;
+            }
+        }
+        
+        for(int i = 0; i < targetsMigBandsFromLoadedSettingsNAMES.size(); i++) {
+            boolean exists = false;
+            for(int j = 0; j < ancestralPopArray.length; j++) {
+                if(targetsMigBandsFromLoadedSettingsNAMES.get(i).equals(ancestralPopArray[j].data)) {
+                    exists = true;
+                }
+            }
+            for(int j = 0; j < currentPopArray.length; j++) {
+                if(targetsMigBandsFromLoadedSettingsNAMES.get(i).equals(currentPopArray[j].data)) {
+                    exists = true;
+                }
+            }
+            if(!exists) {
+                throw e;
+            }
+        }
+    }
+    
+    private void CheckSameSourceTargeteMigBands() throws Exception {
+        Exception e = new Exception();
+        for(int i = 0; i < sorcesMigBandsFromLoadedSettingsNAMES.size(); i++) {
+            if(sorcesMigBandsFromLoadedSettingsNAMES.get(i).equals(targetsMigBandsFromLoadedSettingsNAMES.get(i))) {
+                throw e;
+            }
+        }
+    }
+    
+    private void CheckDuplicateMigBands() throws Exception {
+        Exception e = new Exception();
+        for(int i = 0; i < sorcesMigBandsFromLoadedSettingsNAMES.size(); i++) {
+            String curSource = sorcesMigBandsFromLoadedSettingsNAMES.get(i);
+            String curTarget = targetsMigBandsFromLoadedSettingsNAMES.get(i);
+            for(int j = 0; j < sorcesMigBandsFromLoadedSettingsNAMES.size(); j++) {
+                if (i != j) {
+                    if(sorcesMigBandsFromLoadedSettingsNAMES.get(j).equals(curSource) && targetsMigBandsFromLoadedSettingsNAMES.get(j).equals(curTarget))
+                        throw e;
+                    
+                }
+            }
+        }
+    }
+    
+    private void CheckFatherChildMigBands() throws Exception {
+        Exception e = new Exception();
+        for(int i = 0; i < sorcesMigBandsFromLoadedSettingsNAMES.size(); i++) {
+            String curSource = sorcesMigBandsFromLoadedSettingsNAMES.get(i);
+            String curTarget = targetsMigBandsFromLoadedSettingsNAMES.get(i);
+            BSTNode sourceBST = new BSTNode();
+            BSTNode tempSource = new BSTNode();
+            BSTNode targetBST = new BSTNode();
+            BSTNode tempTarget = new BSTNode();
+            for(int j = 0; j < nwtCreate.childArray.length; j++) {
+                if(nwtCreate.childArray[j].data.equals(curSource)) {
+                    sourceBST = nwtCreate.childArray[j];
+                    tempSource = nwtCreate.childArray[j];
+                }
+                if(nwtCreate.childArray[j].data.equals(curTarget)) {
+                    targetBST = nwtCreate.childArray[j];
+                    tempTarget = nwtCreate.childArray[j];
+                }
+            }
+            for(int j = 0; j < nwtCreate.parentArray.length; j++) {
+                if(nwtCreate.parentArray[j].data.equals(curSource)) {
+                    sourceBST = nwtCreate.parentArray[j];
+                    tempSource = nwtCreate.parentArray[j];
+                }
+                if(nwtCreate.parentArray[j].data.equals(curTarget)) {
+                    targetBST = nwtCreate.parentArray[j];
+                    tempTarget = nwtCreate.parentArray[j];
+                }
+            }
+            
+            while(tempSource != null) {
+                if(tempSource.data.equals(targetBST.data)) {
+                    throw e;
+                }
+                tempSource = tempSource.parent;
+            }
+            
+            while(tempTarget != null) {
+                if(tempTarget.data.equals(sourceBST.data)) {
+                    throw e;
+                }
+                tempTarget = tempTarget.parent;
+            }
+            
+        }
+        
+    }
+    
+        
+    private void MigBandsWriteToUI() throws Exception{
+        for(int i = 0; i < sorcesMigBandsFromLoadedSettingsNAMES.size(); i++) {
+            migBandsSourceList.add(sorcesMigBandsFromLoadedSettingsNAMES.get(i));
+            migBandsTargetList.add(targetsMigBandsFromLoadedSettingsNAMES.get(i));
+            migBandsIndexList.add(i);
+        }
+        migBandsCounter = migBandsSourceList.size();
+        deleteMigBandsButton.setEnabled(true);
+        writeMigBands();
+    }
+    
+    
+    private void InitializeGeneralFields() throws Exception {
+        seqFileField.setText("");
+        traceFileField.setText("");
+        numLociField.setText("");
+        burnInField.setText("");
+        mcmcIterationsField.setText("");
+        mcmcSampleSkipField.setText("");
+        startMigField.setText("");
+        iterationsPerLogField.setText("");
+        logsPerLineField.setText("");
+        tauThetaPrintField.setText("");
+        tauThetaAlphaField.setText("");
+        tauThetaBetaField.setText("");
+        migRatePrintField.setText("");
+        migRateAlphaField.setText("");
+        migRateBetaField.setText("");
+        locusConstRadioButton.setSelected(true);
+        fixedIsChosen = false;
+        chooseLocusMutRateFileField.setEnabled(fixedIsChosen);
+        chooseFixedFileButton.setEnabled(fixedIsChosen);
+        findFinetunesTrueRadioButton.setSelected(true);
+        findFinetunesBool = true;
+        findFinetunesNumStepField.setEnabled(findFinetunesBool);
+        findFinetunesSamplesPerStepField.setEnabled(findFinetunesBool);
+        findFinetunesNumStepField.setText("");
+        findFinetunesSamplesPerStepField.setText("");
+        finetuneCoalTimeField.setText("");
+        finetuneMigTimeField.setText("");
+        finetuneThetaField.setText("");
+        finetuneMigRateField.setText("");
+        finetuneTauField.setText("");
+        finetuneLocusRateField.setText("");
+        finetuneMixingField.setText("");
+        
+    }
+    
+    private void handleLine(String line) throws Exception {
+        String[] lineArray = line.split("\\s+");
+        String tag, fieldText;
+        if(lineArray.length == 0) return;
+        if (lineArray.length == 1) {
+            tag = lineArray[0];
+            if ("no-mixing".equals(tag)) {
+                noMixingCheckBox.setSelected(true);
+            }
+            return;
+        }
+        if (lineArray.length == 2) {
+            if(lineArray[0].equals("#") || lineArray[1].equals("#"))
+                return;
+            tag = lineArray[1];
+            if ("no-mixing".equals(tag)) {
+                noMixingCheckBox.setSelected(true);
+            }
+            return;
+        }
+
+        if (lineArray.length > 2 && lineArray[0].equals("")) {
+            if(lineArray[0].equals("#") || lineArray[1].equals("#"))
+                return;
+            lineArray[0] = lineArray[1];
+            lineArray[1] = lineArray[2];
+            if (lineArray.length > 3) {
+                lineArray[2] = lineArray[3];
+            }
+        }
+
+        if(lineArray[0].equals("#") || lineArray[1].equals("#"))
+            return;
+        
+        tag = lineArray[0];
+        fieldText = lineArray[1];
+
+        if ("seq-file".equals(tag)) {
+            seqFileField.setText(fieldText);
+        } else if ("trace-file".equals(tag)) {
+            traceFileField.setText(fieldText);
+            traceFileField.setForeground(Color.black);
+        } else if ("num-loci".equals(tag)) {
+            numLociField.setText(fieldText);
+        } else if ("random-seed".equals(tag)) {
+            randomSeedField.setText(fieldText);
+        } else if ("burn-in".equals(tag)) {
+            burnInField.setText(fieldText);
+            burnInField.setForeground(Color.black);
+        } else if ("mcmc-iterations".equals(tag)) {
+            mcmcIterationsField.setText(fieldText);
+            mcmcIterationsField.setForeground(Color.black);
+        } else if ("mcmc-sample-skip".equals(tag)) {
+            mcmcSampleSkipField.setText(fieldText);
+            mcmcSampleSkipField.setForeground(Color.black);
+        } else if ("start-mig".equals(tag)) {
+            startMigField.setText(fieldText);
+            startMigField.setForeground(Color.black);
+        } else if ("iterations-per-log".equals(tag)) {
+            iterationsPerLogField.setText(fieldText);
+            iterationsPerLogField.setForeground(Color.black);
+        } else if ("logs-per-line".equals(tag)) {
+            logsPerLineField.setText(fieldText);
+            logsPerLineField.setForeground(Color.black);
+        } else if ("tau-theta-print".equals(tag)) {
+            tauThetaPrintField.setText(fieldText);
+            tauThetaPrintField.setForeground(Color.black);
+        } else if ("tau-theta-alpha".equals(tag)) {
+            tauThetaAlphaField.setText(fieldText);
+            tauThetaAlphaField.setForeground(Color.black);
+        } else if ("tau-theta-beta".equals(tag)) {
+            tauThetaBetaField.setText(fieldText);
+            tauThetaBetaField.setForeground(Color.black);
+        } else if ("mig-rate-print".equals(tag)) {
+            migRatePrintField.setText(fieldText);
+            migRatePrintField.setForeground(Color.black);
+        } else if ("mig-rate-alpha".equals(tag)) {
+            migRateAlphaField.setText(fieldText);
+            migRateAlphaField.setForeground(Color.black);
+        } else if ("mig-rate-beta".equals(tag)) {
+            migRateBetaField.setText(fieldText);
+            migRateBetaField.setForeground(Color.black);
+        } else if ("locus-mut-rate".equals(tag)) {
+            if ("CONST".equals(fieldText)) {
+                locusConstRadioButton.setSelected(true);
+                fixedIsChosen = false;
+                chooseLocusMutRateFileField.setEnabled(fixedIsChosen);
+                chooseFixedFileButton.setEnabled(fixedIsChosen);
+            } else if ("VAR".equals(fieldText)) {
+                locusVarRadioButton.setSelected(true);
+                fixedIsChosen = false;
+                chooseLocusMutRateFileField.setEnabled(fixedIsChosen);
+                chooseFixedFileButton.setEnabled(fixedIsChosen);
+            } else if ("FIXED".equals(fieldText)) {
+                locusFixedRadioButton.setSelected(true);
+                chooseLocusMutRateFileField.setText(lineArray[2]);
+                chooseLocusMutRateFileField.setForeground(Color.black);
+                fixedIsChosen = true;
+                chooseLocusMutRateFileField.setEnabled(fixedIsChosen);
+                chooseFixedFileButton.setEnabled(fixedIsChosen);
+            }
+        } else if ("find-finetunes".equals(tag)) {
+            if ("TRUE".equals(fieldText)) {
+                findFinetunesTrueRadioButton.setSelected(true);
+                findFinetunesBool = true;
+                findFinetunesNumStepField.setEnabled(findFinetunesBool);
+                findFinetunesSamplesPerStepField.setEnabled(findFinetunesBool);
+            } else if ("FALSE".equals(fieldText)) {
+                findFinetunesBool = false;
+                findFinetunesNumStepField.setEnabled(findFinetunesBool);
+                findFinetunesSamplesPerStepField.setEnabled(findFinetunesBool);
+            }
+        } else if ("find-finetunes-num-steps".equals(tag)) {
+            findFinetunesNumStepField.setText(fieldText);
+            findFinetunesNumStepField.setForeground(Color.black);
+        } else if ("find-finetunes-samples-per-step".equals(tag)) {
+            findFinetunesSamplesPerStepField.setText(fieldText);
+            findFinetunesSamplesPerStepField.setForeground(Color.black);
+        } else if ("finetune-coal-time".equals(tag)) {
+            finetuneCoalTimeField.setText(fieldText);
+        } else if ("finetune-mig-time".equals(tag)) {
+            finetuneMigTimeField.setText(fieldText);
+        } else if ("finetune-theta".equals(tag)) {
+            finetuneThetaField.setText(fieldText);
+        } else if ("finetune-mig-rate".equals(tag)) {
+            finetuneMigRateField.setText(fieldText);
+        } else if ("finetune-tau".equals(tag)) {
+            finetuneTauField.setText(fieldText);
+        } else if ("finetune-locus-rate".equals(tag)) {
+            finetuneLocusRateField.setText(fieldText);
+        } else if ("finetune-mixing".equals(tag)) {
+            finetuneMixingField.setText(fieldText);
+        }
+
+    }
 
     private void writeNewMigBand() {
         migBandsStringBuilder.append(
-                    "BAND-START\n\t" +
-                    "source" + TAB + migBandsSourceList.getLast() +
-                    "\n\ttarget" + TAB + migBandsTargetList.getLast() +
-                    "\nBAND-END\n\n"
-            );
-        expectedMigBandsOutputTextArea.setText(migBandsStringBuilder.toString());        
+                "BAND-START\n\t"
+                + "source" + TAB + migBandsSourceList.getLast()
+                + "\n\ttarget" + TAB + migBandsTargetList.getLast()
+                + "\nBAND-END\n\n"
+        );
+        expectedMigBandsOutputTextArea.setText(migBandsStringBuilder.toString());
     }
-    
+
     private void writeMigBands() {
-        for(int i = 0; i < migBandsCounter; i++) {
+        for (int i = 0; i < migBandsCounter; i++) {
             migBandsStringBuilder.append(
-                    "BAND-START\n\t" +
-                    "source" + TAB + migBandsSourceList.get(i) +
-                    "\n\ttarget" + TAB + migBandsTargetList.get(i) +
-                    "\nBAND-END\n\n"
+                    "BAND-START\n\t"
+                    + "source" + TAB + migBandsSourceList.get(i)
+                    + "\n\ttarget" + TAB + migBandsTargetList.get(i)
+                    + "\nBAND-END\n\n"
             );
         }
-        expectedMigBandsOutputTextArea.setText(migBandsStringBuilder.toString());        
+        expectedMigBandsOutputTextArea.setText(migBandsStringBuilder.toString());
     }
-    
-    
+
     private void OpenWebManual(String urlString) {
         try {
             Desktop.getDesktop().browse(new URL(urlString).toURI());
         } catch (Exception e) {
-            e.printStackTrace();
+    //        e.printStackTrace();
         }
     }
-    
+
     private void openManual() {
-        
+
         File fileToDelete = new File("GPhoCS_Manual.pdf");
         String manualPath = fileToDelete.getAbsolutePath();
         Desktop desktop = Desktop.getDesktop();
@@ -3017,7 +4192,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
             Logger.getLogger(ControlFileGeneratorUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     // Helper function to check invalid input for the tree on a basic level.
     private boolean validateTreeInput(String treeInput, StringBuilder errorString) {
         int len = treeInput.length();
@@ -3067,46 +4242,52 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
     // Helper function to check invalid input for the tree in deeper level.
     private boolean validateNewickTree(NewickTree nwtValidate, String treeInput) {
         int commaCounter = 0;
-                
-        for (int i = 0; i < treeInput.length(); i ++) {
+
+        for (int i = 0; i < treeInput.length(); i++) {
             char c = treeInput.charAt(i);
-            if(c == ',')
+            if (c == ',') {
                 commaCounter++;
+            }
         }
-        
+
         // Checking if the number of commas fits the given input
-        if (commaCounter * 2 + 1 != nwtValidate.childArrayLen + nwtValidate.parentArrayLen)
+        if (commaCounter * 2 + 1 != nwtValidate.childArrayLen + nwtValidate.parentArrayLen) {
             return false;
-        
+        }
+
         return true;
     }
-    
+
     // checking to see there are no duplications of the names of the pops
     private static boolean checkForDuplications(NewickTree nwtValidate) {
         for (int i = 0; i < nwtValidate.childArrayLen; i++) {
             for (int j = 0; j < nwtValidate.childArrayLen; j++) {
-                if (nwtValidate.childArray[i].data.compareTo(nwtValidate.childArray[j].data) == 0 && i != j)
+                if (nwtValidate.childArray[i].data.compareTo(nwtValidate.childArray[j].data) == 0 && i != j) {
                     return false;
+                }
             }
             for (int j = 0; j < nwtValidate.parentArrayLen; j++) {
-                if (nwtValidate.childArray[i].data.compareTo(nwtValidate.parentArray[j].data) == 0)
+                if (nwtValidate.childArray[i].data.compareTo(nwtValidate.parentArray[j].data) == 0) {
                     return false;
+                }
             }
         }
-        
+
         for (int i = 0; i < nwtValidate.parentArrayLen; i++) {
             for (int j = 0; j < nwtValidate.childArrayLen; j++) {
-                if (nwtValidate.parentArray[i].data.compareTo(nwtValidate.childArray[j].data) == 0)
+                if (nwtValidate.parentArray[i].data.compareTo(nwtValidate.childArray[j].data) == 0) {
                     return false;
+                }
             }
             for (int j = 0; j < nwtValidate.parentArrayLen; j++) {
-                if (nwtValidate.parentArray[i].data.compareTo(nwtValidate.parentArray[j].data) == 0 && i != j)
+                if (nwtValidate.parentArray[i].data.compareTo(nwtValidate.parentArray[j].data) == 0 && i != j) {
                     return false;
+                }
             }
         }
         return true;
     }
-    
+
     // Checking for empty names of pops
     private static boolean checkForEmptyNames(NewickTree nwtValidate) {
         for (int i = 0; i < nwtValidate.childArrayLen; i++) {
@@ -3121,25 +4302,27 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
         }
         return true;
     }
-    
+
     // Checks there is no whitespace in one of the names
     private static boolean checkForWhiteSpace(NewickTree nwtValidate) {
         for (int i = 0; i < nwtValidate.childArrayLen; i++) {
-            if (checkStringForWhiteSpace(nwtValidate.childArray[i].data))
+            if (checkStringForWhiteSpace(nwtValidate.childArray[i].data)) {
                 return false;
+            }
         }
-        
+
         for (int i = 0; i < nwtValidate.parentArrayLen; i++) {
-            if (checkStringForWhiteSpace(nwtValidate.parentArray[i].data))
+            if (checkStringForWhiteSpace(nwtValidate.parentArray[i].data)) {
                 return false;
+            }
         }
-        
+
         return true;
     }
-    
+
     private static boolean checkStringForWhiteSpace(String s) {
-        for(int i = 0; i < s.length(); i++){
-            if(Character.isWhitespace(s.charAt(i))){
+        for (int i = 0; i < s.length(); i++) {
+            if (Character.isWhitespace(s.charAt(i))) {
                 return true;
             }
         }
@@ -3182,6 +4365,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton CFGLoadButton;
     private javax.swing.JButton addNewMigBandButton;
     private javax.swing.JTextField burnInField;
     private javax.swing.JLabel burnInLabel;
@@ -3315,7 +4499,7 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
     private javax.swing.JLabel tauThetaAlphaLabel;
     private javax.swing.JTextField tauThetaBetaField;
     private javax.swing.JLabel tauThetaBetaLabel;
-    private javax.swing.JTextField thauThetaPrintField;
+    private javax.swing.JTextField tauThetaPrintField;
     private javax.swing.JLabel thauThetaPrintLabel;
     private javax.swing.JTextField traceFileField;
     private javax.swing.JLabel traceFileLabel;
@@ -3342,18 +4526,31 @@ public class ControlFileGeneratorUI extends javax.swing.JFrame {
     String[] adjustedCurrentPopSamples;
     String[] ancestralTauInitial;
     String[] hiploidDiploid;
-    
+
     public static LinkedList<String> migBandsSourceList = new LinkedList<String>();
     public static LinkedList<String> migBandsTargetList = new LinkedList<String>();
     LinkedList migBandsIndexList = new LinkedList();
     int migBandsCounter = 0;
-    
+
     StringBuilder migBandsStringBuilder = new StringBuilder();
-    
+
     boolean popCurrentLegal = false;
     boolean popAncestralLegal = false;
-    
-    int firstTimeCreatingTree = 0;
-    
+
+    boolean firstTimeCreatingTree = true;
+
     public static LinkedList<String> samplesAll = new LinkedList<String>();
+
+    public static ArrayList<String> currentPopsFromLoadedSettingsNAMES = new ArrayList<String>();
+    public static ArrayList<ArrayList<String>> currentPopsFromLoadedSettingsSAMPLES = new ArrayList<ArrayList<String>>();
+
+    public static ArrayList<String> ancestralPopsFromLoadedSettingsNAMES = new ArrayList<String>();
+    public static ArrayList<ArrayList<String>> ancestralPopsFromLoadedSettingsCHILDREN = new ArrayList<ArrayList<String>>();
+    public static ArrayList<String> ancestralPopsFromLoadedSettingsTAU = new ArrayList<String>();
+    
+    public static ArrayList<String> sorcesMigBandsFromLoadedSettingsNAMES = new ArrayList<String>();
+    public static ArrayList<String> targetsMigBandsFromLoadedSettingsNAMES = new ArrayList<String>();
+    
+    File destFolder;
+
 }

@@ -9,6 +9,29 @@ public class NewickTree {
     int childArrayLen;
     int parentArrayLen;
     
+    public NewickTree(BSTNode[] children, BSTNode[] parents) {
+        childArrayLen = children.length;
+        parentArrayLen = parents.length;
+        childArray = new BSTNode[childArrayLen];
+        parentArray = new BSTNode[parentArrayLen];
+        for(int i = 0; i < childArray.length; i++) {
+            childArray[i] = new BSTNode(children[i].data, children[i].parent);
+        }
+        for(int i = 0; i < parentArray.length; i++) {
+                parentArray[i] = new BSTNode(parents[i].data, parents[i].left, parents[i].right);
+        }
+        
+        for(int i = 0; i < parentArray.length; i++) {
+            for(int j = 0; j < parentArray.length; j++) {
+                if(parentArray[i].data.equals(parentArray[j].left.data)) {
+                    parentArray[i].setParent(parentArray[j]);
+                }
+                if(parentArray[i].data.equals(parentArray[j].left.data)) {
+                    parentArray[i].setParent(parentArray[j]);
+                }
+            }
+        }
+    }
     public NewickTree(String s) {
         if (s.length() == 0) {
             return;
@@ -24,6 +47,8 @@ public class NewickTree {
         childList.toArray(childArray);
         parentList.toArray(parentArray);
     }
+    
+    
     //The start of the recurssion
     private static BSTNode recurs(String s) {
         int len = s.length();
