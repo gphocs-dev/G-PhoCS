@@ -8,7 +8,7 @@ GENERAL-INFO-START
 #	num-pop-partitions	1
 	locus-mut-rate		CONST
 	
-	mcmc-iterations		1000
+	mcmc-iterations		100000
 	iterations-per-log  5
 	logs-per-line       10
 
@@ -86,13 +86,13 @@ ANCESTRAL-POPS-START
 ANCESTRAL-POPS-END
 
 
-MIG-BANDS-START	
-
-	BAND-START		
-		name    D->B
-		source  D
-		target  B
-		mig-rate-print 0.1
-	BAND-END
-
-MIG-BANDS-END
+#MIG-BANDS-START	
+#
+#	BAND-START		
+#		name    D->B
+#		source  D
+#		target  B
+#		mig-rate-print 0.1
+#	BAND-END
+#
+#MIG-BANDS-END

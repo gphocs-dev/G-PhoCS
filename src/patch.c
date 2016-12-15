@@ -5,6 +5,9 @@
  */
 
 
+
+
+
 #define MAX_MIG_BANDS	40			// max migration bands in the population tree
 #define MAX_MIGS		10			// max migration events per genealogy
 #define NSPECIES		20			// max # of species
@@ -2578,14 +2581,45 @@ void initSpecificCladeStats(int clade){
 
 
 
+void computeCombStats(){
+	initCombStats();
+	computeCombRootStats();
+	computeCombLeavesStats();
+}
+
+void initCombStats(){
+	//TODO
+}
+
+void computeCombRootStats(){
+	computeCombRootMigStats();
+	computeCombRootCoalStats();
+}
+void computeCombRootCoalStats(){
+//	double[] sortedAges = getCombRootSortedAges();
+//	double combCoalStats = calcCoalStats
+
+}
+void computeCombRootMigStats(){
+	//TODO
+}
+void computeCombLeavesStats(){
+	computeCombLeavesMigStats();
+	computeCombLeavesCoalStats();
+}
+void computeCombLeavesCoalStats(){
+	//TODO
+}
+void computeCombLeavesMigStats(){
+	//TODO
+}
+
+
 /***
- * author - Ron visbord
- *
  * computeFlatStats
 	Computes all statistics in genetree_stats_flat needed for likelihood of
 	gene trees under null model with single population
  */
-
 void computeFlatStats() {
 	double deltaT, coalStat, migStat;
 	int gen, pop, mig_band, i, numLins;
