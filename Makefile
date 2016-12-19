@@ -7,9 +7,9 @@ CC=gcc
 
 # compiler options
 #Debugging
-#CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG
+#CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -std=c99 -fopenmp -ggdb
 #Production
-CFLAGS+= -fstack-protector-all -Wall -O3
+CFLAGS+= -fstack-protector-all -Wall -O3  -std=c99 -fopenmp
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty
@@ -30,13 +30,13 @@ bin/AlignmentProcessor: obj/utils.o obj/AlignmentProcessor.o obj/AlignmentMain.o
 obj/readTrace.o: src/readTrace.c 
 	$(CC) $(CFLAGS) -c src/readTrace.c -o obj/readTrace.o
 
-obj/GPhoCS.o: src/GPhoCS.c src/patch.c src/MCMCcontrol.h src/LocusDataLikelihood.h src/utils.h src/GenericTree.h src/PopulationTree.h src/AlignmentProcessor.h
+obj/GPhoCS.o: src/GPhoCS.c src/patch.c src/MCMCcontrol.h src/LocusDataLikelihood.h src/utils.h src/GenericTree.h src/PopulationTree.h src/AlignmentProcessor.h src/MultiCoreUtils.h
 	$(CC) $(CFLAGS) -c src/GPhoCS.c -o obj/GPhoCS.o
 
-obj/utils.o: src/utils.c src/utils.h
+obj/utils.o: src/utils.c src/utils.h  src/MultiCoreUtils.h
 	$(CC) $(CFLAGS) -c src/utils.c -o obj/utils.o
 
-obj/GenericTree.o: src/GenericTree.c src/GenericTree.h src/utils.h
+obj/GenericTree.o: src/GenericTree.c src/GenericTree.h src/utils.h 
 	$(CC) $(CFLAGS) -c src/GenericTree.c -o obj/GenericTree.o
 
 obj/PopulationTree.o: src/PopulationTree.c src/PopulationTree.h src/utils.h

@@ -1267,7 +1267,7 @@ int readSampleLine(char* sampleLine, int pop) {
 	nameORformat = 1;
 	while(str != NULL) {
 		if(nameORformat == 0) {
-			if(strlen(str) != 1 || (str[0] != 'h' && str[0] != 'd')) {
+			if((str[0] != 'h' && str[0] != 'd')) {
 				fprintf(stderr, "Error: faulty format %s for sample pop %d. Expected h or d.\n",str,pop+1);
 				numErrors++;
 			}

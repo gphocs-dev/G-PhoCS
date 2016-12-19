@@ -5,6 +5,7 @@
    Contains some utility functions and definitions.
 	
 */
+#include "MultiCoreUtils.h"
 
 #include "utils.h"
 #include <stdio.h>
@@ -233,11 +234,94 @@ void turnOnBooleanArray(unsigned short* booleanArray, int arrayLength) {
 
 static time_t time_start;
 
+
 void starttime (void)
 {
-  time_start=time(NULL);
+	time_start=time(NULL);
 }
 
+
+static TIMERS runTimes;
+
+void setStartTimeMethod(enum METHOD_NAME method)
+{
+	time_t tic = time(NULL);
+	switch(method)
+	{
+		case T_UpdateGB_InternalNode: runTimes.UpdateGB_InternalNode.start = tic; break;
+		case T_UpdateGB_MigrationNode: runTimes.UpdateGB_MigrationNode.start = tic;break;
+		case T_UpdateGB_MigSPR: runTimes.UpdateGB_MigSPR.start = tic;break;
+		case T_UpdateTau: runTimes.UpdateTau.start = tic;break;
+		case T_UpdateMigRates: runTimes.UpdateMigRates.start = tic;break;
+		case T_mixing: runTimes.mixing.start = tic;break;
+		case T_UpdateTheta: runTimes.UpdateTheta.start = tic;break;
+		case T_UpdateSampleAge: runTimes.UpdateSampleAge.start = tic;break;
+		case T_UpdateLocusRate: runTimes.UpdateLocusRate.start = tic;break;
+		case T_UpdateAdmixCoeffs: runTimes.UpdateAdmixCoeffs.start = tic;break;
+		case T_MCMCIterations: runTimes.MCMCIterations.start = tic;break;
+	}
+}
+
+void setEndTimeMethod(enum METHOD_NAME method)
+{
+	time_t toc = time(NULL);
+	switch(method)
+	{
+		case T_UpdateGB_InternalNode: runTimes.UpdateGB_InternalNode.accumulated += (toc - runTimes.UpdateGB_InternalNode.start); break;
+		case T_UpdateGB_MigrationNode: runTimes.UpdateGB_MigrationNode.accumulated += (toc - runTimes.UpdateGB_MigrationNode.start); break;
+		case T_UpdateGB_MigSPR: runTimes.UpdateGB_MigSPR.accumulated += (toc - runTimes.UpdateGB_MigSPR.start); break;
+		case T_UpdateTau: runTimes.UpdateTau.accumulated += (toc - runTimes.UpdateTau.start); break;
+		case T_UpdateMigRates: runTimes.UpdateMigRates.accumulated += (toc - runTimes.UpdateMigRates.start); break;
+		case T_mixing: runTimes.mixing.accumulated += (toc - runTimes.mixing.start); break;
+		case T_UpdateTheta: runTimes.UpdateTheta.accumulated += (toc - runTimes.UpdateTheta.start); break;
+		case T_UpdateSampleAge: runTimes.UpdateSampleAge.accumulated += (toc - runTimes.UpdateSampleAge.start); break;
+		case T_UpdateLocusRate: runTimes.UpdateLocusRate.accumulated += (toc - runTimes.UpdateLocusRate.start); break;
+		case T_UpdateAdmixCoeffs: runTimes.UpdateAdmixCoeffs.accumulated += (toc - runTimes.UpdateAdmixCoeffs.start); break;
+		case T_MCMCIterations:  runTimes.MCMCIterations.accumulated += (toc - runTimes.MCMCIterations.start); break;
+
+	}
+}
+void printMethodTimes()
+{
+#ifdef RECORD_METHOD_TIMES
+
+	char timeString[STRING_LENGTH];
+	printf("===== METHOD RUN TIME ======\n");
+	printf("UpdateGB_InternalNode (sec):            %s\n", printtime_i(runTimes.UpdateGB_InternalNode.accumulated , timeString));
+	printf("UpdateGB_MigrationNode (sec):           %s\n", printtime_i(runTimes.UpdateGB_MigrationNode.accumulated, timeString));
+	printf("UpdateGB_MigSPR (sec):                  %s\n", printtime_i(runTimes.UpdateGB_MigSPR.accumulated, timeString));
+	printf("UpdateTau (sec):                        %s\n", printtime_i(runTimes.UpdateTau.accumulated, timeString));
+	printf("UpdateMigRates (sec):                   %s\n", printtime_i(runTimes.UpdateMigRates.accumulated, timeString));
+	printf("mixing (sec):                           %s\n", printtime_i(runTimes.mixing.accumulated, timeString));
+	printf("UpdateTheta (sec):                      %s\n", printtime_i(runTimes.UpdateTheta.accumulated, timeString));
+	printf("UpdateSampleAge (sec):                  %s\n", printtime_i(runTimes.UpdateSampleAge.accumulated, timeString));
+	printf("UpdateLocusRate NO MT(sec):             %s\n", printtime_i(runTimes.UpdateLocusRate.accumulated, timeString));
+	printf("UpdateAdmixCoeffs NO MT(sec):           %s\n", printtime_i(runTimes.UpdateAdmixCoeffs.accumulated, timeString));
+	time_t total = 0;
+	total += runTimes.UpdateGB_InternalNode.accumulated;
+	total += runTimes.UpdateGB_MigrationNode.accumulated;
+	total += runTimes.UpdateGB_MigSPR.accumulated;
+	total += runTimes.UpdateTau.accumulated;
+	total += runTimes.UpdateMigRates.accumulated;
+	total += runTimes.mixing.accumulated;
+	total += runTimes.UpdateTheta.accumulated;
+	total += runTimes.UpdateSampleAge.accumulated;
+	printf("===== Total in MT Methods:              %s\n" , printtime_i(total, timeString));
+	total += runTimes.UpdateLocusRate.accumulated;
+	total += runTimes.UpdateAdmixCoeffs.accumulated;
+	printf("===== Total in All MCMCM Methods        %s\n" , printtime_i(total, timeString));
+	printf("===== Total in MCMCM Iterations:        %s\n" , printtime_i(runTimes.MCMCIterations.accumulated, timeString));
+#endif
+}
+char *printtime_i(int t , char timestr[])
+{
+	  int h, m, s;
+
+	  h=t/3600; m=(t%3600)/60; s=t-(t/60)*60;
+	  if(h)  sprintf(timestr,"%d:%02d:%02d", h,m,s);
+	  else   sprintf(timestr,"00:%02d:%02d", m,s);
+	  return(timestr);
+}
 char* printtime (char timestr[])
 {
   /* print time elapsed since last call to starttime()
@@ -308,18 +392,23 @@ double reflect(double x, double a, double b)
 
 // random sampling functions
 
-static unsigned int z_rndu=137;
-static unsigned int w_rndu=123456757;
-static double m2s2_kernel=8, m2N_kernel, s2N_kernel;;
+static unsigned int z_rndu[THREAD_COUNT_GPHOCS]={137};
+static unsigned int w_rndu[THREAD_COUNT_GPHOCS]={123456757};
+static double m2s2_kernel[THREAD_COUNT_GPHOCS]={8}, m2N_kernel[THREAD_COUNT_GPHOCS], s2N_kernel[THREAD_COUNT_GPHOCS];
 
 void setSeed (unsigned int seed) {
   if(sizeof(int) != 4) 
     puts("oh-oh, we are in trouble.  int not 32-bit?");
-  z_rndu=170*(seed%178)+137;
-  w_rndu = seed*127773;
 
-  m2N_kernel = sqrt(m2s2_kernel/(m2s2_kernel+1));  
-  s2N_kernel = sqrt(1/(m2s2_kernel+1));
+  for(int i = 0; i < THREAD_COUNT_GPHOCS ; i++)
+  {
+	  z_rndu[i]=170*(seed%178)+137;
+	  w_rndu[i] = seed*127773;
+
+	  m2N_kernel[i] = sqrt(m2s2_kernel[i]/(m2s2_kernel[i]+1));
+	  s2N_kernel[i] = sqrt(1/(m2s2_kernel[i]+1));
+	  seed++;
+  }
 }
 
 double rndnormal (void)
@@ -345,41 +434,47 @@ double rndnormal (void)
 
 double rnd2normal8 (void)
 {
-  /* This returns a variate from the mixture of two normals
-     N(-m, s2) and N(m, s2), with mean 0 and variance m^2 + s2 = 1 and m^2/s^2 = 8.
+	/* This returns a variate from the mixture of two normals
+	 N(-m, s2) and N(m, s2), with mean 0 and variance m^2 + s2 = 1 and m^2/s^2 = 8.
 
-     Let this standard variate be z.  Then mean + z * sigma will be a variate 
-     with mean mean and SD sigma.  This is useful for generating MCMC proposals
-  */
-  double z = m2N_kernel + rndnormal()*s2N_kernel;
-  ;
-  z = (rndu()<0.5 ? z : -z);
-  return (z);
+	 Let this standard variate be z.  Then mean + z * sigma will be a variate
+	 with mean mean and SD sigma.  This is useful for generating MCMC proposals
+	 */
+	int i = omp_get_thread_num();
+	double z = m2N_kernel[i] + rndnormal() * s2N_kernel[i];
+	;
+	z = (rndu() < 0.5 ? z : -z);
+	return (z);
 }
 
 
 double rndu (void)
 {
-  /* U(0,1): AS 183: Appl. Stat. 31:188-190 
-     Wichmann BA & Hill ID.  1982.  An efficient and portable
-     pseudo-random number generator.  Appl. Stat. 31:188-190
 
-     x, y, z are any numbers in the range 1-30000.  Integer operation up
-     to 30323 required.
-  */
-  static unsigned int x_rndu=11, y_rndu=23;
-  double r;
+	/* U(0,1): AS 183: Appl. Stat. 31:188-190
+	 Wichmann BA & Hill ID.  1982.  An efficient and portable
+	 pseudo-random number generator.  Appl. Stat. 31:188-190
 
-  x_rndu = 171*(x_rndu%177) -  2*(x_rndu/177);
-  y_rndu = 172*(y_rndu%176) - 35*(y_rndu/176);
-  z_rndu = 170*(z_rndu%178) - 63*(z_rndu/178);
-  /*
-    if (x_rndu<0) x_rndu+=30269;
-    if (y_rndu<0) y_rndu+=30307;
-    if (z_rndu<0) z_rndu+=30323;
-  */
-  r = x_rndu/30269.0 + y_rndu/30307.0 + z_rndu/30323.0;
-  return (r-(int)r);
+	 x, y, z are any numbers in the range 1-30000.  Integer operation up
+	 to 30323 required.
+	 */
+	static unsigned int x_rndu = 11, y_rndu = 23;
+	double r;
+	int i = omp_get_thread_num();
+
+	x_rndu = 171 * (x_rndu % 177) - 2 * (x_rndu / 177);
+	y_rndu = 172 * (y_rndu % 176) - 35 * (y_rndu / 176);
+	z_rndu[i] = 170 * (z_rndu[i] % 178) - 63 * (z_rndu[i] / 178);
+
+	/*
+	 if (x_rndu<0) x_rndu+=30269;
+	 if (y_rndu<0) y_rndu+=30307;
+	 if (z_rndu[omp_get_thread_num()]<0) z_rndu[i]+=30323;
+	 */
+	r = x_rndu / 30269.0 + y_rndu / 30307.0 + z_rndu[i] / 30323.0;
+
+	return (r - (int) r);
+
 }
 
 
@@ -402,7 +497,8 @@ double rndgamma (double s)
   else if (s<1)  r=rndgamma1 (s);
   else if (s>1)  r=rndgamma2 (s);
   else           r=-log(rndu());
-  return (r);
+
+return (r);
 }
 
 
@@ -431,6 +527,7 @@ double rndgamma1 (double s)
       if (r*(w+1)>=1 || -log(r)<=w)  continue;
     break;
   }
+
   return (x);
 }
 
