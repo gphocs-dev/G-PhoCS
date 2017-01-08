@@ -255,10 +255,12 @@ int readGenericTree(FILE* file, GenericBinaryTree* tree, unsigned short readLeaf
     //		fflush(stdout);
     // label characters (':' and '#')
     if(ch == ':') {	
-      fscanf(file,"%lf",&(tree->label1[node]));
+      if(0 > fscanf(file,"%lf",&(tree->label1[node])))
+    	return -1;
     } 
     else if(ch == '#') {		
-      fscanf(file,"%lf",&(tree->label2[node]));
+      if(0 > fscanf(file,"%lf",&(tree->label2[node])))
+    	return -1;
     } 
 
     // move down to internal node

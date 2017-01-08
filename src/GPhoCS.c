@@ -1,7 +1,10 @@
-/** 
- \file GPhoCS.c
- The MAIN file containing code for the G-PhoCS program, implementation of the MCMC sampling procedure
- */
+/*============================================================================
+ File: GPhoCS.c
+
+ The MAIN file containing code for the G-PhoCS program,
+ implementation of the MCMC sampling procedure
+
+ ============================================================================*/
 
 #include "utils.h"
 #include "MCMCcontrol.h"
@@ -9,160 +12,149 @@
 #include "GenericTree.h"
 #include "PopulationTree.h"
 #include <getopt.h>
-#include "LocusDataLikelihood.h"				// NEXTGEN: switch to LocusGenealogy.h !!!
+#include "LocusDataLikelihood.h"	// NEXTGEN: switch to LocusGenealogy.h !!!
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "MultiCoreUtils.h"
 
-/******************************************************************************************************/
-/******                                      CONSTANTS                                           ******/
-/******************************************************************************************************/
+
+// --- CONSTANTS --------------------------------------------------------------
 
 #define LOG_STEPS_NOT
 #define CHECKALL_NOT
 //#define CHECKALL
 
-#define NUM_TYPES				5
-#define TARGET_ACCEPTANCE_PERCENT       35
-#define TARGET_ACCEPTANCE_RANGE		    5
-#define FINETUNE_RESOLUTION             0.0000001
-#define MAX_FINETUNE 10
-#define ACCEPTANCE_FUDGE 2
+#define NUM_TYPES					5
+#define TARGET_ACCEPTANCE_PERCENT	35
+#define TARGET_ACCEPTANCE_RANGE		5
+#define FINETUNE_RESOLUTION			0.0000001
+#define MAX_FINETUNE				10
+#define ACCEPTANCE_FUDGE			2
+
+#define GPHOCS_VERSION_NUM          "1.3"
+#define GPHOCS_VERSION_DATE         "Jan. 2017"
 
 int typeCount[NUM_TYPES];
 
-/***************************************************************************************************************/
-/******                                              DATA TYPES                                           ******/
-/***************************************************************************************************************/
+// --- GLOBAL DATA STRUCTURES -------------------------------------------------
 
-/***************************************************************************************************************/
-/******                                  GLOBAL DATA STRUCTURES                                           ******/
-/***************************************************************************************************************/
-
-/*********
- * data setup
- *********/
+// Data setup. "Singleton"
 struct DATA_STATE {
-	double logLikelihood; // average log-likelihood per genealogy of data given pop tree
-	double dataLogLikelihood; // log likelihood (not averaged) of data given all genealogies.
-	double rateVar;		// the actual variance in locus-specific mutation rate
-
-	LocusData** lociData;// array of LocusData data structures (of length numLoci). (allocated in processAlignments)
+	double logLikelihood;              // average log-likelihood per genealogy
+									   // of data given pop tree
+	double dataLogLikelihood;          // log likelihood (not averaged) of data
+									   // given all genealogies.
+	double rateVar;		               // the actual variance in locus-specific
+									   // mutation rate
+	LocusData** lociData;              // array of LocusData data structures
+									   // (of length numLoci).
+									   // (allocated in processAlignments)
 } dataState;
 
-/*********
- * misc stats
- *********/
+// Miscellaneous statistics. "Singleton"
 struct MISC_STATS {
-	int rubberband_mig_conflicts;// number of rubber band conflicts with migration nodes
-	int spr_zero_targets;// number of times an SPR event encounters zero target edges
-	//	int small_interval;				// very small interval for moving coalescent event or migration event
-	int not_enough_migs;// number of times not enough pre-allocated space for migration nodes
-//	double spr_lnld_disc;			// the size of the smallest discrepancy in log-likelihood computation
+	int rubberband_mig_conflicts;      // number of rubber band conflicts
+									   // with migration nodes
+
+	int spr_zero_targets;              // number of times an SPR event
+									   // encounters zero target edges
+
+	int not_enough_migs;               // number of times not enough pre-
+									   // allocated space for migration nodes
+
+// int small_interval;                 // very small interval for moving
+// coalescent event or migration event
+
+// double spr_lnld_disc;               // the size of the smallest discrepancy
+//in log-likelihood computation
 } misc_stats;
 
-static struct option long_options[] = { { "help", no_argument, 0, 'h' }, {
-		"verbose", no_argument, 0, 'v' }, { 0, 0, 0, 0 } };
+static struct option long_options[] = { { "help", no_argument, 0, 'h' },
+                                        { "verbose", no_argument, 0, 'v' },
+                                        { "nthreads", no_argument, 0, 'n' },
+										{ 0, 0, 0, 0 } };
 
-/******************************************************************************************************/
-/******                                FUNCTION DECLARATIONS                                     ******/
-/******************************************************************************************************/
+// --- FUNCTION DECLARATIONS --------------------------------------------------
 
 void printUsage(char *programName);
 int processAlignments();
 int readRateFile(const char* fileName);
 int initLociWithoutData();
-void printParamVals(double paramVals[], int startParam, int endParam, FILE* out);
+void printParamVals(double paramVals[], int startParam, int endParam, FILE* o);
 int recordTypes();
 int recordParamVals(double paramVals[]);
 int performMCMC();
 void printGenealogyAndExit(int gen, int errStatus);
 int freeAllMemory();
 
-/** sampling functions **/
-int UpdateGB_InternalNode(double finetune); //step1 update coalescent times
-int UpdateGB_MigrationNode(double finetune); // step 2 update migration times
-int UpdateGB_MigSPR(); //step3 - update genealogy structure
-int UpdateTheta(double finetune); //step 4 - No to MT
-int UpdateMigRates(double finetune); //step 5 update migration bands - No to MT
-void UpdateTau(double *finetunes, int *accepted); //step 6 update tau. More difficult to MT. most time consuming
+// Sampling functions
+int UpdateGB_InternalNode(double finetune);  // step 1: update coalescent times
+int UpdateGB_MigrationNode(double finetune); // step 2: update migration times
+int UpdateGB_MigSPR();                       // step 3: update genealogy struct
+int UpdateTheta(double finetune);            // step 4: No to MT
+int UpdateMigRates(double finetune);         // step 5: No to MT,
+                                             //         update migration bands
 
-void UpdateSampleAge(double *finetunes, int *accepted); // similar to update Tau. Modifies the time
+void UpdateTau(double *finetunes,            // step 6: update tau
+		       int *accepted);               //         More difficult to MT,
+                                             //         most time consuming
 
-int UpdateLocusRate(double finetune); //
-int UpdateAdmixCoeffs(double finetune); //ledaleg
+void UpdateSampleAge(double *finetunes,      // similar to update Tau.
+		             int *accepted);         // Modifies the time
+
+int UpdateLocusRate(double finetune);
+int UpdateAdmixCoeffs(double finetune);      // Shall be skipped ("ledaleg")
 int mixing(double finetune);
 
 /** patch for intermediate G-PhoCS version **/
 #include "patch.c"
 
-/******************************************************************************************************/
-/******                              FUNCTION IMPLEMENTATION                                     ******/
-/******************************************************************************************************/
-
+// --- FUNCTION IMPLEMENTATIONS -----------------------------------------------
 void printUsage(char *programName) {
-	printf(
-			"Usage: %s <control-file-name> [secondary-control-file-name] [options].\n",
-			programName);
-	printf(
-			"-v, --verbose     Print more information at the beginning of the program\n");
+	printf("Usage: %s <control-file-name> "
+			"[secondary-control-file-name] [options].\n", programName);
+	printf("-v, --verbose     Print more information "
+			"at the beginning of the program\n");
 	printf("-h, --help\n");
 	printf("See manual for more help.\n");
 }
 
-/***********************************************************************************
- *	main function
- ***********************************************************************************/
+//-----------------------------------------------------------------------------
+// main
+//-----------------------------------------------------------------------------
 int main(int argc, char*argv[]) {
 
 	int res, c, option_index;
+	int num_threads_in_cmd = -1;
+	int max_num_threads = omp_get_max_threads();
 
-	printf("**********************************************************************\n");
-	printf("*                G-Phocs ver 1.2.3        Sept 2015                  *\n");
-	printf("**********************************************************************\n");
-	printf("**********************    MT Settings    *****************************\n");
-	printf("Env Init Maximum Thread Count: %d\n",omp_get_max_threads());
-#ifdef THREAD_MT_ON
-	if(THREAD_COUNT_GPHOCS < omp_get_max_threads())
-	{
-		printf("Setting Maximum Thread Count to : %d\n",THREAD_COUNT_GPHOCS);
-		omp_set_num_threads(THREAD_COUNT_GPHOCS);
-
-		printf("Set Maximum Thread Count to : %d\n", THREAD_COUNT_GPHOCS);
-	}
-#endif
-#ifndef THREAD_MT_ON
-		printf("MT OFF. Setting Maximum Thread Count to : 1\n");
-		omp_set_num_threads(1);
-#endif
 	/*
-#ifdef THREAD_UpdateGB_InternalNode
-	printf("THREAD UpdateGB_InternalNode: %d\n", THREAD_COUNT_GPHOCS);
-#endif
-#ifdef THREAD_UpdateGB_MigrationNode
-	printf("THREAD UpdateGB_MigrationNode: %d\n", THREAD_COUNT_GPHOCS);
-#endif
-#ifdef THREAD_UpdateGB_MigSPR
-	printf("THREAD UpdateGB_MigSPR: %d\n", THREAD_COUNT_GPHOCS);
-#endif
-#ifdef THREAD_UpdateTau
-	printf("THREAD UpdateTau: %d\n", THREAD_COUNT_GPHOCS);
-#endif
-#ifdef THREAD_UpdateMigRates
-	printf("THREAD UpdateMigRates: %d\n", THREAD_COUNT_GPHOCS);
-#endif
-#ifdef THREAD_mixing
-	printf("THREAD mixing: %d\n", THREAD_COUNT_GPHOCS);
-#endif
-#ifdef THREAD_UpdateTheta
-	printf("THREAD UpdateTheta: %d\n", THREAD_COUNT_GPHOCS);
-#endif
-#ifdef THREAD_UpdateSampleAge
-	printf("THREAD UpdateSampleAge: %d\n", THREAD_COUNT_GPHOCS);
-#endif*/
-	printf("**********************************************************************\n\n");
+	 #ifdef THREAD_UpdateGB_InternalNode
+	 printf("THREAD UpdateGB_InternalNode: %d\n", THREAD_COUNT_GPHOCS);
+	 #endif
+	 #ifdef THREAD_UpdateGB_MigrationNode
+	 printf("THREAD UpdateGB_MigrationNode: %d\n", THREAD_COUNT_GPHOCS);
+	 #endif
+	 #ifdef THREAD_UpdateGB_MigSPR
+	 printf("THREAD UpdateGB_MigSPR: %d\n", THREAD_COUNT_GPHOCS);
+	 #endif
+	 #ifdef THREAD_UpdateTau
+	 printf("THREAD UpdateTau: %d\n", THREAD_COUNT_GPHOCS);
+	 #endif
+	 #ifdef THREAD_UpdateMigRates
+	 printf("THREAD UpdateMigRates: %d\n", THREAD_COUNT_GPHOCS);
+	 #endif
+	 #ifdef THREAD_mixing
+	 printf("THREAD mixing: %d\n", THREAD_COUNT_GPHOCS);
+	 #endif
+	 #ifdef THREAD_UpdateTheta
+	 printf("THREAD UpdateTheta: %d\n", THREAD_COUNT_GPHOCS);
+	 #endif
+	 #ifdef THREAD_UpdateSampleAge
+	 printf("THREAD UpdateSampleAge: %d\n", THREAD_COUNT_GPHOCS);
+	 #endif*/
 
 	starttime();
 	if (argc <= 1) {
@@ -175,7 +167,7 @@ int main(int argc, char*argv[]) {
 	while (1) {
 		// getopt_long stores the option index here. 
 		option_index = 0;
-		c = getopt_long(argc, argv, "hv", long_options, &option_index);
+		c = getopt_long(argc, argv, "hvn:", long_options, &option_index);
 
 		// Detect the end of the options. 
 		if (c == -1)
@@ -195,6 +187,10 @@ int main(int argc, char*argv[]) {
 			// getopt_long already printed an error message.
 			break;
 
+		case 'n':
+			num_threads_in_cmd = atoi(optarg);
+			break;
+
 		default:
 			abort();
 		}
@@ -205,7 +201,23 @@ int main(int argc, char*argv[]) {
 		exit(-1);
 	}
 
+
+	printf("****************************"
+           "**********************************\n\n");
+	printf("G-Phocs version "GPHOCS_VERSION_NUM",  "GPHOCS_VERSION_DATE"\n\n");
+	printf("**************************************************************\n");
+
+	int final_num_threads = 1;
+	if(-1 != num_threads_in_cmd)
+		//User set the "-n" command line argument
+		final_num_threads = min2(num_threads_in_cmd, max_num_threads);
+	else
+		//No requests from user on the number of threads. Take maximum.
+		final_num_threads = max_num_threads;
+	printf("Setting Thread Count to: %d\n", final_num_threads);
+
 	printf("Reading control settings from file %s...\n", argv[optind]);
+
 	initGeneralInfo();
 	res = readControlFile(argv[optind]);
 	if (res != 0) {
@@ -1379,23 +1391,23 @@ int performMCMC() {
 	for (iteration = -mcmcSetup.burnin; iteration < mcmcSetup.numSamples;
 			iteration++) {
 #ifdef RECORD_METHOD_TIMES
-	if(iteration > 0 && iteration % 5000 == 0)
-	{
-		setEndTimeMethod(T_MCMCIterations);
-		setStartTimeMethod(T_MCMCIterations);
-		printMethodTimes();
-	}
+		if(iteration > 0 && iteration % 5000 == 0)
+		{
+			setEndTimeMethod(T_MCMCIterations);
+			setStartTimeMethod(T_MCMCIterations);
+			printMethodTimes();
+		}
 #endif
 
 		for (j = 0; j < mcmcSetup.genetreeSamples; j++) {
 
 			// update COALESCENCE NODE ages
 #ifdef RECORD_METHOD_TIMES
-	setStartTimeMethod(T_UpdateGB_InternalNode);
+			setStartTimeMethod(T_UpdateGB_InternalNode);
 #endif
 			acceptCount = UpdateGB_InternalNode(mcmcSetup.finetunes.coalTime);
 #ifdef RECORD_METHOD_TIMES
-	setEndTimeMethod(T_UpdateGB_InternalNode);
+			setEndTimeMethod(T_UpdateGB_InternalNode);
 #endif
 			acceptanceCounts.coalTime += acceptCount;
 
@@ -1408,11 +1420,11 @@ int performMCMC() {
 
 			// update MIGRATION NODE ages
 #ifdef RECORD_METHOD_TIMES
-	setStartTimeMethod(T_UpdateGB_MigrationNode);
+			setStartTimeMethod(T_UpdateGB_MigrationNode);
 #endif
 			acceptCount = UpdateGB_MigrationNode(mcmcSetup.finetunes.migTime);
 #ifdef RECORD_METHOD_TIMES
-	setEndTimeMethod(T_UpdateGB_MigrationNode);
+			setEndTimeMethod(T_UpdateGB_MigrationNode);
 #endif
 			acceptanceCounts.migTime += acceptCount;
 			// count number of events for acceptance ratio
@@ -1429,11 +1441,11 @@ int performMCMC() {
 
 			// update GENEALOGY TOPOLOGY (including migration events)
 #ifdef RECORD_METHOD_TIMES
-	setStartTimeMethod(T_UpdateGB_MigSPR);
+			setStartTimeMethod(T_UpdateGB_MigSPR);
 #endif
 			acceptCount = UpdateGB_MigSPR();
 #ifdef RECORD_METHOD_TIMES
-	setEndTimeMethod(T_UpdateGB_MigSPR);
+			setEndTimeMethod(T_UpdateGB_MigSPR);
 #endif
 			acceptanceCounts.SPR += acceptCount;
 
@@ -1447,11 +1459,11 @@ int performMCMC() {
 			// update individual LOCUS MUTATION rates
 			if (mcmcSetup.mutRateMode == 1) {
 #ifdef RECORD_METHOD_TIMES
-	setStartTimeMethod(T_UpdateLocusRate);
+				setStartTimeMethod(T_UpdateLocusRate);
 #endif
 				acceptCount = UpdateLocusRate(mcmcSetup.finetunes.locusRate);
 #ifdef RECORD_METHOD_TIMES
-	setEndTimeMethod(T_UpdateLocusRate);
+				setEndTimeMethod(T_UpdateLocusRate);
 #endif
 				acceptanceCounts.locusRate += acceptCount;
 
@@ -1466,11 +1478,11 @@ int performMCMC() {
 
 		// update THETAs
 #ifdef RECORD_METHOD_TIMES
-	setStartTimeMethod(T_UpdateTheta);
+		setStartTimeMethod(T_UpdateTheta);
 #endif
 		acceptCount = UpdateTheta(mcmcSetup.finetunes.theta);
 #ifdef RECORD_METHOD_TIMES
-	setEndTimeMethod(T_UpdateTheta);
+		setEndTimeMethod(T_UpdateTheta);
 #endif
 		acceptanceCounts.theta += acceptCount;
 
@@ -1484,11 +1496,11 @@ int performMCMC() {
 		// update MIGRATION RATEs
 		if (iteration > mcmcSetup.startMig) {
 #ifdef RECORD_METHOD_TIMES
-	setStartTimeMethod(T_UpdateMigRates);
+			setStartTimeMethod(T_UpdateMigRates);
 #endif
 			acceptCount = UpdateMigRates(mcmcSetup.finetunes.migRate);
 #ifdef RECORD_METHOD_TIMES
-	setEndTimeMethod(T_UpdateMigRates);
+			setEndTimeMethod(T_UpdateMigRates);
 #endif
 			acceptanceCounts.migRate += acceptCount;
 
@@ -1502,11 +1514,11 @@ int performMCMC() {
 
 		// update TAUs
 #ifdef RECORD_METHOD_TIMES
-	setStartTimeMethod(T_UpdateTau);
+		setStartTimeMethod(T_UpdateTau);
 #endif
 		UpdateTau(mcmcSetup.finetunes.taus, acceptCountArray);
 #ifdef RECORD_METHOD_TIMES
-	setEndTimeMethod(T_UpdateTau);
+		setEndTimeMethod(T_UpdateTau);
 #endif
 		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
 			acceptanceCounts.taus[pop] += acceptCountArray[pop];
@@ -1520,11 +1532,11 @@ int performMCMC() {
 #endif
 
 #ifdef RECORD_METHOD_TIMES
-	setStartTimeMethod(T_UpdateSampleAge);
+		setStartTimeMethod(T_UpdateSampleAge);
 #endif
 		UpdateSampleAge(mcmcSetup.finetunes.taus, acceptCountArray);
 #ifdef RECORD_METHOD_TIMES
-	setEndTimeMethod(T_UpdateSampleAge);
+		setEndTimeMethod(T_UpdateSampleAge);
 #endif
 
 		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
@@ -1540,11 +1552,11 @@ int performMCMC() {
 
 		// update admixture coefficients
 #ifdef RECORD_METHOD_TIMES
-	setStartTimeMethod(T_UpdateAdmixCoeffs);
+		setStartTimeMethod(T_UpdateAdmixCoeffs);
 #endif
 		acceptCount = UpdateAdmixCoeffs(mcmcSetup.finetunes.admix);
 #ifdef RECORD_METHOD_TIMES
-	setEndTimeMethod(T_UpdateAdmixCoeffs);
+		setEndTimeMethod(T_UpdateAdmixCoeffs);
 #endif
 		acceptanceCounts.admix += acceptCount;
 
@@ -1559,13 +1571,12 @@ int performMCMC() {
 		// NO MIXING
 		if (mcmcSetup.doMixing) {
 #ifdef RECORD_METHOD_TIMES
-	setStartTimeMethod(T_mixing);
+			setStartTimeMethod(T_mixing);
 #endif
 			acceptCount = mixing(mcmcSetup.finetunes.mixing);
 #ifdef RECORD_METHOD_TIMES
-	setEndTimeMethod(T_mixing);
+			setEndTimeMethod(T_mixing);
 #endif
-
 
 			acceptanceCounts.mixing += acceptCount;
 		}
@@ -1609,11 +1620,11 @@ int performMCMC() {
 		// start sampling migrations
 		if (iteration == mcmcSetup.startMig) {
 #ifdef RECORD_METHOD_TIMES
-	setStartTimeMethod(T_UpdateMigRates);
+			setStartTimeMethod(T_UpdateMigRates);
 #endif
 			sampleMigRates(dataSetup.popTree);
 #ifdef RECORD_METHOD_TIMES
-	setEndTimeMethod(T_UpdateMigRates);
+			setEndTimeMethod(T_UpdateMigRates);
 #endif
 
 			// adjust likelihoods to newly sampled migration rates
@@ -1634,7 +1645,8 @@ int performMCMC() {
 					dataState.logLikelihood, dataState.dataLogLikelihood);
 			fflush(ioSetup.traceFile);
 
-			if (recordCoalStats) {
+			if (recordCoalStats && 0) {
+				//@@eug: never enter here
 				computeFlatStats();
 				computeNodeStats();
 				computeGenetreeStats_partitioned();
@@ -1996,7 +2008,8 @@ int performMCMC() {
 				numSamplesPerLog = ioSetup.samplesPerLog;
 				logsPerLine = ioSetup.logsPerLine;
 				printf("\n");
-				printf("-------------------------------------  finetunes  ------------------------------------\n");
+				printf(
+						"-------------------------------------  finetunes  ------------------------------------\n");
 				printf("          %8lf  %8lf            %8lf  %8lf  ",
 						mcmcSetup.finetunes.coalTime,
 						mcmcSetup.finetunes.migTime, mcmcSetup.finetunes.theta,
@@ -2007,7 +2020,8 @@ int performMCMC() {
 				printf("          %8lf  %8lf  \n",
 						mcmcSetup.finetunes.locusRate,
 						mcmcSetup.finetunes.mixing);
-				printf("--------------------------------------------------------------------------------------\n");
+				printf(
+						"--------------------------------------------------------------------------------------\n");
 			}
 
 		} // print log
@@ -2049,7 +2063,7 @@ int UpdateGB_InternalNode(double finetune) {
 	}
 
 #ifdef THREAD_UpdateGB_InternalNode
-	#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 	for (gen = 0; gen < dataSetup.numLoci; gen++) {
 
@@ -2152,14 +2166,19 @@ int UpdateGB_InternalNode(double finetune) {
 			 }
 			 **/
 		} // end of for(inode)
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 		dataState.dataLogLikelihood += dataLogLikelihood_local;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 		dataState.logLikelihood += logLikelihood_local;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 		accepted += accepted_local;
 	} // end of for(gen)
-
 
 	return (accepted);
 }
@@ -2179,7 +2198,6 @@ int UpdateGB_MigrationNode(double finetune) {
 	if (finetune <= 0.0) {
 		return 0;
 	}
-
 
 #ifdef THREAD_UpdateGB_MigrationNode
 #pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
@@ -2295,14 +2313,15 @@ int UpdateGB_MigrationNode(double finetune) {
 			}
 		}      // end of for(mignode)
 
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 		dataState.logLikelihood += genetree_lnLd_delta_local;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 		accepted += accepted_local;
 	}      // end of for(gen)
-
-
-
 
 	return (accepted);
 }
@@ -2319,8 +2338,6 @@ int UpdateGB_MigSPR() {
 	// double UNUSED, t_old;
 // UNUSED  unsigned short didAccept;
 	//	double	genetree_lnLd, genetree_lnLd_new;
-
-
 
 #ifdef THREAD_UpdateGB_MigSPR
 #pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
@@ -2420,9 +2437,13 @@ int UpdateGB_MigSPR() {
 						(locus_data[gen].mig_spr_stats.genetree_delta_lnLd[1]
 								- locus_data[gen].mig_spr_stats.genetree_delta_lnLd[0]);
 
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 				dataState.dataLogLikelihood += lnLd;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 				dataState.logLikelihood += (lnLd
 						- locus_data[gen].mig_spr_stats.genetree_delta_lnLd[0]
 						+ locus_data[gen].mig_spr_stats.genetree_delta_lnLd[1])
@@ -2435,7 +2456,9 @@ int UpdateGB_MigSPR() {
 									1
 											/ admixture_status.admixtureCoefficients[admixIndex]
 											- 1) * (1 - 2 * altPop);
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 					dataState.logLikelihood +=
 							log(
 									1
@@ -2501,10 +2524,14 @@ int UpdateGB_MigSPR() {
 					nodePops[gen][father] =
 							locus_data[gen].mig_spr_stats.father_pop_new;
 					genetree_stats[gen].num_coals[father_pop_old]--;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 					genetree_stats_total.num_coals[father_pop_old]--;
 					genetree_stats[gen].num_coals[locus_data[gen].mig_spr_stats.father_pop_new]++;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 					genetree_stats_total.num_coals[locus_data[gen].mig_spr_stats.father_pop_new]++;
 				}
 
@@ -2530,7 +2557,9 @@ int UpdateGB_MigSPR() {
 					genetree_stats[gen].mig_stats[mig_band] +=
 							(locus_data[gen].genetree_stats_delta[1].mig_stats_delta[mig_band]
 									- locus_data[gen].genetree_stats_delta[0].mig_stats_delta[mig_band]);
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 					genetree_stats_total.mig_stats[mig_band] +=
 							(locus_data[gen].genetree_stats_delta[1].mig_stats_delta[mig_band]
 									- locus_data[gen].genetree_stats_delta[0].mig_stats_delta[mig_band]);
@@ -2540,7 +2569,9 @@ int UpdateGB_MigSPR() {
 					genetree_stats[gen].coal_stats[pop] +=
 							locus_data[gen].genetree_stats_delta[1].coal_stats_delta[pop]
 									- locus_data[gen].genetree_stats_delta[0].coal_stats_delta[pop];
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 					genetree_stats_total.coal_stats[pop] +=
 							(locus_data[gen].genetree_stats_delta[1].coal_stats_delta[pop]
 									- locus_data[gen].genetree_stats_delta[0].coal_stats_delta[pop])
@@ -2612,7 +2643,9 @@ int UpdateGB_MigSPR() {
 			 **/
 
 		} // end for(node)
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 		accepted += local_accepted;
 	} // end for(gen)
 
@@ -2704,7 +2737,6 @@ int UpdateTheta(double finetune) {
 		return 0;
 	}
 
-
 	for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
 		// record previous theta
 		thetaold = dataSetup.popTree->pops[pop]->theta;
@@ -2737,7 +2769,7 @@ int UpdateTheta(double finetune) {
 #endif
 			accepted++;
 #ifdef THREAD_UpdateTheta
-		#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 			for (gen = 0; gen < dataSetup.numLoci; gen++) {
 				locus_data[gen].genLogLikelihood -= (lnc
@@ -2754,7 +2786,6 @@ int UpdateTheta(double finetune) {
 		}
 
 	} // end of for(pop)
-
 
 	return (accepted);
 }
@@ -2774,7 +2805,6 @@ int UpdateMigRates(double finetune) {
 	if (finetune <= 0.0) {
 		return 0;
 	}
-
 
 	for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
 
@@ -2836,7 +2866,7 @@ int UpdateMigRates(double finetune) {
 			accepted++;
 
 #ifdef THREAD_UpdateMigRates
-		#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 			for (gen = 0; gen < dataSetup.numLoci; gen++) {
 				locus_data[gen].genLogLikelihood += (lnc
@@ -3091,9 +3121,8 @@ void UpdateTau(double *finetunes, int *accepted) {
 		 *
 		 */
 
-
 #ifdef THREAD_UpdateTau
-		#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 		for (gen = 0; gen < dataSetup.numLoci; gen++) {
 			double age, new_age;
@@ -3105,7 +3134,9 @@ void UpdateTau(double *finetunes, int *accepted) {
 			// keep in mind that this part of the code is ALWAYS reachable - there is no more "Break"
 			locus_data[gen].mig_conflict_log = 0;
 
+//#ifdef ENABLE_OMP_THREADS
 //#pragma omp flush (mig_conflict)
+//#endif
 			if (mig_conflict == 0) {
 				locus_data[gen].mig_conflict_log = 1;
 
@@ -3135,7 +3166,9 @@ void UpdateTau(double *finetunes, int *accepted) {
 				int mig1;
 
 				for (i = 0; i < genetree_migs[gen].num_migs; i++) {
+//#ifdef ENABLE_OMP_THREADS
 //#pragma omp flush (mig_conflict)
+//#endif
 					if (mig_conflict == 0) {
 						int pop = -1;
 						int mig = genetree_migs[gen].living_mignodes[i];
@@ -3198,13 +3231,17 @@ void UpdateTau(double *finetunes, int *accepted) {
 									>= dataSetup.popTree->migBands[mig_band].endTime) {
 								//mig_conflict_gen = gen;
 								mig_conflict = 1;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
+#endif
 								//						fprintf(ioSetup.debugMiscFile, "Mig conflict of type 1, mig-band %d, end time %g. ",mig_band, dataSetup.popTree->migBands[mig_band].endTime);
 							} else if (new_age
 									<= dataSetup.popTree->migBands[mig_band].startTime) {
 								//mig_conflict_gen = gen;
 								mig_conflict = 1;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
+#endif
 								//						fprintf(ioSetup.debugMiscFile, "Mig conflict of type 4, mig-band %d, start time %g. ",mig_band, dataSetup.popTree->migBands[mig_band].startTime);
 							} else if (inORout == 0 && new_age > age) {
 								// an incoming migration event can conflict with event directly above it
@@ -3223,7 +3260,9 @@ void UpdateTau(double *finetunes, int *accepted) {
 												>= genetree_migs[gen].mignodes[mig1].age) {
 									//mig_conflict_gen = gen;
 									mig_conflict = 1;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
+#endif
 
 									//							fprintf(ioSetup.debugMiscFile, "Mig conflict of type 2, mig-node %d, age %g." ,mig1, genetree_migs[gen].mignodes[mig1].age);
 								} else if (fatherNode >= 0
@@ -3233,7 +3272,9 @@ void UpdateTau(double *finetunes, int *accepted) {
 														fatherNode)) {
 									//mig_conflict_gen = gen;
 									mig_conflict = 1;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
+#endif
 									//							fprintf(ioSetup.debugMiscFile, "Mig conflict of type 3, father %d, pop %d, age %g. ",fatherNode, nodePops[gen][fatherNode], getNodeAge(dataState.lociData[gen], fatherNode));
 								}
 							} else if (inORout == 1 && new_age < age) {
@@ -3251,14 +3292,18 @@ void UpdateTau(double *finetunes, int *accepted) {
 												<= genetree_migs[gen].mignodes[mig1].age) {
 									//mig_conflict_gen = gen;
 									mig_conflict = 1;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
+#endif
 									//							fprintf(ioSetup.debugMiscFile, "Mig conflict of type 5, mig-node %d, age %g." ,mig1, genetree_migs[gen].mignodes[mig1].age);
 								} else if (new_age
 										<= getNodeAge(dataState.lociData[gen],
 												inode)) {
 									//mig_conflict_gen = gen;
 									mig_conflict = 1;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
+#endif
 									//							fprintf(ioSetup.debugMiscFile, "Mig conflict of type 6, node %d, pop %d, age %g, ",inode, nodePops[gen][inode], getNodeAge(dataState.lociData[gen], inode));
 								}
 							}
@@ -3281,7 +3326,9 @@ void UpdateTau(double *finetunes, int *accepted) {
 					}
 				} // end for(mignode)
 
+//#ifdef ENABLE_OMP_THREADS
 //#pragma omp flush (mig_conflict)
+//#endif
 				if (mig_conflict == 1) {
 					//				printf("Mignodes requiring special updates:\n");
 					//				for(i=0; i<locus_data[gen].rubberband_migs.num_moved_events; i++) {
@@ -3363,25 +3410,33 @@ void UpdateTau(double *finetunes, int *accepted) {
 					ntj_gen1[1] = ntj_gen[1];
 #endif
 
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 					ntj[0] += ntj_gen1[0];
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 					ntj[1] += ntj_gen1[1];
 
 					if (ntj_gen1[0] + ntj_gen1[1]) {
-							dataDeltaLnLd_local -= getLocusDataLikelihood(
-									dataState.lociData[gen]);
-							dataDeltaLnLd_local += computeLocusDataLikelihood(
-									dataState.lociData[gen], /*reuse old conditionals*/
-									1);
+						dataDeltaLnLd_local -= getLocusDataLikelihood(
+								dataState.lociData[gen]);
+						dataDeltaLnLd_local += computeLocusDataLikelihood(
+								dataState.lociData[gen], /*reuse old conditionals*/
+								1);
 					}
 
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
-							genDeltaLnLd += genDeltaLnLd_local;
+#endif
+					genDeltaLnLd += genDeltaLnLd_local;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
-							dataDeltaLnLd += dataDeltaLnLd_local;
-						}
+#endif
+					dataDeltaLnLd += dataDeltaLnLd_local;
 				}
+			}
 		}	        // end for(gen) - genealogy updates by rubberband
 
 		lnacceptance += dataDeltaLnLd + genDeltaLnLd
@@ -3405,11 +3460,17 @@ void UpdateTau(double *finetunes, int *accepted) {
 			fprintf(ioSetup.debugFile, "accepting.\n");
 #endif
 			// UNUSED      didAccept = 1;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 			accepted[ancestralPop]++;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 			dataState.dataLogLikelihood += dataDeltaLnLd;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 			dataState.logLikelihood += (dataDeltaLnLd + genDeltaLnLd)
 					/ dataSetup.numLoci;
 
@@ -3422,7 +3483,7 @@ void UpdateTau(double *finetunes, int *accepted) {
 			 */
 			gen = 0;
 #ifdef THREAD_UpdateTau
-			#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 			for (gen = 0; gen < dataSetup.numLoci; gen++) {
 				int dummy = 0;
@@ -3494,11 +3555,10 @@ void UpdateTau(double *finetunes, int *accepted) {
 				//				printf("(migration conflict at gen %d)\n",gen);
 				misc_stats.rubberband_mig_conflicts++;
 #ifdef THREAD_UpdateTau
-		#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 				for (gen = 0; gen < dataSetup.numLoci; gen++) {
-					if(locus_data[gen].mig_conflict_log == 1)
-					{
+					if (locus_data[gen].mig_conflict_log == 1) {
 						revertToSaved(dataState.lociData[gen]);
 						rubberBandRipple(gen, 0 /*redo changes*/);
 					}
@@ -3506,7 +3566,7 @@ void UpdateTau(double *finetunes, int *accepted) {
 
 			} else {
 #ifdef THREAD_UpdateTau
-		#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 				for (gen = dataSetup.numLoci - 1; gen >= 0; --gen) {
 					// redo changes in events for migrations and mig bands.
@@ -3517,8 +3577,6 @@ void UpdateTau(double *finetunes, int *accepted) {
 			// start from gen before last and redo changes
 
 		}
-
-
 
 		/**
 		 if (!checkAll()) {
@@ -3558,12 +3616,14 @@ void UpdateTau(double *finetunes, int *accepted) {
 void UpdateSampleAge(double *finetunes, int *accepted) {
 
 	int gen, pop;
-	double ext_dataDeltaLnLd, ext_genDeltaLnLd;
+	double ext_dataDeltaLnLd;
+	double ext_genDeltaLnLd = 0.0;
 	double ext_lnacceptance = 0;
 	double tauold, taunew, taub[2], taufactor[2];
-	int num_affected_mig_bands = 0 , affected_mig_bands[MAX_MIG_BANDS],
-					start_or_end[MAX_MIG_BANDS];
-	int sourcePop_local , targetPop_local;
+	int num_affected_mig_bands = 0, affected_mig_bands[MAX_MIG_BANDS],
+			start_or_end[MAX_MIG_BANDS];
+	int targetPop_local;
+	// int sourcePop_local; // unused
 	int mig_band;
 	double new_band_ages[MAX_MIG_BANDS];
 	int ntj[2];
@@ -3591,15 +3651,15 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 		fprintf(ioSetup.debugFile, "  pop %d, proposing sample age shift: %g-->%g, ",pop, tauold, taunew);
 #endif      	
 		// set rubberband factors
-		int k =0;
+		int k = 0;
 		for (k = 0; k < 2; k++)
 			taufactor[k] = (taunew - taub[k]) / (tauold - taub[k]);
-
 
 		for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands;
 				mig_band++) {
 			int age;
-			sourcePop_local = dataSetup.popTree->migBands[mig_band].sourcePop;
+			// the next assignment is unused
+			//sourcePop_local = dataSetup.popTree->migBands[mig_band].sourcePop;
 			targetPop_local = dataSetup.popTree->migBands[mig_band].targetPop;
 
 			if (targetPop_local == pop) {
@@ -3660,7 +3720,7 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 
 		// implement rubberband on all gen genealogies
 #ifdef THREAD_UpdateSampleAge
-		#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 		for (gen = 0; gen < dataSetup.numLoci; gen++) {
 			// We use this as a log to indicate locations at which an iteration occured
@@ -3743,11 +3803,15 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 							if (new_age
 									>= dataSetup.popTree->migBands[mig_band].endTime) {
 								mig_conflict = 1;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
+#endif
 							} else if (new_age
 									<= dataSetup.popTree->migBands[mig_band].startTime) {
 								mig_conflict = 1;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
+#endif
 							} else if (inORout == 0 && new_age > age) {
 								// an incoming migration event can conflict with event directly above it
 								fatherNode = getNodeFather(
@@ -3760,14 +3824,18 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 										&& new_age
 												>= genetree_migs[gen].mignodes[mig1].age) {
 									mig_conflict = 1;
-#pragma omp flush (mig_conflict )
+#ifdef ENABLE_OMP_THREADS
+#pragma omp flush (mig_conflict)
+#endif
 								} else if (fatherNode >= 0
 										&& new_age
 												>= getNodeAge(
 														dataState.lociData[gen],
 														fatherNode)) {
 									mig_conflict = 1;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
+#endif
 								}
 							} else if (inORout == 1 && new_age < age) {
 								// outgoing migration events can conflict with event directly below it
@@ -3779,12 +3847,16 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 										&& new_age
 												<= genetree_migs[gen].mignodes[mig1].age) {
 									mig_conflict = 1;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
+#endif
 								} else if (new_age
 										<= getNodeAge(dataState.lociData[gen],
 												inode)) {
 									mig_conflict = 1;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
+#endif
 								}
 							}
 							//if (mig_conflict)
@@ -3867,9 +3939,13 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 					ntj_gen1[1] = ntj_gen[1];
 #endif
 
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 					ntj[0] += ntj_gen1[0];
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 					ntj[1] += ntj_gen1[1];
 
 					dataDeltaLnLd -= getLocusDataLikelihood(
@@ -3878,9 +3954,13 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 							dataState.lociData[gen], /*reuse old conditionals*/
 							1);
 
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 					ext_dataDeltaLnLd += dataDeltaLnLd;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 					ext_genDeltaLnLd += genDeltaLnLd;
 				}
 			}
@@ -3905,17 +3985,21 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 #endif
 // UNUSED        didAccept = 1;
 			accepted[pop]++;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 			dataState.dataLogLikelihood += ext_dataDeltaLnLd;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 			dataState.logLikelihood += (ext_dataDeltaLnLd + ext_genDeltaLnLd)
 					/ dataSetup.numLoci;
 #ifdef THREAD_UpdateSampleAge
-		#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 			for (gen = 0; gen < dataSetup.numLoci; gen++) {
 
-				int i = 0 , dummy = 0;
+				int i = 0, dummy = 0;
 				locus_data[gen].genLogLikelihood +=
 						locus_data[gen].genDeltaLogLikelihood;
 				// change gene trees, event chains, and likelihoods
@@ -3966,11 +4050,10 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 				//				printf("(migration conflict at gen %d)\n",gen);
 				misc_stats.rubberband_mig_conflicts++;
 #ifdef THREAD_UpdateSampleAge
-		#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 				for (gen = 0; gen < dataSetup.numLoci; gen++) {
-					if(locus_data[gen].mig_conflict_log == 1)
-					{
+					if (locus_data[gen].mig_conflict_log == 1) {
 						revertToSaved(dataState.lociData[gen]);
 						rubberBandRipple(gen, 0 /*redo changes*/);
 					}
@@ -3978,9 +4061,9 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 			} else {
 				// start from gen before last and redo changes
 #ifdef THREAD_UpdateSampleAge
-		#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
-				for (gen=dataSetup.numLoci - 1; gen >= 0; --gen) {
+				for (gen = dataSetup.numLoci - 1; gen >= 0; --gen) {
 					// redo changes in events for migrations and mig bands.
 					revertToSaved(dataState.lociData[gen]);
 					rubberBandRipple(gen, 0 /*redo changes*/);
@@ -4075,11 +4158,17 @@ int UpdateLocusRate(double finetune) {
 			fprintf(ioSetup.debugFile, "accepting.\n");
 #endif
 
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 			accepted++;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 			dataState.dataLogLikelihood += lnLd;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 			dataState.logLikelihood += lnLd / dataSetup.numLoci;
 			resetSaved(dataState.lociData[gen]);
 			resetSaved(dataState.lociData[genRateRef]);
@@ -4119,7 +4208,6 @@ int mixing(double finetune) {
 		return 0;
 	}
 
-
 	// sample a multiplicative factor
 	lnc = finetune * rnd2normal8();
 	c = exp(lnc);
@@ -4132,7 +4220,8 @@ int mixing(double finetune) {
 	for (ext_pop = 0; ext_pop < dataSetup.popTree->numPops; ext_pop++) {
 		num_events += genetree_stats_total.num_coals[ext_pop];
 	}
-	for (ext_mig_band = 0; ext_mig_band < dataSetup.popTree->numMigBands; ext_mig_band++) {
+	for (ext_mig_band = 0; ext_mig_band < dataSetup.popTree->numMigBands;
+			ext_mig_band++) {
 		num_events += genetree_stats_total.num_migs[ext_mig_band];
 	}
 
@@ -4149,7 +4238,8 @@ int mixing(double finetune) {
 		dataSetup.popTree->pops[ext_pop]->theta = xnew = xold * c;
 		lnacceptance += lnc
 				* (dataSetup.popTree->pops[ext_pop]->thetaPrior.alpha - 1)
-				- (xnew - xold) * dataSetup.popTree->pops[ext_pop]->thetaPrior.beta;
+				- (xnew - xold)
+						* dataSetup.popTree->pops[ext_pop]->thetaPrior.beta;
 		// change in genetree likelihoods is not in the stats
 		// because times and rates are scaled together.
 		// the difference is only in coalescence/migration densities.
@@ -4160,15 +4250,18 @@ int mixing(double finetune) {
 			dataSetup.popTree->pops[ext_pop]->sampleAge *= c;
 		}
 	}
-	for (ext_pop = dataSetup.popTree->numCurPops; ext_pop < dataSetup.popTree->numPops;
-			ext_pop++) {
+	for (ext_pop = dataSetup.popTree->numCurPops;
+			ext_pop < dataSetup.popTree->numPops; ext_pop++) {
 		// consider also current populations with ancient samples
 		xold = dataSetup.popTree->pops[ext_pop]->age;
 		dataSetup.popTree->pops[ext_pop]->age = xnew = xold * c;
-		lnacceptance += lnc * (dataSetup.popTree->pops[ext_pop]->agePrior.alpha - 1)
-				- (xnew - xold) * dataSetup.popTree->pops[ext_pop]->agePrior.beta;
+		lnacceptance += lnc
+				* (dataSetup.popTree->pops[ext_pop]->agePrior.alpha - 1)
+				- (xnew - xold)
+						* dataSetup.popTree->pops[ext_pop]->agePrior.beta;
 	}
-	for (ext_mig_band = 0; ext_mig_band < dataSetup.popTree->numMigBands; ext_mig_band++) {
+	for (ext_mig_band = 0; ext_mig_band < dataSetup.popTree->numMigBands;
+			ext_mig_band++) {
 		// migration rates are scaled inversely
 		xold = dataSetup.popTree->migBands[ext_mig_band].migRate;
 		dataSetup.popTree->migBands[ext_mig_band].migRate = xnew = xold / c;
@@ -4199,12 +4292,15 @@ int mixing(double finetune) {
 	if (!rejectIssue) {
 		// adjust all gen genealogies
 #ifdef THREAD_mixing
-	#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 		for (gen = 0; gen < dataSetup.numLoci; gen++) {
 			// scale age of nodes and compute delta likelihood
-			double dataDeltaLnLd_Temp = scaleAllNodeAges(dataState.lociData[gen], c);
+			double dataDeltaLnLd_Temp = scaleAllNodeAges(
+					dataState.lociData[gen], c);
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 			dataDeltaLnLd += dataDeltaLnLd_Temp;
 		}
 
@@ -4219,11 +4315,11 @@ int mixing(double finetune) {
 #endif
 
 #ifdef THREAD_mixing
-	#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 			for (gen = 0; gen < dataSetup.numLoci; gen++) {
 				resetSaved(dataState.lociData[gen]);
-				int mig = -1 , mig_band = 0, pop = 0 , i = 0;
+				int mig = -1, mig_band = 0, pop = 0, i = 0;
 				for (i = 0; i < genetree_migs[gen].num_migs; i++) {
 					mig = genetree_migs[gen].living_mignodes[i];
 					genetree_migs[gen].mignodes[mig].age *= c;
@@ -4258,9 +4354,13 @@ int mixing(double finetune) {
 					mig_band++) {
 				genetree_stats_total.mig_stats[mig_band] *= c;
 			}
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 			dataState.dataLogLikelihood += dataDeltaLnLd;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 			dataState.logLikelihood += (dataDeltaLnLd + genDeltaLnLd)
 					/ dataSetup.numLoci;
 			adjustRootEvents();
@@ -4276,7 +4376,7 @@ int mixing(double finetune) {
 
 	if (!rejectIssue) {
 #ifdef THREAD_mixing
-	#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
+#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 		for (gen = 0; gen < dataSetup.numLoci; gen++) {
 			revertToSaved(dataState.lociData[gen]);
@@ -4295,7 +4395,8 @@ int mixing(double finetune) {
 			dataSetup.popTree->pops[ext_pop]->sampleAge /= c;
 		}
 	}
-	for (ext_mig_band = 0; ext_mig_band < dataSetup.popTree->numMigBands; ext_mig_band++) {
+	for (ext_mig_band = 0; ext_mig_band < dataSetup.popTree->numMigBands;
+			ext_mig_band++) {
 		// migration rates are scaled inversely
 		dataSetup.popTree->migBands[ext_mig_band].migRate *= c;
 		dataSetup.popTree->migBands[ext_mig_band].startTime /= c;
@@ -4306,6 +4407,6 @@ int mixing(double finetune) {
 }
 /** end of mixing **/
 
-/***************************************************************************************************************/
-/******                                        END OF FILE                                                ******/
-/***************************************************************************************************************/
+/*****************************************************************************/
+/******                       END OF FILE                               ******/
+/*****************************************************************************/

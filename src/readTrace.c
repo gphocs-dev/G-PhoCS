@@ -114,9 +114,18 @@ int main (int argc, char*argv[]) {
   }
 
   numLines = 0; //Determine number of lines in the file
-  fgets(line, bufferLen, traceFile);	// discard header
-  while(!feof(traceFile)) {
-    fgets(line, bufferLen, traceFile);
+  if(NULL == fgets(line, bufferLen, traceFile))	// discard header
+  {
+    fprintf(stderr, "Unable to discard header of the trace file\n");
+    return -1;
+  }
+  while(!feof(traceFile))
+  {
+    if(NULL == fgets(line, bufferLen, traceFile))
+    {
+      fprintf(stderr, "Unable to count lines of the trace file\n");
+      return -1;
+    }
     numLines++;
   } 
   //If user didn't specify a block size, then set the block size to be the number of lines in the file
@@ -129,7 +138,12 @@ int main (int argc, char*argv[]) {
   }
   fseek(traceFile, 0, SEEK_SET);
   //Get first line of trace file
-  fgets(line, bufferLen, traceFile);
+  if(NULL == fgets(line, bufferLen, traceFile))
+  {
+    fprintf(stderr, "Unable to get the first line of the trace file.\n" );
+    return -1;
+  }
+
   strcpy(tempStr,  line);  
 
   //Read each entry in the first line of the trace file
@@ -173,14 +187,22 @@ int main (int argc, char*argv[]) {
   
   //Discard specified number of samples
   for(i=0;i<discardXFromBeginning;i++)
-    fgets(line, bufferLen, traceFile);
+    if(NULL == fgets(line, bufferLen, traceFile))
+    {
+        fprintf(stderr, "Unable to discard lines.\n");
+    	return -1;
+    }
   
   //For each line in trace file
   count = 0;
   blockCount = 0;
   while (1) {
     //Get the next line from the file
-    fgets(line, bufferLen, traceFile);
+    if(NULL == fgets(line, bufferLen, traceFile))
+    {
+      fprintf(stderr, "Unable to read a lline for the trace file\n");
+      return -1;
+    }
     
     //If we are at the end of the file stop
     if (feof(traceFile))

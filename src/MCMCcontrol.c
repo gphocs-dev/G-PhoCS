@@ -472,19 +472,21 @@ int finalizeNumParameters() {
  *	- a pointer to space is returned
  ***********************************************************************************/
 char* getNextToken(FILE* file, char* space) {
-// UNUSED  int res;
+  int res;
+  res =	fscanf(file,"%s",space);
+  if(0 > res)
+    return space;
+  while(!feof(file) && space[0] == '#')
+  {
+    flushLine(file);
+    res = fscanf(file,"%s",space);
+    if(0 > res)
+      break;
+  }
+  if(feof(file))
+    strncpy(space, "EOF", 3);
 	
-// UNUSED  res = 
-	fscanf(file,"%s",space);
-	while(!feof(file) && space[0] == '#') {
-		flushLine(file);
-// UNUSED    res = 
-		fscanf(file,"%s",space);
-	}		
-	if(feof(file)) {
-		strcpy(space,"EOF");
-	}
-	return space;
+  return space;
 }
 /** end of getNextToken **/
 

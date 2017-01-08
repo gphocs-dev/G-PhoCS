@@ -523,7 +523,9 @@ double computePatternLogLikelihood (LocusData* locusData, int numPatterns, int* 
 					locusData->nodeArray[locusData->root]->conditionalProbs[pattId
 							* CODE_SIZE + conditional];
 		}
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 		logLikelihood += log(prob / numConditionals) * patternCounts[patt];
 	}
 	

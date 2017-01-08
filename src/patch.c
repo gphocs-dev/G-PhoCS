@@ -909,7 +909,9 @@ double rubberBand(int gen, int pop, double static_point, double moving_point, do
         event_chains[gen].events[event].elapsed_time += delta_time;
         for(mig_band=0; mig_band<num_mig_bands; mig_band++) {
           genetree_stats[gen].mig_stats[living_mig_bands[mig_band]] += mig_stats_delta;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
           genetree_stats_total.mig_stats[living_mig_bands[mig_band]] += mig_stats_delta;
         }
       }
@@ -1005,7 +1007,9 @@ double rubberBand(int gen, int pop, double static_point, double moving_point, do
   // after loop is done, consider coalescence stats
   if(postORpre) {
     genetree_stats[gen].coal_stats[pop] += coal_stats_delta;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
     genetree_stats_total.coal_stats[pop]  += coal_stats_delta/heredity_factor;
   }
 
@@ -1509,7 +1513,9 @@ int replaceMigNodes(int gen, int node) {
       // update migration stats
       mig_band = genetree_migs[gen].mignodes[mig].migration_band;
       genetree_stats[gen].num_migs[mig_band]--;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
       genetree_stats_total.num_migs[mig_band]--;		         
 	      
     } else {
@@ -1549,7 +1555,9 @@ int replaceMigNodes(int gen, int node) {
 	      
       // update migration stats
       genetree_stats[gen].num_migs[mig_band]++;	
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
       genetree_stats_total.num_migs[mig_band]++;
          
       //         printf("\nCreating new mignode %d for gen %d: mig band %d, branch %d, events (in,out) %d,%d, age %g.",
@@ -1704,13 +1712,17 @@ int acceptEventChainChanges(int gen, int instance) {
   for(i=0; i<locus_data[gen].genetree_stats_delta[instance].num_pops_changed; i++) {
     pop = locus_data[gen].genetree_stats_delta[instance].pops_changed[i];
     genetree_stats[gen].coal_stats[pop] += locus_data[gen].genetree_stats_delta[instance].coal_stats_delta[i];
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
     genetree_stats_total.coal_stats[pop]  += locus_data[gen].genetree_stats_delta[instance].coal_stats_delta[i]/heredity_factor;
   }
   for(i=0; i<locus_data[gen].genetree_stats_delta[instance].num_mig_bands_changed; i++) {
     mig_band = locus_data[gen].genetree_stats_delta[instance].mig_bands_changed[i];
     genetree_stats[gen].mig_stats[mig_band] += locus_data[gen].genetree_stats_delta[instance].mig_stats_delta[i];
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
     genetree_stats_total.mig_stats[mig_band]  += locus_data[gen].genetree_stats_delta[instance].mig_stats_delta[i];
   }
 
@@ -2586,9 +2598,13 @@ double recalcStats(int gen, int pop) {
     case(MIG_BAND_END):
       // compare and copy stats for mig band
       delta_lnLd -= (locus_data[gen].genetree_stats_check.mig_stats[id] - genetree_stats[gen].mig_stats[id]) * dataSetup.popTree->migBands[id].migRate;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
 		genetree_stats_total.mig_stats[id] += locus_data[gen].genetree_stats_check.mig_stats[id] - genetree_stats[gen].mig_stats[id];
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
       genetree_stats_total.num_migs[id]  += locus_data[gen].genetree_stats_check.num_migs[id] - genetree_stats[gen].num_migs[id];
       genetree_stats[gen].mig_stats[id] = locus_data[gen].genetree_stats_check.mig_stats[id];
       genetree_stats[gen].num_migs[id] = locus_data[gen].genetree_stats_check.num_migs[id];
@@ -2641,9 +2657,13 @@ double recalcStats(int gen, int pop) {
 
   delta_lnLd -= (locus_data[gen].genetree_stats_check.coal_stats[pop] - genetree_stats[gen].coal_stats[pop]) /
     ( dataSetup.popTree->pops[pop]->theta * heredity_factor);
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
   genetree_stats_total.coal_stats[pop] += (locus_data[gen].genetree_stats_check.coal_stats[pop] - genetree_stats[gen].coal_stats[pop])/heredity_factor;
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
+#endif
   genetree_stats_total.num_coals[pop]  += locus_data[gen].genetree_stats_check.num_coals[pop] - genetree_stats[gen].num_coals[pop];
   genetree_stats[gen].coal_stats[pop] = locus_data[gen].genetree_stats_check.coal_stats[pop];
   genetree_stats[gen].num_coals[pop] = locus_data[gen].genetree_stats_check.num_coals[pop];
