@@ -17,42 +17,49 @@ For more information: [http://compgen.cshl.edu/GPhoCS/](http://compgen.cshl.edu/
 Installation (Unix only for now)
 ------------
 
-1. Fork the G-PhoCS repository
+1. Clone the G-PhoCS repository
+   ==>  git clone https://github.com/gphocs-dev/G-PhoCS.git
 
 2. Move to the directory:
-
-    cd G-PhoCS/
+   ==>  cd G-PhoCS/
 
 3. Compile G-PhoCS
+   ==>  make
 
-    make
-
-4. 
-  * The G-PhoCS binaries (GPoCS-1-2-3 and readTrace) can be now found in the bin/ subdirectory.
-  * The .o files are placed in the obj/ subdirectory; Those are:
-    * AlignmentProcessor
-    * GenericTree
-    * GPhoCS
-    * LocusDataLikelihood
-    * MCMCcontrol
-    * PopulationTree
-    * readTrace
-    * utils
+* The G-PhoCS binaries (GPhoCS and readTrace) can be now found in the bin/ subdirectory.
+* The object files are placed in the obj/ subdirectory; Those are:
+  * AlignmentProcessor
+  * GenericTree
+  * GPhoCS
+  * LocusDataLikelihood
+  * MCMCcontrol
+  * PopulationTree
+  * readTrace
+  * utils
    
-5. It is highly recommended to have a test run post-installation using the supplied sample files. Type this in the command line while still in the G-PhoCS directory.
-In order to more easily write control files, you are encouraged to use the Jar located in the Control File Generator folder.
+* It is highly recommended to have a test run post-installation using the supplied sample files. Type this in the command line while still in the G-PhoCS directory.
+  ==>  bin/G-PhoCS sample-control-file.ctl
 
-    bin/G-PhoCS-1-2-3 sample-control-file.ctl
+* In order to more easily write control files, you are encouraged to use the Jar located in the Control File Generator folder.
 
+Latest updates
+--------------
+The main updates in version 1.3 include:
+* Introductoin of a multi-threaded implementation, which allows reducing running time on multi-core CPUs.
+* A control file generator Java applet for constructing setup files for G-PhoCS analysis. See details here.
+
+The main updates in version 1.2.3 include:
+* enabling analysis of ancient DNA samples by associating a sample age parameter with each ancient sample. Use 'age' attribute in CURRENT-POP.
+
+More details in the <a href="GPhoCS_Manual.pdf">user manual</a>.
 
 User Guidelines
 ---------------
 
-When preparing your data for analysis by G-PhoCS, you will need to create a sequence file (a .txt file) and a control file (a .ctl file). The sequence file contains your sequence data, and the control file contains the specification for the prior distribution over model parameters and instructions for the sampler.
-There are sample sequence and control files handed by us for you to test by yourselves. More on the sequence file on section 4 of the manual, and more on the control file on section 5.
+When preparing your data for analysis by G-PhoCS, you will need to create a sequence file and a control file (see Sections 4&5 in user manual).
+The sequence file contains your sequence data, and the control file contains the specification for the prior distribution over model parameters and instructions for the sampler.
+We provide sample sequence and control files for you to use for testing and initial experimentation.
 
-The main output of the MCMC sampler is produced in the trace file (whose path is specified in the control file).
-G-PhoCS also outputs a summary log onto the standard output.
-More on the output can be found in section 3 of the manual.
+The main output of G-PhoCS is a trace file containing parameter values traced during the Markov chain (Section 3 in user manual).
+A summary log containing information on the status of the MCMC is printed to the standard output.
 
-In order to run the program, run the binary GPhoCS-1-2-3 which is in the /bin subdirectory together with the control file (See the Installation instructions). The control file is supposed to match the sequence file (For example, in the Sample Names. See section 5 in the manual for more information).
