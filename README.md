@@ -20,9 +20,9 @@ Installation (Unix only for now)
 1. Clone the G-PhoCS repository<br>
    ==>  git clone https://github.com/gphocs-dev/G-PhoCS.git
 
-2. Move to the directory:
+2. Move to the directory:<br>
+   ==>  cd G-PhoCS/
 
-   ==>  cd G-PhoCS/ <br>
 3. Compile G-PhoCS<br>
    ==>  make
 
