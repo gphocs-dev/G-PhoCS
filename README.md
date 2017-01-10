@@ -17,13 +17,13 @@ For more information: [http://compgen.cshl.edu/GPhoCS/](http://compgen.cshl.edu/
 Installation (Unix only for now)
 ------------
 
-1. Clone the G-PhoCS repository
+1. Clone the G-PhoCS repository<br>
    ==>  git clone https://github.com/gphocs-dev/G-PhoCS.git
 
 2. Move to the directory:
-   ==>  cd G-PhoCS/
 
-3. Compile G-PhoCS
+   ==>  cd G-PhoCS/ <br>
+3. Compile G-PhoCS<br>
    ==>  make
 
 * The G-PhoCS binaries (GPhoCS and readTrace) can be now found in the bin/ subdirectory.
@@ -37,7 +37,7 @@ Installation (Unix only for now)
   * readTrace
   * utils
    
-* It is highly recommended to have a test run post-installation using the supplied sample files. Type this in the command line while still in the G-PhoCS directory.
+* It is highly recommended to have a test run post-installation using the supplied sample files. Type this in the command line while still in the G-PhoCS directory.<br>
   ==>  bin/G-PhoCS sample-control-file.ctl
 
 * In order to more easily write control files, you are encouraged to use the Jar located in the Control File Generator folder.
