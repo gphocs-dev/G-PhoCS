@@ -46,7 +46,7 @@ Latest updates
 --------------
 The main updates in version 1.3 include:
 * Introductoin of a multi-threaded implementation, which allows reducing running time on multi-core CPUs.
-* A control file generator Java applet for constructing setup files for G-PhoCS analysis. See details here.
+* A <a href="ControlFileGenerator">control file generator</a> Java applet for constructing setup files for G-PhoCS analysis.
 
 The main updates in version 1.2.3 include:
 * enabling analysis of ancient DNA samples by associating a sample age parameter with each ancient sample. Use 'age' attribute in CURRENT-POP.
