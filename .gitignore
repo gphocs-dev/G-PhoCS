@@ -1,4 +1,10 @@
-# Windows image file caches
+# =========================
+# Operating System Files
+# =========================
+
+# Windows 
+# =========================
+# Image file caches
 Thumbs.db
 ehthumbs.db
 
@@ -17,9 +23,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# =========================
-# Operating System Files
-# =========================
 
 # OSX
 # =========================
@@ -49,6 +52,7 @@ Temporary Items
 
 .metadata
 bin/
+obj/*.o
 tmp/
 *.tmp
 *.bak
@@ -71,5 +75,11 @@ local.properties
 # CDT-specific (C/C++ Development Tooling)
 .cproject
 
-# Code Recommenders
-.recommenders/
+
+
+
+
+# ===========================
+#  G-PhoCS Specifics
+# ===========================
+mcmc.log
