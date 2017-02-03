@@ -4,17 +4,17 @@
 CC=@gcc
 
 # Multi threading enabling flag
-#ENABLE_OMP_THREADS = 1 
+ENABLE_OMP_THREADS = 2 
 
 #CC=/usr/bin/i586-mingw32msvc-gcc 
 #AR=/usr/bin/i586-mingw32msvc-ar
 
 # compiler options
 #Debugging
-#CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -std=c99 -fopenmp -ggdb
+CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -std=c99 -fopenmp -ggdb
 
 #Production
-CFLAGS+= -fstack-protector-all -Wall -O3  -std=c99 
+#CFLAGS+= -fstack-protector-all -Wall -O3  -std=c99 
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty
@@ -45,7 +45,8 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/PopulationTree.o \
                    obj/LocusDataLikelihood.o \
                    obj/AlignmentProcessor.o \
-                   obj/omp_stub.o
+                   obj/omp_stub.o \
+                   obj/CombClade.o
 	$(CC) $(CFLAGS) obj/GPhoCS.o \
 	                obj/MCMCcontrol.o \
 	                obj/utils.o \
@@ -54,6 +55,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
 	                obj/LocusDataLikelihood.o \
 	                obj/AlignmentProcessor.o \
                     obj/omp_stub.o \
+                    obj/CombClade.o \
 	                $(CFLAGS) -lm -o bin/G-PhoCS
 
 bin/AlignmentProcessor: obj/utils.o \
@@ -118,7 +120,11 @@ obj/AlignmentProcessor.o: src/AlignmentProcessor.c \
 obj/AlignmentMain.o: src/AlignmentMain.c \
                      src/AlignmentProcessor.h
 	$(CC) $(CFLAGS) -c src/AlignmentMain.c -o obj/AlignmentMain.o
-
+	
+obj/CombClade.o: src/CombClade.c \
+                     src/CombClade.h
+	$(CC) $(CFLAGS) -c src/CombClade.c -o obj/CombClade.o
+	
 clean:
 	@echo "Cleaning"
 	@rm -rf obj/*.o bin/readTrace bin/G-PhoCS-1-2-3
