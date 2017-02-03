@@ -45,8 +45,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/PopulationTree.o \
                    obj/LocusDataLikelihood.o \
                    obj/AlignmentProcessor.o \
-                   obj/omp_stub.o \
-                   obj/CombClade.o
+                   obj/omp_stub.o 
 	$(CC) $(CFLAGS) obj/GPhoCS.o \
 	                obj/MCMCcontrol.o \
 	                obj/utils.o \
@@ -55,7 +54,6 @@ bin/G-PhoCS:       obj/GPhoCS.o \
 	                obj/LocusDataLikelihood.o \
 	                obj/AlignmentProcessor.o \
                     obj/omp_stub.o \
-                    obj/CombClade.o \
 	                $(CFLAGS) -lm -o bin/G-PhoCS
 
 bin/AlignmentProcessor: obj/utils.o \
