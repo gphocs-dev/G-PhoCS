@@ -11,8 +11,10 @@
 #include "AlignmentProcessor.h"
 #include "GenericTree.h"
 #include "PopulationTree.h"
-#include <getopt.h>
 #include "LocusDataLikelihood.h"    // NEXTGEN: switch to LocusGenealogy.h !!!
+#include "CombStats.h"
+#include "CombStatsPrinter.h"
+#include <getopt.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -42,10 +44,15 @@ int typeCount[NUM_TYPES];
 
 // Data setup. "Singleton"
 struct DATA_STATE {
-		double logLikelihood;              // average log-likelihood per genealogy
-                                           // of data given pop tree
-		double dataLogLikelihood;          // log likelihood (not averaged) of data
-                                           // given all genealogies.
+		              	  	  	  	  	   // average log-likelihood per genealogy of data given pop tree
+		double logLikelihood;			   //  (ln[P(X|Z)]+ln[P(Z|M)])/numLoci
+
+										   // log likelihood (not averaged) of data given all genealogies:
+		double dataLogLikelihood;          //   ln[P(X|Z,M,T)]
+
+										   // log likelihood of all genealogies given model & parameters -
+		double genealogyLogLikelihood;	   //   ln[P(Z|M,T)]
+
 		double rateVar;                    // the actual variance in locus-specific
                                            // mutation rate
 		LocusData** lociData;              // array of LocusData data structures
@@ -1653,6 +1660,8 @@ int performMCMC() {
 						}
 				}
 
+				dataState.genealogyLogLikelihood = dataState.logLikelihood*dataSetup.numLoci - dataState.dataLogLikelihood;
+
 				if (iteration >= 0 && iteration % (mcmcSetup.sampleSkip + 1) == 0) {
 						fprintf(ioSetup.traceFile, "%d\t", iteration);
 						printParamVals(paramVals, 0, mcmcSetup.numParameters,
@@ -1668,6 +1677,15 @@ int performMCMC() {
 								computeGenetreeStats_partitioned();
 								printCoalStats(iteration);
 						}
+
+
+						if (recordCombStats) {
+								//@@ron: please enter here :)
+								computeCombStats();
+								printCombStats(iteration, ioSetup.combStatsFile);
+						}
+
+
 
 						if (admixed_samples.number > 0 && iteration % 1000 == 0) {
 								ioSetup.admixFile = fopen(ioSetup.admixFileName, "w");

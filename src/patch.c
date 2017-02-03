@@ -7,6 +7,10 @@
 //#include "MultiCoreUtils.h"
 #include <omp.h>
 
+#ifndef NULL
+#define NULL   ((void *) 0)
+#endif
+
 
 #define MAX_MIG_BANDS	40			// max migration bands in the population tree
 #define MAX_MIGS		10			// max migration events per genealogy
@@ -184,7 +188,7 @@ struct GENETREE_STATS_FLAT{
   double coal_stats_flat, mig_stats_flat;
   int num_coals_total, num_migs_total;
   double* sortedAgesArray;
-} genetree_stats_flat;						
+} genetree_stats_flat;
 
 /*	genetree node stata
 	holds relevant statistics for coalescent distribution across populations
