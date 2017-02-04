@@ -7,11 +7,10 @@
 #include "GenericTree.h"
 #include "PopulationTree.h"
 #include "LocusDataLikelihood.h"
+#include "patch.h"
 
 #include "CombStats.h"
-#include "CombDataStructures.c"
 
-#include "patch.c"
 
 
 
@@ -26,10 +25,13 @@
 // --- GLOBAL DATA STRUCTURES -------------------------------------------------
 
 
+
 // --- FUNCTION IMPLEMENTATIONS -----------------------------------------------
 
 
 void computeCombStats() {
+
+	return;
 
 	initCombStats();
 	computeCombNumCoals();
@@ -118,7 +120,7 @@ void appendPopToComb(int comb, int gen, int startingPoint){
 		comb_stats[comb].event_types[i] = event_chains[gen].events[event].type;
 	}
 	comb_stats[comb].num_events = i;
-//	comb_stats[comb].coal_stats_total += genetree_stats[gen].coal_stats[comb];
+//	comb_stats[comb].coal_stats_total += genetree_stats[gen].coal_stats[comb]; // TODO - decide which of these lines is better
 	comb_stats[comb].coal_stats_total += getCoalStats(comb_stats[comb].elapsed_times + startingPoint, comb_stats[comb].num_lineages + startingPoint, comb_stats[comb].num_events - startingPoint);
 
 #ifdef CHECKCOMB

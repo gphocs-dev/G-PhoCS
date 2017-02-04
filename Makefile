@@ -4,17 +4,17 @@
 CC=@gcc
 
 # Multi threading enabling flag
-ENABLE_OMP_THREADS = 2 
+ENABLE_OMP_THREADS = 1 
 
 #CC=/usr/bin/i586-mingw32msvc-gcc 
 #AR=/usr/bin/i586-mingw32msvc-ar
 
 # compiler options
 #Debugging
-CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -std=c99 -fopenmp -ggdb
+#CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -std=c99 -fopenmp -ggdb
 
 #Production
-#CFLAGS+= -fstack-protector-all -Wall -O3  -std=c99 
+CFLAGS+= -fstack-protector-all -Wall -O3  -std=c99 
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty
@@ -29,7 +29,8 @@ endif
 
 all: print_message \
 	 bin/G-PhoCS \
-     bin/readTrace 
+     bin/readTrace
+     
 
 print_message:
 	@echo ${BUILD_MSG}
@@ -45,7 +46,9 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/PopulationTree.o \
                    obj/LocusDataLikelihood.o \
                    obj/AlignmentProcessor.o \
-                   obj/omp_stub.o 
+                   obj/CombStats.o \
+                   obj/CombPrinter.o \
+                   obj/omp_stub.o
 	$(CC) $(CFLAGS) obj/GPhoCS.o \
 	                obj/MCMCcontrol.o \
 	                obj/utils.o \
@@ -53,6 +56,8 @@ bin/G-PhoCS:       obj/GPhoCS.o \
 	                obj/PopulationTree.o \
 	                obj/LocusDataLikelihood.o \
 	                obj/AlignmentProcessor.o \
+	                obj/CombStats.o \
+                    obj/CombPrinter.o \
                     obj/omp_stub.o \
 	                $(CFLAGS) -lm -o bin/G-PhoCS
 
@@ -76,6 +81,8 @@ obj/GPhoCS.o: src/GPhoCS.c \
               src/GenericTree.h \
               src/PopulationTree.h \
               src/AlignmentProcessor.h \
+              src/CombStats.h \
+              src/CombPrinter.h \
               src/MultiCoreUtils.h
 	$(CC) $(CFLAGS) -c src/GPhoCS.c -o obj/GPhoCS.o
 
@@ -118,11 +125,18 @@ obj/AlignmentProcessor.o: src/AlignmentProcessor.c \
 obj/AlignmentMain.o: src/AlignmentMain.c \
                      src/AlignmentProcessor.h
 	$(CC) $(CFLAGS) -c src/AlignmentMain.c -o obj/AlignmentMain.o
-	
-obj/CombClade.o: src/CombClade.c \
-                     src/CombClade.h
-	$(CC) $(CFLAGS) -c src/CombClade.c -o obj/CombClade.o
-	
+		
+obj/CombPrinter.o:   src/CombPrinter.c \
+                     src/CombPrinter.h
+	$(CC) $(CFLAGS) -c src/CombPrinter.c -o obj/CombPrinter.o
+		
+obj/CombStats.o:     src/CombStats.c \
+                     src/CombStats.h
+	$(CC) $(CFLAGS) -c src/CombStats.c -o obj/CombStats.o
+		
+
+
+
 clean:
 	@echo "Cleaning"
-	@rm -rf obj/*.o bin/readTrace bin/G-PhoCS-1-2-3
+	@rm -rf obj/*.o bin/readTrace bin/G-PhoCS
