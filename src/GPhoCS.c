@@ -11,105 +11,24 @@
 #include "AlignmentProcessor.h"
 #include "GenericTree.h"
 #include "PopulationTree.h"
-#include <getopt.h>
 #include "LocusDataLikelihood.h"    // NEXTGEN: switch to LocusGenealogy.h !!!
+
+#include "MultiCoreUtils.h"
+
+#include <getopt.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "MultiCoreUtils.h"
-
-
-// --- CONSTANTS --------------------------------------------------------------
-
-#define LOG_STEPS_NOT
-#define CHECKALL_NOT
-//#define CHECKALL
-
-#define NUM_TYPES                    5
-#define TARGET_ACCEPTANCE_PERCENT    35
-#define TARGET_ACCEPTANCE_RANGE      5
-#define FINETUNE_RESOLUTION          0.0000001
-#define MAX_FINETUNE                 10
-#define ACCEPTANCE_FUDGE             2
-
-#define GPHOCS_VERSION_NUM          "1.3"
-#define GPHOCS_VERSION_DATE         "Jan. 2017"
-
-int typeCount[NUM_TYPES];
-
-// --- GLOBAL DATA STRUCTURES -------------------------------------------------
-
-// Data setup. "Singleton"
-struct DATA_STATE {
-		double logLikelihood;              // average log-likelihood per genealogy
-                                           // of data given pop tree
-		double dataLogLikelihood;          // log likelihood (not averaged) of data
-                                           // given all genealogies.
-		double rateVar;                    // the actual variance in locus-specific
-                                           // mutation rate
-		LocusData** lociData;              // array of LocusData data structures
-                                           // (of length numLoci).
-                                           // (allocated in processAlignments)
-} dataState;
-
-// Miscellaneous statistics. "Singleton"
-struct MISC_STATS {
-		int rubberband_mig_conflicts;      // number of rubber band conflicts
-                                           // with migration nodes
-
-		int spr_zero_targets;              // number of times an SPR event
-                                           // encounters zero target edges
-
-		int not_enough_migs;               // number of times not enough pre-
-                                           // allocated space for migration nodes
-
-// int small_interval;                     // very small interval for moving
-// coalescent event or migration event
-
-// double spr_lnld_disc;                   // the size of the smallest discrepancy
-//in log-likelihood computation
-} misc_stats;
-
-static struct option long_options[] = { { "help", no_argument, 0, 'h' },
-                                        { "verbose", no_argument, 0, 'v' },
-                                        { "nthreads", no_argument, 0, 'n' },
-                                        { 0, 0, 0, 0 } };
-
-// --- FUNCTION DECLARATIONS --------------------------------------------------
-
-void printUsage(char *programName);
-int processAlignments();
-int readRateFile(const char* fileName);
-int initLociWithoutData();
-void printParamVals(double paramVals[], int startParam, int endParam, FILE* o);
-int recordTypes();
-int recordParamVals(double paramVals[]);
-int performMCMC();
-void printGenealogyAndExit(int gen, int errStatus);
-int freeAllMemory();
-
-// Sampling functions
-int UpdateGB_InternalNode(double finetune);  // step 1: update coalescent times
-int UpdateGB_MigrationNode(double finetune); // step 2: update migration times
-int UpdateGB_MigSPR();                       // step 3: update genealogy struct
-int UpdateTheta(double finetune);            // step 4: No to MT
-int UpdateMigRates(double finetune);         // step 5: No to MT,
-                                             //         update migration bands
-
-void UpdateTau(double *finetunes,            // step 6: update tau
-               int *accepted);               //         More difficult to MT,
-                                             //         most time consuming
-
-void UpdateSampleAge(double *finetunes,      // similar to update Tau.
-                     int *accepted);         // Modifies the time
-
-int UpdateLocusRate(double finetune);
-int UpdateAdmixCoeffs(double finetune);      // Shall be skipped ("ledaleg")
-int mixing(double finetune);
+#include "GPhoCS.h"
 
 /** patch for intermediate G-PhoCS version **/
 #include "patch.c"
+#include "patch.h"
+
+/** CombStats & Printer require patch.c (event_chains, genetree_stats, genetree_stats_total & genetree_stats_flat) **/
+#include "CombStats.h"
+#include "CombPrinter.h"
 
 // --- FUNCTION IMPLEMENTATIONS -----------------------------------------------
 void printUsage(char *programName) {
@@ -616,6 +535,9 @@ int freeAllMemory() {
 				}
 				free(ioSetup.nodeStatsFile);
 		}
+		if (ioSetup.combStatsFile != NULL)
+				fclose(ioSetup.combStatsFile);
+
 		if (ioSetup.admixFile != NULL)
 				fclose(ioSetup.admixFile);
 		//Freeing print factors array
@@ -1152,6 +1074,9 @@ int performMCMC() {
 		unsigned short findingFinetunes = 0; // set to 1 while dynamically searching for finetunes
 		unsigned short recordCoalStats = (0
 						!= strcmp(ioSetup.nodeStatsFileName, "NONE")); // set to 1 for recording coal stats
+		unsigned short recordCombStats = (0
+						!= strcmp(ioSetup.combStatsFileName, "NONE")); // set to 1 for recording coal stats
+
 
 		char timeString[STRING_LENGTH];
 		char fileName[NAME_LENGTH];
@@ -1204,6 +1129,16 @@ int performMCMC() {
 				}
 				printCoalStats(-1);
 		}
+
+		if (recordCombStats) {
+		  ioSetup.combStatsFile = fopen(ioSetup.combStatsFileName, "w");
+		  if (ioSetup.combStatsFile == NULL) {
+		    fprintf(stderr, "Error: Could not open comb stats file %s.\n",
+		        ioSetup.combStatsFileName);
+		    return (-1);
+		  }
+		}
+
 
 #ifdef LOG_STEPS
 		ioSetup.debugFile = fopen("G-PhoCS-debug.txt","w");
@@ -1637,6 +1572,8 @@ int performMCMC() {
 						}
 				}
 
+				dataState.genealogyLogLikelihood = dataState.logLikelihood*dataSetup.numLoci - dataState.dataLogLikelihood;
+
 				if (iteration >= 0 && iteration % (mcmcSetup.sampleSkip + 1) == 0) {
 						fprintf(ioSetup.traceFile, "%d\t", iteration);
 						printParamVals(paramVals, 0, mcmcSetup.numParameters,
@@ -1652,6 +1589,15 @@ int performMCMC() {
 								computeGenetreeStats_partitioned();
 								printCoalStats(iteration);
 						}
+
+
+						if (recordCombStats) {
+								//@@ron: please enter here :)
+								computeCombStats();
+								printCombStats(iteration, ioSetup.combStatsFile);
+						}
+
+
 
 						if (admixed_samples.number > 0 && iteration % 1000 == 0) {
 								ioSetup.admixFile = fopen(ioSetup.admixFileName, "w");
