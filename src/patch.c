@@ -179,8 +179,6 @@ int GetMem (void)		{
   genetree_node_stats.firstNodesAges  = genetree_node_stats.doubleArray + 3*dataSetup.popTree->numPops*dataSetup.numSamples*dataSetup.numSamples;
   genetree_node_stats.nodeAges        = genetree_node_stats.firstNodesAges + dataSetup.popTree->numPops;
   
-  //TODO - allocate combclade memory
-
   return 0;
 }
 /** end of GetMem **/
@@ -193,7 +191,6 @@ int GetMem (void)		{
  *	- returns 0
  ***********************************************************************************/
 int FreeMem (void)		{
-	//TODO - free combclade mem
  // free(genLogLikelihood);
   free(nodePops[0]);
   free(nodePops);

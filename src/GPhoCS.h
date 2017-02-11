@@ -104,7 +104,8 @@ int UpdateLocusRate(double finetune);
 int UpdateAdmixCoeffs(double finetune);      // Shall be skipped ("ledaleg")
 int mixing(double finetune);
 
-
+void allocateAllMemory() ; // TODO - tidy header file
+int combStatsActivated();
 double getLogPrior() ;
 
 

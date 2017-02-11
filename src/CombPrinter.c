@@ -18,14 +18,6 @@
 
 void printCombStats(int iteration, FILE* file){
 
-	return;
-
-	if(iteration<0) {
-		printCombStatsHeader(file);
-
-		return;
-	}
-
 	fprintf(file, "%d\t", iteration);
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		printSpecificCombStats(comb, file);
