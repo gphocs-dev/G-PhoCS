@@ -1616,7 +1616,7 @@ int performMCMC() {
 
 						if (combStatsActivated()) {
 								//@@ron: please enter here :)
-								calculateCombStats("ABC");// TODO - get name from control
+								calculateCombStats();
 								printCombStats(iteration, ioSetup.combStatsFile);
 						}
 

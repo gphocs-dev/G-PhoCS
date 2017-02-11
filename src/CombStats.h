@@ -66,9 +66,8 @@ void allocateCombMem();
 
 int	isLeaf(int pop);
 int areChildrenLeaves(int pop);
-int isFeasableClade(int pop);
+int isFeasableComb(int pop);
 
 double getCombAge(int comb);
-int getPopByName(char* searchName);
 
 #endif /* SRC_COMBSTATS_H_ */
