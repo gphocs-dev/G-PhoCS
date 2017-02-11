@@ -78,7 +78,7 @@ void countLeafGeneCoals(int comb, int leaf, int gene){
 
 	comb_stats[comb].leaves[leaf].num_coals_total += belowCombAge;
 	comb_stats[comb].num_coals_total += aboveCombAge;
-	comb_stats[comb].leaves[leaf].debug_original_num_coals += (belowCombAge + aboveCombAge); // TODO - remove debug statement
+	comb_stats[comb].leaves[leaf].debug_original_num_coals += (belowCombAge + aboveCombAge); // TODO - debugggggggggg
 }
 
 
@@ -136,7 +136,7 @@ void countNonLeafCoals(int comb, int currentPop) {
 //		comb_stats[comb].event_types[i] = event_chains[gen].events[event].type;
 //	}
 //	comb_stats[comb].num_events = i;
-////	comb_stats[comb].coal_stats_total += genetree_stats[gen].coal_stats_total[comb]; // TODO - decide which of these lines is better
+////	comb_stats[comb].coal_stats_total += genetree_stats[gen].coal_stats_total[comb];
 //	comb_stats[comb].coal_stats_total += getCoalStats(comb_stats[comb].elapsed_times + startingPoint, comb_stats[comb].num_lineages + startingPoint, comb_stats[comb].num_events - startingPoint);
 //
 //#ifdef CHECKCOMB
@@ -300,7 +300,7 @@ int isFeasableComb(int pop){
 	}
 	return TRUE;
 }
-void initStats(int comb){
+void initStats(){
 	for (int comb = 0 ; comb < dataSetup.popTree->numPops ; comb++){
 		if (isFeasableComb(comb)){
 			comb_stats[comb].coal_stats_total   = 0.0;
@@ -316,7 +316,7 @@ void initStats(int comb){
 				comb_stats[comb].leaves[leaf].num_coals_total = 0;
 				comb_stats[comb].leaves[leaf].mig_stats = 0.0;
 				comb_stats[comb].leaves[leaf].coal_stats = 0.0;
-				comb_stats[comb].leaves[leaf].debug_original_num_coals = 0; // TODO - remove if not in-use
+				comb_stats[comb].leaves[leaf].debug_original_num_coals = 0; // TODO - debugggggggggg
 			}
 		}
 	}
@@ -325,7 +325,7 @@ void allocateCombMem(){
 	comb_stats=(struct COMB_STATS*)malloc(dataSetup.popTree->numPops*sizeof(struct COMB_STATS));
 	int max_events = 2*dataSetup.numSamples+ 4*MAX_MIGS + 3*dataSetup.popTree->numMigBands + dataSetup.popTree->numPops + 10;
 
-	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) { // TODO - consider not iterating over non-comb-feasable pops
+	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		comb_stats[comb].sorted_ages = (double*)malloc(max_events*sizeof(double));
 		comb_stats[comb].elapsed_times = (double*)malloc(max_events*sizeof(double));
 		comb_stats[comb].num_lineages = (int*)malloc(max_events*sizeof(int));

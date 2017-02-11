@@ -2,7 +2,7 @@
 #ifndef SRC_COMBSTATS_H_
 #define SRC_COMBSTATS_H_
 
-#define TRUE 1 // TODO - where should these consts be?
+#define TRUE 1 // TODO - ask Ilan: where should these consts be?
 #define FALSE 0
 
 
@@ -15,12 +15,11 @@ struct COMB_STATS{
 	double* sorted_ages; 	// temporary array to hold sorted node ages of a specific genealogy.
 	double* elapsed_times;	// temporary array to hold elapsed_time between adjacent events of a specific genealogy.
 	int* num_lineages; 		// temporary array to hold num of lineages of a specific genealogy.
-	int* event_types; 		// temporary array to hold event types //TODO - possibly reinit eventtypes, num_lineages, elapsed times, sorted ages?
+	int* event_types; 		// temporary array to hold event types
 
 	int num_events; 		// temporary number of events in clade.
 	// used as an "array length" variable for sortedAges, event_types & num_lineages arrays
-	double debug_total_error; // TODO - remove if unused
-	//TODO - rename, init
+	double debug_total_error; // TODO - debugggggggggg
 	double age; 			// temporary value of leaves-trim-age //TODO - rewrite this comment
 	struct COMB_LEAF {
 	    int num_coals_total, num_migs_total;
@@ -37,7 +36,7 @@ struct COMB_STATS{
 // clade_stats calculation functions
 void calculateCombStats();
 void initCombStats();
-void initStats(int clade);
+void initStats();
 void computeCombNumMigs();
 void computeCombMigStats();
 void countCoals();

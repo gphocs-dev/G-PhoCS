@@ -168,19 +168,6 @@ struct EVENT_CHAIN{
   }* events;
 } *event_chains;
 
-//const char* getEventTypeName(enum event_type eventType){ // TODO - reimplement this somehow
-//   switch (eventType) {
-//      case COAL: return "COAL";
-//      case IN_MIG: return "IN_MIG";
-//      case OUT_MIG: return "OUT_MIG";
-//      case MIG_BAND_START: return "MIG_BAND_START";
-//      case MIG_BAND_END: return "MIG_BAND_END";
-//      case SAMPLES_START: return "SAMPLES_START";
-//      case END_CHAIN: return "END_CHAIN";
-//      case DUMMY: return "DUMMY";
-//   }
-//   return "UNDEFINED_EVENT";
-//}
 
 /*	genetree stats
 	holds relevant statistics for fast computation of probability of tree

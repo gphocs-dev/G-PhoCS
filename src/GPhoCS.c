@@ -554,7 +554,7 @@ int freeAllMemory() {
 				}
 				free(ioSetup.nodeStatsFile);
 		}
-		if (ioSetup.combStatsFile != NULL) // TODO - possibly replace with a better flag (recordCombStats?)
+		if (ioSetup.combStatsFile != NULL)
 				fclose(ioSetup.combStatsFile);
 				freeCombMem();
 
@@ -1152,7 +1152,7 @@ int performMCMC() {
 				printCoalStats(-1);
 		}
 
-		if (combStatsActivated()) { // TODO - change to combStatsActivated()
+		if (combStatsActivated()) {
 		  ioSetup.combStatsFile = fopen(ioSetup.combStatsFileName, "w");
 		  if (ioSetup.combStatsFile == NULL) {
 		    fprintf(stderr, "Error: Could not open comb stats file %s.\n",
