@@ -37,11 +37,11 @@ struct COMB_STATS{
 // clade_stats calculation functions
 void calculateCombStats();
 void initCombStats();
-void initSpecificCombStats(int clade);
+void initStats(int clade);
 void computeCombNumMigs();
 void computeCombMigStats();
-void combNumCoals();
-void combNumCoals_rec(int comb, int pop);
+void countCoals();
+void countCoals_rec(int comb, int pop);
 void computeCombCoalStats();
 void computeCombCoalStats_rec(int clade, int gen);
 void fillupLeafCombStats(int clade, int gen);

@@ -18,10 +18,11 @@
 
 
 void calculateCombStats() {
+	initStats();
 	for (int comb = 0 ; comb < dataSetup.popTree->numPops ; comb++){
 		if (isFeasableComb(comb)){
-			initSpecificCombStats(comb);
-			combNumCoals(comb);
+
+			countCoals(comb);
 //			computeCombCoalStats(comb);
 		}
 	}
@@ -30,11 +31,11 @@ void calculateCombStats() {
 
 
 
-void combNumCoals(int comb){
-	combNumCoals_rec(comb, comb);
+void countCoals(int comb){
+	countCoals_rec(comb, comb);
 }
 
-void combNumCoals_rec(int comb, int currentPop){
+void countCoals_rec(int comb, int currentPop){
 	if (isLeaf(currentPop)){
 		countLeafCoals(comb, currentPop);
 	} else{
@@ -86,8 +87,8 @@ void countNonLeafCoals(int comb, int currentPop) {
 	int leftSon = dataSetup.popTree->pops[currentPop]->sons[LEFT]->id;
 	int rightSon = dataSetup.popTree->pops[currentPop]->sons[RIGHT]->id;
 
-	combNumCoals_rec(comb, leftSon);
-	combNumCoals_rec(comb, rightSon);
+	countCoals_rec(comb, leftSon);
+	countCoals_rec(comb, rightSon);
 
 	comb_stats[comb].num_coals_total += genetree_stats_total.num_coals[currentPop];
 }
@@ -247,7 +248,7 @@ void countNonLeafCoals(int comb, int currentPop) {
 
 
 
-
+//TODO - find places for these functions
 double getCombAge(int comb){
 
 	if (isLeaf(comb)){
@@ -299,23 +300,26 @@ int isFeasableComb(int pop){
 	}
 	return TRUE;
 }
-void initSpecificCombStats(int comb){
-	comb_stats[comb].coal_stats_total   = 0.0;
-	comb_stats[comb].mig_stats_total 	= 0.0;
-	comb_stats[comb].num_coals_total 	= 0;
-	comb_stats[comb].num_migs_total 	= 0;
-	comb_stats[comb].num_events 		= 0;
-	comb_stats[comb].debug_total_error  = 0;
-	comb_stats[comb].age 				= getCombAge(comb);
+void initStats(int comb){
+	for (int comb = 0 ; comb < dataSetup.popTree->numPops ; comb++){
+		if (isFeasableComb(comb)){
+			comb_stats[comb].coal_stats_total   = 0.0;
+			comb_stats[comb].mig_stats_total 	= 0.0;
+			comb_stats[comb].num_coals_total 	= 0;
+			comb_stats[comb].num_migs_total 	= 0;
+			comb_stats[comb].num_events 		= 0;
+			comb_stats[comb].debug_total_error  = 0;
+			comb_stats[comb].age 				= getCombAge(comb);
 
-	for (int leaf = 0 ; leaf < dataSetup.popTree->numCurPops ; leaf++){
-		comb_stats[comb].leaves[leaf].num_migs_total = 0;
-		comb_stats[comb].leaves[leaf].num_coals_total = 0;
-		comb_stats[comb].leaves[leaf].mig_stats = 0.0;
-		comb_stats[comb].leaves[leaf].coal_stats = 0.0;
-		comb_stats[comb].leaves[leaf].debug_original_num_coals = 0; // TODO - remove if not in-use
+			for (int leaf = 0 ; leaf < dataSetup.popTree->numCurPops ; leaf++){
+				comb_stats[comb].leaves[leaf].num_migs_total = 0;
+				comb_stats[comb].leaves[leaf].num_coals_total = 0;
+				comb_stats[comb].leaves[leaf].mig_stats = 0.0;
+				comb_stats[comb].leaves[leaf].coal_stats = 0.0;
+				comb_stats[comb].leaves[leaf].debug_original_num_coals = 0; // TODO - remove if not in-use
+			}
+		}
 	}
-
 }
 void allocateCombMem(){
 	comb_stats=(struct COMB_STATS*)malloc(dataSetup.popTree->numPops*sizeof(struct COMB_STATS));
