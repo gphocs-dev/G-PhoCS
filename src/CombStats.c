@@ -12,8 +12,6 @@
 
 #include "CombStats.h"
 
-
-
 // --- FUNCTION IMPLEMENTATIONS -----------------------------------------------
 
 
@@ -21,14 +19,13 @@ void calculateCombStats() {
 	initStats();
 	for (int comb = 0 ; comb < dataSetup.popTree->numPops ; comb++){
 		if (isFeasableComb(comb)){
-
 			countCoals(comb);
 //			computeCombCoalStats(comb);
+			test_runAll(comb);
 		}
 	}
+
 }
-
-
 
 
 void countCoals(int comb){
@@ -69,7 +66,7 @@ void countLeafGeneCoals(int comb, int leaf, int gene){
 			if (eventAge <= combAge){
 				belowCombAge++;
 			} else {
-				aboveCombAge++; //TODO - verify with Ilan - if a coal-event occurs on comb-age, to which Pop does it belong? - - - currently to the LEAF
+				aboveCombAge++;
 			}
 		}
 
@@ -294,8 +291,7 @@ int areChildrenLeaves(int pop){
 int isFeasableComb(int pop){
 	if (isLeaf(pop)){
 		return FALSE;
-	}
-	if (areChildrenLeaves(pop)) { //TODO - ask Ilan: should AB:A,B be a feasable comb?
+	} else if (areChildrenLeaves(pop)){
 		return FALSE;
 	}
 	return TRUE;
@@ -343,7 +339,7 @@ void allocateCombMem(){
 		}
 
 
-		if((comb_stats == NULL) || // TODO - add error checks for comb_stats_leaves
+		if((comb_stats == NULL) || // TODO - add memory checks for comb_stats_leaves
 				(!comb_stats[comb].sorted_ages) || (!comb_stats[comb].elapsed_times) ||
 				(!comb_stats[comb].num_lineages)|| (!comb_stats[comb].event_types)) {
 			fprintf(stderr, "\nError: Out Of Memory comb_stats\n");
@@ -372,4 +368,46 @@ void debug_print_combstats(int comb, int gen){
 	}
 	printf("====================================================================================\n");
 	fflush(stdout);
+}
+
+// TODO - extract tests to different source file
+int test_runAll(int comb){
+	test_validateCountCoals(comb);
+	test_validateCoalStats(comb);
+}
+void test_validateCountCoals(int comb){
+	int sumCoalsInComb = test_countCoalsEntireComb(comb);
+	int sumCoalsInClade = test_countCoalsEntireClade(comb);
+	if (sumCoalsInClade != sumCoalsInComb){
+		printf("Error in test_validateCountCoals(int comb): Comb had %d coals, however Clade had %d!", sumCoalsInComb, sumCoalsInClade);
+		exit(-1);
+	}
+}
+int test_countCoalsEntireComb(int comb){
+	int count = 0;
+	count += comb_stats[comb].num_coals_total;
+	count += test_countCoalsCombLeaves_rec(comb, comb);
+	return count;
+}
+int test_countCoalsCombLeaves_rec(int comb, int pop){
+	if (isLeaf(pop)){
+		return comb_stats[comb].leaves[pop].num_coals_total;
+	} else {
+		int left_son = dataSetup.popTree->pops[pop]->sons[LEFT]->id;
+		int right_son = dataSetup.popTree->pops[pop]->sons[RIGHT]->id;
+		return (test_countCoalsCombLeaves_rec(comb, left_son) + test_countCoalsCombLeaves_rec(comb, right_son));
+	}
+}
+int test_countCoalsEntireClade(int clade){
+	if (isLeaf(clade)){
+		return genetree_stats_total.num_coals[clade];
+	} else {
+		int left_son  = dataSetup.popTree->pops[clade]->sons[ LEFT ]->id;
+		int right_son = dataSetup.popTree->pops[clade]->sons[ RIGHT]->id;
+		return genetree_stats_total.num_coals[clade] +
+				test_countCoalsEntireClade(left_son) +
+				test_countCoalsEntireClade(right_son);
+	}
+}
+void test_validateCoalStats(int comb){
 }

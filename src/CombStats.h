@@ -20,7 +20,7 @@ struct COMB_STATS{
 	int num_events; 		// temporary number of events in clade.
 	// used as an "array length" variable for sortedAges, event_types & num_lineages arrays
 	double debug_total_error; // TODO - debugggggggggg
-	double age; 			// temporary value of leaves-trim-age //TODO - rewrite this comment
+	double age; 			// temporary value of comb-age
 	struct COMB_LEAF {
 	    int num_coals_total, num_migs_total;
 	    double coal_stats, mig_stats;
@@ -68,5 +68,14 @@ int areChildrenLeaves(int pop);
 int isFeasableComb(int pop);
 
 double getCombAge(int comb);
+
+
+// TODO - extract tests to different source file
+int test_runAll(int comb);
+void test_validateCoalStats(int comb);
+void test_validateCountCoals(int comb);
+int test_countCoalsCombLeaves_rec(int comb, int pop);
+int test_countCoalsEntireComb(int comb);
+int test_countCoalsEntireClade(int comb);
 
 #endif /* SRC_COMBSTATS_H_ */
