@@ -303,23 +303,17 @@ void allocateCombMem(){
 	comb_stats=malloc(dataSetup.popTree->numPops*sizeof(struct COMB_STATS));
 
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
-//		comb_stats[comb].total = (Stats) malloc(sizeof(Stats));
 		allocateStats(&comb_stats[comb].total);
-
 		comb_stats[comb].leaves=malloc(dataSetup.popTree->numCurPops*sizeof(LeafStats));
 		comb_stats[comb].clades=malloc(dataSetup.popTree->numCurPops*sizeof(Stats));
 		for (int pop = 0 ; pop < dataSetup.popTree->numCurPops ; pop++){
 			if (isLeaf(pop)){
-//				comb_stats[comb].leaves[pop].below_comb = malloc(sizeof(Stats));
-//				comb_stats[comb].leaves[pop].above_comb = malloc(sizeof(Stats));
-
 				allocateStats(&comb_stats[comb].leaves[pop].below_comb);
 				allocateStats(&comb_stats[comb].leaves[pop].above_comb);
 			} else {
 				allocateStats(&comb_stats[comb].clades[pop]);
 			}
 		}
-
 		if(comb_stats == NULL){ // TODO - add memory allocation test for all of comb_stats
 			fprintf(stderr, "\nError: Out Of Memory comb_stats\n");
 			exit(-1);
