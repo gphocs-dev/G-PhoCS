@@ -22,12 +22,18 @@ void calculateCombStats() {
 			for(int gene=0; gene<dataSetup.numLoci; gene++) {
 				calculateSufficientStats(comb, gene);
 			}
-
+			finalizeCombCoalStats(comb);
 		}
 	}
 	assertRootNumCoals();
 }
 
+void finalizeCombCoalStats(int comb){
+	double* elapsedTimes = comb_stats[comb].clades[comb].elapsed_times;
+	int* numLineages = comb_stats[comb].clades[comb].num_lineages;
+	int size = comb_stats[comb].clades[comb].num_events;
+	comb_stats[comb].total.coal_stats = calculateCoalStats(elapsedTimes, numLineages, size);
+}
 
 void calculateSufficientStats(int comb, int gene){
 	coalescence(comb, gene);
@@ -36,8 +42,8 @@ void calculateSufficientStats(int comb, int gene){
 
 void coalescence(int comb, int gene){
 	coalescence_rec(comb, comb, gene);
-
 }
+
 
 void coalescence_rec(int comb, int currentPop, int gene){
 	if (isLeaf(currentPop)){
@@ -95,7 +101,7 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 
 void handleNonLeafCoals(int comb, int currentPop, int gene) {
 	handleNonLeafNumCoals(comb, currentPop, gene);
-//	handleNonLeafCoalStats(comb, currentPop, gene); // TODO - reactivate coal stats
+	handleNonLeafCoalStats(comb, currentPop, gene);
 }
 
 void handleNonLeafNumCoals(int comb, int currentPop, int gene) {
@@ -191,7 +197,7 @@ void appendCurrent(int comb, int currentPop, int gene){
 	currentStats->num_events = i;
 }
 
-double calculateCoalStats(double* elapsed_times, int* num_lineages, int size){
+double calculateCoalStats(double* elapsed_times, int* num_lineages, int size){ // TODO - test this method
 	int n;
 	double t;
 	double result = 0.0;
@@ -230,7 +236,7 @@ double getCombAge(int comb){
 		return 99999.9;
 	}
 }
-int	isLeaf(int pop){
+int	isLeaf(int pop){ // TODO - ask Ilan if this already exists
 	Population *population, *left_son, *right_son;
 
 	population = dataSetup.popTree->pops[pop];
@@ -261,6 +267,11 @@ int isFeasibleComb(int pop){
 		return TRUE;
 	}
 }
+int isAncestralTo(int father, int son){
+	return dataSetup.popTree->pops[father]->isAncestralTo[son];
+}
+
+
 
 int getSon(int pop, int SON){
 	return dataSetup.popTree->pops[pop]->sons[SON]->id;
@@ -281,7 +292,7 @@ void initCombStats(){
 			initStats(&comb_stats[comb].total);
 			comb_stats[comb].age = getCombAge(comb);
 
-			for (int pop = 0 ; pop < dataSetup.popTree->numCurPops ; pop++){
+			for (int pop = 0 ; pop < dataSetup.popTree->numPops ; pop++){
 				if (isLeaf(pop)){
 					initStats(&comb_stats[comb].leaves[pop].above_comb);
 					initStats(&comb_stats[comb].leaves[pop].below_comb);
@@ -306,7 +317,7 @@ void allocateCombMem(){
 		allocateStats(&comb_stats[comb].total);
 		comb_stats[comb].leaves=malloc(dataSetup.popTree->numCurPops*sizeof(LeafStats));
 		comb_stats[comb].clades=malloc(dataSetup.popTree->numCurPops*sizeof(Stats));
-		for (int pop = 0 ; pop < dataSetup.popTree->numCurPops ; pop++){
+		for (int pop = 0 ; pop < dataSetup.popTree->numPops ; pop++){
 			if (isLeaf(pop)){
 				allocateStats(&comb_stats[comb].leaves[pop].below_comb);
 				allocateStats(&comb_stats[comb].leaves[pop].above_comb);
@@ -322,34 +333,15 @@ void allocateCombMem(){
 }
 void allocateStats(Stats* stats){
 	int max_events = 2*dataSetup.numSamples+ 4*MAX_MIGS + 3*dataSetup.popTree->numMigBands + dataSetup.popTree->numPops + 10;
-	stats->sorted_ages = (double*)malloc(max_events*sizeof(double));
+	stats->sorted_ages   = (double*)malloc(max_events*sizeof(double));
 	stats->elapsed_times = (double*)malloc(max_events*sizeof(double));
-	stats->num_lineages = (int*)malloc(max_events*sizeof(int));
-	stats->event_types = (int*)malloc(max_events*sizeof(int));
+	stats->num_lineages  = (int*)malloc(max_events*sizeof(int));
+	stats->event_types   = (int*)malloc(max_events*sizeof(int));
 }
 
 void freeCombMem(){ // TODO - implement
 }
 
-//void debug_print_errors(){
-//	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
-//		fprintf(stderr, "comb:%s, total_error=%0.35f, relative_error=%0.35f\n",
-//				dataSetup.popTree->pops[comb]->name , comb_stats[comb].debug_total_error,
-//				comb_stats[comb].debug_total_error / comb_stats[comb].coal_stats_total);
-//	}
-//	printf("\n");
-//}
-//void debug_print_combstats(int comb, int gen){
-//	printf("=== comb:%s, gen:%d, num_events:%d, num_coals_below_comb:%d === >>\n",
-//			dataSetup.popTree->pops[comb]->name, gen, comb_stats[comb].num_events, comb_stats[comb].num_coals_total);
-//	for (int i = 0 ; i < comb_stats[comb].num_events ; i++){
-//		printf("age:%0.25f, elapsed_time:%0.25f, num_lin:%d, type:%s \n",
-//				comb_stats[comb].sorted_ages[i], comb_stats[comb].elapsed_times[i],
-//				comb_stats[comb].num_lineages[i],	/*getEventTypeName(comb_stats[comb].event_types[i])*/ "UNIMPLEMENTED");
-//	}
-//	printf("====================================================================================\n");
-//	fflush(stdout);
-//}
 
 // TODO - extract tests to different source file
 
@@ -364,7 +356,7 @@ void assertRootNumCoals(){
 			actualCoals += comb_stats[root].leaves[pop].below_comb.num_coals;
 		}
 	}
-	if (maxCoals != actualCoals) { // TODO - rewrite this test
+	if (maxCoals != actualCoals) {
 		printf("comb %s: Expected coalescence - %d. Actual coalescence - %d",
 				"root", maxCoals, actualCoals);
 		exit(-1);

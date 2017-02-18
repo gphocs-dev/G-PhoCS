@@ -18,7 +18,6 @@ typedef struct STATS {
 			/** size of stats arrays (event_types, num_lineages, elapsed_times, sorted_ages)*/
 			int num_events;
 } Stats;
-
 typedef struct LEAF_STATS {
 	Stats above_comb, below_comb;
   } LeafStats;
@@ -35,6 +34,7 @@ struct COMB_STATS{
 
 // clade_stats calculation functions
 void calculateCombStats();
+void finalizeCombCoalStats(int comb);
 void calculateSufficientStats(int comb, int gene);
 void coalescence(int comb, int gene);
 void coalescence_rec(int comb, int currentPop, int gene);
@@ -51,6 +51,7 @@ double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
 int	isLeaf(int pop);
 int areChildrenLeaves(int pop);
 int isFeasibleComb(int pop);
+int isAncestralTo(int father, int son);
 
 double getCombAge(int comb);
 int getSon(int pop, int SON);

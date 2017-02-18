@@ -27,6 +27,7 @@ void printCombStats(int iteration, FILE* file){
 	for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
 		printSpecificPopStats(pop, file);
 	}
+
 //	for(int mig_band=0; mig_band<dataSetup.popTree->numMigBands; mig_band++) {
 //		printSpecificMigBandStats(mig_band, file);
 //	}
@@ -52,15 +53,24 @@ void printCombStatsHeader(FILE* file){
 }
 void printSpecificCombHeader(int comb, FILE* file){
 	char* combName = dataSetup.popTree->popArray[comb].name;
-	fprintf(file, "%s%s\t%s%s\t",
-			"comb_coal_stats:", combName,
-			"comb_num_coals:", combName);
+	char* leafName;
+	fprintf(file, "C_%s %s\tC_%s %s\t",
+			combName, "cs",
+			combName, "nc");
+	for (int pop = 0 ; pop <dataSetup.popTree->numPops ; pop++){
+		if (isLeaf(pop) && isAncestralTo(comb, pop)){
+			leafName = dataSetup.popTree->popArray[pop].name; // TODO - change to one-liner function
+			fprintf(file, "C_%s_%s %s\tC_%s_%s %s\t",
+					combName, leafName, "cs",
+					combName, leafName, "nc");
+		}
+	}
 }
 void printSpecificPopHeader(int pop, FILE* file){
 	char* popName = dataSetup.popTree->popArray[pop].name;
-	fprintf(file, "%s%s\t%s%s\t",
-			"pop_coal_stats:", popName,
-			"pop_num_coals:", popName);
+	fprintf(file, "P_%s %s\tP_%s %s\t",
+			popName, "cs",
+			popName, "nc");
 }
 //void printSpecificMigHeader(int mig_band, FILE* file){
 ////	char* migBandName = dataSetup.popTree->migBands[mig_band].name;
@@ -75,6 +85,13 @@ void printSpecificCombStats(int comb, FILE* file){
 	fprintf(file, "%0.35f\t%d\t",  //TODO - turn float percision to a MACRO/CONSTS
 			comb_stats[comb].total.coal_stats,
 			comb_stats[comb].total.num_coals);
+	for (int pop = 0 ; pop <dataSetup.popTree->numPops ; pop++){
+		if (isLeaf(pop) && isAncestralTo(comb, pop)){
+			fprintf(file, "%0.35f\t%d\t",
+					comb_stats[comb].leaves[pop].below_comb.coal_stats,
+					comb_stats[comb].leaves[pop].below_comb.num_coals);
+		}
+	}
 }
 void printSpecificPopStats(int pop, FILE* file){
 	fprintf(file, "%0.35f\t%d\t",
