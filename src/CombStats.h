@@ -55,7 +55,7 @@ int isAncestralTo(int father, int son);
 
 double getCombAge(int comb);
 int getSon(int pop, int SON);
-Stats* getStats(int comb, int pop);
+Stats* getCombPopStats(int comb, int pop);
 void initCombStats();
 void initStats(Stats* stats);
 
@@ -70,11 +70,5 @@ void assertRootNumCoals();
 void assertCombLeaves();
 void assertCombLeafNumCoals(int comb, int leaf);
 void assertCombLeafCoalStats(int comb, int leaf);
-//void test_all(int comb);
-//void test_validateCoalStats(int comb);
-//void test_validateCountCoals(int comb);
-//int test_countCoalsCombLeaves_rec(int comb, int pop);
-//int test_countCoalsEntireComb(int comb);
-//int test_countCoalsEntireClade(int comb);
 
 #endif /* SRC_COMBSTATS_H_ */

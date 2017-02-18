@@ -125,9 +125,9 @@ void mergeChildernIntoCurrent(int comb, int currentPop, int gen){
 	leftSon = getSon(currentPop, LEFT);
 	rightSon = getSon(currentPop, RIGHT);
 
-	currentStats = getStats(comb, currentPop);
-	leftStats = getStats(comb, leftSon);
-	rightStats = getStats(comb, rightSon);
+	currentStats = getCombPopStats(comb, currentPop);
+	leftStats = getCombPopStats(comb, leftSon);
+	rightStats = getCombPopStats(comb, rightSon);
 
 
 	int m = leftStats->num_events;
@@ -182,7 +182,7 @@ void mergeChildernIntoCurrent(int comb, int currentPop, int gen){
 }
 
 void appendCurrent(int comb, int currentPop, int gene){
-	Stats *currentStats = getStats(comb, currentPop);
+	Stats *currentStats = getCombPopStats(comb, currentPop);
 
 	int startingPoint = currentStats->num_events;
 	int i = startingPoint;
@@ -200,7 +200,7 @@ void appendCurrent(int comb, int currentPop, int gene){
 	currentStats->num_events = i;
 }
 
-double calculateCoalStats(double* elapsed_times, int* num_lineages, int size){ // TODO - test this method
+double calculateCoalStats(double* elapsed_times, int* num_lineages, int size){
 	int n;
 	double t;
 	double result = 0.0;
@@ -239,7 +239,7 @@ double getCombAge(int comb){
 		return 99999.9;
 	}
 }
-int	isLeaf(int pop){ // TODO - ask Ilan if this already exists
+int	isLeaf(int pop){ // TODO - ask Ilan if this function already exists somewhere in the code
 	Population *population, *left_son, *right_son;
 
 	population = dataSetup.popTree->pops[pop];
@@ -247,7 +247,7 @@ int	isLeaf(int pop){ // TODO - ask Ilan if this already exists
 	left_son = population->sons[LEFT];
 	right_son = population->sons[RIGHT];
 
-	if (left_son || right_son){ // TODO - validate this is a valid boolean test
+	if (left_son || right_son){
 		return FALSE;
 	} else {
 		return TRUE;
@@ -279,7 +279,7 @@ int isAncestralTo(int father, int son){
 int getSon(int pop, int SON){
 	return dataSetup.popTree->pops[pop]->sons[SON]->id;
 }
-Stats* getStats(int comb, int pop){ //TODO - rename to something more descriptive
+Stats* getCombPopStats(int comb, int pop){
 	if (isLeaf(pop)){
 		return &comb_stats[comb].leaves[pop].above_comb;
 	} else {
@@ -346,8 +346,8 @@ void freeCombMem(){ // TODO - implement
 }
 
 
-double COMB_PERCISION = 0.000000000000001; // TODO - where to put this? // TODO - discuss this with Ilan
-//						0.12345678901234567890
+double COMB_RELATIVE_PERCISION = 	0.000000000001; // TODO - where to put this? // TODO - discuss this with Ilan
+//									0.12345678901234567890
 
 
 // TODO - extract tests to different source file
@@ -362,7 +362,8 @@ void assertRootNumCoals(){
 			actualCoals += comb_stats[root].leaves[pop].below_comb.num_coals;
 		}
 	}
-	if (fabs(maxCoals - actualCoals) > COMB_PERCISION) {
+
+	if (actualCoals != maxCoals) {
 		printf("comb %s: Expected coalescence - %d. Actual coalescence - %d",
 				"root", maxCoals, actualCoals);
 		exit(-1);
@@ -395,53 +396,12 @@ void assertCombLeafCoalStats(int comb, int leaf){
 	double expectedCoalStats = genetree_stats_total.coal_stats[leaf];
 	double actualCoalStats = comb_stats[comb].leaves[leaf].above_comb.coal_stats
 			+ comb_stats[comb].leaves[leaf].below_comb.coal_stats;
-	double difference = fabs(actualCoalStats - expectedCoalStats);
-	if (difference > COMB_PERCISION){
-		printf("Error while checking leaf %s coal_stats:\nExpected:%0.35f\tActual:%0.35f\tDifference:%0.35f\tRelative Error:%0.35f",
+	double error = fabs(actualCoalStats - expectedCoalStats);
+	double relativeError = error/expectedCoalStats;
+	if (relativeError > COMB_RELATIVE_PERCISION){
+		printf("Error while checking leaf %s coal_stats:\nExpected:%0.35f\tActual:%0.35f\tRelative Error:%0.35f\tAbsolute Error:%0.35f",
 				dataSetup.popTree->pops[leaf]->name,
-				expectedCoalStats, actualCoalStats, difference, 2*difference/(actualCoalStats+expectedCoalStats));
+				expectedCoalStats, actualCoalStats, relativeError, error);
 		exit(-1);
 	}
 }
-
-//void test_all(int comb){ // TODO - rewrite tests
-//	test_validateCountCoals(comb);
-//	test_validateCoalStats(comb);
-//}
-//void test_validateCountCoals(int comb){
-//	int sumCoalsInComb = test_countCoalsEntireComb(comb);
-//	int sumCoalsInClade = test_countCoalsEntireClade(comb);
-//	if (sumCoalsInClade != sumCoalsInComb){
-//		printf("Error in test_validateCountCoals(int comb): Comb had %d coals, however Clade had %d!", sumCoalsInComb, sumCoalsInClade);
-//		exit(-1);
-//	}
-//}
-//int test_countCoalsEntireComb(int comb){
-//	int count = 0;
-//	count += comb_stats[comb].num_coals_total;
-//	count += test_countCoalsCombLeaves_rec(comb, comb);
-//	return count;
-//}
-//int test_countCoalsCombLeaves_rec(int comb, int pop){
-//	if (isLeaf(pop)){
-//		return comb_stats[comb].leaves[pop].num_coals_below_comb;
-//	} else {
-//		int left_son = dataSetup.popTree->pops[pop]->sons[LEFT]->id;
-//		int right_son = dataSetup.popTree->pops[pop]->sons[RIGHT]->id;
-//		return (test_countCoalsCombLeaves_rec(comb, left_son) + test_countCoalsCombLeaves_rec(comb, right_son));
-//	}
-//}
-//int test_countCoalsEntireClade(int clade){
-//	if (isLeaf(clade)){
-//		return genetree_stats_total.num_coals[clade];
-//	} else {
-//		int left_son  = dataSetup.popTree->pops[clade]->sons[ LEFT ]->id;
-//		int right_son = dataSetup.popTree->pops[clade]->sons[ RIGHT]->id;
-//		return genetree_stats_total.num_coals[clade] +
-//				test_countCoalsEntireClade(left_son) +
-//				test_countCoalsEntireClade(right_son);
-//	}
-//}
-//void test_validateCoalStats(int comb){
-//}
-//
