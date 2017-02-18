@@ -50,13 +50,13 @@ double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
 
 int	isLeaf(int pop);
 int areChildrenLeaves(int pop);
-int isFeasableComb(int pop);
+int isFeasibleComb(int pop);
 
 double getCombAge(int comb);
 int getSon(int pop, int SON);
-struct STATS getStats(int comb, int pop);
+Stats* getStats(int comb, int pop);
 void initCombStats();
-void initStats(struct STATS stats);
+void initStats(Stats* stats);
 
 void allocateCombMem();
 void allocateStats(Stats* stats);
@@ -65,6 +65,7 @@ void freeCombMem();
 
 
 // TODO - extract tests to different source file
+void assertRootNumCoals();
 //void test_all(int comb);
 //void test_validateCoalStats(int comb);
 //void test_validateCountCoals(int comb);
