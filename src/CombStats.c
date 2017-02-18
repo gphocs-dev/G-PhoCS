@@ -26,6 +26,7 @@ void calculateCombStats() {
 		}
 	}
 	assertRootNumCoals();
+	assertCombLeaves();
 }
 
 void finalizeCombCoalStats(int comb){
@@ -83,7 +84,7 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 		}
 		else {
 			if (eventType == COAL){
-				aboveCombLeafStats->coal_stats++;
+				aboveCombLeafStats->num_coals++;
 				combTotalStats->num_coals++;
 			}
 			// you're a tiny part of the comb so supply future methods the data they need -
@@ -91,10 +92,12 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 			aboveCombLeafStats->elapsed_times[numEventsAboveComb] 	= elapsedTime;
 			aboveCombLeafStats->num_lineages[numEventsAboveComb] 	= numLineages;
 			aboveCombLeafStats->event_types[numEventsAboveComb] 	= eventType;
+
 			numEventsAboveComb++;
 		}
 		eventId = event_chains[gene].events[eventId].next;
 	}
+	aboveCombLeafStats->coal_stats += calculateCoalStats(aboveCombLeafStats->elapsed_times, aboveCombLeafStats->num_lineages, numEventsAboveComb); // TODO - this stat is not outputed. consider removing it performancewise
 	aboveCombLeafStats->num_events = numEventsAboveComb;
 	combTotalStats->num_events += numEventsAboveComb;
 }
@@ -343,8 +346,11 @@ void freeCombMem(){ // TODO - implement
 }
 
 
-// TODO - extract tests to different source file
+double COMB_PERCISION = 0.000000000000001; // TODO - where to put this? // TODO - discuss this with Ilan
+//						0.12345678901234567890
 
+
+// TODO - extract tests to different source file
 void assertRootNumCoals(){
 	int root = getPopIdByName(dataSetup.popTree, "root");
 
@@ -356,9 +362,44 @@ void assertRootNumCoals(){
 			actualCoals += comb_stats[root].leaves[pop].below_comb.num_coals;
 		}
 	}
-	if (maxCoals != actualCoals) {
+	if (fabs(maxCoals - actualCoals) > COMB_PERCISION) {
 		printf("comb %s: Expected coalescence - %d. Actual coalescence - %d",
 				"root", maxCoals, actualCoals);
+		exit(-1);
+	}
+}
+
+void assertCombLeaves(){
+	for (int comb = 0; comb < dataSetup.popTree->numPops ; comb++){
+		if (isFeasibleComb(comb)){
+			for (int leaf = 0; leaf < dataSetup.popTree->numPops ; leaf++){
+				if (isLeaf(leaf) && isAncestralTo(comb, leaf)){
+					assertCombLeafNumCoals(comb, leaf);
+					assertCombLeafCoalStats(comb, leaf);
+				}
+			}
+		}
+	}
+}
+void assertCombLeafNumCoals(int comb, int leaf){
+	int expectedNumCoals = genetree_stats_total.num_coals[leaf];
+	int actualNumCoals = comb_stats[comb].leaves[leaf].above_comb.num_coals
+			+ comb_stats[comb].leaves[leaf].below_comb.num_coals;
+	if (expectedNumCoals != actualNumCoals){
+		printf("Error while checking leaf %s num_coals:\nExpected num_coals %d. actual is %d",
+				dataSetup.popTree->pops[leaf]->name, expectedNumCoals, actualNumCoals);
+		exit(-1);
+	}
+}
+void assertCombLeafCoalStats(int comb, int leaf){
+	double expectedCoalStats = genetree_stats_total.coal_stats[leaf];
+	double actualCoalStats = comb_stats[comb].leaves[leaf].above_comb.coal_stats
+			+ comb_stats[comb].leaves[leaf].below_comb.coal_stats;
+	double difference = fabs(actualCoalStats - expectedCoalStats);
+	if (difference > COMB_PERCISION){
+		printf("Error while checking leaf %s coal_stats:\nExpected:%0.35f\tActual:%0.35f\tDifference:%0.35f\tRelative Error:%0.35f",
+				dataSetup.popTree->pops[leaf]->name,
+				expectedCoalStats, actualCoalStats, difference, 2*difference/(actualCoalStats+expectedCoalStats));
 		exit(-1);
 	}
 }
