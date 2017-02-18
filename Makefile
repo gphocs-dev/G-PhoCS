@@ -11,10 +11,10 @@ ENABLE_OMP_THREADS = 1
 
 # compiler options
 #Debugging
-#CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -std=c99 -fopenmp -ggdb
+CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -std=c99 -fopenmp -ggdb
 
 #Production
-CFLAGS+= -fstack-protector-all -Wall -O3  -std=c99 
+#CFLAGS+= -fstack-protector-all -Wall -O3  -std=c99 
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty
@@ -139,4 +139,4 @@ obj/CombStats.o:     src/CombStats.c \
 
 clean:
 	@echo "Cleaning"
-	@rm -rf obj/*.o bin/readTrace bin/G-PhoCS
+	@rm -rf obj/*.o bin/readTrace bin/G-PhoCS bin/readTrace.exe bin/G-PhoCS.exe

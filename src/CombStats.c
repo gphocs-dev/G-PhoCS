@@ -16,223 +16,186 @@
 
 
 void calculateCombStats() {
-	initStats();
+	initCombStats();
 	for (int comb = 0 ; comb < dataSetup.popTree->numPops ; comb++){
 		if (isFeasableComb(comb)){
-			countCoals(comb);
-//			computeCombCoalStats(comb);
-			test_runAll(comb);
-		}
-	}
-
-}
-
-
-void countCoals(int comb){
-	countCoals_rec(comb, comb);
-}
-
-void countCoals_rec(int comb, int currentPop){
-	if (isLeaf(currentPop)){
-		countLeafCoals(comb, currentPop);
-	} else{
-		countNonLeafCoals(comb, currentPop);
-	}
-}
-
-void countLeafCoals(int comb, int leaf) {
-	for(int gene=0; gene<dataSetup.numLoci; gene++) {
-		countLeafGeneCoals(comb, leaf, gene);
-	}
-	if (comb_stats[comb].leaves[leaf].debug_original_num_coals !=
-			genetree_stats_total.num_coals[leaf]) { // TODO - debugggggggggg
-				printf("ERROR: comb leaf num coal not correct!");
-				exit(-1);
-	}
-}
-
-void countLeafGeneCoals(int comb, int leaf, int gene){
-
-	float combAge = comb_stats[comb].age;
-	int belowCombAge = 0;
-	int aboveCombAge = 0;
-	int eventId = event_chains[gene].first_event[leaf];
-	float eventAge = 0.0;
-
-	while (eventId >= 0) {
-		eventAge += event_chains[gene].events[eventId].elapsed_time;
-
-		if (event_chains[gene].events[eventId].type == COAL){
-			if (eventAge <= combAge){
-				belowCombAge++;
-			} else {
-				aboveCombAge++;
+			for(int gene=0; gene<dataSetup.numLoci; gene++) {
+				calculateSufficientStats(comb, gene);
 			}
 		}
+	}
+}
 
+
+void calculateSufficientStats(int comb, int gene){
+	coalescence(comb, gene);
+//	migrations(comb, gene);
+}
+
+void coalescence(int comb, int gene){
+	coalescence_rec(comb, comb, gene);
+
+}
+
+void coalescence_rec(int comb, int currentPop, int gene){
+	if (isLeaf(currentPop)){
+		handleLeafCoals(comb, currentPop, gene);
+	} else{
+		coalescence_rec(comb, getSon(currentPop, LEFT), gene);
+		coalescence_rec(comb, getSon(currentPop, RIGHT), gene);
+
+		handleNonLeafCoals(comb, currentPop, gene);
+	}
+}
+
+
+void handleLeafCoals(int comb, int leaf, int gene) {
+
+	double elapsedTime, eventAge = 0.0;
+	int numLineages, eventType, numEventsAboveComb = 0;
+	double combAge = comb_stats[comb].age;
+
+	struct STATS belowCombLeafStats = comb_stats[comb].leaves[leaf].below_comb;
+	struct STATS aboveCombLeafStats = comb_stats[comb].leaves[leaf].above_comb;
+	struct STATS CombTotalStats = comb_stats[comb].total;
+
+	int eventId = event_chains[gene].first_event[leaf];
+	while (eventId >= 0) {
+		elapsedTime = event_chains[gene].events[eventId].elapsed_time;
+		eventType = event_chains[gene].events[eventId].type;
+		numLineages = event_chains[gene].events[eventId].num_lineages;
+		eventAge += elapsedTime;
+
+		if (eventAge <= combAge){
+			if (eventType == COAL){ belowCombLeafStats.num_coals++; }
+			// you've got all the data you need so just update coal_stats -
+			belowCombLeafStats.coal_stats += numLineages*(numLineages-1)*elapsedTime;  // TODO - discuss this with Ilan (how I update coal stats on EVERY event and not just numLin-changing events)
+		}
+		else {
+			if (eventType == COAL){ aboveCombLeafStats.coal_stats ++; }
+			// you're a tiny part of the comb so supply future methods the data they need -
+			aboveCombLeafStats.sorted_ages[numEventsAboveComb] 	= eventAge;
+			aboveCombLeafStats.elapsed_times[numEventsAboveComb] 	= elapsedTime;
+			aboveCombLeafStats.num_lineages[numEventsAboveComb] 	= numLineages;
+			aboveCombLeafStats.event_types[numEventsAboveComb] 	= eventType;
+			numEventsAboveComb++;
+		}
 		eventId = event_chains[gene].events[eventId].next;
 	}
-
-	comb_stats[comb].leaves[leaf].num_coals_total += belowCombAge;
-	comb_stats[comb].num_coals_total += aboveCombAge;
-	comb_stats[comb].leaves[leaf].debug_original_num_coals += (belowCombAge + aboveCombAge); // TODO - debugggggggggg
+	aboveCombLeafStats.num_events = numEventsAboveComb;
+	CombTotalStats.num_events += numEventsAboveComb;
 }
 
-
-void countNonLeafCoals(int comb, int currentPop) {
-
-	int leftSon = dataSetup.popTree->pops[currentPop]->sons[LEFT]->id;
-	int rightSon = dataSetup.popTree->pops[currentPop]->sons[RIGHT]->id;
-
-	countCoals_rec(comb, leftSon);
-	countCoals_rec(comb, rightSon);
-
-	comb_stats[comb].num_coals_total += genetree_stats_total.num_coals[currentPop];
+void handleNonLeafCoals(int comb, int currentPop, int gene) {
+	handleNonLeafNumCoals(comb, currentPop, gene);
+//	handleNonLeafCoalStats(comb, currentPop, gene); // TODO - reactivate coal stats
 }
 
+void handleNonLeafNumCoals(int comb, int currentPop, int gene) {
+	comb_stats[comb].total.num_coals += genetree_stats[gene].num_coals[currentPop];
+}
 
-//void computeCombCoalStats(){
-//	for(int gen=0; gen<dataSetup.numLoci; gen++) {
-//		computeCombCoalStats_rec(dataSetup.popTree->rootPop, gen);
-//	}
-//}
+void handleNonLeafCoalStats(int comb, int currentPop, int gene){
+	mergeChildernIntoCurrent(comb, currentPop, gene);
+	appendCurrent(comb, currentPop, gene); // start filling the comb_stats arrays from the last known event
+}
 
-//void computeCombCoalStats_rec(int comb, int gen) {
-//	int leftSon, rightSon;
-//
-//	if (isLeaf(comb)){
-//		fillupLeafCombStats(comb, gen);
-//	} else{
-//		leftSon = dataSetup.popTree->pops[comb]->sons[LEFT]->id;
-//		rightSon = dataSetup.popTree->pops[comb]->sons[RIGHT]->id;
-//
-//		computeCombCoalStats_rec(leftSon, gen);
-//		computeCombCoalStats_rec(rightSon, gen);
-//
-//		fillupCombStats(comb, gen);
-//
-//	}
-////	debug_print_combstats(comb, gen); //CAUTION! uncommenting this increases running time tenfold! (because of IO)
-//}
+void mergeChildernIntoCurrent(int comb, int currentPop, int gen){
+	int i, j = 0, k = 0;
+	double leftAge, rightAge;
+	int leftSon, rightSon;
+	struct STATS leftStats, rightStats;
+	struct STATS currentStats;
 
-//void fillupLeafCombStats(int comb, int gen){
-//	appendPopToComb(comb, gen, 0); // since this is a leaf, starting point of the comb_stats arrays should be 0
-//}
+	leftSon = getSon(currentPop, LEFT);
+	rightSon = getSon(currentPop, RIGHT);
 
-//void appendPopToComb(int comb, int gen, int startingPoint){
-//	int i = startingPoint;
-//	int event = event_chains[gen].first_event[comb];
-//	double combStartTime = dataSetup.popTree->pops[comb]->age;
-//	double eventAge = combStartTime;
-//
-//	for ( ; event >= 0 ; i++, event = event_chains[gen].events[event].next){
-//		eventAge += event_chains[gen].events[event].elapsed_time;
-//		comb_stats[comb].sorted_ages[i] = eventAge;
-//		comb_stats[comb].elapsed_times[i] = event_chains[gen].events[event].elapsed_time;
-//		comb_stats[comb].num_lineages[i] = event_chains[gen].events[event].num_lineages;
-//		comb_stats[comb].event_types[i] = event_chains[gen].events[event].type;
-//	}
-//	comb_stats[comb].num_events = i;
-////	comb_stats[comb].coal_stats_total += genetree_stats[gen].coal_stats_total[comb];
-//	comb_stats[comb].coal_stats_total += getCoalStats(comb_stats[comb].elapsed_times + startingPoint, comb_stats[comb].num_lineages + startingPoint, comb_stats[comb].num_events - startingPoint);
-//
-//#ifdef CHECKCOMB
-//	test_compareGphocsVsCombPopCoalStats(comb, gen, startingPoint);
-//#endif
-//}
+	currentStats = getStats(comb, currentPop);
+	leftStats = getStats(comb, leftSon);
+	rightStats = getStats(comb, rightSon);
 
 
-//void fillupCombStats(int comb, int gen){
-//	addChildenIntoCombStats(comb, gen);
-//	addCurrentPopIntoCombStats(comb, gen);
-//}
+	int m = leftStats.num_events;
+	int n = rightStats.num_events;
 
-//void addChildenIntoCombStats(int comb, int gen){
-//	mergeChildern(comb, gen);
-//	addChildrenCombStats(comb, gen);
-//}
+	for (i = 0 ; i < m + n; ) {
+		if ( j < m && k < n) {
 
+			leftAge = leftStats.sorted_ages[j];
+			rightAge = rightStats.sorted_ages[k];
+			if (leftAge < rightAge){
+				currentStats.event_types[i]  = leftStats.event_types[j];
+				currentStats.sorted_ages[i]  = leftStats.sorted_ages[j];
+				currentStats.num_lineages[i] = leftStats.num_lineages[j] + rightStats.num_lineages[k];
+				j++;
+			}
+			else{
+				currentStats.event_types[i]  = rightStats.event_types[j];
+				currentStats.sorted_ages[i]  = rightStats.sorted_ages[j];
+				currentStats.num_lineages[i] = leftStats.num_lineages[j] + rightStats.num_lineages[k];
+				k++;
+			}
+			i++;
+		}
+		else if (j == m) {
+			for (; i < m + n ;) {
+				currentStats.event_types[i] = rightStats.event_types[k];
+				currentStats.sorted_ages[i] = rightStats.sorted_ages[k];
+				currentStats.num_lineages[i] =
+						leftStats.num_lineages[j-1] + rightStats.num_lineages[k];
+				k++;
+				i++;
+			}
+		}
+		else {
+			for (; i < m + n;) {
+				currentStats.event_types[i] = leftStats.event_types[j];
+				currentStats.sorted_ages[i] = leftStats.sorted_ages[j];
+				currentStats.num_lineages[i] =
+						leftStats.num_lineages[j] + rightStats.num_lineages[k-1];
+				j++;
+				i++;
+			}
+		}
+	}
+	for (i = 0 ; i < m + n; i++ ) {
+		currentStats.elapsed_times[i] = (i==0) ? 0 :
+				currentStats.sorted_ages[i] - currentStats.sorted_ages[i-1];
+	}
 
+	currentStats.num_events = m + n;
+}
 
-//void mergeChildern(int comb, int gen){
-//	int i, j = 0, k = 0;
-//	double leftAge, rightAge;
-//	int leftSon, rightSon;
-//	leftSon = dataSetup.popTree->pops[comb]->sons[LEFT]->id;
-//	rightSon = dataSetup.popTree->pops[comb]->sons[RIGHT]->id;
-//	int m = comb_stats[leftSon].num_events;
-//	int n = comb_stats[rightSon].num_events;
-//
-//	for (i = 0 ; i < m + n; ) {
-//		if ( j < m && k < n) {
-//			leftAge = comb_stats[leftSon].sorted_ages[j];
-//			rightAge = comb_stats[rightSon].sorted_ages[k];
-//			if (leftAge < rightAge){
-//				comb_stats[comb].event_types[i] = comb_stats[leftSon].event_types[j];
-//				comb_stats[comb].sorted_ages[i] = comb_stats[leftSon].sorted_ages[j];
-//				comb_stats[comb].num_lineages[i] =
-//						comb_stats[leftSon].num_lineages[j] + comb_stats[rightSon].num_lineages[k];
-//				j++;
-//			}
-//			else{
-//				comb_stats[comb].event_types[i] = comb_stats[rightSon].event_types[k];
-//				comb_stats[comb].sorted_ages[i] = comb_stats[rightSon].sorted_ages[k];
-//				comb_stats[comb].num_lineages[i] =
-//						comb_stats[leftSon].num_lineages[j] + comb_stats[rightSon].num_lineages[k];
-//				k++;
-//			}
-//			i++;
-//		}
-//		else if (j == m) {
-//			for (; i < m + n ;) {
-//				comb_stats[comb].event_types[i] = comb_stats[rightSon].event_types[k];
-//				comb_stats[comb].sorted_ages[i] = comb_stats[rightSon].sorted_ages[k];
-//				comb_stats[comb].num_lineages[i] =
-//						comb_stats[leftSon].num_lineages[j-1] + comb_stats[rightSon].num_lineages[k];
-//				k++;
-//				i++;
-//			}
-//		}
-//		else {
-//			for (; i < m + n;) {
-//				comb_stats[comb].event_types[i] = comb_stats[leftSon].event_types[j];
-//				comb_stats[comb].sorted_ages[i] = comb_stats[leftSon].sorted_ages[j];
-//				comb_stats[comb].num_lineages[i] =
-//						comb_stats[leftSon].num_lineages[j] + comb_stats[rightSon].num_lineages[k-1];
-//				j++;
-//				i++;
-//			}
-//		}
-//	}
-//	for (i = 0 ; i < m + n; i++ ) {
-//		comb_stats[comb].elapsed_times[i] = (i==0) ? 0 :
-//				comb_stats[comb].sorted_ages[i] - comb_stats[comb].sorted_ages[i-1];
-//	}
-//
-//	comb_stats[comb].num_events = m + n;
-//}
+void appendCurrent(int comb, int currentPop, int gene){
+	struct STATS currentStats = getStats(comb, currentPop);
 
-//void addChildrenCombStats(int comb, int gen){
-//	comb_stats[comb].coal_stats_total +=
-//			getCoalStats(comb_stats[comb].elapsed_times, comb_stats[comb].num_lineages, comb_stats[comb].num_events);
-//}
+	int startingPoint = currentStats.num_events;
+	int i = startingPoint;
+	int event = event_chains[gene].first_event[currentPop];
+	double combStartTime = dataSetup.popTree->pops[currentPop]->age;
+	double eventAge = combStartTime;
 
-//void addCurrentPopIntoCombStats(int comb, int gen){
-//	appendPopToComb(comb, gen, comb_stats[comb].num_events); // start filling the comb_stats arrays from the last known event
-//}
+	for ( ; event >= 0 ; i++, event = event_chains[gene].events[event].next){
+		eventAge += event_chains[gene].events[event].elapsed_time;
+		currentStats.sorted_ages[i] = eventAge;
+		currentStats.elapsed_times[i] = event_chains[gene].events[event].elapsed_time;
+		currentStats.num_lineages[i] = event_chains[gene].events[event].num_lineages;
+		currentStats.event_types[i] = event_chains[gene].events[event].type;
+	}
+	currentStats.num_events = i;
+}
 
-
-//double getCoalStats(double* elapsed_times, int* num_lineages, int size){
-//	int n;
-//	double t;
-//	double result = 0.0;
-//	for( int i = 0 ; i < size ; i++) {
-//		n = num_lineages[i];
-//		t = elapsed_times[i];
-//		result += n*(n-1)*t;
-//	}
-//	return result;
-//}
+double calculateCoalStats(double* elapsed_times, int* num_lineages, int size){
+	int n;
+	double t;
+	double result = 0.0;
+	for( int i = 0 ; i < size ; i++) {
+		n = num_lineages[i];
+		t = elapsed_times[i];
+		result += n*(n-1)*t;
+	}
+	return result;
+}
 
 
 
@@ -296,118 +259,143 @@ int isFeasableComb(int pop){
 	}
 	return TRUE;
 }
-void initStats(){
+
+
+
+int getSon(int pop, int SON){
+	return dataSetup.popTree->pops[pop]->sons[SON]->id;
+}
+Stats getStats(int comb, int pop){ //TODO - rename to something more descriptive
+	if (isLeaf(pop)){
+		return comb_stats[comb].leaves[pop].above_comb;
+	} else {
+		return comb_stats[comb].clades[pop];
+	}
+}
+
+
+void initCombStats(){
 	for (int comb = 0 ; comb < dataSetup.popTree->numPops ; comb++){
 		if (isFeasableComb(comb)){
-			comb_stats[comb].coal_stats_total   = 0.0;
-			comb_stats[comb].mig_stats_total 	= 0.0;
-			comb_stats[comb].num_coals_total 	= 0;
-			comb_stats[comb].num_migs_total 	= 0;
-			comb_stats[comb].num_events 		= 0;
-			comb_stats[comb].debug_total_error  = 0;
-			comb_stats[comb].age 				= getCombAge(comb);
 
-			for (int leaf = 0 ; leaf < dataSetup.popTree->numCurPops ; leaf++){
-				comb_stats[comb].leaves[leaf].num_migs_total = 0;
-				comb_stats[comb].leaves[leaf].num_coals_total = 0;
-				comb_stats[comb].leaves[leaf].mig_stats = 0.0;
-				comb_stats[comb].leaves[leaf].coal_stats = 0.0;
-				comb_stats[comb].leaves[leaf].debug_original_num_coals = 0; // TODO - debugggggggggg
+			initStats(comb_stats[comb].total);
+			comb_stats[comb].age = getCombAge(comb);
+
+			for (int pop = 0 ; pop < dataSetup.popTree->numCurPops ; pop++){
+				if (isLeaf(pop)){
+					initStats(comb_stats[comb].leaves[pop].above_comb);
+					initStats(comb_stats[comb].leaves[pop].below_comb);
+				} else {
+					initStats(comb_stats[comb].clades[pop]);
+				}
 			}
 		}
 	}
 }
+void initStats(Stats stats){
+	stats.coal_stats = 0.0;
+	stats.mig_stats = 0.0;
+	stats.num_coals  = 0;
+	stats.num_events = 0;
+	stats.num_migs = 0;
+}
 void allocateCombMem(){
-	comb_stats=(struct COMB_STATS*)malloc(dataSetup.popTree->numPops*sizeof(struct COMB_STATS));
-	int max_events = 2*dataSetup.numSamples+ 4*MAX_MIGS + 3*dataSetup.popTree->numMigBands + dataSetup.popTree->numPops + 10;
+	comb_stats=malloc(dataSetup.popTree->numPops*sizeof(struct COMB_STATS));
 
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
-		comb_stats[comb].sorted_ages = (double*)malloc(max_events*sizeof(double));
-		comb_stats[comb].elapsed_times = (double*)malloc(max_events*sizeof(double));
-		comb_stats[comb].num_lineages = (int*)malloc(max_events*sizeof(int));
-		comb_stats[comb].event_types = (int*)malloc(max_events*sizeof(int));
-		comb_stats[comb].coal_stats_total = 0.0;
+//		comb_stats[comb].total = (Stats) malloc(sizeof(Stats));
+		allocateStats(&comb_stats[comb].total);
 
-		comb_stats[comb].mig_stats_total = 0.0;
+		comb_stats[comb].leaves=malloc(dataSetup.popTree->numCurPops*sizeof(LeafStats));
+		comb_stats[comb].clades=malloc(dataSetup.popTree->numCurPops*sizeof(Stats));
+		for (int pop = 0 ; pop < dataSetup.popTree->numCurPops ; pop++){
+			if (isLeaf(pop)){
+//				comb_stats[comb].leaves[pop].below_comb = malloc(sizeof(Stats));
+//				comb_stats[comb].leaves[pop].above_comb = malloc(sizeof(Stats));
 
-		comb_stats[comb].leaves=(struct COMB_LEAF*)malloc(dataSetup.popTree->numCurPops*sizeof(struct COMB_LEAF));
-		for (int leaf = 0 ; leaf < dataSetup.popTree->numCurPops ; leaf++){
-			comb_stats[comb].leaves[leaf].coal_stats = 0.0;
-			comb_stats[comb].leaves[leaf].mig_stats = 0.0;
-			comb_stats[comb].leaves[leaf].num_migs_total = 0;
-			comb_stats[comb].leaves[leaf].num_coals_total = 0;
+				allocateStats(&comb_stats[comb].leaves[pop].below_comb);
+				allocateStats(&comb_stats[comb].leaves[pop].above_comb);
+			} else {
+				allocateStats(&comb_stats[comb].clades[pop]);
+			}
 		}
 
-
-		if((comb_stats == NULL) || // TODO - add memory checks for comb_stats_leaves
-				(!comb_stats[comb].sorted_ages) || (!comb_stats[comb].elapsed_times) ||
-				(!comb_stats[comb].num_lineages)|| (!comb_stats[comb].event_types)) {
+		if(comb_stats == NULL){ // TODO - add memory allocation test for all of comb_stats
 			fprintf(stderr, "\nError: Out Of Memory comb_stats\n");
 			exit(-1);
 		}
 	}
-
 }
+void allocateStats(Stats* stats){
+	int max_events = 2*dataSetup.numSamples+ 4*MAX_MIGS + 3*dataSetup.popTree->numMigBands + dataSetup.popTree->numPops + 10;
+	stats->sorted_ages = (double*)malloc(max_events*sizeof(double));
+	stats->elapsed_times = (double*)malloc(max_events*sizeof(double));
+	stats->num_lineages = (int*)malloc(max_events*sizeof(int));
+	stats->event_types = (int*)malloc(max_events*sizeof(int));
+}
+
 void freeCombMem(){ // TODO - implement
 }
-void debug_print_errors(){
-	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
-		fprintf(stderr, "comb:%s, total_error=%0.35f, relative_error=%0.35f\n",
-				dataSetup.popTree->pops[comb]->name , comb_stats[comb].debug_total_error,
-				comb_stats[comb].debug_total_error / comb_stats[comb].coal_stats_total);
-	}
-	printf("\n");
-}
-void debug_print_combstats(int comb, int gen){
-	printf("=== comb:%s, gen:%d, num_events:%d, num_coals_total:%d === >>\n",
-			dataSetup.popTree->pops[comb]->name, gen, comb_stats[comb].num_events, comb_stats[comb].num_coals_total);
-	for (int i = 0 ; i < comb_stats[comb].num_events ; i++){
-		printf("age:%0.25f, elapsed_time:%0.25f, num_lin:%d, type:%s \n",
-				comb_stats[comb].sorted_ages[i], comb_stats[comb].elapsed_times[i],
-				comb_stats[comb].num_lineages[i],	/*getEventTypeName(comb_stats[comb].event_types[i])*/ "UNIMPLEMENTED");
-	}
-	printf("====================================================================================\n");
-	fflush(stdout);
-}
+
+//void debug_print_errors(){
+//	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
+//		fprintf(stderr, "comb:%s, total_error=%0.35f, relative_error=%0.35f\n",
+//				dataSetup.popTree->pops[comb]->name , comb_stats[comb].debug_total_error,
+//				comb_stats[comb].debug_total_error / comb_stats[comb].coal_stats_total);
+//	}
+//	printf("\n");
+//}
+//void debug_print_combstats(int comb, int gen){
+//	printf("=== comb:%s, gen:%d, num_events:%d, num_coals_below_comb:%d === >>\n",
+//			dataSetup.popTree->pops[comb]->name, gen, comb_stats[comb].num_events, comb_stats[comb].num_coals_total);
+//	for (int i = 0 ; i < comb_stats[comb].num_events ; i++){
+//		printf("age:%0.25f, elapsed_time:%0.25f, num_lin:%d, type:%s \n",
+//				comb_stats[comb].sorted_ages[i], comb_stats[comb].elapsed_times[i],
+//				comb_stats[comb].num_lineages[i],	/*getEventTypeName(comb_stats[comb].event_types[i])*/ "UNIMPLEMENTED");
+//	}
+//	printf("====================================================================================\n");
+//	fflush(stdout);
+//}
 
 // TODO - extract tests to different source file
-int test_runAll(int comb){
-	test_validateCountCoals(comb);
-	test_validateCoalStats(comb);
-}
-void test_validateCountCoals(int comb){
-	int sumCoalsInComb = test_countCoalsEntireComb(comb);
-	int sumCoalsInClade = test_countCoalsEntireClade(comb);
-	if (sumCoalsInClade != sumCoalsInComb){
-		printf("Error in test_validateCountCoals(int comb): Comb had %d coals, however Clade had %d!", sumCoalsInComb, sumCoalsInClade);
-		exit(-1);
-	}
-}
-int test_countCoalsEntireComb(int comb){
-	int count = 0;
-	count += comb_stats[comb].num_coals_total;
-	count += test_countCoalsCombLeaves_rec(comb, comb);
-	return count;
-}
-int test_countCoalsCombLeaves_rec(int comb, int pop){
-	if (isLeaf(pop)){
-		return comb_stats[comb].leaves[pop].num_coals_total;
-	} else {
-		int left_son = dataSetup.popTree->pops[pop]->sons[LEFT]->id;
-		int right_son = dataSetup.popTree->pops[pop]->sons[RIGHT]->id;
-		return (test_countCoalsCombLeaves_rec(comb, left_son) + test_countCoalsCombLeaves_rec(comb, right_son));
-	}
-}
-int test_countCoalsEntireClade(int clade){
-	if (isLeaf(clade)){
-		return genetree_stats_total.num_coals[clade];
-	} else {
-		int left_son  = dataSetup.popTree->pops[clade]->sons[ LEFT ]->id;
-		int right_son = dataSetup.popTree->pops[clade]->sons[ RIGHT]->id;
-		return genetree_stats_total.num_coals[clade] +
-				test_countCoalsEntireClade(left_son) +
-				test_countCoalsEntireClade(right_son);
-	}
-}
-void test_validateCoalStats(int comb){
-}
+//void test_all(int comb){ // TODO - rewrite tests
+//	test_validateCountCoals(comb);
+//	test_validateCoalStats(comb);
+//}
+//void test_validateCountCoals(int comb){
+//	int sumCoalsInComb = test_countCoalsEntireComb(comb);
+//	int sumCoalsInClade = test_countCoalsEntireClade(comb);
+//	if (sumCoalsInClade != sumCoalsInComb){
+//		printf("Error in test_validateCountCoals(int comb): Comb had %d coals, however Clade had %d!", sumCoalsInComb, sumCoalsInClade);
+//		exit(-1);
+//	}
+//}
+//int test_countCoalsEntireComb(int comb){
+//	int count = 0;
+//	count += comb_stats[comb].num_coals_total;
+//	count += test_countCoalsCombLeaves_rec(comb, comb);
+//	return count;
+//}
+//int test_countCoalsCombLeaves_rec(int comb, int pop){
+//	if (isLeaf(pop)){
+//		return comb_stats[comb].leaves[pop].num_coals_below_comb;
+//	} else {
+//		int left_son = dataSetup.popTree->pops[pop]->sons[LEFT]->id;
+//		int right_son = dataSetup.popTree->pops[pop]->sons[RIGHT]->id;
+//		return (test_countCoalsCombLeaves_rec(comb, left_son) + test_countCoalsCombLeaves_rec(comb, right_son));
+//	}
+//}
+//int test_countCoalsEntireClade(int clade){
+//	if (isLeaf(clade)){
+//		return genetree_stats_total.num_coals[clade];
+//	} else {
+//		int left_son  = dataSetup.popTree->pops[clade]->sons[ LEFT ]->id;
+//		int right_son = dataSetup.popTree->pops[clade]->sons[ RIGHT]->id;
+//		return genetree_stats_total.num_coals[clade] +
+//				test_countCoalsEntireClade(left_son) +
+//				test_countCoalsEntireClade(right_son);
+//	}
+//}
+//void test_validateCoalStats(int comb){
+//}
+//

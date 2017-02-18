@@ -8,25 +8,25 @@
 
 // --- GLOBAL DATA STRUCTURES -------------------------------------------------
 
+typedef struct STATS {
+			int num_coals, num_migs;
+			double coal_stats, mig_stats;
+			double* sorted_ages; 	// temporary array to hold sorted node ages of a specific genealogy.
+			double* elapsed_times;	// temporary array to hold elapsed_time between adjacent events of a specific genealogy.
+			int* num_lineages; 		// temporary array to hold num of lineages of a specific genealogy.
+			int* event_types; 		// temporary array to hold event types
+			/** size of stats arrays (event_types, num_lineages, elapsed_times, sorted_ages)*/
+			int num_events;
+} Stats;
+
+typedef struct LEAF_STATS {
+	Stats above_comb, below_comb;
+  } LeafStats;
 struct COMB_STATS{
-	double coal_stats_total, mig_stats_total;
-	int num_coals_total, num_migs_total;
-
-	double* sorted_ages; 	// temporary array to hold sorted node ages of a specific genealogy.
-	double* elapsed_times;	// temporary array to hold elapsed_time between adjacent events of a specific genealogy.
-	int* num_lineages; 		// temporary array to hold num of lineages of a specific genealogy.
-	int* event_types; 		// temporary array to hold event types
-
-	int num_events; 		// temporary number of events in clade.
-	// used as an "array length" variable for sortedAges, event_types & num_lineages arrays
-	double debug_total_error; // TODO - debugggggggggg
 	double age; 			// temporary value of comb-age
-	struct COMB_LEAF {
-	    int num_coals_total, num_migs_total;
-	    double coal_stats, mig_stats;
-	    int debug_original_num_coals;
-	  }* leaves;
-
+	Stats total;
+	Stats* clades;
+	LeafStats* leaves;
 } *comb_stats;
 
 
@@ -35,47 +35,41 @@ struct COMB_STATS{
 
 // clade_stats calculation functions
 void calculateCombStats();
-void initCombStats();
-void initStats();
-void computeCombNumMigs();
-void computeCombMigStats();
-void countCoals();
-void countCoals_rec(int comb, int pop);
-void computeCombCoalStats();
-void computeCombCoalStats_rec(int clade, int gen);
-void fillupLeafCombStats(int clade, int gen);
-void appendPopToComb(int clade, int gen, int startingPoint);
-void fillupCombStats(int clade, int gen);
-void addChildenIntoCombStats(int clade, int gen);
-void mergeChildern(int clade, int gen);
-void addChildrenCombStats(int clade, int gen);
-void addCurrentPopIntoCombStats(int clade, int gen);
-double getCoalStats(double* elapsed_times, int* num_lineages, int size);
+void calculateSufficientStats(int comb, int gene);
+void coalescence(int comb, int gene);
+void coalescence_rec(int comb, int currentPop, int gene);
 
+void handleLeafCoals(int comb, int leaf, int gene);
+void handleNonLeafCoals(int comb, int currentPop, int gene);
+void handleNonLeafNumCoals(int comb, int currentPop, int gene);
+void handleNonLeafCoalStats(int comb, int currentPop, int gene);
+void mergeChildernIntoCurrent(int comb, int currentPop, int gen);
+void appendCurrent(int comb, int currentPop, int gene);
+double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
 
-
-void countLeafCoals(int comb, int leaf);
-void countLeafGeneCoals(int comb, int leaf, int gene);
-void countNonLeafCoals(int comb, int pop); // TODO - tidy declarations
-int getChildCladeNumCoal(int child);
-void computeCombLeafNumCoals(int leafPop);
-void countCoalsOutsideTrimmedLeafGene(int leafPop, int gene);
-void freeCombMem();
-void allocateCombMem();
 
 int	isLeaf(int pop);
 int areChildrenLeaves(int pop);
 int isFeasableComb(int pop);
 
 double getCombAge(int comb);
+int getSon(int pop, int SON);
+struct STATS getStats(int comb, int pop);
+void initCombStats();
+void initStats(struct STATS stats);
+
+void allocateCombMem();
+void allocateStats(Stats* stats);
+
+void freeCombMem();
 
 
 // TODO - extract tests to different source file
-int test_runAll(int comb);
-void test_validateCoalStats(int comb);
-void test_validateCountCoals(int comb);
-int test_countCoalsCombLeaves_rec(int comb, int pop);
-int test_countCoalsEntireComb(int comb);
-int test_countCoalsEntireClade(int comb);
+//void test_all(int comb);
+//void test_validateCoalStats(int comb);
+//void test_validateCountCoals(int comb);
+//int test_countCoalsCombLeaves_rec(int comb, int pop);
+//int test_countCoalsEntireComb(int comb);
+//int test_countCoalsEntireClade(int comb);
 
 #endif /* SRC_COMBSTATS_H_ */

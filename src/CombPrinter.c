@@ -69,8 +69,8 @@ void printSpecificMigHeader(int mig_band, FILE* file){
 
 void printSpecificCombStats(int comb, FILE* file){
 	fprintf(file, "%0.35f\t%d\t",
-			comb_stats[comb].coal_stats_total,
-			comb_stats[comb].num_coals_total);
+			comb_stats[comb].total.coal_stats,
+			comb_stats[comb].total.num_coals);
 }
 void printSpecificPopStats(int pop, FILE* file){
 	fprintf(file, "%0.35f\t%d\t",
@@ -81,5 +81,4 @@ void printSpecificMigBandStats(int mig_band, FILE* file){
 	fprintf(file, "%0.35f\t%d\t",
 			genetree_stats_total.mig_stats[mig_band],
 			genetree_stats_total.num_migs[mig_band]);
-
 }
