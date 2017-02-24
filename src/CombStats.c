@@ -1,6 +1,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <float.h>
 
 #include "utils.h"
 #include "MCMCcontrol.h"
@@ -26,7 +27,9 @@ void calculateCombStats() {
 		}
 	}
 	assertRootNumCoals();
+	assertRootCoalStats();
 	assertCombLeaves();
+
 }
 
 void finalizeCombCoalStats(int comb){
@@ -80,7 +83,7 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 				belowCombLeafStats->num_coals++;
 			}
 			// you've got all the data you need so just update coal_stats -
-			belowCombLeafStats->coal_stats += numLineages*(numLineages-1)*elapsedTime;  // TODO - discuss this with Ilan (how I update coal stats on EVERY event and not just numLin-changing events)
+			belowCombLeafStats->coal_stats += numLineages*(numLineages-1)*elapsedTime;
 		}
 		else {
 			if (eventType == COAL){
@@ -225,8 +228,9 @@ double calculateCoalStats(double* elapsed_times, int* num_lineages, int size){
 
 //TODO - find places for these functions
 double getCombAge(int comb){
+	return 0.0;
 	if (isLeaf(comb)){
-		return 99999.9; // TODO - replace with MAX_DOUBLE const
+		return DBL_MAX;
 	} else if (areChildrenLeaves(comb)){
 		return dataSetup.popTree->pops[comb]->age;
 	} else if (isFeasibleComb(comb)){
@@ -236,7 +240,7 @@ double getCombAge(int comb){
 	} else {
 		printf("ERROR: bug in combAge algorithm. Should not reach here!");
 		exit(-1);
-		return 99999.9;
+		return DBL_MAX;
 	}
 }
 int	isLeaf(int pop){ // TODO - ask Ilan if this function already exists somewhere in the code
@@ -346,11 +350,11 @@ void freeCombMem(){ // TODO - implement
 }
 
 
-double COMB_RELATIVE_PERCISION = 	0.000000000001; // TODO - where to put this? // TODO - discuss this with Ilan
-//									0.12345678901234567890
 
 
 // TODO - extract tests to different source file
+double COMB_RELATIVE_PERCISION = 	0.000000000001;
+
 void assertRootNumCoals(){
 	int root = getPopIdByName(dataSetup.popTree, "root");
 
@@ -366,6 +370,22 @@ void assertRootNumCoals(){
 	if (actualCoals != maxCoals) {
 		printf("comb %s: Expected coalescence - %d. Actual coalescence - %d",
 				"root", maxCoals, actualCoals);
+		exit(-1);
+	}
+}
+
+
+void assertRootCoalStats(){
+	int root = getPopIdByName(dataSetup.popTree, "root");
+	double actualCoalStats = comb_stats[root].total.coal_stats;
+	double expectedCoalStats = genetree_stats_flat.coal_stats_flat;
+
+	double error = fabs(actualCoalStats - expectedCoalStats);
+	double relativeError = error/expectedCoalStats;
+
+	if (relativeError > COMB_RELATIVE_PERCISION){
+		printf("Error while checking root coal_stats:\nExpected %f. actual %f",
+				expectedCoalStats, actualCoalStats);
 		exit(-1);
 	}
 }

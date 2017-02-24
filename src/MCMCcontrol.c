@@ -593,7 +593,7 @@ int readGeneralInfo(FILE* fctl) {
 			strncpy(ioSetup.traceFileName, token2, NAME_LENGTH-1);
 		} else if(0 == strcmp("coal-stats-file",token)) {
 			strncpy(ioSetup.nodeStatsFileName, token2, NAME_LENGTH-1);
-		} else if(0 == strcmp("comb-trace-file",token)) {
+		} else if(0 == strcmp("comb-stats-file",token)) {
 			strncpy(ioSetup.combStatsFileName, token2, NAME_LENGTH-1);
 		} else if(0 == strcmp("num-pop-partitions",token)) {
 			if (sscanf(token2, "%d", &dataSetup.numPopPartitions) != 1 || dataSetup.numPopPartitions <= 0) {

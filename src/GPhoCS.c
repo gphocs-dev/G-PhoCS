@@ -1605,13 +1605,13 @@ int performMCMC() {
 										dataState.logLikelihood, dataState.dataLogLikelihood);
 						fflush(ioSetup.traceFile);
 
-						if (recordCoalStats && 0) {
+//						if (recordCoalStats) {
 								//@@eug: never enter here
 								computeFlatStats();
-								computeNodeStats();
-								computeGenetreeStats_partitioned();
-								printCoalStats(iteration);
-						}
+//								computeNodeStats();
+//								computeGenetreeStats_partitioned();
+//								printCoalStats(iteration);
+//						}
 
 
 						if (combStatsActivated()) {
@@ -4367,6 +4367,9 @@ int mixing(double finetune) {
 		for (ext_mig_band = 0; ext_mig_band < dataSetup.popTree->numMigBands;
 						ext_mig_band++) {
 				// migration rates are scaled inversely
+				dataSetup.popTree->migBands[ext_mig_band].migRate *= c;
+				dataSetup.popTree->migBands[ext_mig_band].migRate *= c;
+				dataSetup.popTree->migBands[ext_mig_band].migRate *= c;
 				dataSetup.popTree->migBands[ext_mig_band].migRate *= c;
 				dataSetup.popTree->migBands[ext_mig_band].startTime /= c;
 				dataSetup.popTree->migBands[ext_mig_band].endTime /= c;
