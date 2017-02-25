@@ -155,17 +155,20 @@ struct GENETREE_MIGS {
    sorted in a list according to chronology within a population.
    Actual array of events is allocated in getMem()
 */
+
+typedef enum event_type {COAL, IN_MIG, OUT_MIG, MIG_BAND_START, MIG_BAND_END, SAMPLES_START, END_CHAIN, DUMMY} EventType;
+typedef struct EVENT{
+	EventType type;
+    int node_id, next, prev;
+    double elapsed_time;				// time from last event
+    int num_lineages;					// number of lineages before the event
+} Event;
 struct EVENT_CHAIN{
   int total_events;						// total number of events pre-allocated to this chain
   int first_event[2*NSPECIES-1];		// pointers to first event for every population
   int last_event[2*NSPECIES-1];			// pointers to last event for every population
   int free_events;						// pointer to a chain of free events for use. Always have at least one free event
-  struct EVENT{
-    enum event_type {COAL, IN_MIG, OUT_MIG, MIG_BAND_START, MIG_BAND_END, SAMPLES_START, END_CHAIN, DUMMY} type;
-    int node_id, next, prev;
-    double elapsed_time;			// time from last event
-    int num_lineages;					// number of lineages before the event
-  }* events;
+  Event* events;
 } *event_chains;
 
 

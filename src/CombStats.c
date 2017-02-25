@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
@@ -22,21 +21,21 @@ void calculateCombStats() {
 		if (isFeasibleComb(comb)){
 			for(int gene=0; gene<dataSetup.numLoci; gene++) {
 				calculateSufficientStats(comb, gene);
+				finalizeCombCoalStats(comb);
+//				debug_printCombGene(comb);
 			}
-			finalizeCombCoalStats(comb);
 		}
 	}
 	assertRootNumCoals();
 	assertRootCoalStats();
 	assertCombLeaves();
-
 }
 
 void finalizeCombCoalStats(int comb){
 	double* elapsedTimes = comb_stats[comb].clades[comb].elapsed_times;
 	int* numLineages = comb_stats[comb].clades[comb].num_lineages;
 	int size = comb_stats[comb].clades[comb].num_events;
-	comb_stats[comb].total.coal_stats = calculateCoalStats(elapsedTimes, numLineages, size);
+	comb_stats[comb].total.coal_stats += calculateCoalStats(elapsedTimes, numLineages, size);
 }
 
 void calculateSufficientStats(int comb, int gene){
@@ -78,14 +77,14 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 		numLineages = event_chains[gene].events[eventId].num_lineages;
 		eventAge += elapsedTime;
 
-		if (eventAge <= combAge){
+		if (eventAge < combAge){
 			if (eventType == COAL){
 				belowCombLeafStats->num_coals++;
 			}
 			// you've got all the data you need so just update coal_stats -
 			belowCombLeafStats->coal_stats += numLineages*(numLineages-1)*elapsedTime;
 		}
-		else {
+		else if (eventAge >= combAge){
 			if (eventType == COAL){
 				aboveCombLeafStats->num_coals++;
 				combTotalStats->num_coals++;
@@ -100,9 +99,12 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 		}
 		eventId = event_chains[gene].events[eventId].next;
 	}
-	aboveCombLeafStats->coal_stats += calculateCoalStats(aboveCombLeafStats->elapsed_times, aboveCombLeafStats->num_lineages, numEventsAboveComb); // TODO - this stat is not outputed. consider removing it performancewise
+
 	aboveCombLeafStats->num_events = numEventsAboveComb;
 	combTotalStats->num_events += numEventsAboveComb;
+
+	// TODO - this stat is not outputed. consider removing it performancewise
+	aboveCombLeafStats->coal_stats += calculateCoalStats(aboveCombLeafStats->elapsed_times, aboveCombLeafStats->num_lineages, numEventsAboveComb);
 }
 
 void handleNonLeafCoals(int comb, int currentPop, int gene) {
@@ -136,44 +138,34 @@ void mergeChildernIntoCurrent(int comb, int currentPop, int gen){
 	int m = leftStats->num_events;
 	int n = rightStats->num_events;
 
-	for (i = 0 ; i < m + n; ) {
+	for (i = 0 ; i < m + n; i++) {
 		if ( j < m && k < n) {
-
 			leftAge = leftStats->sorted_ages[j];
 			rightAge = rightStats->sorted_ages[k];
+
+			currentStats->num_lineages[i] = leftStats->num_lineages[j] + rightStats->num_lineages[k];
 			if (leftAge < rightAge){
 				currentStats->event_types[i]  = leftStats->event_types[j];
 				currentStats->sorted_ages[i]  = leftStats->sorted_ages[j];
-				currentStats->num_lineages[i] = leftStats->num_lineages[j] + rightStats->num_lineages[k];
 				j++;
 			}
 			else{
-				currentStats->event_types[i]  = rightStats->event_types[j];
-				currentStats->sorted_ages[i]  = rightStats->sorted_ages[j];
-				currentStats->num_lineages[i] = leftStats->num_lineages[j] + rightStats->num_lineages[k];
+				currentStats->event_types[i]  = rightStats->event_types[k];
+				currentStats->sorted_ages[i]  = rightStats->sorted_ages[k];
 				k++;
 			}
-			i++;
 		}
 		else if (j == m) {
-			for (; i < m + n ;) {
-				currentStats->event_types[i] = rightStats->event_types[k];
-				currentStats->sorted_ages[i] = rightStats->sorted_ages[k];
-				currentStats->num_lineages[i] =
-						leftStats->num_lineages[j-1] + rightStats->num_lineages[k];
+				currentStats->event_types[i]  = rightStats->event_types[k];
+				currentStats->sorted_ages[i]  = rightStats->sorted_ages[k];
+				currentStats->num_lineages[i] = leftStats->num_lineages[j-1] + rightStats->num_lineages[k];
 				k++;
-				i++;
-			}
 		}
-		else {
-			for (; i < m + n;) {
-				currentStats->event_types[i] = leftStats->event_types[j];
-				currentStats->sorted_ages[i] = leftStats->sorted_ages[j];
-				currentStats->num_lineages[i] =
-						leftStats->num_lineages[j] + rightStats->num_lineages[k-1];
+		else if (k == n){
+				currentStats->event_types[i]  = leftStats->event_types[j];
+				currentStats->sorted_ages[i]  = leftStats->sorted_ages[j];
+				currentStats->num_lineages[i] = leftStats->num_lineages[j] + rightStats->num_lineages[k-1];
 				j++;
-				i++;
-			}
 		}
 	}
 	for (i = 0 ; i < m + n; i++ ) {
@@ -190,8 +182,8 @@ void appendCurrent(int comb, int currentPop, int gene){
 	int startingPoint = currentStats->num_events;
 	int i = startingPoint;
 	int event = event_chains[gene].first_event[currentPop];
-	double combStartTime = dataSetup.popTree->pops[currentPop]->age;
-	double eventAge = combStartTime;
+	double startTime = dataSetup.popTree->pops[currentPop]->age; // do I need to start from pop age or from last event age (or are they equal)?
+	double eventAge = startTime;
 
 	for ( ; event >= 0 ; i++, event = event_chains[gene].events[event].next){
 		eventAge += event_chains[gene].events[event].elapsed_time;
@@ -243,7 +235,7 @@ double getCombAge(int comb){
 		return DBL_MAX;
 	}
 }
-int	isLeaf(int pop){ // TODO - ask Ilan if this function already exists somewhere in the code
+int	isLeaf(int pop){
 	Population *population, *left_son, *right_son;
 
 	population = dataSetup.popTree->pops[pop];
@@ -277,7 +269,28 @@ int isFeasibleComb(int pop){
 int isAncestralTo(int father, int son){
 	return dataSetup.popTree->pops[father]->isAncestralTo[son];
 }
-
+char* getEventTypeName(int eventType){
+	switch(eventType){
+		case COAL:
+			return "COAL";
+		case IN_MIG:
+			return "IN_MIG";
+		case OUT_MIG:
+			return "OUT_MIG";
+		case MIG_BAND_START:
+			return "MIG_START";
+		case MIG_BAND_END:
+			return "MIG_END";
+		case SAMPLES_START:
+			return "SAM_START";
+		case END_CHAIN:
+			return "END_CHAIN";
+		case DUMMY:
+			return "DUMMY";
+		default:
+			return "UNDEFINED";
+	}
+}
 
 
 int getSon(int pop, int SON){
@@ -355,6 +368,22 @@ void freeCombMem(){ // TODO - implement
 // TODO - extract tests to different source file
 double COMB_RELATIVE_PERCISION = 	0.000000000001;
 
+void debug_printCombGene(int comb){
+	char* combName = dataSetup.popTree->pops[comb]->name;
+	double combAge = comb_stats[comb].age;
+	double* elapsedTimes = comb_stats[comb].clades[comb].elapsed_times;
+	int* numLineages = comb_stats[comb].clades[comb].num_lineages;
+	int* eventTypes = comb_stats[comb].clades[comb].event_types;
+	int size = comb_stats[comb].clades[comb].num_events;
+	double currentAge = combAge + elapsedTimes[0];
+
+	printf("\ncomb:%s, size:%d\n",combName, size);
+	for (int i = 0 ; i< size ; i++){
+		printf("type:%s\tnumLins:%d\tage:%0.35f\n",getEventTypeName(eventTypes[i]), numLineages[i], currentAge);
+		currentAge += elapsedTimes[i];
+	}
+}
+
 void assertRootNumCoals(){
 	int root = getPopIdByName(dataSetup.popTree, "root");
 
@@ -373,8 +402,10 @@ void assertRootNumCoals(){
 		exit(-1);
 	}
 }
-
-
+/**
+ * Tests whether root comb with mocked comb_age:=0.0 gives the same coal_stats as a flat model.
+ *  To enable this test, you must hard-code getCombAge() to return 0.0 always
+ */
 void assertRootCoalStats(){
 	int root = getPopIdByName(dataSetup.popTree, "root");
 	double actualCoalStats = comb_stats[root].total.coal_stats;
@@ -384,12 +415,11 @@ void assertRootCoalStats(){
 	double relativeError = error/expectedCoalStats;
 
 	if (relativeError > COMB_RELATIVE_PERCISION){
-		printf("Error while checking root coal_stats:\nExpected %f. actual %f",
-				expectedCoalStats, actualCoalStats);
+		printf("Error while checking root coal_stats:\nExpected:%0.35f\tActual:%0.35f\tRelative Error:%0.35f",
+				expectedCoalStats, actualCoalStats, relativeError);
 		exit(-1);
 	}
 }
-
 void assertCombLeaves(){
 	for (int comb = 0; comb < dataSetup.popTree->numPops ; comb++){
 		if (isFeasibleComb(comb)){

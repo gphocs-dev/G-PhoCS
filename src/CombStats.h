@@ -66,6 +66,7 @@ void freeCombMem();
 
 
 // TODO - extract tests to different source file
+void debug_printCombGene(int comb);
 void assertRootNumCoals();
 void assertRootCoalStats();
 void assertCombLeaves();
