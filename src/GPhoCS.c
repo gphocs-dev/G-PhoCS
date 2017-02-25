@@ -1605,13 +1605,13 @@ int performMCMC() {
 										dataState.logLikelihood, dataState.dataLogLikelihood);
 						fflush(ioSetup.traceFile);
 
-//						if (recordCoalStats) {
-								//@@eug: never enter here
+						if (recordCoalStats) {
+								@@eug: never enter here
 								computeFlatStats();
-//								computeNodeStats();
-//								computeGenetreeStats_partitioned();
-//								printCoalStats(iteration);
-//						}
+								computeNodeStats();
+								computeGenetreeStats_partitioned();
+								printCoalStats(iteration);
+						}
 
 
 						if (combStatsActivated()) {
