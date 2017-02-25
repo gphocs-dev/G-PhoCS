@@ -4367,9 +4367,6 @@ int mixing(double finetune) {
 						ext_mig_band++) {
 				// migration rates are scaled inversely
 				dataSetup.popTree->migBands[ext_mig_band].migRate *= c;
-				dataSetup.popTree->migBands[ext_mig_band].migRate *= c;
-				dataSetup.popTree->migBands[ext_mig_band].migRate *= c;
-				dataSetup.popTree->migBands[ext_mig_band].migRate *= c;
 				dataSetup.popTree->migBands[ext_mig_band].startTime /= c;
 				dataSetup.popTree->migBands[ext_mig_band].endTime /= c;
   }
