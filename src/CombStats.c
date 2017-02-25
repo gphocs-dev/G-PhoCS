@@ -220,7 +220,6 @@ double calculateCoalStats(double* elapsed_times, int* num_lineages, int size){
 
 //TODO - find places for these functions
 double getCombAge(int comb){
-	return 0.0;
 	if (isLeaf(comb)){
 		return DBL_MAX;
 	} else if (areChildrenLeaves(comb)){
