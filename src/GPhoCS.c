@@ -524,7 +524,7 @@ int readRateFile(const char* fileName) {
  ***********************************************************************************/
 void allocateAllMemory() {
 	GetMem();
-	if (combStatsActivated()) {
+	if (isCombStatsActivated()) {
 		allocateCombMem();
 	}
 }
@@ -552,7 +552,7 @@ int freeAllMemory() {
 				}
 				free(ioSetup.nodeStatsFile);
 		}
-	    if (combStatsActivated()){
+	    if (isCombStatsActivated()){
 	    	fclose(ioSetup.combStatsFile);
 	    	freeCombMem();
 	    }
@@ -1072,7 +1072,7 @@ int initializeMCMC() {
 
 }/** end of initializeMCMC **/
 
-int combStatsActivated(){
+int isCombStatsActivated(){
 	return (0 != strcmp(ioSetup.combStatsFileName, "NONE")); // set to 1 for recording coal stats
 }
 
@@ -1151,7 +1151,7 @@ int performMCMC() {
 				printCoalStats(-1);
 		}
 
-		if (combStatsActivated()) {
+		if (isCombStatsActivated()) {
 		  ioSetup.combStatsFile = fopen(ioSetup.combStatsFileName, "w");
 		  if (ioSetup.combStatsFile == NULL) {
 		    fprintf(stderr, "Error: Could not open comb stats file %s.\n",
@@ -1613,7 +1613,7 @@ int performMCMC() {
 						}
 
 
-						if (combStatsActivated()) {
+						if (isCombStatsActivated()) {
 								//@@ron: please enter here :)
 								calculateCombStats();
 								printCombStats(iteration, ioSetup.combStatsFile);

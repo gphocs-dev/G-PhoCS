@@ -105,7 +105,7 @@ int UpdateAdmixCoeffs(double finetune);      // Shall be skipped ("ledaleg")
 int mixing(double finetune);
 
 void allocateAllMemory() ; // TODO - tidy header file
-int combStatsActivated();
+int isCombStatsActivated();
 double getLogPrior() ;
 
 
