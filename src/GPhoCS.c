@@ -537,9 +537,7 @@ void allocateAllMemory() {
 int freeAllMemory() {
 		int gen, i;
 
-		  if (combStatsActivated()){
-			  freeCombMem();
-		  }
+
 
 		//Closing files
 		if (ioSetup.debugFile != NULL)
@@ -554,9 +552,10 @@ int freeAllMemory() {
 				}
 				free(ioSetup.nodeStatsFile);
 		}
-		if (ioSetup.combStatsFile != NULL)
-				fclose(ioSetup.combStatsFile);
-				freeCombMem();
+	    if (combStatsActivated()){
+	    	fclose(ioSetup.combStatsFile);
+	    	freeCombMem();
+	    }
 
 		if (ioSetup.admixFile != NULL)
 				fclose(ioSetup.admixFile);
