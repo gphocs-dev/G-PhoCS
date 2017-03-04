@@ -1604,7 +1604,7 @@ int performMCMC() {
 										dataState.logLikelihood, dataState.dataLogLikelihood);
 						fflush(ioSetup.traceFile);
 
-						if (recordCoalStats) {
+						if (recordCoalStats  && 0) {
 								@@eug: never enter here
 								computeFlatStats();
 								computeNodeStats();
