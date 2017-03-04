@@ -1605,7 +1605,7 @@ int performMCMC() {
 						fflush(ioSetup.traceFile);
 
 						if (recordCoalStats  && 0) {
-								@@eug: never enter here
+//								@@eug: never enter here
 								computeFlatStats();
 								computeNodeStats();
 								computeGenetreeStats_partitioned();

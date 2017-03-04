@@ -27,7 +27,8 @@ void calculateCombStats() {
 		}
 	}
 	assertRootNumCoals();
-	assertRootCoalStats();
+//	assertRootCoalStats();
+//	assertBottomCombs();
 	assertCombLeaves();
 }
 
@@ -259,8 +260,8 @@ int areChildrenLeaves(int pop){
 int isFeasibleComb(int pop){
 	if (isLeaf(pop)){
 		return FALSE;
-	} else if (areChildrenLeaves(pop)){
-		return FALSE;
+	} else if (areChildrenLeaves(pop)){ // a population whos two children are leaves is considered a "trivial comb" and is usually not interesting (except for algorithm test purposes)
+		return FALSE; // Set TRUE if you want to run "assertBottomCombs()" test // TODO - always set back to FALSE after testing
 	} else {
 		return TRUE;
 	}
@@ -416,6 +417,41 @@ void assertRootCoalStats(){
 	if (relativeError > COMB_RELATIVE_PERCISION){
 		printf("Error while checking root coal_stats:\nExpected:%0.35f\tActual:%0.35f\tRelative Error:%0.35f",
 				expectedCoalStats, actualCoalStats, relativeError);
+		exit(-1);
+	}
+}
+
+/**
+ * Compares trivial combs (pops directly above two leaves) with regular pops.
+ * Can only be used when isFeasibleComb() allows trivial combs (and it usually shouldn't)
+ */
+void assertBottomCombs(){
+	for (int comb = 0 ; comb < dataSetup.popTree->numPops ; comb++){
+		if (isFeasibleComb(comb) && areChildrenLeaves(comb)){
+			assertBottomCombsNumCoals(comb);
+			assertBottomCombsCoalStats(comb);
+		}
+	}
+}
+void assertBottomCombsNumCoals(int comb){
+	int expected = genetree_stats_total.num_coals[comb];
+	int actual = comb_stats[comb].total.num_coals;
+
+	if (expected != actual){
+		printf("Error while checking comb %s num_coals:\nExpected num_coals %d. actual is %d",
+				dataSetup.popTree->pops[comb]->name, expected, actual);
+		exit(-1);
+	}
+}
+void assertBottomCombsCoalStats(int comb){
+	double expected = genetree_stats_total.coal_stats[comb];
+	double actual = comb_stats[comb].total.coal_stats;
+	double error = fabs(actual - expected);
+	double relativeError = error/expected;
+	if (relativeError > COMB_RELATIVE_PERCISION){
+		printf("Error while checking comb %s coal_stats:\nExpected:%0.35f\tActual:%0.35f\tRelative Error:%0.35f\tAbsolute Error:%0.35f",
+				dataSetup.popTree->pops[comb]->name,
+				expected, actual, relativeError, error);
 		exit(-1);
 	}
 }
