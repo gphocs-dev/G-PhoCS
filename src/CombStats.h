@@ -38,7 +38,6 @@ void finalizeCombCoalStats(int comb);
 void calculateSufficientStats(int comb, int gene);
 void coalescence(int comb, int gene);
 void coalescence_rec(int comb, int currentPop, int gene);
-
 void handleLeafCoals(int comb, int leaf, int gene);
 void handleNonLeafCoals(int comb, int currentPop, int gene);
 void handleNonLeafNumCoals(int comb, int currentPop, int gene);
@@ -46,6 +45,8 @@ void handleNonLeafCoalStats(int comb, int currentPop, int gene);
 void mergeChildernIntoCurrent(int comb, int currentPop, int gen);
 void appendCurrent(int comb, int currentPop, int gene);
 double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
+
+void migrations(int comb, int gene);
 
 
 int	isLeaf(int pop);

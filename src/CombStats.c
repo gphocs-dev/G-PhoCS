@@ -41,13 +41,16 @@ void finalizeCombCoalStats(int comb){
 
 void calculateSufficientStats(int comb, int gene){
 	coalescence(comb, gene);
-//	migrations(comb, gene);
+	migrations(comb, gene);
 }
 
 void coalescence(int comb, int gene){
 	coalescence_rec(comb, comb, gene);
 }
 
+void migrations(int comb, int gene){
+//	printf("inside migrations\n");
+}
 
 void coalescence_rec(int comb, int currentPop, int gene){
 	if (isLeaf(currentPop)){
