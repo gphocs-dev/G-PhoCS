@@ -67,11 +67,6 @@ struct MISC_STATS {
 //in log-likelihood computation
 } misc_stats;
 
-static struct option long_options[] = { { "help", no_argument, 0, 'h' },
-                                        { "verbose", no_argument, 0, 'v' },
-                                        { "nthreads", no_argument, 0, 'n' },
-                                        { 0, 0, 0, 0 } };
-
 // --- FUNCTION DECLARATIONS --------------------------------------------------
 
 void printUsage(char *programName);

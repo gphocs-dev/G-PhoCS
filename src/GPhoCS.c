@@ -30,6 +30,11 @@
 #include "CombStats.h"
 #include "CombPrinter.h"
 
+static struct option long_options[] = { { "help", no_argument, 0, 'h' },
+                                        { "verbose", no_argument, 0, 'v' },
+                                        { "nthreads", no_argument, 0, 'n' },
+                                        { 0, 0, 0, 0 } };
+
 // --- FUNCTION IMPLEMENTATIONS -----------------------------------------------
 void printUsage(char *programName) {
 		printf("Usage: %s <control-file-name> "
