@@ -11,10 +11,10 @@ ENABLE_OMP_THREADS = 1
 
 # compiler options
 #Debugging
-#CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -std=c99 -fopenmp -ggdb
+#CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -fopenmp -ggdb
 
 #Production
-CFLAGS+= -fstack-protector-all -Wall -O3  -std=c99 
+CFLAGS+= -fstack-protector-all -Wall -O3   
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty
