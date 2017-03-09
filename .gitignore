@@ -75,8 +75,10 @@ local.properties
 # CDT-specific (C/C++ Development Tooling)
 .cproject
 
-
-
+# ====================
+# Others
+# ====================
+*.stackdump
 
 
 # ===========================
@@ -85,3 +87,6 @@ local.properties
 mcmc.log
 out/*
 ron
+
+
+

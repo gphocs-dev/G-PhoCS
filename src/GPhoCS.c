@@ -45,6 +45,8 @@ void printUsage(char *programName) {
 		printf("See manual for more help.\n");
 }
 
+
+
 //-----------------------------------------------------------------------------
 // main
 //-----------------------------------------------------------------------------
@@ -216,7 +218,7 @@ int main(int argc, char*argv[]) {
 				exit(-1);
 		}
 
-		GetMem();
+		allocateAllMemory();
 		printf("\n");
 
 		performMCMC();
@@ -519,6 +521,19 @@ int readRateFile(const char* fileName) {
 }
 /** end of readRateFile **/
 
+
+/***********************************************************************************
+ *	allocateAllMemory
+ *	- in charge of allocating all memory used by sampler
+ *	- returns 0
+ ***********************************************************************************/
+void allocateAllMemory() {
+	GetMem();
+	if (isCombStatsActivated()) {
+		allocateCombMem();
+	}
+}
+
 /***********************************************************************************
  *	freeAllMemory
  *	- in charge of freeing all memory allocated by sampler
@@ -526,6 +541,8 @@ int readRateFile(const char* fileName) {
  ***********************************************************************************/
 int freeAllMemory() {
 		int gen, i;
+
+
 
 		//Closing files
 		if (ioSetup.debugFile != NULL)
@@ -540,8 +557,10 @@ int freeAllMemory() {
 				}
 				free(ioSetup.nodeStatsFile);
 		}
-		if (ioSetup.combStatsFile != NULL)
-				fclose(ioSetup.combStatsFile);
+	    if (isCombStatsActivated()){
+	    	fclose(ioSetup.combStatsFile);
+	    	freeCombMem();
+	    }
 
 		if (ioSetup.admixFile != NULL)
 				fclose(ioSetup.admixFile);
@@ -1058,6 +1077,10 @@ int initializeMCMC() {
 
 }/** end of initializeMCMC **/
 
+int isCombStatsActivated(){
+	return (0 != strcmp(ioSetup.combStatsFileName, "NONE")); // set to 1 for recording coal stats
+}
+
 /***********************************************************************************
  *	performMCMC
  *	- main procedure in program.
@@ -1079,8 +1102,6 @@ int performMCMC() {
 		unsigned short findingFinetunes = 0; // set to 1 while dynamically searching for finetunes
 		unsigned short recordCoalStats = (0
 						!= strcmp(ioSetup.nodeStatsFileName, "NONE")); // set to 1 for recording coal stats
-		unsigned short recordCombStats = (0
-						!= strcmp(ioSetup.combStatsFileName, "NONE")); // set to 1 for recording coal stats
 
 
 		char timeString[STRING_LENGTH];
@@ -1135,13 +1156,14 @@ int performMCMC() {
 				printCoalStats(-1);
 		}
 
-		if (recordCombStats) {
+		if (isCombStatsActivated()) {
 		  ioSetup.combStatsFile = fopen(ioSetup.combStatsFileName, "w");
 		  if (ioSetup.combStatsFile == NULL) {
 		    fprintf(stderr, "Error: Could not open comb stats file %s.\n",
 		        ioSetup.combStatsFileName);
 		    return (-1);
 		  }
+		  printCombStatsHeader(ioSetup.combStatsFile);
 		}
 
 
@@ -1587,8 +1609,8 @@ int performMCMC() {
 										dataState.logLikelihood, dataState.dataLogLikelihood);
 						fflush(ioSetup.traceFile);
 
-						if (recordCoalStats && 0) {
-								//@@eug: never enter here
+						if (recordCoalStats  && 0) {
+//								@@eug: never enter here
 								computeFlatStats();
 								computeNodeStats();
 								computeGenetreeStats_partitioned();
@@ -1596,9 +1618,9 @@ int performMCMC() {
 						}
 
 
-						if (recordCombStats) {
+						if (isCombStatsActivated()) {
 								//@@ron: please enter here :)
-								computeCombStats();
+								calculateCombStats();
 								printCombStats(iteration, ioSetup.combStatsFile);
 						}
 
@@ -4357,6 +4379,7 @@ int mixing(double finetune) {
   return 0;
 }
 /** end of mixing **/
+
 
 /*****************************************************************************/
 /******                       END OF FILE                               ******/

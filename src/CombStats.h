@@ -2,22 +2,30 @@
 #ifndef SRC_COMBSTATS_H_
 #define SRC_COMBSTATS_H_
 
+#define TRUE 1 // TODO - ask Ilan: where should these consts be?
+#define FALSE 0
+
 
 // --- GLOBAL DATA STRUCTURES -------------------------------------------------
 
+typedef struct STATS {
+			int num_coals, num_migs;
+			double coal_stats, mig_stats;
+			double* sorted_ages; 	// temporary array to hold sorted node ages of a specific genealogy.
+			double* elapsed_times;	// temporary array to hold elapsed_time between adjacent events of a specific genealogy.
+			int* num_lineages; 		// temporary array to hold num of lineages of a specific genealogy.
+			int* event_types; 		// temporary array to hold event types
+			/** size of stats arrays (event_types, num_lineages, elapsed_times, sorted_ages)*/
+			int num_events;
+} Stats;
+typedef struct LEAF_STATS {
+	Stats above_comb, below_comb;
+  } LeafStats;
 struct COMB_STATS{
-	double coal_stats_total, mig_stats_total;
-	int num_coals_total, num_migs_total;
-
-	double* sorted_ages; 	// temporary array to hold sorted node ages of a specific genealogy.
-	double* elapsed_times;	// temporary array to hold elapsed_time between adjacent events of a specific genealogy.
-	int* num_lineages; 		// temporary array to hold num of lineages of a specific genealogy.
-	int* event_types; 		// temporary array to hold event types
-
-	int num_events; 		// temporary number of events in clade.
-	// used as an "array length" variable for sortedAges, event_types & num_lineages arrays
-	double debug_total_error;
-
+	double age; 			// temporary value of comb-age
+	Stats total;
+	Stats* clades;
+	LeafStats* leaves;
 } *comb_stats;
 
 
@@ -25,26 +33,47 @@ struct COMB_STATS{
 
 
 // clade_stats calculation functions
-void computeCombStats();
+void calculateCombStats();
+void finalizeCombCoalStats(int comb);
+void calculateSufficientStats(int comb, int gene);
+void coalescence(int comb, int gene);
+void coalescence_rec(int comb, int currentPop, int gene);
+
+void handleLeafCoals(int comb, int leaf, int gene);
+void handleNonLeafCoals(int comb, int currentPop, int gene);
+void handleNonLeafNumCoals(int comb, int currentPop, int gene);
+void handleNonLeafCoalStats(int comb, int currentPop, int gene);
+void mergeChildernIntoCurrent(int comb, int currentPop, int gen);
+void appendCurrent(int comb, int currentPop, int gene);
+double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
+
+
+int	isLeaf(int pop);
+int areChildrenLeaves(int pop);
+int isFeasibleComb(int pop);
+int isAncestralTo(int father, int son);
+
+double getCombAge(int comb);
+int getSon(int pop, int SON);
+Stats* getCombPopStats(int comb, int pop);
 void initCombStats();
-void initSpecificCombStats(int clade);
-void computeCombNumMigs();
-void computeCombMigStats();
-void computeCombNumCoals();
-void computeCombNumCoals_rec(int pop);
-void computeCombCoalStats();
-void computeCombCoalStats_rec(int clade, int gen);
-void fillupLeafCombStats(int clade, int gen);
-void appendPopToComb(int clade, int gen, int startingPoint);
-void fillupCombStats(int clade, int gen);
-void addChildenIntoCombStats(int clade, int gen);
-void mergeChildern(int clade, int gen);
-void addChildrenCombStats(int clade, int gen);
-void addCurrentPopIntoCombStats(int clade, int gen);
-double getCoalStats(double* elapsed_times, int* num_lineages, int size);
+void initStats(Stats* stats);
 
-int	isLeafPopulation(int pop);
-int printLine();
+void allocateCombMem();
+void allocateStats(Stats* stats);
 
+void freeCombMem();
+
+
+// TODO - extract tests to different source file
+void debug_printCombGene(int comb);
+void assertRootNumCoals();
+void assertRootCoalStats();
+void assertBottomCombs();
+void assertBottomCombsCoalStats(int comb);
+void assertBottomCombsNumCoals(int comb);
+void assertCombLeaves();
+void assertCombLeafNumCoals(int comb, int leaf);
+void assertCombLeafCoalStats(int comb, int leaf);
 
 #endif /* SRC_COMBSTATS_H_ */
