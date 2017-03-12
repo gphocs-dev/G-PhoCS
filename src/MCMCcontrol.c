@@ -477,8 +477,7 @@ char* getNextToken(FILE* file, char* space) {
   res =	fscanf(file,"%s",space);
   if(0 > res)
     return space;
-  while(!feof(file) && space[0] == '#')
-  {
+  while(!feof(file) && space[0] == '#')   {
     flushLine(file);
     res = fscanf(file,"%s",space);
     if(0 > res)
@@ -1272,7 +1271,7 @@ int readSampleLine(char* sampleLine, int pop) {
 	nameORformat = 1;
 	while(str != NULL) {
 		if(nameORformat == 0) {
-			if((str[0] != 'h' && str[0] != 'd')) {
+			if(strlen(str) != 1 || (str[0] != 'h' && str[0] != 'd')) {
 				fprintf(stderr, "Error: faulty format %s for sample pop %d. Expected h or d.\n",str,pop+1);
 				numErrors++;
 			}

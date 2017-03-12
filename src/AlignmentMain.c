@@ -115,7 +115,7 @@ int main_analyze_patterns(int argc, char*argv[]) {
 	
   printf("Total %d patterns.\n",AlignmentData.numPatterns);
 	
-	
+   res = processHetPatterns(/*break the symmetries*/ 1);	
    if(res<0) {
     fprintf(stderr, "Error: problem occurred while processing het patterns.\n");
     printAlignmentError();

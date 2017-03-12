@@ -26,8 +26,6 @@
 #define swap2(a,b) ({a += b ; b = a-b ; a -= b ;})
 #define rndexp(mean) (-(mean)*log(rndu()))
 
-#define	ROOT_SLACK	0.001		// default length of top-most interval
-
 void test(const char* message);
 
 double rndu (void);

@@ -234,7 +234,6 @@ void turnOnBooleanArray(unsigned short* booleanArray, int arrayLength) {
 
 static time_t time_start;
 
-
 void starttime (void)
 {
 	time_start=time(NULL);
@@ -454,6 +453,7 @@ double rndu (void)
   */
   static unsigned int x_rndu=11, y_rndu=23;
   double r;
+
   x_rndu = 171*(x_rndu%177) -  2*(x_rndu/177);
   y_rndu = 172*(y_rndu%176) - 35*(y_rndu/176);
   z_rndu = 170*(z_rndu%178) - 63*(z_rndu/178);
@@ -515,7 +515,6 @@ double rndgamma1 (double s)
       if (r*(w+1)>=1 || -log(r)<=w)  continue;
     break;
   }
-
   return (x);
 }
 
@@ -607,8 +606,7 @@ double rndgamma2 (double s)
 
 
 
-void flushLine(FILE* readFile)
-{
+void flushLine(FILE* readFile) {
   static char restOfLine[16000] = {'\0'};
   char* p_res = fgets(restOfLine, 16000, readFile);
   if(NULL == p_res)

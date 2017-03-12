@@ -11,11 +11,11 @@
 #include "AlignmentProcessor.h"
 #include "GenericTree.h"
 #include "PopulationTree.h"
+#include <getopt.h>
 #include "LocusDataLikelihood.h"    // NEXTGEN: switch to LocusGenealogy.h !!!
 
 #include "MultiCoreUtils.h"
 
-#include <getopt.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -143,7 +143,6 @@ int main(int argc, char*argv[]) {
 		printf("Setting Thread Count to: %d\n", final_num_threads);
         omp_set_num_threads(final_num_threads);
 		printf("Reading control settings from file %s...\n", argv[optind]);
-
 		initGeneralInfo();
 		res = readControlFile(argv[optind]);
 		if (res != 0) {
@@ -160,20 +159,15 @@ int main(int argc, char*argv[]) {
 				}
 		}
 		if (dataSetup.popTree->numCurPops > NSPECIES) {
-				printf(
-								"Error: defined too many populations (%d), maximum allowed is %d.\n",
-								dataSetup.popTree->numCurPops, NSPECIES);
-				printf(
-								"Please set NSPECIES constant at top of patch.c source file to at least %d, recomplie, and re-run.\n",
+			printf("Error: defined too many populations (%d), maximum allowed is %d.\n", 								dataSetup.popTree->numCurPops, NSPECIES);
+				printf("Please set NSPECIES constant at top of patch.c source file to at least %d, recomplie, and re-run.\n",
 								dataSetup.popTree->numCurPops);
 				exit(-1);
 		}
 		if (dataSetup.popTree->numMigBands > MAX_MIG_BANDS) {
-				printf(
-								"Error: defined too many migration bands (%d), maximum allowed is %d.\n",
+				printf("Error: defined too many migration bands (%d), maximum allowed is %d.\n",
 								dataSetup.popTree->numMigBands, MAX_MIG_BANDS);
-				printf(
-								"Please set MAX_MIG_BANDS constant at top of patch.c source file to at least %d, recomplie, and re-run.\n",
+				printf("Please set MAX_MIG_BANDS constant at top of patch.c source file to at least %d, recomplie, and re-run.\n",
 								dataSetup.popTree->numMigBands);
 				exit(-1);
 		}
@@ -183,8 +177,7 @@ int main(int argc, char*argv[]) {
 		finalizeNumParameters();
 
 		if (res > 0) {
-				fprintf(stderr, "Found %d errors when processing control settings.\n",
-								res);
+				fprintf(stderr, "Found %d errors when processing control settings.\n", res);
 				exit(-1);
 		}
 
@@ -235,6 +228,8 @@ int main(int argc, char*argv[]) {
 }
 /** end of main **/
 
+
+
 /***********************************************************************************
  *	processAlignments
  *	- processes alignment data from file.
@@ -250,8 +245,7 @@ int processAlignments() {
 		char** phasedPatternArray;
 		int totalNumPatterns, totalPhasedPattern;
 
-		res = readSeqFile(ioSetup.seqFileName, dataSetup.numSamples,
-						dataSetup.sampleNames, dataSetup.numLoci);
+		res = readSeqFile(ioSetup.seqFileName, dataSetup.numSamples, dataSetup.sampleNames, dataSetup.numLoci);
 		if (res < 0) {
 				//fprintf(stderr, "Error: Problem occurred while reading sequence file.\n");
 				//printAlignmentError();
@@ -261,33 +255,28 @@ int processAlignments() {
 		dataSetup.numLoci = AlignmentData.numLoci;
 
 		if (verbose)
-				printf("Found %d patterns in %d loci over %d samples.\n",
-								AlignmentData.numPatterns, dataSetup.numLoci,
+			printf("Found %d patterns in %d loci over %d samples.\n", AlignmentData.numPatterns, dataSetup.numLoci,
 								dataSetup.numSamples);
 
 		maxNumPatterns = 4 * AlignmentData.numPatterns;
 
 		patternArray = (char**) malloc(AlignmentData.numPatterns * sizeof(char*));
 		if (patternArray == NULL) {
-				fprintf(stderr,
-								"Error: Out Of Memory when trying to allocate patternArray in processAlignments.\n");
+				fprintf(stderr,	"Error: Out Of Memory when trying to allocate patternArray in processAlignments.\n");
 				freeAlignmentData();
 				return -1;
 		}
 		phasedPatternArray = (char**) malloc(maxNumPatterns * sizeof(char*));
 		if (phasedPatternArray == NULL) {
-				fprintf(stderr,
-								"Error: Out Of Memory when trying to allocate phasedPatternArray in processAlignments.\n");
+				fprintf(stderr,	"Error: Out Of Memory when trying to allocate phasedPatternArray in processAlignments.\n");
 				freeAlignmentData();
 				free(patternArray);
 				return -1;
 		}
 
-		phasedPatternArray[0] = (char*) malloc(
-						dataSetup.numSamples * maxNumPatterns * sizeof(char));
+		phasedPatternArray[0] = (char*) malloc(	dataSetup.numSamples * maxNumPatterns * sizeof(char));
 		if (phasedPatternArray[0] == NULL) {
-				fprintf(stderr,
-								"Error: Out Of Memory when trying to allocate phasedPatternArray space in processAlignments.\n");
+				fprintf(stderr,	"Error: Out Of Memory when trying to allocate phasedPatternArray space in processAlignments.\n");
 				freeAlignmentData();
 				free(phasedPatternArray);
 				free(patternArray);
@@ -307,13 +296,10 @@ int processAlignments() {
 
 		// initialize gene trees
 		if (verbose)
-				printf("Initializing %d genealogies with %d leaves...\n",
-								dataSetup.numLoci, dataSetup.numSamples);
-		dataState.lociData = (LocusData**) malloc(
-						dataSetup.numLoci * sizeof(LocusData*));
+				printf("Initializing %d genealogies with %d leaves...\n", dataSetup.numLoci, dataSetup.numSamples);
+		dataState.lociData = (LocusData**) malloc(dataSetup.numLoci * sizeof(LocusData*));
 		if (dataState.lociData == NULL) {
-				fprintf(stderr,
-								"Error: Out Of Memory when trying to allocate lociData array.\n");
+				fprintf(stderr,	"Error: Out Of Memory when trying to allocate lociData array.\n");
 				freeAlignmentData();
 				free(patternArray);
 				free(phasedPatternArray[0]);
@@ -326,9 +312,7 @@ int processAlignments() {
 //					printf("\n gen %d.\n",gen+1);
 				dataState.lociData[gen] = createLocusData(dataSetup.numSamples, 1);
 				if (dataState.lociData[gen] == NULL) {
-						fprintf(stderr,
-										"Error: Out Of Memory when creating genealogy %d.\n",
-										gen + 1);
+						fprintf(stderr,"Error: Out Of Memory when creating genealogy %d.\n",				gen + 1);
 						freeAlignmentData();
 						free(patternArray);
 						free(phasedPatternArray[0]);
@@ -338,10 +322,8 @@ int processAlignments() {
 				}
 
 // UNUSED    numPatterns = 0;
-				for (patt = 0; patt < AlignmentData.locusProfiles[gen].numPatterns;
-								patt++) {
-						patternArray[patt] =
-										AlignmentData.patternArray[AlignmentData.locusProfiles[gen].patternIds[patt]];
+				for (patt = 0; patt < AlignmentData.locusProfiles[gen].numPatterns; patt++) {
+						patternArray[patt] =	AlignmentData.patternArray[AlignmentData.locusProfiles[gen].patternIds[patt]];
 				}
 				numPhasedPatterns = processHetPatterns(patternArray,
 								AlignmentData.locusProfiles[gen].patternCounts,
@@ -350,9 +332,7 @@ int processAlignments() {
 								&maxNumPatterns);
 
 				if (numPhasedPatterns < 0) {
-						fprintf(stderr,
-										"Error: Number of phased patterns is negative, unable to process het patterns for genealogy %d.\n",
-										gen + 1);
+						fprintf(stderr,	"Error: Number of phased patterns is negative, unable to process het patterns for genealogy %d.\n", gen + 1);
 						printAlignmentError();
 						freeAlignmentData();
 						free(patternArray);
@@ -365,14 +345,11 @@ int processAlignments() {
 				totalNumPatterns += AlignmentData.locusProfiles[gen].numPatterns;
 				totalPhasedPattern += numPhasedPatterns;
 
-				res = initializeLocusData(dataState.lociData[gen], phasedPatternArray,
-								numPhasedPatterns, numPhasesArray,
-								AlignmentData.locusProfiles[gen].patternCounts);
+				res = initializeLocusData(dataState.lociData[gen], phasedPatternArray,	numPhasedPatterns, 
+						numPhasesArray, AlignmentData.locusProfiles[gen].patternCounts);
 
 				if (res < 0) {
-						fprintf(stderr,
-										"Error: Unable to initialize locus data, which is necessary to initialize genealogy %d.\n",
-										gen + 1);
+						fprintf(stderr,	"Error: Unable to initialize locus data, which is necessary to initialize genealogy %d.\n", gen + 1);
 						freeAlignmentData();
 						free(patternArray);
 						free(phasedPatternArray[0]);
@@ -388,8 +365,7 @@ int processAlignments() {
 		free(phasedPatternArray);
 		free(numPhasesArray);
 		if (verbose)
-				printf(
-								"Done. Total of %d patterns (%lf average per locus) transformed to %d phased patterns (%lf average per locus).\n",
+				printf(	"Done. Total of %d patterns (%lf average per locus) transformed to %d phased patterns (%lf average per locus).\n",
 								totalNumPatterns,
 								((double) totalNumPatterns) / dataSetup.numLoci,
 								totalPhasedPattern,
@@ -410,18 +386,14 @@ int initLociWithoutData() {
 		int locus;
 
 		if (dataSetup.numLoci <= 0) {
-				fprintf(stderr,
-								"Error: when using no sequence data, a positive number of loci should be explicitly specified in control file.\n");
+				fprintf(stderr,	"Error: when using no sequence data, a positive number of loci should be explicitly specified in control file.\n");
 				return (-1);
 		}
-		printf("Initializing locus data without sequences for %d loci.\n",
-						dataSetup.numLoci);
+		printf("Initializing locus data without sequences for %d loci.\n", dataSetup.numLoci);
 
-		dataState.lociData = (LocusData**) malloc(
-						dataSetup.numLoci * sizeof(LocusData*));
+		dataState.lociData = (LocusData**) malloc(dataSetup.numLoci * sizeof(LocusData*));
 		if (dataState.lociData == NULL) {
-				fprintf(stderr,
-								"\n Error: Out Of Memory array of locus data pointers.\n");
+				fprintf(stderr,	"\n Error: Out Of Memory array of locus data pointers.\n");
 				return (-1);
 		}
 
@@ -429,9 +401,7 @@ int initLociWithoutData() {
 		for (locus = 0; locus < dataSetup.numLoci; locus++) {
 				dataState.lociData[locus] = createLocusData(dataSetup.numSamples, 0);
 				if (dataState.lociData[locus] == NULL) {
-						fprintf(stderr,
-										"\n Error: Unable to create locus data formatting for locus %d.\n",
-										locus + 1);
+						fprintf(stderr,	"\n Error: Unable to create locus data formatting for locus %d.\n",locus + 1);
 						return (-1);
 				}
 		}
@@ -450,6 +420,7 @@ int readRateFile(const char* fileName) {
 		int res, locus; // UNUSED numZero;
 		double rateSum, tmp;
 		double* rates = (double*) malloc(dataSetup.numLoci * sizeof(double));
+
 
 		if (frate == NULL) {
 				fprintf(stderr, "Error: Could not find/read rate file %s.\n", fileName);
@@ -509,8 +480,7 @@ int readRateFile(const char* fileName) {
 		dataState.rateVar = 0.0;
 		for (locus = 0; locus < dataSetup.numLoci; locus++) {
 				setLocusMutationRate(dataState.lociData[locus], rates[locus] / rateSum);
-				dataState.rateVar += (rates[locus] / rateSum - 1)
-								* (rates[locus] / rateSum - 1);
+				dataState.rateVar += (rates[locus] / rateSum - 1) * (rates[locus] / rateSum - 1);
 		} // end of for(locus)
 		dataState.rateVar /= dataSetup.numLoci;
 
@@ -542,15 +512,10 @@ void allocateAllMemory() {
 int freeAllMemory() {
 		int gen, i;
 
-
-
 		//Closing files
-		if (ioSetup.debugFile != NULL)
-				fclose(ioSetup.debugFile);
-		if (ioSetup.traceFile != NULL)
-				fclose(ioSetup.traceFile);
-		if (ioSetup.coalStatsFile != NULL)
-				fclose(ioSetup.coalStatsFile);
+		if (ioSetup.debugFile != NULL)	fclose(ioSetup.debugFile);
+		if (ioSetup.traceFile != NULL)	fclose(ioSetup.traceFile);
+		if (ioSetup.coalStatsFile != NULL) fclose(ioSetup.coalStatsFile);
 		if (ioSetup.nodeStatsFile != NULL) {
 				for (i = 0; i < 3 * dataSetup.popTree->numPops; i++) {
 						fclose(ioSetup.nodeStatsFile[i]);
@@ -562,8 +527,7 @@ int freeAllMemory() {
 	    	freeCombMem();
 	    }
 
-		if (ioSetup.admixFile != NULL)
-				fclose(ioSetup.admixFile);
+		if (ioSetup.admixFile != NULL) fclose(ioSetup.admixFile);
 		//Freeing print factors array
 		free(mcmcSetup.printFactors);
 		// NEXTGEN - change this to locusGenealogy !!
@@ -611,14 +575,12 @@ void printGenealogyAndExit(int gen, int errStatus) {
 
 		if (debug) {
 				printPopulationTree(dataSetup.popTree, stderr, 1);
-				printLocusGenTree(dataState.lociData[gen], stderr, nodePops[gen],
-								nodeEvents[gen]);
+				printLocusGenTree(dataState.lociData[gen], stderr, nodePops[gen],nodeEvents[gen]);
 				printEventChains(stderr, gen);
 		}
 		freeAllMemory();
 
-		if (errStatus != 0)
-				exit(errStatus);
+		if (errStatus != 0) exit(errStatus);
 
 		return;
 }
@@ -632,6 +594,7 @@ void printGenealogyAndExit(int gen, int errStatus) {
 int recordTypes() {
 		int type, gen; // UNUSED targetPop;
 		int numMigs;
+
 
 // UNUSED  targetPop = dataSetup.popTree->migBands[0].targetPop;
 
@@ -673,6 +636,7 @@ int recordTypes() {
 }
 /** end of recordTypes **/
 
+
 /***********************************************************************************
  *	printParamVals
  *	- prints parameter values to out file (without newline)
@@ -686,6 +650,8 @@ void printParamVals(double* paramVals, int startParam, int endParam, FILE* out) 
 		}
 }
 /** end of printParamVals **/
+
+
 
 /***********************************************************************************
  *	recordAdmixtureCounts
@@ -704,7 +670,7 @@ int recordAdmixtureCounts() {
 				}
 				for (locus = 0; locus < admixture_status.numSampledLoci; locus++) {
 						if (nodePops[admixture_status.sampledLoci[locus]][admixed_samples.samples[sample]]
-										== admixed_samples.popPairs[sample][1]) {
+== admixed_samples.popPairs[sample][1]) {
 								admixture_status.sampleLocusAdmixRate[sample][locus] += 1.0;
 						}
 				}
@@ -715,6 +681,7 @@ int recordAdmixtureCounts() {
 
 }
 /** end of recordAdmixtureCounts **/
+
 
 /***********************************************************************************
  *	recordParamVals
@@ -731,8 +698,7 @@ int recordParamVals(double* paramVals) {
 		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
 				paramVals[ind++] = dataSetup.popTree->pops[pop]->theta;
 		}
-		for (pop = dataSetup.popTree->numCurPops; pop < dataSetup.popTree->numPops;
-						pop++) {
+		for (pop = dataSetup.popTree->numCurPops; pop < dataSetup.popTree->numPops; pop++) {
 				paramVals[ind++] = dataSetup.popTree->pops[pop]->age;
 		}
 		for (migBand = 0; migBand < dataSetup.popTree->numMigBands; migBand++) {
@@ -741,8 +707,7 @@ int recordParamVals(double* paramVals) {
 
 		// record ages of ancient populations
 		for (pop = 0; pop < dataSetup.popTree->numCurPops; pop++) {
-				if (dataSetup.popTree->pops[pop]->updateSampleAge
-								|| dataSetup.popTree->pops[pop]->sampleAge > 0.0) {
+				if (dataSetup.popTree->pops[pop]->updateSampleAge || dataSetup.popTree->pops[pop]->sampleAge > 0.0) {
 						paramVals[ind++] = dataSetup.popTree->pops[pop]->sampleAge;
 				}
 		}
@@ -762,6 +727,7 @@ int recordParamVals(double* paramVals) {
 }
 /** end of recordParamVals **/
 
+
 /***********************************************************************************
  *	getLogPrior
  *	- compute log of prior distribution [ WITHOUT LOCUS-SPECIFIC MUT RATES ]
@@ -769,8 +735,7 @@ int recordParamVals(double* paramVals) {
 /*** computes gamma density function  ***/
 double getLogGammaDist(double alpha, double beta, double val) {
 		double logP = 0;
-		if (alpha != 1)
-				logP -= lgamma(alpha);
+		if (alpha != 1) logP -= lgamma(alpha);
 		return logP + alpha * log(beta) + (alpha - 1) * log(val) - beta * val;
 }
 /*** AUXILIARY FUNCTION  ***/
@@ -787,8 +752,7 @@ double getLogPrior() {
 								dataSetup.popTree->pops[pop]->thetaPrior.beta,
 								dataSetup.popTree->pops[pop]->theta);
 		}
-		for (pop = dataSetup.popTree->numCurPops; pop < dataSetup.popTree->numPops;
-						pop++) {
+		for (pop = dataSetup.popTree->numCurPops; pop < dataSetup.popTree->numPops; pop++) {
 				logPrior += getLogGammaDist(
 								dataSetup.popTree->pops[pop]->agePrior.alpha,
 								dataSetup.popTree->pops[pop]->agePrior.beta,
@@ -804,6 +768,9 @@ double getLogPrior() {
 		return logPrior;
 }
 /** end of getLogPrior **/
+
+
+
 
 /***********************************************************************************
  *	printCoalStats
@@ -826,8 +793,7 @@ int printCoalStats(int iteration) {
 								"iter\tcoalStat\tnumCoal\tmigStat\tnumMig\tlogPrior\tlogGenLikelihood\tlogDataLikelihood");
 				for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
 						popName = dataSetup.popTree->pops[pop]->name;
-						for (partition = 1; partition <= dataSetup.numPopPartitions;
-										partition++) {
+						for (partition = 1; partition <= dataSetup.numPopPartitions;	partition++) {
 								fprintf(ioSetup.coalStatsFile, "\tnumCoal_%s:%d\tdeltaT_%s:%d",
 												popName, partition, popName, partition);
 						}
@@ -847,8 +813,7 @@ int printCoalStats(int iteration) {
 								for (leaf2 = 0; leaf2 < dataSetup.numSamples; leaf2++) {
 										sampleName2 = dataSetup.sampleNames[leaf2];
 										if (sampleName2 == NULL) {
-												if (leaf2
-																<= 0|| dataSetup.sampleNames[leaf2-1] == NULL) {
+												if (leaf2 <= 0|| dataSetup.sampleNames[leaf2-1] == NULL) {
 														sampleName2 = noName;
 												} else {
 														sampleName2 = dataSetup.sampleNames[leaf2 - 1];
@@ -881,13 +846,14 @@ int printCoalStats(int iteration) {
 						genetree_stats_flat.coal_stats_flat,
 						genetree_stats_flat.num_coals_total,
 						genetree_stats_flat.mig_stats_flat,
-						genetree_stats_flat.num_migs_total, logPrior,
+						genetree_stats_flat.num_migs_total,
+            logPrior,
 						dataState.logLikelihood * dataSetup.numLoci,
-						dataState.dataLogLikelihood);
+						dataState.dataLogLikelihood
+           );
 		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
 				popName = dataSetup.popTree->pops[pop]->name;
-				for (partition = 0; partition < dataSetup.numPopPartitions;
-								partition++) {
+				for (partition = 0; partition < dataSetup.numPopPartitions;	partition++) {
 						fprintf(ioSetup.coalStatsFile, "\t%9d\t%8f",
 										genetree_stats_total_partitioned[partition].num_coals[pop],
 										genetree_stats_total_partitioned[partition].coal_stats[pop]);
@@ -922,6 +888,7 @@ int printCoalStats(int iteration) {
 }
 /** end of printCoalStats **/
 
+
 /***********************************************************************************
  *	initializeAdmixtureStructures
  *	- initializes data structure for tracing admixture
@@ -931,6 +898,7 @@ int initializeAdmixtureStructures() {
 		int sample, locus;
 
 		admixture_status.numSampledLoci = dataSetup.numLoci;
+
 
 		admixed_samples.index = (int*) malloc(admixed_samples.number * sizeof(int));
 
@@ -973,6 +941,7 @@ int initializeAdmixtureStructures() {
 				}
 		}
 
+
 		for (locus = 0; locus < admixture_status.numSampledLoci; locus++) {
 				admixture_status.sampledLoci[locus] = locus;
 //			admixture_status.sampledLoci[locus] = (int)(rndu()*dataSetup.numLoci);
@@ -981,6 +950,8 @@ int initializeAdmixtureStructures() {
 
 }
 /** end of initializeAdmixtureStructures **/
+
+
 
 /***********************************************************************************
  *	initializeMCMC
@@ -1026,14 +997,15 @@ int initializeMCMC() {
 				totalMutationRate /= dataSetup.numLoci;
 				dataState.rateVar = 0.0;
 				for (gen = 0; gen < dataSetup.numLoci; gen++) {
-						mutationRate = getLocusMutationRate(dataState.lociData[gen])
-										/ totalMutationRate;
+						mutationRate = getLocusMutationRate(dataState.lociData[gen])	/ totalMutationRate;
 						setLocusMutationRate(dataState.lociData[gen], mutationRate);
 						dataState.rateVar += (mutationRate - 1) * (mutationRate - 1);
 				}
 				dataState.rateVar /= dataSetup.numLoci;
 				mcmcSetup.genRateRef = 0;
 		}
+
+
 
 		// initialize genealogies by random sampling (according to pop parameters
 		if (verbose)
@@ -1070,8 +1042,7 @@ int initializeMCMC() {
 				printf("Done.\n");
 		freeGenericTree(tree);
 		computeTotalStats();
-		dataState.logLikelihood = (dataState.logLikelihood
-						+ dataState.dataLogLikelihood) / dataSetup.numLoci;
+		dataState.logLikelihood = (dataState.logLikelihood	+ dataState.dataLogLikelihood) / dataSetup.numLoci;
 
 		return totalCoals;
 
@@ -1088,11 +1059,11 @@ int isCombStatsActivated(){
  ***********************************************************************************/
 int performMCMC() {
 
+
 		int totalCoals;
 		int gen, iteration, pop, sample;
 		double *paramVals, *paramMeans, *doubleArray;
-		UpdateStats acceptanceCounts, acceptancePercents, finetuneMaxes,
-						finetuneMins;
+		UpdateStats acceptanceCounts, acceptancePercents, finetuneMaxes, finetuneMins;
 
 		int acceptCount;
 		int *acceptCountArray = malloc(sizeof(int) * dataSetup.popTree->numPops);
@@ -1100,8 +1071,7 @@ int performMCMC() {
 		int numSamplesPerLog, logsPerLine;
 
 		unsigned short findingFinetunes = 0; // set to 1 while dynamically searching for finetunes
-		unsigned short recordCoalStats = (0
-						!= strcmp(ioSetup.nodeStatsFileName, "NONE")); // set to 1 for recording coal stats
+		unsigned short recordCoalStats = (0	!= strcmp(ioSetup.nodeStatsFileName, "NONE")); // set to 1 for recording coal stats
 
 
 		char timeString[STRING_LENGTH];
@@ -1109,8 +1079,7 @@ int performMCMC() {
 
 		ioSetup.traceFile = fopen(ioSetup.traceFileName, "w");
 		if (ioSetup.traceFile == NULL) {
-				fprintf(stderr, "Error: Could not open trace file %s.\n",
-								ioSetup.traceFileName);
+				fprintf(stderr, "Error: Could not open trace file %s.\n",	ioSetup.traceFileName);
 				return (-1);
 		}
 
@@ -1118,21 +1087,16 @@ int performMCMC() {
 				sprintf(fileName, "%s.coalStats.txt", ioSetup.nodeStatsFileName);
 				ioSetup.coalStatsFile = fopen(fileName, "w");
 				if (ioSetup.coalStatsFile == NULL) {
-						fprintf(stderr, "Error: Could not open coal stats file %s.\n",
-										fileName);
+						fprintf(stderr, "Error: Could not open coal stats file %s.\n", fileName);
 						return (-1);
 				}
-				ioSetup.nodeStatsFile = (FILE**) malloc(
-								3 * dataSetup.popTree->numPops * sizeof(FILE*));
+				ioSetup.nodeStatsFile = (FILE**) malloc(3 * dataSetup.popTree->numPops * sizeof(FILE*));
 				if (ioSetup.nodeStatsFile == NULL) {
-						fprintf(stderr, "memory allocation for node coal file %s.\n",
-										fileName);
+						fprintf(stderr, "memory allocation for node coal file %s.\n",	fileName);
 						return (-1);
 				}
 				for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-						sprintf(fileName, "%s.probCoalPop_%s.txt",
-										ioSetup.nodeStatsFileName,
-										dataSetup.popTree->pops[pop]->name);
+						sprintf(fileName, "%s.probCoalPop_%s.txt",	ioSetup.nodeStatsFileName,dataSetup.popTree->pops[pop]->name);
 						ioSetup.nodeStatsFile[3 * pop] = fopen(fileName, "w");
 						sprintf(fileName, "%s.probFirstCoalPop_%s.txt",
 										ioSetup.nodeStatsFileName,
@@ -1177,40 +1141,33 @@ int performMCMC() {
 		}
 		fprintf(ioSetup.traceFile, "Sample");
 		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-				fprintf(ioSetup.traceFile, "\ttheta_%s",
-								dataSetup.popTree->pops[pop]->name);
+				fprintf(ioSetup.traceFile, "\ttheta_%s",	dataSetup.popTree->pops[pop]->name);
 		}
 
-		for (pop = dataSetup.popTree->numCurPops; pop < dataSetup.popTree->numPops;
-						pop++) {
-				fprintf(ioSetup.traceFile, "\ttau_%s",
-								dataSetup.popTree->pops[pop]->name);
+		for (pop = dataSetup.popTree->numCurPops; pop < dataSetup.popTree->numPops;			pop++) {
+				fprintf(ioSetup.traceFile, "\ttau_%s",	dataSetup.popTree->pops[pop]->name);
 		}
 
 		for (migBand = 0; migBand < dataSetup.popTree->numMigBands; migBand++) {
-				fprintf(ioSetup.traceFile, "\tm_%s->%s",
-								dataSetup.popTree->pops[dataSetup.popTree->migBands[migBand].sourcePop]->name,
+				fprintf(ioSetup.traceFile, "\tm_%s->%s", dataSetup.popTree->pops[dataSetup.popTree->migBands[migBand].sourcePop]->name,
 								dataSetup.popTree->pops[dataSetup.popTree->migBands[migBand].targetPop]->name);
 		}
 		for (pop = 0; pop < dataSetup.popTree->numCurPops; pop++) {
-				if (dataSetup.popTree->pops[pop]->updateSampleAge
-								|| dataSetup.popTree->pops[pop]->sampleAge > 0.0) {
-						fprintf(ioSetup.traceFile, "\ttau_%s",
-										dataSetup.popTree->pops[pop]->name);
+				if (dataSetup.popTree->pops[pop]->updateSampleAge || dataSetup.popTree->pops[pop]->sampleAge > 0.0) {
+						fprintf(ioSetup.traceFile, "\ttau_%s",dataSetup.popTree->pops[pop]->name);
 				}
 		}
 
 		for (sample = 0; sample < admixed_samples.number; sample++) {
-				fprintf(ioSetup.traceFile, "\tA%d[%s]", admixed_samples.samples[sample],
-								dataSetup.popTree->pops[admixed_samples.popPairs[sample][1]]->name);
+				fprintf(ioSetup.traceFile, "\tA%d[%s]", admixed_samples.samples[sample], dataSetup.popTree->pops[admixed_samples.popPairs[sample][1]]->name);
 		}
+
 
 		if (mcmcSetup.mutRateMode == 1)
 				fprintf(ioSetup.traceFile, "\tVariance-Mut");
 		fprintf(ioSetup.traceFile, "\tData-ld-ln\tFull-ld-ln\n");
 
-		printf(
-						"Starting MCMC: %d burnin, %d running, sampled every %d iteration(s).\n",
+		printf(	"Starting MCMC: %d burnin, %d running, sampled every %d iteration(s).\n",
 						mcmcSetup.burnin, mcmcSetup.numSamples, mcmcSetup.sampleSkip);
 //    printf("Updating genealogies %d times between parameter updates, and starting to sample migration after %d iterations\n", mcmcSetup.genetreeSamples, mcmcSetup.startMig);
 
@@ -1221,9 +1178,7 @@ int performMCMC() {
 		}
 		// allocate and initialize parameter value arrays
 		printf("There are %d parameters in the model.\n", mcmcSetup.numParameters);
-		doubleArray = (double*) malloc(
-						(2 * mcmcSetup.numParameters + 4 * dataSetup.popTree->numPops)
-										* sizeof(double));
+		doubleArray = (double*) malloc((2 * mcmcSetup.numParameters + 4 * dataSetup.popTree->numPops)	* sizeof(double));
 		if (doubleArray == NULL) {
 				fprintf(stderr,
 								"\nError: Out Of Memory while allocating double array in performMCMC.\n");
@@ -1232,12 +1187,12 @@ int performMCMC() {
 		paramVals = doubleArray;
 		paramMeans = paramVals + mcmcSetup.numParameters;
 		acceptanceCounts.taus = paramMeans + mcmcSetup.numParameters;
-		acceptancePercents.taus = acceptanceCounts.taus
-						+ dataSetup.popTree->numPops;
+		acceptancePercents.taus = acceptanceCounts.taus	+ dataSetup.popTree->numPops;
 		finetuneMaxes.taus = acceptancePercents.taus + dataSetup.popTree->numPops;
 		finetuneMins.taus = finetuneMaxes.taus + dataSetup.popTree->numPops;
 
 		recordParamVals(paramVals);
+
 
 		if (verbose) {
 				printf("Initial parameters: ");
@@ -1250,15 +1205,13 @@ int performMCMC() {
 				printf("    AdmxCoefs ");
 		}
 		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-				if (pop >= dataSetup.popTree->numCurPops
-								|| dataSetup.popTree->pops[pop]->updateSampleAge) {
+				if (pop >= dataSetup.popTree->numCurPops 	|| dataSetup.popTree->pops[pop]->updateSampleAge) {
 						printf("TAU_%2d    ", pop);
 				}
 		}
 
 		printf("RbberBnd  MutRates  Mixing    | DATA-ln-ld |  TIME\n");
-		printf(
-						"-----------------------------------------------------------------------------------------------------------------------------------------------------\n");
+		printf("-----------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
 		fflush(stdout);
 
@@ -1275,6 +1228,7 @@ int performMCMC() {
 		//	misc_stats.small_interval = 0;
 		misc_stats.not_enough_migs = 0;
 		//	misc_stats.spr_lnld_disc = 0.0;
+
 
 		finetuneMaxes.coalTime = MAX_FINETUNE;
 		finetuneMaxes.migTime = MAX_FINETUNE;
@@ -1302,6 +1256,7 @@ int performMCMC() {
 		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
 				acceptanceCounts.taus[pop] = 0;
 		}
+
 
 		// initialize finetunes for dynamic search
 		if (!mcmcSetup.findFinetunes) {
@@ -1575,8 +1530,7 @@ int performMCMC() {
 				// record parameters, means, and print to trace, if appropriate
 				recordParamVals(paramVals);
 				for (i = 0; i < mcmcSetup.numParameters; i++) {
-						paramMeans[i] = paramMeans[i] * ((double) logCount / (logCount + 1))
-										+ paramVals[i] / (logCount + 1);
+						paramMeans[i] = paramMeans[i] * ((double) logCount / (logCount + 1)) + paramVals[i] / (logCount + 1);
 				}
 
 				// start sampling migrations
@@ -1591,11 +1545,9 @@ int performMCMC() {
 
 						// adjust likelihoods to newly sampled migration rates
 						for (gen = 0; gen < dataSetup.numLoci; gen++) {
-								dataState.logLikelihood -= locus_data[gen].genLogLikelihood
-												/ dataSetup.numLoci;
+								dataState.logLikelihood -= locus_data[gen].genLogLikelihood	/ dataSetup.numLoci;
 								locus_data[gen].genLogLikelihood = gtreeLnLikelihood(gen);
-								dataState.logLikelihood += locus_data[gen].genLogLikelihood
-												/ dataSetup.numLoci;
+								dataState.logLikelihood += locus_data[gen].genLogLikelihood	/ dataSetup.numLoci;
 						}
 				}
 
@@ -1603,10 +1555,8 @@ int performMCMC() {
 
 				if (iteration >= 0 && iteration % (mcmcSetup.sampleSkip + 1) == 0) {
 						fprintf(ioSetup.traceFile, "%d\t", iteration);
-						printParamVals(paramVals, 0, mcmcSetup.numParameters,
-										ioSetup.traceFile);
-						fprintf(ioSetup.traceFile, "\t%.6f\t%.6f\n",
-										dataState.logLikelihood, dataState.dataLogLikelihood);
+						printParamVals(paramVals, 0, mcmcSetup.numParameters,	ioSetup.traceFile);
+						fprintf(ioSetup.traceFile, "\t%.6f\t%.6f\n", dataState.logLikelihood, dataState.dataLogLikelihood);
 						fflush(ioSetup.traceFile);
 
 						if (recordCoalStats  && 0) {
@@ -1636,8 +1586,7 @@ int performMCMC() {
 								}
 								fprintf(ioSetup.admixFile, "%d", iteration);
 								for (sample = 0; sample < admixed_samples.number; sample++) {
-										for (gen = 0; gen < admixture_status.numSampledLoci;
-														gen++) {
+										for (gen = 0; gen < admixture_status.numSampledLoci;	gen++) {
 //							fprintf(ioSetup.admixFile,"\t%d", nodePops[ admixture_status.sampledLoci[gen] ][ admixed_samples.samples[sample] ]);
 												fprintf(ioSetup.admixFile, "\t%lf",
 																admixture_status.sampleLocusAdmixRate[sample][admixture_status.sampledLoci[gen]]
@@ -1662,31 +1611,18 @@ int performMCMC() {
 								exit(-1);
 						}
 
-						acceptancePercents.coalTime = acceptanceCounts.coalTime * 100.0
-										/ (((double) logCount) * totalCoals
-														* mcmcSetup.genetreeSamples);
-						acceptancePercents.migTime = acceptanceCounts.migTime * 100.0
-										/ (totalNumMigNodes + 0.000001);
-						acceptancePercents.SPR = acceptanceCounts.SPR * 100.0
-										/ (((double) logCount) * 2 * totalCoals
-														* mcmcSetup.genetreeSamples);
-						acceptancePercents.theta = acceptanceCounts.theta * 100.0
-										/ (((double) logCount) * dataSetup.popTree->numPops);
-						acceptancePercents.migRate = acceptanceCounts.migRate * 100.0
-										/ (((double) logCount) * dataSetup.popTree->numMigBands
-														+ 0.000001);
+						acceptancePercents.coalTime = acceptanceCounts.coalTime * 100.0		/ (((double) logCount) * totalCoals				* mcmcSetup.genetreeSamples);
+						acceptancePercents.migTime = acceptanceCounts.migTime * 100.0			/ (totalNumMigNodes + 0.000001);
+						acceptancePercents.SPR = acceptanceCounts.SPR * 100.0 						/ (((double) logCount) * 2 * totalCoals		* mcmcSetup.genetreeSamples);
+						acceptancePercents.theta = acceptanceCounts.theta * 100.0					/ (((double) logCount) * dataSetup.popTree->numPops);
+						acceptancePercents.migRate = acceptanceCounts.migRate * 100.0 		/ (((double) logCount) * dataSetup.popTree->numMigBands	+ 0.000001);
 						for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-								acceptancePercents.taus[pop] = acceptanceCounts.taus[pop]
-												* 100.0 / (double) logCount;
+								acceptancePercents.taus[pop] = acceptanceCounts.taus[pop]					* 100.0 / (double) logCount;
 						}
-						acceptancePercents.locusRate = acceptanceCounts.locusRate * 100.0
-										/ (((double) logCount) * (dataSetup.numLoci - 1)
-														* mcmcSetup.genetreeSamples);
-						acceptancePercents.mixing = acceptanceCounts.mixing * 100.0
-										/ logCount;
+						acceptancePercents.locusRate = acceptanceCounts.locusRate * 100.0 / (((double) logCount) * (dataSetup.numLoci - 1)	* mcmcSetup.genetreeSamples);
+						acceptancePercents.mixing = acceptanceCounts.mixing * 100.0				/ logCount;
 						if (admixed_samples.number > 0) {
-								acceptancePercents.admix = acceptanceCounts.admix * 100.0
-												/ (((double) logCount) * admixed_samples.number);
+								acceptancePercents.admix = acceptanceCounts.admix * 100.0			/ (((double) logCount) * admixed_samples.number);
 						} else {
 								acceptancePercents.admix = 0.0;
 						}
@@ -1701,8 +1637,7 @@ int performMCMC() {
 						}
 
 						for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-								if (pop >= dataSetup.popTree->numCurPops
-												|| dataSetup.popTree->pops[pop]->updateSampleAge) {
+								if (pop >= dataSetup.popTree->numCurPops || dataSetup.popTree->pops[pop]->updateSampleAge) {
 										printf("%5.1f%%    ", acceptancePercents.taus[pop]);
 								}
 						}
@@ -1710,8 +1645,7 @@ int performMCMC() {
 						printf("%6.1f%%    %5.1f%%    %5.1f%%    ",
 										misc_stats.rubberband_mig_conflicts * 100.0
 														/ (logCount
-																		* (dataSetup.popTree->numPops
-																						- dataSetup.popTree->numCurPops)),
+																		* (dataSetup.popTree->numPops	- dataSetup.popTree->numCurPops)),
 										acceptancePercents.locusRate, acceptancePercents.mixing);
 
 						// print parameter means
@@ -1728,219 +1662,166 @@ int performMCMC() {
 
 						// dynamically adjust finetunes, if applicable
 						if (findingFinetunes) {
-								if (acceptancePercents.coalTime
-												> TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
+								if (acceptancePercents.coalTime	> TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
 										finetuneMins.coalTime = mcmcSetup.finetunes.coalTime; //raise the minimal finetune value
-										if (finetuneMaxes.coalTime
-														- finetuneMins.coalTime< FINETUNE_RESOLUTION) { // recompute maximal finetune
+										if (finetuneMaxes.coalTime	- finetuneMins.coalTime< FINETUNE_RESOLUTION) { // recompute maximal finetune
 //							finetuneMaxes.coalTime = MAX_FINETUNE;
 												if (finetuneMaxes.coalTime >= MAX_FINETUNE) {
-														finetuneMaxes.coalTime = finetuneMins.coalTime =
-														MAX_FINETUNE;
+														finetuneMaxes.coalTime = finetuneMins.coalTime =	MAX_FINETUNE;
 												} else {
 														finetuneMaxes.coalTime *= 2.0;
 												}
 										}
-								} else if (acceptancePercents.coalTime
-												< TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
+								} else if (acceptancePercents.coalTime	< TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
 										finetuneMaxes.coalTime = mcmcSetup.finetunes.coalTime; //lower the maximal finetune value
-										if (finetuneMaxes.coalTime
-														- finetuneMins.coalTime< FINETUNE_RESOLUTION) { // recompute minimal finetune
+										if (finetuneMaxes.coalTime	- finetuneMins.coalTime< FINETUNE_RESOLUTION) { // recompute minimal finetune
 //							finetuneMins.coalTime = 0.0;
 												finetuneMins.coalTime /= 2.0;
 										}
 								}
-								mcmcSetup.finetunes.coalTime = 0.5
-												* (finetuneMaxes.coalTime + finetuneMins.coalTime); //finetune set to midpoint of interval
+								mcmcSetup.finetunes.coalTime = 0.5	* (finetuneMaxes.coalTime + finetuneMins.coalTime); //finetune set to midpoint of interval
 
-								if (acceptancePercents.migTime
-												> TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
+								if (acceptancePercents.migTime	> TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
 										finetuneMins.migTime = mcmcSetup.finetunes.migTime; //raise the minimal finetune value
-										if (finetuneMaxes.migTime
-														- finetuneMins.migTime< FINETUNE_RESOLUTION) { // recompute maximal finetune
+										if (finetuneMaxes.migTime	- finetuneMins.migTime< FINETUNE_RESOLUTION) { // recompute maximal finetune
 //							finetuneMaxes.migTime = MAX_FINETUNE;
 												if (finetuneMaxes.migTime >= MAX_FINETUNE) {
-														finetuneMaxes.migTime = finetuneMins.migTime =
-														MAX_FINETUNE;
+														finetuneMaxes.migTime = finetuneMins.migTime =			MAX_FINETUNE;
 												} else {
 														finetuneMaxes.migTime *= 2.0;
 												}
 										}
-								} else if (acceptancePercents.migTime
-												< TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
+								} else if (acceptancePercents.migTime	< TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
 										finetuneMaxes.migTime = mcmcSetup.finetunes.migTime; //lower the maximal finetune value
-										if (finetuneMaxes.migTime
-														- finetuneMins.migTime< FINETUNE_RESOLUTION) { // recompute minimal finetune
+										if (finetuneMaxes.migTime		- finetuneMins.migTime< FINETUNE_RESOLUTION) { // recompute minimal finetune
 //							finetuneMins.migTime = 0.0;
 												finetuneMins.migTime /= 2.0;
 										}
 								}
-								mcmcSetup.finetunes.migTime = 0.5
-												* (finetuneMaxes.migTime + finetuneMins.migTime); //finetune set to midpoint of interval
+								mcmcSetup.finetunes.migTime = 0.5		* (finetuneMaxes.migTime + finetuneMins.migTime); //finetune set to midpoint of interval
 
-								if (acceptancePercents.theta
-												> TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
+								if (acceptancePercents.theta	> TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
 										finetuneMins.theta = mcmcSetup.finetunes.theta; //raise the minimal finetune value
-										if (finetuneMaxes.theta
-														- finetuneMins.theta< FINETUNE_RESOLUTION) { // recompute maximal finetune
+										if (finetuneMaxes.theta	- finetuneMins.theta< FINETUNE_RESOLUTION) { // recompute maximal finetune
 //							finetuneMaxes.theta = MAX_FINETUNE;
 												if (finetuneMaxes.theta >= MAX_FINETUNE) {
-														finetuneMaxes.theta = finetuneMins.theta =
-														MAX_FINETUNE;
+														finetuneMaxes.theta = finetuneMins.theta =	MAX_FINETUNE;
 												} else {
 														finetuneMaxes.theta *= 2.0;
 												}
 										}
-								} else if (acceptancePercents.theta
-												< TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
+								} else if (acceptancePercents.theta < TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
 										finetuneMaxes.theta = mcmcSetup.finetunes.theta; //lower the maximal finetune value
-										if (finetuneMaxes.theta
-														- finetuneMins.theta< FINETUNE_RESOLUTION) { // recompute minimal finetune
+										if (finetuneMaxes.theta - finetuneMins.theta< FINETUNE_RESOLUTION) { // recompute minimal finetune
 //							finetuneMins.theta = 0.0;
 												finetuneMins.theta /= 2.0;
 										}
 								}
-								mcmcSetup.finetunes.theta = 0.5
-												* (finetuneMaxes.theta + finetuneMins.theta); //finetune set to midpoint of interval
+								mcmcSetup.finetunes.theta = 0.5 * (finetuneMaxes.theta + finetuneMins.theta); //finetune set to midpoint of interval
 
-								if (acceptancePercents.migRate
-												> TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
+								if (acceptancePercents.migRate > TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
 										finetuneMins.migRate = mcmcSetup.finetunes.migRate; //raise the minimal finetune value
-										if (finetuneMaxes.migRate
-														- finetuneMins.migRate< FINETUNE_RESOLUTION) { // recompute maximal finetune
+										if (finetuneMaxes.migRate - finetuneMins.migRate< FINETUNE_RESOLUTION) { // recompute maximal finetune
 //							finetuneMaxes.migRate = MAX_FINETUNE;
 												if (finetuneMaxes.migRate >= MAX_FINETUNE) {
-														finetuneMaxes.migRate = finetuneMins.migRate =
-														MAX_FINETUNE;
+														finetuneMaxes.migRate = finetuneMins.migRate = MAX_FINETUNE;
 												} else {
 														finetuneMaxes.migRate *= 2.0;
 												}
 										}
-								} else if (acceptancePercents.migRate
-												< TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
+								} else if (acceptancePercents.migRate < TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
 										finetuneMaxes.migRate = mcmcSetup.finetunes.migRate; //lower the maximal finetune value
-										if (finetuneMaxes.migRate
-														- finetuneMins.migRate< FINETUNE_RESOLUTION) { // recompute minimal finetune
+										if (finetuneMaxes.migRate - finetuneMins.migRate< FINETUNE_RESOLUTION) { // recompute minimal finetune
 //							finetuneMins.migRate = 0.0;
 												finetuneMins.migRate /= 2.0;
 										}
 								}
-								mcmcSetup.finetunes.migRate = 0.5
-												* (finetuneMaxes.migRate + finetuneMins.migRate); //finetune set to midpoint of interval
+								mcmcSetup.finetunes.migRate = 0.5 * (finetuneMaxes.migRate + finetuneMins.migRate); //finetune set to midpoint of interval
 
-								if (acceptancePercents.admix
-												> TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
+								if (acceptancePercents.admix > TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
 										finetuneMins.admix = mcmcSetup.finetunes.admix; //raise the minimal finetune value
-										if (finetuneMaxes.admix
-														- finetuneMins.admix< FINETUNE_RESOLUTION) { // recompute maximal finetune
+										if (finetuneMaxes.admix - finetuneMins.admix< FINETUNE_RESOLUTION) { // recompute maximal finetune
 //							finetuneMaxes.migRate = MAX_FINETUNE;
 												if (finetuneMaxes.admix >= MAX_FINETUNE) {
-														finetuneMaxes.admix = finetuneMins.admix =
-														MAX_FINETUNE;
+														finetuneMaxes.admix = finetuneMins.admix = MAX_FINETUNE;
 												} else {
 														finetuneMaxes.admix *= 2.0;
 												}
 										}
-								} else if (acceptancePercents.admix
-												< TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
+								} else if (acceptancePercents.admix < TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
 										finetuneMaxes.admix = mcmcSetup.finetunes.admix; //lower the maximal finetune value
-										if (finetuneMaxes.admix
-														- finetuneMins.admix< FINETUNE_RESOLUTION) { // recompute minimal finetune
+										if (finetuneMaxes.admix	- finetuneMins.admix< FINETUNE_RESOLUTION) { // recompute minimal finetune
 //							finetuneMins.admix = 0.0;
 												finetuneMins.admix /= 2.0;
 										}
 								}
-								mcmcSetup.finetunes.admix = 0.5
-												* (finetuneMaxes.admix + finetuneMins.admix); //finetune set to midpoint of interval
+								mcmcSetup.finetunes.admix = 0.5	* (finetuneMaxes.admix + finetuneMins.admix); //finetune set to midpoint of interval
 
-								if (acceptancePercents.locusRate
-												> TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
+								if (acceptancePercents.locusRate > TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
 										finetuneMins.locusRate = mcmcSetup.finetunes.locusRate; //raise the minimal finetune value
-										if (finetuneMaxes.locusRate
-														- finetuneMins.locusRate< FINETUNE_RESOLUTION) { // recompute maximal finetune
+										if (finetuneMaxes.locusRate	- finetuneMins.locusRate< FINETUNE_RESOLUTION) { // recompute maximal finetune
 //							finetuneMaxes.locusRate = MAX_FINETUNE;
 												if (finetuneMaxes.locusRate >= MAX_FINETUNE) {
-														finetuneMaxes.locusRate = finetuneMins.locusRate =
-														MAX_FINETUNE;
+														finetuneMaxes.locusRate = finetuneMins.locusRate = MAX_FINETUNE;
 												} else {
 														finetuneMaxes.locusRate *= 2.0;
 												}
 										}
-								} else if (acceptancePercents.locusRate
-												< TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
+								} else if (acceptancePercents.locusRate												< TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
 										finetuneMaxes.locusRate = mcmcSetup.finetunes.locusRate; //lower the maximal finetune value
-										if (finetuneMaxes.locusRate
-														- finetuneMins.locusRate< FINETUNE_RESOLUTION) { // recompute minimal finetune
+										if (finetuneMaxes.locusRate - finetuneMins.locusRate< FINETUNE_RESOLUTION) { // recompute minimal finetune
 //							finetuneMins.locusRate = 0.0;
 												finetuneMins.locusRate /= 2.0;
 										}
 								}
-								mcmcSetup.finetunes.locusRate = 0.5
-												* (finetuneMaxes.locusRate + finetuneMins.locusRate); //finetune set to midpoint of interval
+								mcmcSetup.finetunes.locusRate = 0.5 * (finetuneMaxes.locusRate + finetuneMins.locusRate); //finetune set to midpoint of interval
 
-								if (acceptancePercents.mixing
-												> TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
+								if (acceptancePercents.mixing	> TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE) {
 										finetuneMins.mixing = mcmcSetup.finetunes.mixing; //raise the minimal finetune value
-										if (finetuneMaxes.mixing
-														- finetuneMins.mixing< FINETUNE_RESOLUTION) { // recompute maximal finetune
+										if (finetuneMaxes.mixing - finetuneMins.mixing< FINETUNE_RESOLUTION) { // recompute maximal finetune
 //							finetuneMaxes.mixing = MAX_FINETUNE;
 												if (finetuneMaxes.mixing >= MAX_FINETUNE) {
-														finetuneMaxes.mixing = finetuneMins.mixing =
-														MAX_FINETUNE;
+														finetuneMaxes.mixing = finetuneMins.mixing =	MAX_FINETUNE;
 												} else {
 														finetuneMaxes.mixing *= 2.0;
 												}
 										}
-								} else if (acceptancePercents.mixing
-												< TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
+								} else if (acceptancePercents.mixing	< TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
 										finetuneMaxes.mixing = mcmcSetup.finetunes.mixing; //lower the maximal finetune value
-										if (finetuneMaxes.mixing
-														- finetuneMins.mixing< FINETUNE_RESOLUTION) { // recompute minimal finetune
+										if (finetuneMaxes.mixing	- finetuneMins.mixing< FINETUNE_RESOLUTION) { // recompute minimal finetune
 //							finetuneMins.mixing = 0.0;
 												finetuneMins.mixing /= 2.0;
 										}
 								}
-								mcmcSetup.finetunes.mixing = 0.5
-												* (finetuneMaxes.mixing + finetuneMins.mixing); //finetune set to midpoint of interval
+								mcmcSetup.finetunes.mixing = 0.5	* (finetuneMaxes.mixing + finetuneMins.mixing); //finetune set to midpoint of interval
 
-								for (pop = dataSetup.popTree->numCurPops;
-												pop < dataSetup.popTree->numPops; pop++) {
-										if (acceptancePercents.taus[pop]
-														> TARGET_ACCEPTANCE_PERCENT
-																		+ TARGET_ACCEPTANCE_RANGE) {
+								for (pop = dataSetup.popTree->numCurPops;	pop < dataSetup.popTree->numPops; pop++) {
+										if (acceptancePercents.taus[pop]	> TARGET_ACCEPTANCE_PERCENT	+ TARGET_ACCEPTANCE_RANGE) {
 												finetuneMins.taus[pop] = mcmcSetup.finetunes.taus[pop]; //raise the minimal finetune value
-												if (finetuneMaxes.taus[pop]
-																- finetuneMins.taus[pop]< FINETUNE_RESOLUTION) { // recompute maximal finetune
+												if (finetuneMaxes.taus[pop] - finetuneMins.taus[pop]< FINETUNE_RESOLUTION) { // recompute maximal finetune
 //									finetuneMaxes.taus[pop] = MAX_FINETUNE;
 														if (finetuneMaxes.taus[pop] >= MAX_FINETUNE) {
-																finetuneMaxes.taus[pop] =
-																				finetuneMins.taus[pop] = MAX_FINETUNE;
+																finetuneMaxes.taus[pop] = finetuneMins.taus[pop] = MAX_FINETUNE;
 														} else {
 																finetuneMaxes.taus[pop] *= 2.0;
 														}
 												}
-										} else if (acceptancePercents.taus[pop]
-														< TARGET_ACCEPTANCE_PERCENT
-																		- TARGET_ACCEPTANCE_RANGE) {
+										} else if (acceptancePercents.taus[pop] < TARGET_ACCEPTANCE_PERCENT - TARGET_ACCEPTANCE_RANGE) {
 												finetuneMaxes.taus[pop] = mcmcSetup.finetunes.taus[pop]; //lower the maximal finetune value
-												if (finetuneMaxes.taus[pop]
-																- finetuneMins.taus[pop]< FINETUNE_RESOLUTION) { // recompute minimal finetune
+												if (finetuneMaxes.taus[pop] - finetuneMins.taus[pop]< FINETUNE_RESOLUTION) { // recompute minimal finetune
 //									finetuneMins.taus[pop] = 0.0;
 														finetuneMins.taus[pop] /= 2.0;
 												}
 										}
-										mcmcSetup.finetunes.taus[pop] =
-														0.5
-																		* (finetuneMaxes.taus[pop]
-																						+ finetuneMins.taus[pop]); //finetune set to midpoint of interval
+										mcmcSetup.finetunes.taus[pop] = 0.5 * (finetuneMaxes.taus[pop] + finetuneMins.taus[pop]); //finetune set to midpoint of interval
 								}
-								printf(
-												"          %-9.7lf %-9.7lf           %-9.7lf %-9.7lf %-9.7lf ",
+								printf("          %-9.7lf %-9.7lf           %-9.7lf %-9.7lf %-9.7lf ",
 												mcmcSetup.finetunes.coalTime,
-												mcmcSetup.finetunes.migTime, mcmcSetup.finetunes.theta,
-												mcmcSetup.finetunes.migRate, mcmcSetup.finetunes.admix);
-								for (pop = dataSetup.popTree->numCurPops;
-												pop < dataSetup.popTree->numPops; pop++) {
+												mcmcSetup.finetunes.migTime,
+                        mcmcSetup.finetunes.theta,
+												mcmcSetup.finetunes.migRate,
+                        mcmcSetup.finetunes.admix);
+								for (pop = dataSetup.popTree->numCurPops; pop < dataSetup.popTree->numPops; pop++) {
 										printf("%-9.7lf ", mcmcSetup.finetunes.taus[pop]);
 								}
 								printf("          %-9.7lf %-9.7lf \n",
@@ -1972,20 +1853,17 @@ int performMCMC() {
 						acceptanceCounts.mixing = 0;
 						acceptanceCounts.admix = 0;
 
-						if (findingFinetunes
-										&& iteration + 1
-														>= mcmcSetup.findFinetunesSamplesPerStep
-																		* mcmcSetup.findFinetunesNumSteps) {
+						if (findingFinetunes && iteration + 1 >= mcmcSetup.findFinetunesSamplesPerStep * mcmcSetup.findFinetunesNumSteps) {
 
 								findingFinetunes = 0;
 								numSamplesPerLog = ioSetup.samplesPerLog;
 								logsPerLine = ioSetup.logsPerLine;
 								printf("\n");
-								printf(
-												"-------------------------------------  finetunes  ------------------------------------\n");
+								printf("-------------------------------------  finetunes  ------------------------------------\n");
 								printf("          %8lf  %8lf            %8lf  %8lf  ",
 												mcmcSetup.finetunes.coalTime,
-												mcmcSetup.finetunes.migTime, mcmcSetup.finetunes.theta,
+												mcmcSetup.finetunes.migTime,
+                        mcmcSetup.finetunes.theta,
 												mcmcSetup.finetunes.migRate);
 								for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
 										printf("%8lf  ", mcmcSetup.finetunes.taus[pop]);
@@ -1993,8 +1871,7 @@ int performMCMC() {
 								printf("          %8lf  %8lf  \n",
 												mcmcSetup.finetunes.locusRate,
 												mcmcSetup.finetunes.mixing);
-								printf(
-												"--------------------------------------------------------------------------------------\n");
+								printf("--------------------------------------------------------------------------------------\n");
 						}
 
 				} // print log
@@ -2010,15 +1887,18 @@ int performMCMC() {
 		printf("\nMCMC finished. Time used: %s\n", printtime(timeString));
 
 		printMethodTimes();
-
 		return 0;
 }
-
 /** end of performMCMC **/
+
+
+
 
 /******************************************************************************************************/
 /******                                 SAMPLING FUNCTIONS                                       ******/
 /******************************************************************************************************/
+
+
 
 /***********************************************************************************
  *	UpdateGB_InternalNode
@@ -2041,18 +1921,16 @@ int UpdateGB_InternalNode(double finetune) {
 		for (gen = 0; gen < dataSetup.numLoci; gen++) {
 
 				int pop, inode, i, son;
-				double t, tnew;
-				double lnacceptance, lnLd;
+				double t, tnew, lnacceptance, lnLd;
 				double genetree_lnLd_delta;
 				int mig;
 				double tb[2];
 
-				int accepted_local = 0;
-				double dataLogLikelihood_local = 0;
-				double logLikelihood_local = 0;
+				int accepted_mt = 0;
+				double dataLogLikelihood_mt = 0;
+				double logLikelihood_mt = 0;
 
-				for (inode = dataSetup.numSamples; inode < 2 * dataSetup.numSamples - 1;
-								inode++) {
+				for (inode = dataSetup.numSamples; inode < 2 * dataSetup.numSamples - 1; inode++) {
 
 						t = getNodeAge(dataState.lociData[gen], inode);
 						pop = nodePops[gen][inode];
@@ -2069,9 +1947,7 @@ int UpdateGB_InternalNode(double finetune) {
 						if (mig >= 0) {
 								tb[1] = min2(tb[1], genetree_migs[gen].mignodes[mig].age);
 						} else if (inode != getLocusRoot(dataState.lociData[gen])) {
-								tb[1] = min2(tb[1],
-												getNodeAge(dataState.lociData[gen],
-																getNodeFather(dataState.lociData[gen], inode)));
+								tb[1] = min2(tb[1], getNodeAge(dataState.lociData[gen], getNodeFather(dataState.lociData[gen], inode)));
 						}
 						for (i = 0; i < 2; i++) {
 								son = getNodeSon(dataState.lociData[gen], inode, i);
@@ -2079,15 +1955,14 @@ int UpdateGB_InternalNode(double finetune) {
 								if (mig >= 0) {
 										tb[0] = max2(tb[0], genetree_migs[gen].mignodes[mig].age);
 								} else {
-										tb[0] = max2(tb[0],
-														getNodeAge(dataState.lociData[gen], son));
+										tb[0] = max2(tb[0],	getNodeAge(dataState.lociData[gen], son));
 								}
 						}
 						tnew = t + finetune * rnd2normal8();
 						tnew = reflect(tnew, tb[0], tb[1]);
 						/**/
 						if (fabs(tnew - t) < 1e-15) {
-								accepted_local++;
+								accepted_mt++;
 								continue;
 						}
 						/**/
@@ -2097,12 +1972,10 @@ int UpdateGB_InternalNode(double finetune) {
 						// update node's age, and compute delta log-likelihood
 						adjustGenNodeAge(dataState.lociData[gen], inode, tnew);
 						lnLd = -getLocusDataLikelihood(dataState.lociData[gen]);
-						lnLd += computeLocusDataLikelihood(dataState.lociData[gen], /*reuse old conditionals*/
-						1);
+						lnLd += computeLocusDataLikelihood(dataState.lociData[gen], /*reuse old conditionals*/ 1);
 						//					printf("computing delta in genealogy likelihood...\n");
 
-						genetree_lnLd_delta = considerEventMove(gen, 0,
-										nodeEvents[gen][inode], pop, t, pop, tnew);
+						genetree_lnLd_delta = considerEventMove(gen, 0,	nodeEvents[gen][inode], pop, t, pop, tnew);
 						lnacceptance = genetree_lnLd_delta + lnLd;
 						//					printf("done.\n");
 
@@ -2114,17 +1987,14 @@ int UpdateGB_InternalNode(double finetune) {
 #ifdef LOG_STEPS
 								fprintf(ioSetup.debugFile, "accepting.\n");
 #endif
-								accepted_local++;
+								accepted_mt++;
 								locus_data[gen].genLogLikelihood += genetree_lnLd_delta;
-
-								dataLogLikelihood_local += lnLd;
-
-								logLikelihood_local += (genetree_lnLd_delta + lnLd)
-												/ dataSetup.numLoci;
-
+								dataLogLikelihood_mt += lnLd;
+								logLikelihood_mt += (genetree_lnLd_delta + lnLd)	/ dataSetup.numLoci;
 								acceptEventChainChanges(gen, 0);
 								resetSaved(dataState.lociData[gen]);
-						} else {
+						} 
+            else {
 								// reject changes and revert to saved version
 #ifdef LOG_STEPS
 								fprintf(ioSetup.debugFile, "rejecting.\n");
@@ -2142,20 +2012,22 @@ int UpdateGB_InternalNode(double finetune) {
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-				dataState.dataLogLikelihood += dataLogLikelihood_local;
+				dataState.dataLogLikelihood += dataLogLikelihood_mt;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-				dataState.logLikelihood += logLikelihood_local;
+				dataState.logLikelihood += logLikelihood_mt;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-				accepted += accepted_local;
+				accepted += accepted_mt;
 		} // end of for(gen)
 
 		return (accepted);
 }
 /** end of UpdateGB_InternalNode **/
+
+
 
 /***********************************************************************************
  *	UpdateGB_MigrationNode
@@ -2176,16 +2048,15 @@ int UpdateGB_MigrationNode(double finetune) {
 #pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 		for (gen = 0; gen < dataSetup.numLoci; gen++) {
-				int m = 0;
+				int mig_below, mig_above, node_below, m = 0;
 				double lnacceptance = 0, t;
 				double genetree_lnLd_delta;
 				int father;
-				int accepted_local = 0;
-				double genetree_lnLd_delta_local = 0;
+				int accepted_mt = 0;
+				double genetree_lnLd_delta_mt = 0;
 				double t_bounds[2];
 				double tnew;
-				int mignode, pop_source, pop_target, event_source, event_target,
-								node_below;
+				int mignode, pop_source, pop_target, event_source, event_target;
 
 				for (m = 0; m < genetree_migs[gen].num_migs; m++) {
 						mignode = genetree_migs[gen].living_mignodes[m];
@@ -2199,24 +2070,19 @@ int UpdateGB_MigrationNode(double finetune) {
 						// determine upper and lower bounds for new time
 						// start up with start and end times of migration band
 						// then bound according to events right below or above the migration event
-						t_bounds[0] =
-										dataSetup.popTree->migBands[genetree_migs[gen].mignodes[mignode].migration_band].startTime;
-						t_bounds[1] =
-										dataSetup.popTree->migBands[genetree_migs[gen].mignodes[mignode].migration_band].endTime;
+						t_bounds[0] =	dataSetup.popTree->migBands[genetree_migs[gen].mignodes[mignode].migration_band].startTime;
+						t_bounds[1] =	dataSetup.popTree->migBands[genetree_migs[gen].mignodes[mignode].migration_band].endTime;
 
-						int mig_below = findLastMig(gen, node_below, t);
-						int mig_above = findFirstMig(gen, node_below, t);
+						mig_below = findLastMig(gen, node_below, t);
+						mig_above = findFirstMig(gen, node_below, t);
 						if (mig_below >= 0) {
-								t_bounds[0] = max2(t_bounds[0],
-												genetree_migs[gen].mignodes[mig_below].age);
+								t_bounds[0] = max2(t_bounds[0], genetree_migs[gen].mignodes[mig_below].age);
 						} else {
-								t_bounds[0] = max2(t_bounds[0],
-												getNodeAge(dataState.lociData[gen], node_below));
+								t_bounds[0] = max2(t_bounds[0], getNodeAge(dataState.lociData[gen], node_below));
 						}
 
 						if (mig_above >= 0) {
-								t_bounds[1] = min2(t_bounds[1],
-												genetree_migs[gen].mignodes[mig_above].age);
+								t_bounds[1] = min2(t_bounds[1], genetree_migs[gen].mignodes[mig_above].age);
 						} else {
 								father = getNodeFather(dataState.lociData[gen], node_below);
 								if (father < 0) {
@@ -2226,8 +2092,7 @@ int UpdateGB_MigrationNode(double finetune) {
 										//									printf("\n Migration event %d above genealogy root at gen %d.\n",mignode,gen);
 										t_bounds[1] = min2(t_bounds[1], OLDAGE);
 								} else {
-										t_bounds[1] = min2(t_bounds[1],
-														getNodeAge(dataState.lociData[gen], father));
+										t_bounds[1] = min2(t_bounds[1], getNodeAge(dataState.lociData[gen], father));
 								}
 						}
 
@@ -2240,10 +2105,11 @@ int UpdateGB_MigrationNode(double finetune) {
 						 */
 						// Note: migration node cannot move to another population
 						// because it is restricted to specific band
+
 						tnew = t + finetune * rnd2normal8();
 						tnew = reflect(tnew, t_bounds[0], t_bounds[1]);
 						if (fabs(tnew - t) < 1e-15) {
-								accepted_local++;
+								accepted_mt++;
 								continue;
 						}
 
@@ -2253,11 +2119,9 @@ int UpdateGB_MigrationNode(double finetune) {
 
 						//         printEventChains(gen);
 
-						genetree_lnLd_delta = considerEventMove(gen, 0, event_source,
-										pop_source, t, pop_source, tnew);
+						genetree_lnLd_delta = considerEventMove(gen, 0, event_source, pop_source, t, pop_source, tnew);
 						//					printEventChains(gen);
-						genetree_lnLd_delta += considerEventMove(gen, 1, event_target,
-										pop_target, t, pop_target, tnew);
+						genetree_lnLd_delta += considerEventMove(gen, 1, event_target, pop_target, t, pop_target, tnew);
 						lnacceptance = genetree_lnLd_delta;
 
 #ifdef LOG_STEPS
@@ -2267,17 +2131,14 @@ int UpdateGB_MigrationNode(double finetune) {
 #ifdef LOG_STEPS
 								fprintf(ioSetup.debugFile, "accepting.\n");
 #endif
-
-								accepted_local++;
+								accepted_mt++;
 								locus_data[gen].genLogLikelihood += genetree_lnLd_delta;
-
-								genetree_lnLd_delta_local += genetree_lnLd_delta
-												/ dataSetup.numLoci;
-
+								genetree_lnLd_delta_mt += genetree_lnLd_delta / dataSetup.numLoci;
 								acceptEventChainChanges(gen, 0);
 								acceptEventChainChanges(gen, 1);
 								genetree_migs[gen].mignodes[mignode].age = tnew;
-						} else {
+						}
+            else {
 #ifdef LOG_STEPS
 								fprintf(ioSetup.debugFile, "rejecting.\n");
 #endif
@@ -2285,15 +2146,14 @@ int UpdateGB_MigrationNode(double finetune) {
 								rejectEventChainChanges(gen, 1);
 						}
 				}      // end of for(mignode)
-
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-				dataState.logLikelihood += genetree_lnLd_delta_local;
+				dataState.logLikelihood += genetree_lnLd_delta_mt;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-				accepted += accepted_local;
+				accepted += accepted_mt;
 		}      // end of for(gen)
 
 		return (accepted);
@@ -2306,10 +2166,11 @@ int UpdateGB_MigrationNode(double finetune) {
  *	- randomly recoalesce with the remaining tree (with migrations).
  ***********************************************************************************/
 int UpdateGB_MigSPR() {
+
 		int accepted = 0;
 		int gen;
 		// double UNUSED, t_old;
-// UNUSED  unsigned short didAccept;
+
 		//	double	genetree_lnLd, genetree_lnLd_new;
 
 #ifdef THREAD_UpdateGB_MigSPR
@@ -2333,21 +2194,18 @@ int UpdateGB_MigSPR() {
 				int pop;
 
 				for (node = 0; node < 2 * dataSetup.numSamples - 1; node++) {
-
 						//					printLocusGenTree(dataState.lociData[gen], nodePops[gen], nodeEvents[gen]);;
 						//					printEventChains(gen);
 
 						// tree root is NOT skipped - the root can be below root pop in the presence of migration
 						// in this case, we might want to introduce/remove migration events from the edge above the root
-						if (node == getLocusRoot(dataState.lociData[gen]))
-								continue;
+						if (node == getLocusRoot(dataState.lociData[gen]))  continue;
 
 						father = getNodeFather(dataState.lociData[gen], node);
 						// record for later
 // UNUSED      t_old = getNodeAge(dataState.lociData[gen], father);
 						father_pop_old = nodePops[gen][father];
-						sibling = getNodeSon(dataState.lociData[gen], father, 0)
-										+ getNodeSon(dataState.lociData[gen], father, 1) - node;
+						sibling = getNodeSon(dataState.lociData[gen], father, 0) + getNodeSon(dataState.lociData[gen], father, 1) - node;
 
 						// trace original lineage and collect delta-stats from pruned version
 						// of genetree to complete (original) version of genetree.
@@ -2356,7 +2214,6 @@ int UpdateGB_MigSPR() {
 #ifdef LOG_STEPS
 						fprintf(ioSetup.debugFile, "  gen %d, node %d, detaching father %d, pop %d, ",gen, node, father, father_pop_old);
 #endif
-
 						traceLineage(gen, node, 0);
 
 						// trace new lineage from node until reconnected
@@ -2367,13 +2224,11 @@ int UpdateGB_MigSPR() {
 						// if node corresponds to admixed sample, resample population assignment
 						altPop = 0;
 						admixSwitch = 0;
-						if (node < dataSetup.numSamples && admixed_samples.number > 0
-										&& admixed_samples.index[node] >= 0) {
+						if (node < dataSetup.numSamples && admixed_samples.number > 0	&& admixed_samples.index[node] >= 0) {
 								admixIndex = admixed_samples.index[node];
 								oldPop = nodePops[gen][node];
 								// consider alternative population w.p. admixture_status.admixtureCoefficients[node]
-								if (rndu()
-												< admixture_status.admixtureCoefficients[admixIndex]) {
+								if (rndu()	< admixture_status.admixtureCoefficients[admixIndex]) {
 										altPop = 1;
 								}
 								newPop = admixed_samples.popPairs[admixIndex][altPop];
@@ -2391,8 +2246,7 @@ int UpdateGB_MigSPR() {
 										locus_data[gen].mig_spr_stats.target, locus_data[gen].mig_spr_stats.father_pop_new, getNodeAge(dataState.lociData[gen], father));
 #endif
 						lnLd = -getLocusDataLikelihood(dataState.lociData[gen]);
-						lnLd += computeLocusDataLikelihood(dataState.lociData[gen], /*reuse old conidtionals*/
-						1);
+						lnLd += computeLocusDataLikelihood(dataState.lociData[gen], /*reuse old conidtionals*/ 1);
 						lnacceptance = lnLd;
 
 #ifdef LOG_STEPS
@@ -2400,13 +2254,12 @@ int UpdateGB_MigSPR() {
 #endif
 
 						if (res >= 0 && (lnacceptance >= 0 || rndu() < exp(lnacceptance))) {
-
 #ifdef LOG_STEPS
 								fprintf(ioSetup.debugFile, "accepting.\n");
 #endif
 								local_accepted++;
 // UNUSED        didAccept = 1;
-								locus_data[gen].genLogLikelihood +=
+								locus_data[gen].genLogLikelihood += 
 												(locus_data[gen].mig_spr_stats.genetree_delta_lnLd[1]
 																- locus_data[gen].mig_spr_stats.genetree_delta_lnLd[0]);
 
@@ -2424,31 +2277,20 @@ int UpdateGB_MigSPR() {
 
 								if (admixSwitch) {
 //					fprintf(ioSetup.debugFile, " Accepting with delta log likelihood %lf.\n",lnacceptance);
-										locus_data[gen].genLogLikelihood +=
-														log(
-																		1
-																						/ admixture_status.admixtureCoefficients[admixIndex]
-																						- 1) * (1 - 2 * altPop);
+										locus_data[gen].genLogLikelihood +=   log(1/admixture_status.admixtureCoefficients[admixIndex]- 1) * (1 - 2 * altPop);
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-										dataState.logLikelihood +=
-														log(
-																		1
-																						/ admixture_status.admixtureCoefficients[admixIndex]
-																						- 1) * (1 - 2 * altPop)
-																		/ dataSetup.numLoci;
+										dataState.logLikelihood +=log(1/admixture_status.admixtureCoefficients[admixIndex]- 1) * (1 - 2 * altPop)/ dataSetup.numLoci;
 								}
 
 								// change pointers of migration nodes to genetree edges
 								// note that id of father might have changed (because of root)
 								target = locus_data[gen].mig_spr_stats.target;
 								t_new = getNodeAge(dataState.lociData[gen], father);
-
 								for (i = 0; i < genetree_migs[gen].num_migs; i++) {
 										mig = genetree_migs[gen].living_mignodes[i];
-										if (genetree_migs[gen].mignodes[mig].gtree_branch
-														== father) {
+										if (genetree_migs[gen].mignodes[mig].gtree_branch	== father) {
 												genetree_migs[gen].mignodes[mig].gtree_branch = sibling;
 												/*											printf("\nSwitching node id's for mignode %d in gen %d from %d to %d due to MIG_SPR on node %d.\n",
 												 mig,gen,father_old,sib, node);
@@ -2457,10 +2299,8 @@ int UpdateGB_MigSPR() {
 										}
 										// this is to transfer "sibling" migrations into "father"
 										// in case where target == father.
-										if (target == father)
-												target = sibling;
-										if (genetree_migs[gen].mignodes[mig].gtree_branch == target
-														&& genetree_migs[gen].mignodes[mig].age >= t_new) {
+										if (target == father)	target = sibling;
+										if (genetree_migs[gen].mignodes[mig].gtree_branch == target	&& genetree_migs[gen].mignodes[mig].age >= t_new) {
 												genetree_migs[gen].mignodes[mig].gtree_branch = father;
 												/*											printf("\nSwitching node id's for mignode %d in gen %d from %d to %d due to MIG_SPR on node %d.\n",
 												 mig,gen,target,nodes[node].father, node);
@@ -2482,20 +2322,14 @@ int UpdateGB_MigSPR() {
 								 }
 								 */
 								// remove old coalescent event and configure new one
-								removeEvent(gen,
-												locus_data[gen].mig_spr_stats.father_event_old);
-								event_chains[gen].events[locus_data[gen].mig_spr_stats.father_event_new].type =
-												COAL;
-								event_chains[gen].events[locus_data[gen].mig_spr_stats.father_event_new].node_id =
-												father;
-								nodeEvents[gen][father] =
-												locus_data[gen].mig_spr_stats.father_event_new;
+								removeEvent(gen,locus_data[gen].mig_spr_stats.father_event_old);
+								event_chains[gen].events[locus_data[gen].mig_spr_stats.father_event_new].type = COAL;
+								event_chains[gen].events[locus_data[gen].mig_spr_stats.father_event_new].node_id = father;
+								nodeEvents[gen][father] = locus_data[gen].mig_spr_stats.father_event_new;
 
 								// update number of coalescences for new and old father populations (if necessary)
-								if (locus_data[gen].mig_spr_stats.father_pop_new
-												!= father_pop_old) {
-										nodePops[gen][father] =
-														locus_data[gen].mig_spr_stats.father_pop_new;
+								if (locus_data[gen].mig_spr_stats.father_pop_new != father_pop_old) {
+										nodePops[gen][father] = locus_data[gen].mig_spr_stats.father_pop_new;
 										genetree_stats[gen].num_coals[father_pop_old]--;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
@@ -2508,27 +2342,22 @@ int UpdateGB_MigSPR() {
 										genetree_stats_total.num_coals[locus_data[gen].mig_spr_stats.father_pop_new]++;
 								}
 
+
 								// configure new migration nodes/events
 								// remove old nodes/events
 								replaceMigNodes(gen, node);
 
 								// add lineage to all events in new path to new father
-								for (i = 0;
-												i
-																< locus_data[gen].genetree_stats_delta[1].num_changed_events;
-												i++) {
-										event =
-														locus_data[gen].genetree_stats_delta[1].changed_events[i];
+								for (i=0; i<locus_data[gen].genetree_stats_delta[1].num_changed_events; i++) {
+										event = locus_data[gen].genetree_stats_delta[1].changed_events[i];
 										event_chains[gen].events[event].num_lineages++;
 								}
 
 								// apply changes to genetree stats
 								// changes in number of coals and migs are applied separately
-								for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands;
-												mig_band++) {
+								for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
 
-										genetree_stats[gen].mig_stats[mig_band] +=
-														(locus_data[gen].genetree_stats_delta[1].mig_stats_delta[mig_band]
+										genetree_stats[gen].mig_stats[mig_band] += (locus_data[gen].genetree_stats_delta[1].mig_stats_delta[mig_band]
 																		- locus_data[gen].genetree_stats_delta[0].mig_stats_delta[mig_band]);
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
@@ -2558,33 +2387,23 @@ int UpdateGB_MigSPR() {
 								 fabs((genetree_lnLd_new - genetree_lnLd) -(locus_data[gen].mig_spr_stats.genetree_delta_lnLd[1] - locus_data[gen].mig_spr_stats.genetree_delta_lnLd[0])));
 								 genetree_lnLd = genetree_lnLd_new;
 								 */
-
-						} else {
-
+						}
+            else {
 // UNUSED        didAccept = 0;
 #ifdef LOG_STEPS
 								fprintf(ioSetup.debugFile, "rejecting.\n");
 #endif
 								// remove all added migration events
 								if (res >= 0) {
-										removeEvent(gen,
-														locus_data[gen].mig_spr_stats.father_event_new);
+										removeEvent(gen, locus_data[gen].mig_spr_stats.father_event_new);
 								}
-								for (i = 0; i < locus_data[gen].mig_spr_stats.num_new_migs;
-												i++) {
-										removeEvent(gen,
-														locus_data[gen].mig_spr_stats.new_migs_in[i]);
-										removeEvent(gen,
-														locus_data[gen].mig_spr_stats.new_migs_out[i]);
+								for (i = 0; i < locus_data[gen].mig_spr_stats.num_new_migs; i++) {
+										removeEvent(gen, locus_data[gen].mig_spr_stats.new_migs_in[i]);
+										removeEvent(gen, locus_data[gen].mig_spr_stats.new_migs_out[i]);
 								}
-
 								// return reduced lineage to all events of original edge
-								for (i = 0;
-												i
-																< locus_data[gen].genetree_stats_delta[0].num_changed_events;
-												i++) {
-										event =
-														locus_data[gen].genetree_stats_delta[0].changed_events[i];
+								for (i = 0; i < locus_data[gen].genetree_stats_delta[0].num_changed_events; i++) {
+										event = locus_data[gen].genetree_stats_delta[0].changed_events[i];
 										event_chains[gen].events[event].num_lineages++;
 								}
 								// change back population assignment (due to admixture)
@@ -2592,11 +2411,8 @@ int UpdateGB_MigSPR() {
 										nodePops[gen][node] = oldPop;
 //					fprintf(ioSetup.debugFile, " Rejecting with delta log likelihood %lf.\n",lnacceptance);
 								}
-
 								revertToSaved(dataState.lociData[gen]);
-
 						}
-
 						/**
 						 if(!checkLocusDataLikelihood(dataState.lociData[gen])) {
 						 printf("\nError checking recorded likelihood for gen %d!", gen);
@@ -2614,7 +2430,6 @@ int UpdateGB_MigSPR() {
 						 exit(-1);
 						 }
 						 **/
-
 				} // end for(node)
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
@@ -2625,6 +2440,8 @@ int UpdateGB_MigSPR() {
 		return (accepted);
 }
 /** end of UpdateGB_MigSPR **/
+
+
 
 /***********************************************************************************
  *	UpdateAdmixCoeffs
@@ -2721,15 +2538,12 @@ int UpdateTheta(double finetune) {
 				fprintf(ioSetup.debugFile, "  pop %d, proposing theta shift: %g-->%g, ",pop, thetaold,thetanew);
 #endif
 				// acceptance ratio according to proposal prior
-				lnacceptance = lnc
-								+ lnc * (dataSetup.popTree->pops[pop]->thetaPrior.alpha - 1)
-								- (thetanew - thetaold)
-												* dataSetup.popTree->pops[pop]->thetaPrior.beta;
+				lnacceptance = lnc + lnc * (dataSetup.popTree->pops[pop]->thetaPrior.alpha - 1) - (thetanew - thetaold)* dataSetup.popTree->pops[pop]->thetaPrior.beta;
 
 				// delta in log-likelihood of all genealogies
-				deltaLogLikelihood = -(lnc * genetree_stats_total.num_coals[pop]
-								+ (1 / thetanew - 1 / thetaold)
-												* genetree_stats_total.coal_stats[pop]);
+				deltaLogLikelihood =
+          -(lnc * genetree_stats_total.num_coals[pop] +
+								(1 / thetanew - 1 / thetaold) 		* genetree_stats_total.coal_stats[pop]);
 
 				lnacceptance += deltaLogLikelihood;
 
@@ -2745,10 +2559,7 @@ int UpdateTheta(double finetune) {
 #pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 						for (gen = 0; gen < dataSetup.numLoci; gen++) {
-								locus_data[gen].genLogLikelihood -= (lnc
-												* genetree_stats[gen].num_coals[pop]
-												+ (1 / thetanew - 1 / thetaold)
-																* genetree_stats[gen].coal_stats[pop]);
+								locus_data[gen].genLogLikelihood -= ( lnc * genetree_stats[gen].num_coals[pop] + (1/thetanew - 1/thetaold) * genetree_stats[gen].coal_stats[pop] );
 						}
 						dataState.logLikelihood += deltaLogLikelihood / dataSetup.numLoci;
 						dataSetup.popTree->pops[pop]->theta = thetanew;
@@ -2781,6 +2592,7 @@ int UpdateMigRates(double finetune) {
 
 		for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
 
+
 				// record old rate and propose new migration rate
 				old_rate = dataSetup.popTree->migBands[mig_band].migRate;
 				// ADDITIVE UPDATE !!!
@@ -2806,15 +2618,9 @@ int UpdateMigRates(double finetune) {
 				//									mig_band, dataSetup.popTree->migBands[mig_band].sourcePop, dataSetup.popTree->migBands[mig_band].targetPop, old_rate, new_rate);
 
 				// GAMA PRIOR
-				if (new_rate < 0.00001)
-						continue;
-				lnacceptance =
-								lnc
-												+ lnc
-																* (dataSetup.popTree->migBands[mig_band].migRatePrior.alpha
-																				- 1)
-												- (new_rate - old_rate)
-																* dataSetup.popTree->migBands[mig_band].migRatePrior.beta;
+				if (new_rate < 0.00001) continue;
+				lnacceptance = lnc + lnc * (dataSetup.popTree->migBands[mig_band].migRatePrior.alpha - 1) -
+												(new_rate - old_rate) * dataSetup.popTree->migBands[mig_band].migRatePrior.beta;
 
 				// UNIFORM PRIOR
 				// if new rate is outside boundary, reject
@@ -2822,9 +2628,9 @@ int UpdateMigRates(double finetune) {
 				//			lnacceptance = lnc;
 
 				// diff in log-likelihood
-				deltaLogLikelihood = (lnc * genetree_stats_total.num_migs[mig_band]
-								- (new_rate - old_rate)
-												* genetree_stats_total.mig_stats[mig_band]);
+				deltaLogLikelihood = 
+					(lnc * genetree_stats_total.num_migs[mig_band] -
+								(new_rate - old_rate) * genetree_stats_total.mig_stats[mig_band]);
 
 				lnacceptance += deltaLogLikelihood;
 
@@ -2842,10 +2648,7 @@ int UpdateMigRates(double finetune) {
 #pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 						for (gen = 0; gen < dataSetup.numLoci; gen++) {
-								locus_data[gen].genLogLikelihood += (lnc
-												* genetree_stats[gen].num_migs[mig_band]
-												- (new_rate - old_rate)
-																* genetree_stats[gen].mig_stats[mig_band]);
+								locus_data[gen].genLogLikelihood += ( lnc * genetree_stats[gen].num_migs[mig_band] - (new_rate - old_rate) * genetree_stats[gen].mig_stats[mig_band] );
 						}
 						dataSetup.popTree->migBands[mig_band].migRate = new_rate;
 						dataState.logLikelihood += deltaLogLikelihood / dataSetup.numLoci;
@@ -2855,7 +2658,6 @@ int UpdateMigRates(double finetune) {
 #endif
 				}
 		}    // end of for(mig_band)
-
 		return (accepted);
 }
 /** end of UpdateMigRates **/
@@ -2870,24 +2672,23 @@ int UpdateMigRates(double finetune) {
  ***********************************************************************************/
 void UpdateTau(double *finetunes, int *accepted) {
 
-		int ancestralPop, gen;
+		int k, ancestralPop, gen;
 		int ntj[2];
-
 		double tauold, taunew, taub[2], taufactor[2];
 		double lnacceptance = 0; //, lnLd;
 
-		int num_affected_mig_bands, affected_mig_bands[MAX_MIG_BANDS],
-						start_or_end[MAX_MIG_BANDS];
+		int num_affected_mig_bands, affected_mig_bands[MAX_MIG_BANDS], start_or_end[MAX_MIG_BANDS];
 		double new_band_ages[MAX_MIG_BANDS];
+		int mig_band;
 		double dataDeltaLnLd, genDeltaLnLd;
 
-		int sourcePop_local, targetPop_local, sons[2];
+		int sourcePop, targetPop, sons[2];
 		unsigned short isRoot = 0;
 		unsigned short res;
 		//UNUSED unsigned short didAccept = 0;
 
-		for (ancestralPop = dataSetup.popTree->numCurPops;
-						ancestralPop < dataSetup.popTree->numPops; ancestralPop++) {
+
+		for (ancestralPop = dataSetup.popTree->numCurPops; ancestralPop < dataSetup.popTree->numPops; ancestralPop++) {
 				accepted[ancestralPop] = 0;
 				isRoot = (ancestralPop == dataSetup.popTree->rootPop);
 
@@ -2896,8 +2697,7 @@ void UpdateTau(double *finetunes, int *accepted) {
 				genDeltaLnLd = 0.0;
 				sons[0] = dataSetup.popTree->pops[ancestralPop]->sons[0]->id;
 				sons[1] = dataSetup.popTree->pops[ancestralPop]->sons[1]->id;
-				taub[0] = max2(dataSetup.popTree->pops[sons[0]]->age,
-								dataSetup.popTree->pops[sons[1]]->age);
+				taub[0] = max2(dataSetup.popTree->pops[sons[0]]->age, dataSetup.popTree->pops[sons[1]]->age);
 				// MARK CHANGE
 				taub[0] = max2(taub[0], dataSetup.popTree->pops[sons[0]]->sampleAge);
 				taub[0] = max2(taub[0], dataSetup.popTree->pops[sons[1]]->sampleAge);
@@ -2907,23 +2707,15 @@ void UpdateTau(double *finetunes, int *accepted) {
 						taub[1] = dataSetup.popTree->pops[ancestralPop]->father->age;
 				}
 
-				int mig_band_loop;
+
 				// modify bounds according to migration bands - make sure all migration bands stay alive
-				for (mig_band_loop = 0; mig_band_loop < dataSetup.popTree->numMigBands;
-								mig_band_loop++) {
-						sourcePop_local =
-										dataSetup.popTree->migBands[mig_band_loop].sourcePop;
-						targetPop_local =
-										dataSetup.popTree->migBands[mig_band_loop].targetPop;
-						if (sourcePop_local == ancestralPop
-										|| targetPop_local == ancestralPop) {
-								taub[1] = min2(taub[1],
-												dataSetup.popTree->migBands[mig_band_loop].endTime);
-						} else if (sourcePop_local == sons[0] || sourcePop_local == sons[1]
-										|| targetPop_local == sons[0]
-										|| targetPop_local == sons[1]) {
-								taub[0] = max2(taub[0],
-												dataSetup.popTree->migBands[mig_band_loop].startTime);
+				for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
+						sourcePop = dataSetup.popTree->migBands[mig_band].sourcePop;
+						targetPop = dataSetup.popTree->migBands[mig_band].targetPop;
+						if (sourcePop == ancestralPop || targetPop == ancestralPop) {
+								taub[1] = min2(taub[1], dataSetup.popTree->migBands[mig_band].endTime);
+						} else if (sourcePop == sons[0] || sourcePop == sons[1] || targetPop == sons[0] || targetPop == sons[1]) {
+								taub[0] = max2(taub[0], dataSetup.popTree->migBands[mig_band].startTime);
 						}
 				}
 
@@ -2936,7 +2728,6 @@ void UpdateTau(double *finetunes, int *accepted) {
 				fprintf(ioSetup.debugFile, "  ancestral pop %d, proposing age shift: %g-->%g, ",ancestralPop, tauold, taunew);
 #endif
 				// set rubberband factors
-				int k = 0;
 				for (k = 0; k < 2; k++)
 						taufactor[k] = (taunew - taub[k]) / (tauold - taub[k]);
 
@@ -2949,121 +2740,101 @@ void UpdateTau(double *finetunes, int *accepted) {
 				//			printf("\nAffected migration bands, when adjusting ancestral pop %d split %f --> %f (taub[0] = %g, taub[1] = %g, taufactor[0] = %g, taufactor[1] = %g:\n",
 				//									ancestralPop, tauold, taunew,taub[0], taub[1],taufactor[0], taufactor[1]);
 				num_affected_mig_bands = 0;
-				for (mig_band_loop = 0; mig_band_loop < dataSetup.popTree->numMigBands;
-								mig_band_loop++) {
-						sourcePop_local =
-										dataSetup.popTree->migBands[mig_band_loop].sourcePop;
-						targetPop_local =
-										dataSetup.popTree->migBands[mig_band_loop].targetPop;
-						res = updateMigrationBandTimes(dataSetup.popTree, mig_band_loop);
+				for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
+						sourcePop = dataSetup.popTree->migBands[mig_band].sourcePop;
+						targetPop = dataSetup.popTree->migBands[mig_band].targetPop;
+						res = updateMigrationBandTimes(dataSetup.popTree, mig_band);
 
-						if ((sourcePop_local == sons[0] && targetPop_local == sons[1])
-										|| (sourcePop_local == sons[1] && targetPop_local == sons[0])) {
+						if ((sourcePop == sons[0] && targetPop == sons[1]) || (sourcePop == sons[1] && targetPop == sons[0])) {
 								// migration bands between son populations are actually not affected,
 								// but this makes future conditions simpler
 
-						} else if (targetPop_local == ancestralPop) {
+						} else if (targetPop == ancestralPop) {
 								// mig bands entering rubber-banded populations are not affected
 								// by the standard rubber band. We factor the times artificially
 								// so that after rubber-band they will be in the right spot
-								if (dataSetup.popTree->migBands[mig_band_loop].endTime
-												< taub[1]) {
-										//									printf("    mig band %d, type 1a.\n",mig_band_loop);
-										affected_mig_bands[num_affected_mig_bands] = mig_band_loop;
+								if (dataSetup.popTree->migBands[mig_band].endTime < taub[1]) {
+										//									printf("    mig band %d, type 1a.\n",mig_band);
+										affected_mig_bands[num_affected_mig_bands] = mig_band;
 										start_or_end[num_affected_mig_bands] = 0;//indicate that end time has changed
-										new_band_ages[num_affected_mig_bands] =
-														taub[1]
-																		+ (dataSetup.popTree->migBands[mig_band_loop].endTime
-																						- taub[1]) / taufactor[1];
+										new_band_ages[num_affected_mig_bands] = taub[1] + (dataSetup.popTree->migBands[mig_band].endTime - taub[1]) / taufactor[1];
 										num_affected_mig_bands++;
 								}
 								// do same with start time (if not bounded before and after by age of ancestralPop)
-								if (dataSetup.popTree->migBands[mig_band_loop].startTime
-												< taub[1]&& dataSetup.popTree->pops[sourcePop_local]->age > min2(tauold,taunew)) {
-										//									printf("    mig band %d, type 1b.\n",mig_band_loop);
-										affected_mig_bands[num_affected_mig_bands] = mig_band_loop;
+								if (dataSetup.popTree->migBands[mig_band].startTime < taub[1]&& dataSetup.popTree->pops[sourcePop]->age > min2(tauold,taunew)) {
+										//									printf("    mig band %d, type 1b.\n",mig_band);
+										affected_mig_bands[num_affected_mig_bands] = mig_band;
 										start_or_end[num_affected_mig_bands] = 1;//indicate that start time has changed
-										new_band_ages[num_affected_mig_bands] =
-														taub[1]
-																		+ (dataSetup.popTree->migBands[mig_band_loop].startTime
-																						- taub[1]) / taufactor[1];
+										new_band_ages[num_affected_mig_bands] = taub[1] + (dataSetup.popTree->migBands[mig_band].startTime - taub[1]) / taufactor[1];
 										num_affected_mig_bands++;
 								}
-						} else if (targetPop_local == sons[0]
-										|| targetPop_local == sons[1]) {
+						} else if (targetPop == sons[0] || targetPop == sons[1]) {
 								// same idea as previous condition, but with lower rubberband
-								if (dataSetup.popTree->migBands[mig_band_loop].startTime
-												> taub[0]) {
-										//									printf("    mig band %d, type 2a.\n",mig_band_loop);
-										affected_mig_bands[num_affected_mig_bands] = mig_band_loop;
+								if (dataSetup.popTree->migBands[mig_band].startTime > taub[0]) {
+										//									printf("    mig band %d, type 2a.\n",mig_band);
+										affected_mig_bands[num_affected_mig_bands] = mig_band;
 										start_or_end[num_affected_mig_bands] = 1;//indicate that start time has changed
-										new_band_ages[num_affected_mig_bands] =
-														taub[0]
-																		+ (dataSetup.popTree->migBands[mig_band_loop].startTime
-																						- taub[0]) / taufactor[0];
+										new_band_ages[num_affected_mig_bands] = taub[0] + (dataSetup.popTree->migBands[mig_band].startTime - taub[0]) / taufactor[0];
 										num_affected_mig_bands++;
 								}
 								// do same with start time (if not bounded before and after by age of ancestralPop)
-								if (dataSetup.popTree->migBands[mig_band_loop].endTime
-												> taub[0]&& dataSetup.popTree->pops[sourcePop_local]->father->age < max2(tauold,taunew)) {
-										affected_mig_bands[num_affected_mig_bands] = mig_band_loop;
+								if (dataSetup.popTree->migBands[mig_band].endTime > taub[0]&& dataSetup.popTree->pops[sourcePop]->father->age < max2(tauold,taunew)) {
+										affected_mig_bands[num_affected_mig_bands] = mig_band;
 										start_or_end[num_affected_mig_bands] = 0;//indicate that end time has changed
-										new_band_ages[num_affected_mig_bands] =
-														taub[0]
-																		+ (dataSetup.popTree->migBands[mig_band_loop].endTime
-																						- taub[0]) / taufactor[0];
+										new_band_ages[num_affected_mig_bands] = taub[0] + (dataSetup.popTree->migBands[mig_band].endTime - taub[0]) / taufactor[0];
 										num_affected_mig_bands++;
 										//									printf("    mig band %d, type 2b. New end time = %g, so end time is artificially set to %g\n",
-										//												 mig_band_loop, dataSetup.popTree->migBands[mig_band_loop].endTime, new_band_ages[num_affected_mig_bands-1]);
+										//												 mig_band, dataSetup.popTree->migBands[mig_band].endTime, new_band_ages[num_affected_mig_bands-1]);
 								}
-						} else if (res && sourcePop_local == ancestralPop) {
+						} else if (res && sourcePop == ancestralPop) {
 								// start time of this migration band changes with proposed change in tau
-								//							printf("    mig band %d, type 3.\n",mig_band_loop);
-								affected_mig_bands[num_affected_mig_bands] = mig_band_loop;
+								//							printf("    mig band %d, type 3.\n",mig_band);
+								affected_mig_bands[num_affected_mig_bands] = mig_band;
 								start_or_end[num_affected_mig_bands] = 1;//indicate that start time has changed
-								new_band_ages[num_affected_mig_bands] =
-												dataSetup.popTree->migBands[mig_band_loop].startTime;
+								new_band_ages[num_affected_mig_bands] = dataSetup.popTree->migBands[mig_band].startTime;
 								num_affected_mig_bands++;
-						} else if (res
-										&& (sourcePop_local == sons[0] || sourcePop_local == sons[1])) {
-								//							printf("    mig band %d, type 4.\n",mig_band_loop);
+						} else if (res && (sourcePop == sons[0] || sourcePop == sons[1])) {
+								//							printf("    mig band %d, type 4.\n",mig_band);
 								// end time of this migration band changes with proposed change in tau
-								affected_mig_bands[num_affected_mig_bands] = mig_band_loop;
+								affected_mig_bands[num_affected_mig_bands] = mig_band;
 								start_or_end[num_affected_mig_bands] = 0;//indicate that end time has changed
-								new_band_ages[num_affected_mig_bands] =
-												dataSetup.popTree->migBands[mig_band_loop].endTime;
+								new_band_ages[num_affected_mig_bands] = dataSetup.popTree->migBands[mig_band].endTime;
 								num_affected_mig_bands++;
 						}
 						//					else {
 						//							printf("not affected.\n");
 						//					}
 
+
+
+
 						/*
-						 //					printf("mig band %d (%d-->%d) - ",mig_band_loop, sourcePop_local,targetPop_local);
-						 if(		sourcePop_local == ancestralPop && res) {
+						 //					printf("mig band %d (%d-->%d) - ",mig_band, sourcePop,targetPop);
+						 if(		sourcePop == ancestralPop && res) {
 						 // start time of this migration band changes with proposed change in tau
-						 //							printf("above split.\n",mig_band_loop);
-						 affected_mig_bands[num_affected_mig_bands] = mig_band_loop;
+						 //							printf("above split.\n",mig_band);
+						 affected_mig_bands[num_affected_mig_bands] = mig_band;
 						 start_or_end[num_affected_mig_bands] = 1;			//indicate that start time has changed
-						 new_band_ages[num_affected_mig_bands] = max2(taunew, dataSetup.popTree->pops[targetPop_local]->age);
+						 new_band_ages[num_affected_mig_bands] = max2(taunew, dataSetup.popTree->pops[targetPop]->age);
 						 num_affected_mig_bands++;
-						 } else if(			(sourcePop_local  == sons[0] || sourcePop_local  == sons[1]) &&
-						 (targetPop_local  != sons[0] && targetPop_local  != sons[1]) && dataSetup.popTree->pops[targetPop_local]->father->age > min2(taunew,tauold)) {
-						 //							printf("below split.\n",mig_band_loop);
+						 } else if(			(sourcePop  == sons[0] || sourcePop  == sons[1]) &&
+						 (targetPop  != sons[0] && targetPop  != sons[1]) && dataSetup.popTree->pops[targetPop]->father->age > min2(taunew,tauold)) {
+						 //							printf("below split.\n",mig_band);
 						 // end time of this migration band changes with proposed change in tau
-						 affected_mig_bands[num_affected_mig_bands] = mig_band_loop;
+						 affected_mig_bands[num_affected_mig_bands] = mig_band;
 						 start_or_end[num_affected_mig_bands] = 0;			//indicate that end time has changed
-						 new_band_ages[num_affected_mig_bands] = min2(dataSetup.popTree->pops[targetPop_local]->father->age , taunew);
+						 new_band_ages[num_affected_mig_bands] = min2(dataSetup.popTree->pops[targetPop]->father->age , taunew);
 						 num_affected_mig_bands++;
 						 }
 						 //					else {
 						 //							printf("not affected.\n");
 						 //					}
 						 */
-				} // end of for(mig_band_loop)
+				} // end of for(mig_band)
 
 				// restoring old time for various computations - DIRTY !!!!
 				dataSetup.popTree->pops[ancestralPop]->age = tauold;
+
 
 				//      printf("\nConsidering UpdateTau for split of pop %d: %g-->%g. Num affected migration bands is %d.",ancestralPop,tauold,taunew, num_affected_mig_bands);
 
@@ -3072,10 +2843,8 @@ void UpdateTau(double *finetunes, int *accepted) {
 								ancestralPop, tauold,taunew,taub[0],taub[1],taufactor[0],taufactor[1]);
 #endif
 
-				lnacceptance = log(taunew / tauold)
-								* (dataSetup.popTree->pops[ancestralPop]->agePrior.alpha - 1)
-								- (taunew - tauold)
-												* dataSetup.popTree->pops[ancestralPop]->agePrior.beta;
+				lnacceptance = log(taunew / tauold) * (dataSetup.popTree->pops[ancestralPop]->agePrior.alpha - 1) -
+								(taunew - tauold) * dataSetup.popTree->pops[ancestralPop]->agePrior.beta;
 
 				dataDeltaLnLd = 0.0;
 				genDeltaLnLd = 0.0;
@@ -3099,8 +2868,8 @@ void UpdateTau(double *finetunes, int *accepted) {
 #endif
 				for (gen = 0; gen < dataSetup.numLoci; gen++) {
 						double age, new_age;
-						double genDeltaLnLd_local = 0, dataDeltaLnLd_local = 0;
-						int sourcePop, targetPop, fatherNode;
+						double genDeltaLnLd_mt = 0, dataDeltaLnLd_mt = 0;
+						int sourcePop_mt, targetPop_mt, fatherNode, inode;
 						unsigned short inORout = -1; // for potentially conflicting migration events
 
 						// We use this as a log to indicate locations at which an iteration occured
@@ -3116,11 +2885,10 @@ void UpdateTau(double *finetunes, int *accepted) {
 #ifdef CHECK_OPERATIONS
 								int ntj_gen[2];
 								ntj_gen[0] = ntj_gen[1] = 0;
-								int inode_c = 0;
-								for(inode_c=dataSetup.numSamples; inode_c<2*dataSetup.numSamples-1; inode_c++) {
-										t=getNodeAge(dataState.lociData[gen], inode_c);
+								for(inode=dataSetup.numSamples; inode<2*dataSetup.numSamples-1; inode++) {
+										t=getNodeAge(dataState.lociData[gen], inode);
 										if (t>=taub[0] && t<taub[1] &&
-														(nodePops[gen][inode_c] == ancestralPop || nodePops[gen][inode_c] == sons[0] || nodePops[gen][inode_c] == sons[1])) {
+														(nodePops[gen][inode] == ancestralPop || nodePops[gen][inode] == sons[0] || nodePops[gen][inode] == sons[1])) {
 												k = (t>=tauold && !isRoot); /* k=0: below; 1: above */
 												//									k = (t>=tauold); /* k=0: below; 1: above */
 												ntj_gen[k]++;
@@ -3145,71 +2913,57 @@ void UpdateTau(double *finetunes, int *accepted) {
 										if (mig_conflict == 0) {
 												int pop = -1;
 												int mig = genetree_migs[gen].living_mignodes[i];
-												int mig_band =
-																genetree_migs[gen].mignodes[mig].migration_band;
-												sourcePop = genetree_migs[gen].mignodes[mig].source_pop;
-												targetPop = genetree_migs[gen].mignodes[mig].target_pop;
+												int mig_band = genetree_migs[gen].mignodes[mig].migration_band;
+												sourcePop_mt = genetree_migs[gen].mignodes[mig].source_pop;
+												targetPop_mt = genetree_migs[gen].mignodes[mig].target_pop;
 												age = genetree_migs[gen].mignodes[mig].age;
 
-												if (age < taub[0] || age > taub[1])
-														continue;
+												if (age < taub[0] || age > taub[1]) continue;
 
 												// we assume here that there are no in/out migrations from root population.
-												if ((sourcePop == sons[0] && targetPop == sons[1])
-																|| (sourcePop == sons[1] && targetPop == sons[0])) {
+												if((sourcePop_mt == sons[0] && targetPop_mt == sons[1]) || (sourcePop_mt == sons[1] && targetPop_mt == sons[0])) {
 														// migration bands between son populations are actually not affected,
 														// but this makes future conditions simpler
 														ntj_gen1[0]++;
-												} else if (sourcePop == ancestralPop) {
+												} else if (sourcePop_mt == ancestralPop) {
 														inORout = 1;						// indicating out migration
-														event =
-																		genetree_migs[gen].mignodes[mig].target_event;
-														pop = targetPop;
+														event =	genetree_migs[gen].mignodes[mig].target_event;
+														pop = targetPop_mt;
 														new_age = taub[1] + taufactor[1] * (age - taub[1]);
 														// rubberBand only counts migrations coming into pops
 														ntj_gen1[1]++;
-												} else if (targetPop == ancestralPop) {
+												} else if (targetPop_mt == ancestralPop) {
 														inORout = 0;						// indicating in migration
-														event =
-																		genetree_migs[gen].mignodes[mig].source_event;
-														pop = sourcePop;
+														event = genetree_migs[gen].mignodes[mig].source_event;
+														pop = sourcePop_mt;
 														new_age = taub[1] + taufactor[1] * (age - taub[1]);
 														ntj_gen1[1]++;
-												} else if ((sourcePop == sons[0] || sourcePop == sons[1])
-																&& genetree_migs[gen].mignodes[mig].age
-																				> taub[0]) {
+												} else if ((sourcePop_mt == sons[0] || sourcePop_mt == sons[1]) && genetree_migs[gen].mignodes[mig].age > taub[0]) {
 														inORout = 1;						// indicating out migration
-														event =
-																		genetree_migs[gen].mignodes[mig].target_event;
-														pop = targetPop;
+														event = genetree_migs[gen].mignodes[mig].target_event;
+														pop = targetPop_mt;
 														new_age = taub[0] + taufactor[0] * (age - taub[0]);
 														// rubberBand only counts migrations coming into pops
 														ntj_gen1[0]++;
-												} else if ((targetPop == sons[0] || targetPop == sons[1])
-																&& genetree_migs[gen].mignodes[mig].age
-																				> taub[0]) {
+												} else if ((targetPop_mt == sons[0] || targetPop_mt == sons[1]) && genetree_migs[gen].mignodes[mig].age > taub[0]) {
 														inORout = 0;						// indicating in migration
-														event =
-																		genetree_migs[gen].mignodes[mig].source_event;
-														pop = sourcePop;
+														event = genetree_migs[gen].mignodes[mig].source_event;
+														pop = sourcePop_mt;
 														new_age = taub[0] + taufactor[0] * (age - taub[0]);
 														ntj_gen1[0]++;
 												}
 
 												if (event >= 0) {
-														int inode =
-																		genetree_migs[gen].mignodes[mig].gtree_branch;
+														inode = genetree_migs[gen].mignodes[mig].gtree_branch;
 														// check for conflicts
-														if (new_age
-																		>= dataSetup.popTree->migBands[mig_band].endTime) {
+														if (new_age	>= dataSetup.popTree->migBands[mig_band].endTime) {
 																//mig_conflict_gen = gen;
 																mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
 #endif
 																//											fprintf(ioSetup.debugMiscFile, "Mig conflict of type 1, mig-band %d, end time %g. ",mig_band, dataSetup.popTree->migBands[mig_band].endTime);
-														} else if (new_age
-																		<= dataSetup.popTree->migBands[mig_band].startTime) {
+														} else if (new_age <= dataSetup.popTree->migBands[mig_band].startTime) {
 																//mig_conflict_gen = gen;
 																mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
@@ -3218,19 +2972,13 @@ void UpdateTau(double *finetunes, int *accepted) {
 																//											fprintf(ioSetup.debugMiscFile, "Mig conflict of type 4, mig-band %d, start time %g. ",mig_band, dataSetup.popTree->migBands[mig_band].startTime);
 														} else if (inORout == 0 && new_age > age) {
 																// an incoming migration event can conflict with event directly above it
-																fatherNode = getNodeFather(
-																				dataState.lociData[gen], inode);
-																mig1 = findFirstMig(gen, inode,
-																				genetree_migs[gen].mignodes[mig].age);
-																if (mig1 >= 0
-																				&& genetree_migs[gen].mignodes[mig1].source_pop
-																								!= ancestralPop
-																				&& genetree_migs[gen].mignodes[mig1].source_pop
-																								!= sons[0]
-																				&& genetree_migs[gen].mignodes[mig1].source_pop
-																								!= sons[1]
-																				&& new_age
-																								>= genetree_migs[gen].mignodes[mig1].age) {
+																fatherNode = getNodeFather( dataState.lociData[gen], inode);
+																mig1 = findFirstMig(gen, inode, genetree_migs[gen].mignodes[mig].age);
+																if (mig1 >= 0 &&
+                                        genetree_migs[gen].mignodes[mig1].source_pop != ancestralPop &&
+																				genetree_migs[gen].mignodes[mig1].source_pop != sons[0] &&
+																				genetree_migs[gen].mignodes[mig1].source_pop != sons[1] &&
+																				new_age >= genetree_migs[gen].mignodes[mig1].age) {
 																		//mig_conflict_gen = gen;
 																		mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
@@ -3238,11 +2986,7 @@ void UpdateTau(double *finetunes, int *accepted) {
 #endif
 
 																		//													fprintf(ioSetup.debugMiscFile, "Mig conflict of type 2, mig-node %d, age %g." ,mig1, genetree_migs[gen].mignodes[mig1].age);
-																} else if (fatherNode >= 0
-																				&& new_age
-																								>= getNodeAge(
-																												dataState.lociData[gen],
-																												fatherNode)) {
+																} else if (fatherNode >= 0 && new_age >= getNodeAge( dataState.lociData[gen], fatherNode)) {
 																		//mig_conflict_gen = gen;
 																		mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
@@ -3252,26 +2996,19 @@ void UpdateTau(double *finetunes, int *accepted) {
 																}
 														} else if (inORout == 1 && new_age < age) {
 																// outgoing migration events can conflict with event directly below it
-																mig1 = findLastMig(gen, inode,
-																				genetree_migs[gen].mignodes[mig].age);
-																if (mig1 >= 0
-																				&& genetree_migs[gen].mignodes[mig1].target_pop
-																								!= ancestralPop
-																				&& genetree_migs[gen].mignodes[mig1].target_pop
-																								!= sons[0]
-																				&& genetree_migs[gen].mignodes[mig1].target_pop
-																								!= sons[1]
-																				&& new_age
-																								<= genetree_migs[gen].mignodes[mig1].age) {
+																mig1 = findLastMig(gen, inode, genetree_migs[gen].mignodes[mig].age);
+																if (mig1 >= 0 &&
+																				genetree_migs[gen].mignodes[mig1].target_pop != ancestralPop &&
+																				genetree_migs[gen].mignodes[mig1].target_pop != sons[0] &&
+																				genetree_migs[gen].mignodes[mig1].target_pop != sons[1] &&
+																				new_age <= genetree_migs[gen].mignodes[mig1].age) {
 																		//mig_conflict_gen = gen;
 																		mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
 #endif
 																		//													fprintf(ioSetup.debugMiscFile, "Mig conflict of type 5, mig-node %d, age %g." ,mig1, genetree_migs[gen].mignodes[mig1].age);
-																} else if (new_age
-																				<= getNodeAge(dataState.lociData[gen],
-																								inode)) {
+																} else if (new_age <= getNodeAge(dataState.lociData[gen], inode)) {
 																		//mig_conflict_gen = gen;
 																		mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
@@ -3284,12 +3021,9 @@ void UpdateTau(double *finetunes, int *accepted) {
 														if (mig_conflict != 1) {
 																//									printf("\n- Locus %d: moving migration event %d from age %g to age %g.",
 																//													gen, event, genetree_migs[gen].mignodes[mig].age, new_age);
-																locus_data[gen].rubberband_migs.orig_events[locus_data[gen].rubberband_migs.num_moved_events] =
-																				event;
-																locus_data[gen].rubberband_migs.pops[locus_data[gen].rubberband_migs.num_moved_events] =
-																				pop;
-																locus_data[gen].rubberband_migs.new_ages[locus_data[gen].rubberband_migs.num_moved_events] =
-																				new_age;
+																locus_data[gen].rubberband_migs.orig_events[locus_data[gen].rubberband_migs.num_moved_events] = event;
+																locus_data[gen].rubberband_migs.pops[locus_data[gen].rubberband_migs.num_moved_events] = pop;
+																locus_data[gen].rubberband_migs.new_ages[locus_data[gen].rubberband_migs.num_moved_events] = new_age;
 																locus_data[gen].rubberband_migs.num_moved_events++;
 																event = -1;
 														}
@@ -3302,7 +3036,7 @@ void UpdateTau(double *finetunes, int *accepted) {
 //#ifdef ENABLE_OMP_THREADS
 //#pragma omp flush (mig_conflict)
 //#endif
-								if (mig_conflict == 1) {
+								if (mig_conflict) {
 										//							printf("Mignodes requiring special updates:\n");
 										//							for(i=0; i<locus_data[gen].rubberband_migs.num_moved_events; i++) {
 										//									printf("mignode %d, event %d, pop %d, new age = %f.\n", event_chains[gen].events[locus_data[gen].rubberband_migs.orig_events[i]].node_id,
@@ -3315,62 +3049,40 @@ void UpdateTau(double *finetunes, int *accepted) {
 								} else {
 										// create new events for affected migration bands
 										for (i = 0; i < num_affected_mig_bands; i++) {
-												int mig_band = affected_mig_bands[i];
-												targetPop =
-																dataSetup.popTree->migBands[mig_band].targetPop;
-												for (event = event_chains[gen].first_event[targetPop];
-																event >= 0; event =
-																				event_chains[gen].events[event].next) {
-														if (event_chains[gen].events[event].node_id
-																		== mig_band
-																		&& ((start_or_end[i]
-																						&& event_chains[gen].events[event].type
-																										== MIG_BAND_START)
-																						|| event_chains[gen].events[event].type
-																										== MIG_BAND_END))
-																break;
+												mig_band = affected_mig_bands[i];
+												targetPop_mt = dataSetup.popTree->migBands[mig_band].targetPop;
+												for (event = event_chains[gen].first_event[targetPop_mt]; event >= 0; event = event_chains[gen].events[event].next) {
+														if (event_chains[gen].events[event].node_id == mig_band &&
+																		((start_or_end[i] && event_chains[gen].events[event].type == MIG_BAND_START) ||
+																						event_chains[gen].events[event].type == MIG_BAND_END))  break;
 												}
 												if (event < 0) {
 														if (debug) {
-																fprintf(stderr,
-																				"\nError: UpdateTau: couldn't find event for migration band %d in gen %d.\n",
-																				mig_band, gen);
+																fprintf(stderr, "\nError: UpdateTau: couldn't find event for migration band %d in gen %d.\n", mig_band, gen);
 														} else {
 																fprintf(stderr, "Fatal Error 0074.\n");
 														}
 														printGenealogyAndExit(gen, -1);
 												}
-												locus_data[gen].rubberband_migs.orig_events[locus_data[gen].rubberband_migs.num_moved_events] =
-																event;
-												locus_data[gen].rubberband_migs.pops[locus_data[gen].rubberband_migs.num_moved_events] =
-																targetPop;
-												locus_data[gen].rubberband_migs.new_ages[locus_data[gen].rubberband_migs.num_moved_events] =
-																new_band_ages[i];
+												locus_data[gen].rubberband_migs.orig_events[locus_data[gen].rubberband_migs.num_moved_events] = event;
+												locus_data[gen].rubberband_migs.pops[locus_data[gen].rubberband_migs.num_moved_events] = targetPop_mt;
+												locus_data[gen].rubberband_migs.new_ages[locus_data[gen].rubberband_migs.num_moved_events] = new_band_ages[i];
 												locus_data[gen].rubberband_migs.num_moved_events++;
 										}
 
 										// compute residual effects of rubber-band (before actual rubber-band
-										locus_data[gen].genDeltaLogLikelihood = rubberBandRipple(
-														gen, 1 /*do changes*/);
+										locus_data[gen].genDeltaLogLikelihood = rubberBandRipple( gen, 1 /*do changes*/);
 
 										// compute rubber band
 										if (isRoot) {
-												locus_data[gen].genDeltaLogLikelihood += rubberBand(gen,
-																ancestralPop, taub[0], tauold, taufactor[1],
-																0 /*don't change chain*/, &ntj_gen1[1]);
+												locus_data[gen].genDeltaLogLikelihood += rubberBand(gen, ancestralPop, taub[0], tauold, taufactor[1], 0 /*don't change chain*/, &ntj_gen1[1]);
 										} else {
-												locus_data[gen].genDeltaLogLikelihood += rubberBand(gen,
-																ancestralPop, taub[1], tauold, taufactor[1],
-																0 /*don't change chain*/, &ntj_gen1[1]);
+												locus_data[gen].genDeltaLogLikelihood += rubberBand(gen, ancestralPop, taub[1], tauold, taufactor[1], 0 /*don't change chain*/, &ntj_gen1[1]);
 										}
-										locus_data[gen].genDeltaLogLikelihood += rubberBand(gen,
-														sons[0], taub[0], tauold, taufactor[0],
-														0 /*don't change chain*/, &ntj_gen1[0]);
-										locus_data[gen].genDeltaLogLikelihood += rubberBand(gen,
-														sons[1], taub[0], tauold, taufactor[0],
-														0 /*don't change chain*/, &ntj_gen1[0]);
+										locus_data[gen].genDeltaLogLikelihood += rubberBand(gen, sons[0], taub[0], tauold, taufactor[0], 0 /*don't change chain*/, &ntj_gen1[0]);
+										locus_data[gen].genDeltaLogLikelihood += rubberBand(gen, sons[1], taub[0], tauold, taufactor[0], 0 /*don't change chain*/, &ntj_gen1[0]);
 
-										genDeltaLnLd_local += locus_data[gen].genDeltaLogLikelihood;
+										genDeltaLnLd_mt += locus_data[gen].genDeltaLogLikelihood;
 
 #ifdef CHECK_OPERATIONS
 										if( (!isRoot && (ntj_gen[0] != ntj_gen1[0] || ntj_gen[1] != ntj_gen1[1])) ||
@@ -3393,30 +3105,27 @@ void UpdateTau(double *finetunes, int *accepted) {
 										ntj[1] += ntj_gen1[1];
 
 										if (ntj_gen1[0] + ntj_gen1[1]) {
-												dataDeltaLnLd_local -= getLocusDataLikelihood(
-																dataState.lociData[gen]);
-												dataDeltaLnLd_local += computeLocusDataLikelihood(
-																dataState.lociData[gen], /*reuse old conditionals*/
-																1);
+												dataDeltaLnLd_mt -= getLocusDataLikelihood( dataState.lociData[gen]);
+												dataDeltaLnLd_mt += computeLocusDataLikelihood( dataState.lociData[gen], /*reuse old conditionals*/ 1);
 										}
 
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-										genDeltaLnLd += genDeltaLnLd_local;
+										genDeltaLnLd += genDeltaLnLd_mt;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-										dataDeltaLnLd += dataDeltaLnLd_local;
+										dataDeltaLnLd += dataDeltaLnLd_mt;
 								}
 						}
 				}						// end for(gen) - genealogy updates by rubberband
 
-				lnacceptance += dataDeltaLnLd + genDeltaLnLd
-								+ ntj[0] * log(taufactor[0]) + ntj[1] * log(taufactor[1]);
+				lnacceptance += dataDeltaLnLd + genDeltaLnLd + ntj[0] * log(taufactor[0]) + ntj[1] * log(taufactor[1]);
 				//			lnacceptance += totalDeltaLnLd;
 
 				//			fprintf(ioSetup.debugMiscFile, "Ancestral pop %d %g --> %g. Mig node age %g --> %g.\n",ancestralPop,tauold,taunew,age,new_age);
+
 
 #ifdef LOG_STEPS
 				if(mig_conflict) {
@@ -3444,8 +3153,7 @@ void UpdateTau(double *finetunes, int *accepted) {
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-						dataState.logLikelihood += (dataDeltaLnLd + genDeltaLnLd)
-										/ dataSetup.numLoci;
+						dataState.logLikelihood += (dataDeltaLnLd + genDeltaLnLd) / dataSetup.numLoci;
 
 						/*
 						 *
@@ -3460,36 +3168,26 @@ void UpdateTau(double *finetunes, int *accepted) {
 #endif
 						for (gen = 0; gen < dataSetup.numLoci; gen++) {
 								int dummy = 0;
-								locus_data[gen].genLogLikelihood +=
-												locus_data[gen].genDeltaLogLikelihood;
+								locus_data[gen].genLogLikelihood += locus_data[gen].genDeltaLogLikelihood;
 								// change gene trees, event chains, and likelihoods
 								if (isRoot) {
-										rubberBand(gen, ancestralPop, taub[0], tauold, taufactor[1],
-														1 /*change chain*/, &dummy);
+										rubberBand(gen, ancestralPop, taub[0], tauold, taufactor[1], 1 /*change chain*/, &dummy);
 								} else {
-										rubberBand(gen, ancestralPop, taub[1], tauold, taufactor[1],
-														1 /*change chain*/, &dummy);
+										rubberBand(gen, ancestralPop, taub[1], tauold, taufactor[1], 1 /*change chain*/, &dummy);
 								}
-								rubberBand(gen, sons[0], taub[0], tauold, taufactor[0],
-												1 /*change chain*/, &dummy);
-								rubberBand(gen, sons[1], taub[0], tauold, taufactor[0],
-												1 /*change chain*/, &dummy);
+								rubberBand(gen, sons[0], taub[0], tauold, taufactor[0], 1 /*change chain*/, &dummy);
+								rubberBand(gen, sons[1], taub[0], tauold, taufactor[0], 1 /*change chain*/, &dummy);
 
 								// accept genealogy changes
 								resetSaved(dataState.lociData[gen]);
 
 								// remove original added events for migrations and migration bands
 								int i = 0;
-								for (i = 0;
-												i < locus_data[gen].rubberband_migs.num_moved_events;
-												i++) {
+								for (i = 0; i < locus_data[gen].rubberband_migs.num_moved_events; i++) {
 										// set pointers from mignodes to new events
-										int mig =
-														event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].node_id;
-										if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].type
-														== IN_MIG) {
-												genetree_migs[gen].mignodes[mig].target_event =
-																locus_data[gen].rubberband_migs.new_events[i];
+										int mig = event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].node_id;
+										if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].type == IN_MIG) {
+												genetree_migs[gen].mignodes[mig].target_event = locus_data[gen].rubberband_migs.new_events[i];
 												// adjust ages of mignodes for migrations out of rubberband
 												// the ones coming in are adjusted in rubberBand.
 												genetree_migs[gen].mignodes[mig].age =
@@ -3517,7 +3215,8 @@ void UpdateTau(double *finetunes, int *accepted) {
 						if (isRoot) {
 								adjustRootEvents();
 						}
-				} else {
+				}
+        else {
 #ifdef LOG_STEPS
 						fprintf(ioSetup.debugFile, "rejecting.\n");
 #endif
@@ -3541,16 +3240,14 @@ void UpdateTau(double *finetunes, int *accepted) {
 #ifdef THREAD_UpdateTau
 #pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
+    						// start from gen before last and redo changes
 								for (gen = dataSetup.numLoci - 1; gen >= 0; --gen) {
 										// redo changes in events for migrations and mig bands.
 										revertToSaved(dataState.lociData[gen]);
 										rubberBandRipple(gen, 0 /*redo changes*/);
 								}
 						}
-						// start from gen before last and redo changes
-
 				}
-
 				/**
 				 if (!checkAll()) {
 				 printf("\n  --  Aborting after UpdateTau for ancestral pop %d, accepted = %d.\n",ancestralPop, didAccept);
@@ -3572,11 +3269,11 @@ void UpdateTau(double *finetunes, int *accepted) {
 				 }
 				 }
 				 **/
-
 		}					// end of for(ancestralPop)
-
 }
 /** end of UpdateTau **/
+
+
 
 /***********************************************************************************
  *	UpdateSampleAge
@@ -3588,32 +3285,33 @@ void UpdateTau(double *finetunes, int *accepted) {
  ***********************************************************************************/
 void UpdateSampleAge(double *finetunes, int *accepted) {
 
-		int gen, pop;
-		double ext_dataDeltaLnLd;
-		double ext_genDeltaLnLd = 0.0;
-		double ext_lnacceptance = 0;
-		double tauold, taunew, taub[2], taufactor[2];
-		int num_affected_mig_bands = 0, affected_mig_bands[MAX_MIG_BANDS],
-						start_or_end[MAX_MIG_BANDS];
-		int targetPop_local;
-		// int sourcePop_local; // unused
-		int mig_band;
-		double new_band_ages[MAX_MIG_BANDS];
+		int k=0, pop, gen;
 		int ntj[2];
-		int mig_conflict = 0;
+		double tauold, taunew, taub[2], taufactor[2];
+		double lnacceptance=0;
 
+		int mig_conflict = 0;
+		int num_affected_mig_bands = 0, affected_mig_bands[MAX_MIG_BANDS],	start_or_end[MAX_MIG_BANDS];
+		double new_band_ages[MAX_MIG_BANDS];
+		int mig_band;
+    double age = 0.0;
+    double dataDeltaLnLd, genDeltaLnLd;
+
+ // int sourcePop; // unused
+		int targetPop;
 		// UNUSED    unsigned short didAccept = 0;
+
 
 		for (pop = 0; pop < dataSetup.popTree->numCurPops; pop++) {
 				accepted[pop] = 0;
-				if (!dataSetup.popTree->pops[pop]->updateSampleAge)
-						continue;
+				if (!dataSetup.popTree->pops[pop]->updateSampleAge) continue;
 
 				tauold = dataSetup.popTree->pops[pop]->sampleAge;
-				ext_dataDeltaLnLd = 0.0;
-				ext_dataDeltaLnLd = 0.0;
+				dataDeltaLnLd = 0.0;
+        genDeltaLnLd  = 0.0;
 				taub[0] = 0.0;
 				taub[1] = dataSetup.popTree->pops[pop]->father->age;
+
 
 				//sample new time
 				taunew = tauold + finetunes[pop] * rnd2normal8();
@@ -3624,44 +3322,35 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 				fprintf(ioSetup.debugFile, "  pop %d, proposing sample age shift: %g-->%g, ",pop, tauold, taunew);
 #endif					
 				// set rubberband factors
-				int k = 0;
 				for (k = 0; k < 2; k++)
 						taufactor[k] = (taunew - taub[k]) / (tauold - taub[k]);
 
-				for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands;
-								mig_band++) {
-						int age;
-						// the next assignment is unused
-						//sourcePop_local = dataSetup.popTree->migBands[mig_band].sourcePop;
-						targetPop_local = dataSetup.popTree->migBands[mig_band].targetPop;
 
-						if (targetPop_local == pop) {
+        num_affected_mig_bands = 0;
+				for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
+						// the next assignment is unused
+						//sourcePop = dataSetup.popTree->migBands[mig_band].sourcePop;
+						targetPop = dataSetup.popTree->migBands[mig_band].targetPop;
+
+						if (targetPop == pop) {
 								// mig bands entering rubber-banded populations are not affected
 								// by the standard rubber band. We factor the times artificially
 								// so that after rubber-band they will be in the right spot
-								if (dataSetup.popTree->migBands[mig_band].endTime < taub[1]
-												&& dataSetup.popTree->migBands[mig_band].endTime
-																> taub[0]) {
+								if (dataSetup.popTree->migBands[mig_band].endTime < taub[1] && dataSetup.popTree->migBands[mig_band].endTime > taub[0]) {
 										//									printf("    mig band %d, type 1a.\n",mig_band);
 										affected_mig_bands[num_affected_mig_bands] = mig_band;
 										start_or_end[num_affected_mig_bands] = 0;//indicate that end time has changed
 										age = dataSetup.popTree->migBands[mig_band].endTime;
-										new_band_ages[num_affected_mig_bands] = taub[age > taunew]
-														+ (age - taub[age > taunew])
-																		/ taufactor[age > taunew];
+										new_band_ages[num_affected_mig_bands] = taub[age > taunew] + (age - taub[age > taunew]) / taufactor[age > taunew];
 										num_affected_mig_bands++;
 								}
 								// do same with start time
-								if (dataSetup.popTree->migBands[mig_band].startTime < taub[1]
-												&& dataSetup.popTree->migBands[mig_band].startTime
-																> taub[0]) {
+								if (dataSetup.popTree->migBands[mig_band].startTime < taub[1] && dataSetup.popTree->migBands[mig_band].startTime > taub[0]) {
 										//									printf("    mig band %d, type 1b.\n",mig_band);
 										affected_mig_bands[num_affected_mig_bands] = mig_band;
 										start_or_end[num_affected_mig_bands] = 1;//indicate that start time has changed
 										age = dataSetup.popTree->migBands[mig_band].startTime;
-										new_band_ages[num_affected_mig_bands] = taub[age > taunew]
-														+ (age - taub[age > taunew])
-																		/ taufactor[age > taunew];
+										new_band_ages[num_affected_mig_bands] = taub[age > taunew] + (age - taub[age > taunew])	/ taufactor[age > taunew];
 										num_affected_mig_bands++;
 								}
 						}
@@ -3670,27 +3359,28 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 						//}
 				} // end of for(mig_band)
 
+
 				// restoring old time for various computations - DIRTY !!!!
 				dataSetup.popTree->pops[pop]->sampleAge = tauold;
+
+
 
 #ifdef DEBUG_RUBBERBAND
 				printf("Performing rubber band on pop %d for sample age: times %g --> %g. Upper/lower bounds - %f / %f, factors: %f / %f.\n",
 								pop, tauold,taunew,taub[0],taub[1],taufactor[0],taufactor[1]);
 #endif							
 
-				//SAMPLEAGE: do we want to have a prior Gamma distribution associated with sample age?
-				ext_lnacceptance = log(taunew / tauold)
-								* (dataSetup.popTree->pops[pop]->agePrior.alpha - 1)
-								- (taunew - tauold)
-												* dataSetup.popTree->pops[pop]->agePrior.beta;
 
-				ext_dataDeltaLnLd = 0.0;
-				ext_dataDeltaLnLd = 0.0;
+				//SAMPLEAGE: do we want to have a prior Gamma distribution associated with sample age?
+				lnacceptance = log(taunew / tauold) * (dataSetup.popTree->pops[pop]->agePrior.alpha - 1) -
+								(taunew - tauold)	* dataSetup.popTree->pops[pop]->agePrior.beta;
+
+				dataDeltaLnLd = 0.0;
+        genDeltaLnLd  = 0.0;
 
 				// initialize -  no migration conflicts, and number of moved nodes
 				mig_conflict = 0;
 				ntj[0] = ntj[1] = 0;
-
 				// implement rubberband on all gen genealogies
 #ifdef THREAD_UpdateSampleAge
 #pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
@@ -3700,33 +3390,35 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 						locus_data[gen].mig_conflict_log = 0;
 
 						if (mig_conflict == 0) {
-								double dataDeltaLnLd = 0, genDeltaLnLd = 0;
+								double dataDeltaLnLd_mt = 0.0, genDeltaLnLd_mt = 0.0;
 
 								int inode;
 								int ntj_gen1[2];
 								int event = -1;
-								int new_age = 0.0, age = 0;
+								double new_age = 0.0, age_mt = 0.0;
 								int i, mig, mig1, migPop = -1;
-								int sourcePop, targetPop, fatherNode;
+								int sourcePop_mt, targetPop_mt, fatherNode;
 								unsigned short inORout = -1; // for potentially conflicting migration events
 
 								locus_data[gen].mig_conflict_log = 1;
 #ifdef CHECK_OPERATIONS
-								int l, t , ntj_gen[2];
-								ntj_gen[0] = ntj_gen[1] = 0;
-								for(inode=dataSetup.numSamples; inode<2*dataSetup.numSamples-1; inode++) {
-										t=getNodeAge(dataState.lociData[gen], inode);
-										if (t>=taub[0] && t<taub[1] &&
-														(nodePops[gen][inode] == pop)) {
-												l = (t>=tauold); /* k=0: below; 1: above */
-												//									k = (t>=tauold); /* k=0: below; 1: above */
-												ntj_gen[l]++;
-										}
-								}
+								int k1 , ntj_gen[2];
+                double t;
+      ntj_gen[0] = ntj_gen[1] = 0;
+      for(inode=dataSetup.numSamples; inode<2*dataSetup.numSamples-1; inode++) {
+        t=getNodeAge(dataState.lociData[gen], inode);
+        if (t>=taub[0] && t<taub[1] &&
+            (nodePops[gen][inode] == pop)) {
+          k1 = (t>=tauold); /* k1=0: below; 1: above */
+          //					k1 = (t>=tauold); /* k1=0: below; 1: above */
+          ntj_gen[k1]++;
+        }
+      }
 #endif
 
 								// deal with rubber-banded migration nodes, and their representation in
 								// non-rubberbanded populations
+
 
 								// printPopulationTree(dataSetup.popTree, stderr, 1);
 								// printLocusGenTree(dataState.lociData[gen], stderr, nodePops[gen], nodeEvents[gen]);
@@ -3738,109 +3430,79 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 								for (i = 0; i < genetree_migs[gen].num_migs; i++) {
 										if (mig_conflict == 0) {
 												mig = genetree_migs[gen].living_mignodes[i];
-												mig_band =
-																genetree_migs[gen].mignodes[mig].migration_band;
-												sourcePop = genetree_migs[gen].mignodes[mig].source_pop;
-												targetPop = genetree_migs[gen].mignodes[mig].target_pop;
-												age = genetree_migs[gen].mignodes[mig].age;
+												mig_band = genetree_migs[gen].mignodes[mig].migration_band;
+												sourcePop_mt = genetree_migs[gen].mignodes[mig].source_pop;
+												targetPop_mt = genetree_migs[gen].mignodes[mig].target_pop;
+												age_mt = genetree_migs[gen].mignodes[mig].age;
 
-												if (age < taub[0] || age > taub[1])
-														continue;
+												if(age_mt < taub[0] || age_mt > taub[1])		continue;
 
 												// we assume here that there are no in/out migrations from root population.
-												if (sourcePop == pop) {
+												if (sourcePop_mt == pop) {
 														inORout = 1;						// indicating out migration
-														event =
-																		genetree_migs[gen].mignodes[mig].target_event;
-														migPop = targetPop;
-														new_age = taub[age > tauold]
-																		+ taufactor[age > tauold]
-																						* (age - taub[age > tauold]);
+														event = genetree_migs[gen].mignodes[mig].target_event;
+														migPop = targetPop_mt;
+														new_age = taub[age_mt > tauold] + taufactor[age_mt > tauold]*(age_mt - taub[age_mt > tauold]);
 														// rubberBand only counts migrations coming into pops
-														ntj_gen1[age > tauold]++;
-												} else if (targetPop == pop) {
+														ntj_gen1[age_mt > tauold]++;
+												} else if(targetPop_mt == pop) {
 														inORout = 0;						// indicating in migration
-														event =
-																		genetree_migs[gen].mignodes[mig].source_event;
-														migPop = sourcePop;
-														new_age = taub[age > tauold]
-																		+ taufactor[age > tauold]
-																						* (age - taub[age > tauold]);
-														ntj_gen1[age > tauold]++;
+														event = genetree_migs[gen].mignodes[mig].source_event;
+														migPop = sourcePop_mt;
+														new_age = taub[age_mt > tauold] + taufactor[age_mt > tauold] * (age_mt - taub[age_mt > tauold]);
+														ntj_gen1[age_mt > tauold]++;
 												}
 
 												if (event >= 0) {
-														inode =
-																		genetree_migs[gen].mignodes[mig].gtree_branch;
+														inode = genetree_migs[gen].mignodes[mig].gtree_branch;
 														// check for conflicts
-														if (new_age
-																		>= dataSetup.popTree->migBands[mig_band].endTime) {
+														if (new_age >= dataSetup.popTree->migBands[mig_band].endTime) {
 																mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
 #endif
-														} else if (new_age
-																		<= dataSetup.popTree->migBands[mig_band].startTime) {
+														} else if(new_age <= dataSetup.popTree->migBands[mig_band].startTime) {
 																mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
 #endif
-														} else if (inORout == 0 && new_age > age) {
+														} else if (inORout == 0 && new_age > age_mt) {
 																// an incoming migration event can conflict with event directly above it
-																fatherNode = getNodeFather(
-																				dataState.lociData[gen], inode);
-																mig1 = findFirstMig(gen, inode,
-																				genetree_migs[gen].mignodes[mig].age);
-																if (mig1 >= 0
-																				&& genetree_migs[gen].mignodes[mig1].source_pop
-																								!= pop
-																				&& new_age
-																								>= genetree_migs[gen].mignodes[mig1].age) {
+																fatherNode = getNodeFather(dataState.lociData[gen], inode);
+																mig1 = findFirstMig(gen, inode, genetree_migs[gen].mignodes[mig].age);
+																if (mig1 >= 0 &&
+                                     genetree_migs[gen].mignodes[mig1].source_pop != pop && new_age >= genetree_migs[gen].mignodes[mig1].age) {
 																		mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
 #endif
-																} else if (fatherNode >= 0
-																				&& new_age
-																								>= getNodeAge(
-																												dataState.lociData[gen],
-																												fatherNode)) {
+																} else if(fatherNode >= 0 && new_age >= getNodeAge( dataState.lociData[gen], fatherNode)) {
 																		mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
 #endif
 																}
-														} else if (inORout == 1 && new_age < age) {
+														} else if (inORout == 1 && new_age < age_mt) {
 																// outgoing migration events can conflict with event directly below it
-																mig1 = findLastMig(gen, inode,
-																				genetree_migs[gen].mignodes[mig].age);
-																if (mig1 >= 0
-																				&& genetree_migs[gen].mignodes[mig1].target_pop
-																								!= pop
-																				&& new_age
-																								<= genetree_migs[gen].mignodes[mig1].age) {
+																mig1 = findLastMig(gen, inode, genetree_migs[gen].mignodes[mig].age);
+																if (mig1 >= 0 &&
+																				genetree_migs[gen].mignodes[mig1].target_pop!= pop && new_age<= genetree_migs[gen].mignodes[mig1].age) {
 																		mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
 #endif
-																} else if (new_age
-																				<= getNodeAge(dataState.lociData[gen],
-																								inode)) {
+																} else if (new_age <= getNodeAge(dataState.lociData[gen], inode)) {
 																		mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp flush (mig_conflict)
 #endif
 																}
 														}
-														//if (mig_conflict)
-														//	break;
+														//if (mig_conflict)   break;
 														if (mig_conflict == 0) {
-																locus_data[gen].rubberband_migs.orig_events[locus_data[gen].rubberband_migs.num_moved_events] =
-																				event;
-																locus_data[gen].rubberband_migs.pops[locus_data[gen].rubberband_migs.num_moved_events] =
-																				migPop;
-																locus_data[gen].rubberband_migs.new_ages[locus_data[gen].rubberband_migs.num_moved_events] =
-																				new_age;
+																locus_data[gen].rubberband_migs.orig_events[locus_data[gen].rubberband_migs.num_moved_events] = event;
+																locus_data[gen].rubberband_migs.pops[locus_data[gen].rubberband_migs.num_moved_events] = migPop;
+																locus_data[gen].rubberband_migs.new_ages[locus_data[gen].rubberband_migs.num_moved_events] = new_age;
 																locus_data[gen].rubberband_migs.num_moved_events++;
 																event = -1;
 														}
@@ -3855,51 +3517,33 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 										// create new events for affected migration bands
 										for (i = 0; i < num_affected_mig_bands; i++) {
 												mig_band = affected_mig_bands[i];
-												targetPop =
-																dataSetup.popTree->migBands[mig_band].targetPop;
-												for (event = event_chains[gen].first_event[targetPop];
-																event >= 0; event =
-																				event_chains[gen].events[event].next) {
-														if (event_chains[gen].events[event].node_id
-																		== mig_band
-																		&& ((start_or_end[i]
-																						&& event_chains[gen].events[event].type
-																										== MIG_BAND_START)
-																						|| event_chains[gen].events[event].type
-																										== MIG_BAND_END))
-																break;
+												targetPop_mt = dataSetup.popTree->migBands[mig_band].targetPop;
+												for (event = event_chains[gen].first_event[targetPop_mt]; event >= 0; event = event_chains[gen].events[event].next) {
+														if (event_chains[gen].events[event].node_id == mig_band &&
+																		((start_or_end[i] && event_chains[gen].events[event].type == MIG_BAND_START) ||
+																						event_chains[gen].events[event].type == MIG_BAND_END))   break;
 												}
 												if (event < 0) {
 														if (debug) {
-																fprintf(stderr,
-																				"\nError: UpdateSampleAge: couldn't find event for migration band %d in gen %d.\n",
-																				mig_band, gen);
+																fprintf(stderr, "\nError: UpdateSampleAge: couldn't find event for migration band %d in gen %d.\n", mig_band, gen);
 														} else {
 																fprintf(stderr, "Fatal Error 0174.\n");
 														}
 														printGenealogyAndExit(gen, -1);
 												}
-												locus_data[gen].rubberband_migs.orig_events[locus_data[gen].rubberband_migs.num_moved_events] =
-																event;
-												locus_data[gen].rubberband_migs.pops[locus_data[gen].rubberband_migs.num_moved_events] =
-																targetPop;
-												locus_data[gen].rubberband_migs.new_ages[locus_data[gen].rubberband_migs.num_moved_events] =
-																new_band_ages[i];
+												locus_data[gen].rubberband_migs.orig_events[locus_data[gen].rubberband_migs.num_moved_events] = event;
+												locus_data[gen].rubberband_migs.pops[locus_data[gen].rubberband_migs.num_moved_events] = targetPop_mt;
+												locus_data[gen].rubberband_migs.new_ages[locus_data[gen].rubberband_migs.num_moved_events] =  new_band_ages[i];
 												locus_data[gen].rubberband_migs.num_moved_events++;
 										}
 
 										// compute residual effects of rubber-band (before actual rubber-band
-										locus_data[gen].genDeltaLogLikelihood = rubberBandRipple(
-														gen, 1 /*do changes*/);
+										locus_data[gen].genDeltaLogLikelihood = rubberBandRipple(gen, 1 /*do changes*/);
 
-										locus_data[gen].genDeltaLogLikelihood += rubberBand(gen,
-														pop, taub[1], tauold, taufactor[1],
-														0 /*don't change chain*/, &ntj_gen1[1]);
-										locus_data[gen].genDeltaLogLikelihood += rubberBand(gen,
-														pop, taub[0], tauold, taufactor[0],
-														0 /*don't change chain*/, &ntj_gen1[0]);
+										locus_data[gen].genDeltaLogLikelihood += rubberBand(gen, pop, taub[1], tauold, taufactor[1], 0 /*don't change chain*/, &ntj_gen1[1]);
+										locus_data[gen].genDeltaLogLikelihood += rubberBand(gen, pop, taub[0], tauold, taufactor[0], 0 /*don't change chain*/, &ntj_gen1[0]);
 
-										genDeltaLnLd += locus_data[gen].genDeltaLogLikelihood;
+										genDeltaLnLd_mt += locus_data[gen].genDeltaLogLikelihood;
 
 #ifdef CHECK_OPERATIONS
 										if( (ntj_gen[0] != ntj_gen1[0] || ntj_gen[1] != ntj_gen1[1]) ||
@@ -3921,37 +3565,33 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 #endif
 										ntj[1] += ntj_gen1[1];
 
-										dataDeltaLnLd -= getLocusDataLikelihood(
-														dataState.lociData[gen]);
-										dataDeltaLnLd += computeLocusDataLikelihood(
-														dataState.lociData[gen], /*reuse old conditionals*/
-														1);
+										dataDeltaLnLd_mt -= getLocusDataLikelihood(dataState.lociData[gen]);
+										dataDeltaLnLd_mt += computeLocusDataLikelihood(dataState.lociData[gen], /*reuse old conditionals*/ 1);
 
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-										ext_dataDeltaLnLd += dataDeltaLnLd;
+										dataDeltaLnLd += dataDeltaLnLd_mt;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-										ext_genDeltaLnLd += genDeltaLnLd;
+										genDeltaLnLd += genDeltaLnLd_mt;
 								}
 						}
 				} // end for(gen) - genealogy updates by rubberband
 
-				ext_lnacceptance += ext_dataDeltaLnLd + ext_genDeltaLnLd
-								+ ntj[0] * log(taufactor[0]) + ntj[1] * log(taufactor[1]);
+				lnacceptance += dataDeltaLnLd + genDeltaLnLd + ntj[0] * log(taufactor[0]) + ntj[1] * log(taufactor[1]);
+
 
 #ifdef LOG_STEPS
 				if(mig_conflict) {
 						fprintf(ioSetup.debugFile, "migration conflict at gen %d, ", gen);
 				} else {
-						fprintf(ioSetup.debugFile, "lnacceptance = %g, ",ext_lnacceptance);
+						fprintf(ioSetup.debugFile, "lnacceptance = %g, ",lnacceptance);
 				}
 #endif
 				//No migraton conflict   Positive acceptance    accept some even if acceptance below 0 based on random probability
-				if (!mig_conflict
-								&& (ext_lnacceptance >= 0 || rndu() < exp(ext_lnacceptance))) {
+				if (!mig_conflict && (lnacceptance >= 0 || rndu() < exp(lnacceptance))) {
 
 #ifdef LOG_STEPS
 						fprintf(ioSetup.debugFile, "accepting.\n");
@@ -3961,53 +3601,39 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-						dataState.dataLogLikelihood += ext_dataDeltaLnLd;
+						dataState.dataLogLikelihood += dataDeltaLnLd;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-						dataState.logLikelihood += (ext_dataDeltaLnLd + ext_genDeltaLnLd)
-										/ dataSetup.numLoci;
+						dataState.logLikelihood += (dataDeltaLnLd + genDeltaLnLd) / dataSetup.numLoci;
 #ifdef THREAD_UpdateSampleAge
 #pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
 						for (gen = 0; gen < dataSetup.numLoci; gen++) {
-
 								int i = 0, dummy = 0;
-								locus_data[gen].genLogLikelihood +=
-												locus_data[gen].genDeltaLogLikelihood;
+								locus_data[gen].genLogLikelihood += locus_data[gen].genDeltaLogLikelihood;
 								// change gene trees, event chains, and likelihoods
-								rubberBand(gen, pop, taub[1], tauold, taufactor[1],
-												1 /*change chain*/, &dummy);
-								rubberBand(gen, pop, taub[0], tauold, taufactor[0],
-												1 /*change chain*/, &dummy);
+								rubberBand(gen, pop, taub[1], tauold, taufactor[1], 1 /*change chain*/, &dummy);
+								rubberBand(gen, pop, taub[0], tauold, taufactor[0], 1 /*change chain*/, &dummy);
 
 								// accept genealogy changes
 								resetSaved(dataState.lociData[gen]);
 
 								// remove original added events for migrations and migration bands
-								for (i = 0;
-												i < locus_data[gen].rubberband_migs.num_moved_events;
-												i++) {
+								for (i = 0; i < locus_data[gen].rubberband_migs.num_moved_events; i++) {
 										// set pointers from mignodes to new events
-										int mig =
-														event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].node_id;
-										if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].type
-														== IN_MIG) {
-												genetree_migs[gen].mignodes[mig].target_event =
-																locus_data[gen].rubberband_migs.new_events[i];
+										int mig = event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].node_id;
+										if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].type == IN_MIG) {
+												genetree_migs[gen].mignodes[mig].target_event = locus_data[gen].rubberband_migs.new_events[i];
 												// adjust ages of mignodes for migrations out of rubberband
 												// the ones coming in are adjusted in rubberBand.
 												// THIS IS TO ENSURE CORRECTLY ADDRESSING MIGRATIONS BETWEEN TWO CHILDREN POPULATIONS
 												// AFFECTED BY THE RUBBER BAND
-												genetree_migs[gen].mignodes[mig].age =
-																locus_data[gen].rubberband_migs.new_ages[i];
-										} else if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].type
-														== OUT_MIG) {
-												genetree_migs[gen].mignodes[mig].source_event =
-																locus_data[gen].rubberband_migs.new_events[i];
+												genetree_migs[gen].mignodes[mig].age = locus_data[gen].rubberband_migs.new_ages[i];
+										} else if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].type == OUT_MIG) {
+												genetree_migs[gen].mignodes[mig].source_event = locus_data[gen].rubberband_migs.new_events[i];
 										}
-										removeEvent(gen,
-														locus_data[gen].rubberband_migs.orig_events[i]);
+										removeEvent(gen, locus_data[gen].rubberband_migs.orig_events[i]);
 								}
 								locus_data[gen].rubberband_migs.num_moved_events = 0;
 						}            // end of for(gen) - implement genealogy changes
@@ -4015,7 +3641,8 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 						// commit to new sample age [ no need to change mig-band times - these were changed already ]
 						dataSetup.popTree->pops[pop]->sampleAge = taunew;
 
-				} else {
+				}
+        else {
 #ifdef LOG_STEPS
 						fprintf(ioSetup.debugFile, "rejecting.\n");
 #endif
@@ -4069,6 +3696,8 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 }
 /** end of UpdateSampleAge **/
 
+
+
 /***********************************************************************************
  *	UpdateLocusRate
  *	- perturbs locus-specific mutation rates
@@ -4092,8 +3721,7 @@ int UpdateLocusRate(double finetune) {
 		}
 
 		for (gen = 0; gen < dataSetup.numLoci; gen++) {
-				if (gen == genRateRef)
-						continue;
+				if (gen == genRateRef)	continue;
 				rrefold = getLocusMutationRate(dataState.lociData[genRateRef]);
 				rold = getLocusMutationRate(dataState.lociData[gen]);
 				rnew = rold + finetune * rnd2normal8();
@@ -4110,16 +3738,12 @@ int UpdateLocusRate(double finetune) {
 				// maybe this needs to be factored by the number of loci??
 				// Does not matter when varRatesAlpha = 1.0 !
 				// CHECK THIS !!!
-				lnacceptance = (mcmcSetup.varRatesAlpha - 1)
-								* log((rnew * rrefnew) / (rold * rrefold));
+				lnacceptance = (mcmcSetup.varRatesAlpha - 1) * log((rnew * rrefnew) / (rold * rrefold));
 
 				// compute delta in log likelihood of gen and reference gen
-				lnLd = -(getLocusDataLikelihood(dataState.lociData[gen])
-								+ getLocusDataLikelihood(dataState.lociData[genRateRef]));
-				lnLd += computeLocusDataLikelihood(dataState.lociData[gen], /*recompute from scratch*/
-				0);
-				lnLd += computeLocusDataLikelihood(dataState.lociData[genRateRef], /*recompute from scratch*/
-				0);
+				lnLd = -(getLocusDataLikelihood(dataState.lociData[gen]) + getLocusDataLikelihood(dataState.lociData[genRateRef]));
+				lnLd += computeLocusDataLikelihood(dataState.lociData[gen], /*recompute from scratch*/ 0);
+				lnLd += computeLocusDataLikelihood(dataState.lociData[genRateRef], /*recompute from scratch*/ 0);
 
 				lnacceptance += lnLd;
 
@@ -4130,24 +3754,14 @@ int UpdateLocusRate(double finetune) {
 #ifdef LOG_STEPS
 						fprintf(ioSetup.debugFile, "accepting.\n");
 #endif
-
-#ifdef ENABLE_OMP_THREADS
-#pragma omp atomic
-#endif
 						accepted++;
-#ifdef ENABLE_OMP_THREADS
-#pragma omp atomic
-#endif
 						dataState.dataLogLikelihood += lnLd;
-#ifdef ENABLE_OMP_THREADS
-#pragma omp atomic
-#endif
 						dataState.logLikelihood += lnLd / dataSetup.numLoci;
 						resetSaved(dataState.lociData[gen]);
 						resetSaved(dataState.lociData[genRateRef]);
-						dataState.rateVar += (rnew * rnew + rrefnew * rrefnew - rold * rold
-										- rrefold * rrefold) / dataSetup.numLoci;
-				} else {
+						dataState.rateVar += (rnew * rnew + rrefnew * rrefnew - rold * rold - rrefold * rrefold) / dataSetup.numLoci;
+				}
+        else {
 #ifdef LOG_STEPS
 						fprintf(ioSetup.debugFile, "rejecting.\n");
 #endif
@@ -4161,6 +3775,8 @@ int UpdateLocusRate(double finetune) {
 }
 /** end of UpdateLocusRate **/
 
+
+
 /***********************************************************************************
  *	mixing
  *	- scales all population parameters by  a uniform constant
@@ -4172,10 +3788,10 @@ int UpdateLocusRate(double finetune) {
 int mixing(double finetune) {
 		double xold, xnew, c, lnc, lnacceptance, dataDeltaLnLd, genDeltaLnLd;
 
-		int gen, num_events;
-		int ext_mig_band = 0, ext_pop = 0;
+		int gen, mig_band = 0, pop = 0, num_events;
 
 		unsigned short rejectIssue = 0;	// a flag which indicates if found any issue that results in a-priori rejection
+
 
 		if (finetune <= 0.0) {
 				return 0;
@@ -4190,54 +3806,42 @@ int mixing(double finetune) {
 
 		// compute number of coalescent and migration events whose age is scaled
 		num_events = 0;
-		for (ext_pop = 0; ext_pop < dataSetup.popTree->numPops; ext_pop++) {
-				num_events += genetree_stats_total.num_coals[ext_pop];
+		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+				num_events += genetree_stats_total.num_coals[pop];
 		}
-		for (ext_mig_band = 0; ext_mig_band < dataSetup.popTree->numMigBands;
-						ext_mig_band++) {
-				num_events += genetree_stats_total.num_migs[ext_mig_band];
+		for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
+				num_events += genetree_stats_total.num_migs[mig_band];
 		}
 
 		// proposal ratio - note that migration rates are scaled in the other direction
-		lnacceptance = lnc
-						* (2 * dataSetup.popTree->numPops - dataSetup.popTree->numCurPops
-										- dataSetup.popTree->numMigBands + num_events);
+		lnacceptance = lnc * (2 * dataSetup.popTree->numPops - dataSetup.popTree->numCurPops - dataSetup.popTree->numMigBands + num_events);
 		//	lnacceptance = lnc;
 
 		dataDeltaLnLd = 0.0;
 		genDeltaLnLd = 0.0;
-		for (ext_pop = 0; ext_pop < dataSetup.popTree->numPops; ext_pop++) {
-				xold = dataSetup.popTree->pops[ext_pop]->theta;
-				dataSetup.popTree->pops[ext_pop]->theta = xnew = xold * c;
-				lnacceptance += lnc
-								* (dataSetup.popTree->pops[ext_pop]->thetaPrior.alpha - 1)
-								- (xnew - xold)
-												* dataSetup.popTree->pops[ext_pop]->thetaPrior.beta;
+		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+				xold = dataSetup.popTree->pops[pop]->theta;
+				dataSetup.popTree->pops[pop]->theta = xnew = xold * c;
+				lnacceptance += lnc * (dataSetup.popTree->pops[pop]->thetaPrior.alpha - 1) - (xnew - xold) * dataSetup.popTree->pops[pop]->thetaPrior.beta;
 				// change in genetree likelihoods is not in the stats
 				// because times and rates are scaled together.
 				// the difference is only in coalescence/migration densities.
 				// this actually cancels out with proposal ratio.
-				genDeltaLnLd -= lnc * genetree_stats_total.num_coals[ext_pop];
-				if (ext_pop < dataSetup.popTree->numCurPops
-								&& dataSetup.popTree->pops[ext_pop]->sampleAge > 0.0) {
-						dataSetup.popTree->pops[ext_pop]->sampleAge *= c;
+				genDeltaLnLd -= lnc * genetree_stats_total.num_coals[pop];
+				if (pop < dataSetup.popTree->numCurPops&& dataSetup.popTree->pops[pop]->sampleAge > 0.0) {
+						dataSetup.popTree->pops[pop]->sampleAge *= c;
 				}
 		}
-		for (ext_pop = dataSetup.popTree->numCurPops;
-						ext_pop < dataSetup.popTree->numPops; ext_pop++) {
+		for (pop = dataSetup.popTree->numCurPops; pop < dataSetup.popTree->numPops; pop++) {
 				// consider also current populations with ancient samples
-				xold = dataSetup.popTree->pops[ext_pop]->age;
-				dataSetup.popTree->pops[ext_pop]->age = xnew = xold * c;
-				lnacceptance += lnc
-								* (dataSetup.popTree->pops[ext_pop]->agePrior.alpha - 1)
-								- (xnew - xold)
-												* dataSetup.popTree->pops[ext_pop]->agePrior.beta;
+				xold = dataSetup.popTree->pops[pop]->age;
+				dataSetup.popTree->pops[pop]->age = xnew = xold * c;
+				lnacceptance += lnc * (dataSetup.popTree->pops[pop]->agePrior.alpha - 1) - (xnew - xold) * dataSetup.popTree->pops[pop]->agePrior.beta;
 		}
-		for (ext_mig_band = 0; ext_mig_band < dataSetup.popTree->numMigBands;
-						ext_mig_band++) {
+		for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
 				// migration rates are scaled inversely
-				xold = dataSetup.popTree->migBands[ext_mig_band].migRate;
-				dataSetup.popTree->migBands[ext_mig_band].migRate = xnew = xold / c;
+				xold = dataSetup.popTree->migBands[mig_band].migRate;
+				dataSetup.popTree->migBands[mig_band].migRate = xnew = xold / c;
 				// see if migration rate got out of bounds
 				//			if(xnew < 0.00001 || xnew > dataSetup.popTree->migBands[mig_band].upperBound) {
 				//			if(xold > 0 && xnew < 0.0000001 || xnew > MAX_MIG_RATE) {
@@ -4247,19 +3851,14 @@ int mixing(double finetune) {
 				//					rejectIssue = 1;
 				//			}
 				// GAMMA PRIOR
-				lnacceptance +=
-								-lnc
-												* (dataSetup.popTree->migBands[ext_mig_band].migRatePrior.alpha
-																- 1)
-												- (xnew - xold)
-																* dataSetup.popTree->migBands[ext_mig_band].migRatePrior.beta;
-				dataSetup.popTree->migBands[ext_mig_band].startTime *= c;
-				dataSetup.popTree->migBands[ext_mig_band].endTime *= c;
+				lnacceptance += -lnc * (dataSetup.popTree->migBands[mig_band].migRatePrior.alpha - 1) - (xnew - xold) * dataSetup.popTree->migBands[mig_band].migRatePrior.beta;
+				dataSetup.popTree->migBands[mig_band].startTime *= c;
+				dataSetup.popTree->migBands[mig_band].endTime *= c;
 				// change in genetree likelihoods is not in the stats
 				// because times and rates are scaled together.
 				// the difference is only in coalescence/migration densities.
 				// this actually cancels out with proposal ratio.
-				genDeltaLnLd -= lnc * genetree_stats_total.num_migs[ext_mig_band];
+				genDeltaLnLd -= lnc * genetree_stats_total.num_migs[mig_band];
 		}
 
 		if (!rejectIssue) {
@@ -4269,12 +3868,11 @@ int mixing(double finetune) {
 #endif
 				for (gen = 0; gen < dataSetup.numLoci; gen++) {
 						// scale age of nodes and compute delta likelihood
-						double dataDeltaLnLd_Temp = scaleAllNodeAges(
-										dataState.lociData[gen], c);
+						double dataDeltaLnLd_mt = scaleAllNodeAges( dataState.lociData[gen], c);
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-						dataDeltaLnLd += dataDeltaLnLd_Temp;
+						dataDeltaLnLd += dataDeltaLnLd_mt;
 				}
 
 				lnacceptance += (dataDeltaLnLd + genDeltaLnLd);
@@ -4292,39 +3890,33 @@ int mixing(double finetune) {
 #endif
 						for (gen = 0; gen < dataSetup.numLoci; gen++) {
 								resetSaved(dataState.lociData[gen]);
-								int mig = -1, mig_band = 0, pop = 0, i = 0;
+								int mig = -1, mig_band_mt = 0, pop_mt = 0, i = 0;
 								for (i = 0; i < genetree_migs[gen].num_migs; i++) {
 										mig = genetree_migs[gen].living_mignodes[i];
 										genetree_migs[gen].mignodes[mig].age *= c;
 								}
 
-								locus_data[gen].genLogLikelihood -= lnc
-												* (dataSetup.numSamples - 1
-																+ genetree_migs[gen].num_migs);
+								locus_data[gen].genLogLikelihood -= lnc	* (dataSetup.numSamples - 1 + genetree_migs[gen].num_migs);
 
 								// update all statistics by the constant
-								for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-										genetree_stats[gen].coal_stats[pop] *= c;
+								for (pop_mt=0; pop_mt<dataSetup.popTree->numPops; pop_mt++) {
+										genetree_stats[gen].coal_stats[pop_mt] *= c;
 								}
-								for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands;
-												mig_band++) {
-										genetree_stats[gen].mig_stats[mig_band] *= c;
+								for (mig_band_mt=0; mig_band_mt<dataSetup.popTree->numMigBands; mig_band_mt++) {
+										genetree_stats[gen].mig_stats[mig_band_mt] *= c;
 								}
 
 								// update elapsed times of all valid events
 								for (i = 0; i < event_chains[gen].total_events; i++) {
-										if (event_chains[gen].events[i].elapsed_time > 0)
-												event_chains[gen].events[i].elapsed_time *= c;
+										if (event_chains[gen].events[i].elapsed_time > 0) event_chains[gen].events[i].elapsed_time *= c;
 								}
 						}    // end of for(gen)
 
-						int mig_band = 0, pop = 0;
 						// update total statistics by the constant
 						for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
 								genetree_stats_total.coal_stats[pop] *= c;
 						}
-						for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands;
-										mig_band++) {
+						for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands;	mig_band++) {
 								genetree_stats_total.mig_stats[mig_band] *= c;
 						}
 #ifdef ENABLE_OMP_THREADS
@@ -4334,8 +3926,7 @@ int mixing(double finetune) {
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-						dataState.logLikelihood += (dataDeltaLnLd + genDeltaLnLd)
-										/ dataSetup.numLoci;
+						dataState.logLikelihood += (dataDeltaLnLd + genDeltaLnLd) / dataSetup.numLoci;
 						adjustRootEvents();
 
 						return 1;
@@ -4346,7 +3937,6 @@ int mixing(double finetune) {
 #ifdef LOG_STEPS
 		fprintf(ioSetup.debugFile, "rejecting.\n");
 #endif
-
 		if (!rejectIssue) {
 #ifdef THREAD_mixing
 #pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
@@ -4357,23 +3947,21 @@ int mixing(double finetune) {
 		}
 
 		// revert to old parameters and genealogies
-		for (ext_pop = 0; ext_pop < dataSetup.popTree->numPops; ext_pop++) {
-				dataSetup.popTree->pops[ext_pop]->theta /= c;
+		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+				dataSetup.popTree->pops[pop]->theta /= c;
 		}
 //  for(pop=dataSetup.popTree->numCurPops; pop<dataSetup.popTree->numPops; pop++) {
-		for (ext_pop = 0; ext_pop < dataSetup.popTree->numPops; ext_pop++) {
-				dataSetup.popTree->pops[ext_pop]->age /= c;
-				if (ext_pop < dataSetup.popTree->numCurPops
-								&& dataSetup.popTree->pops[ext_pop]->sampleAge > 0.0) {
-						dataSetup.popTree->pops[ext_pop]->sampleAge /= c;
+		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+				dataSetup.popTree->pops[pop]->age /= c;
+				if (pop < dataSetup.popTree->numCurPops && dataSetup.popTree->pops[pop]->sampleAge > 0.0) {
+						dataSetup.popTree->pops[pop]->sampleAge /= c;
 				}
 		}
-		for (ext_mig_band = 0; ext_mig_band < dataSetup.popTree->numMigBands;
-						ext_mig_band++) {
+		for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
 				// migration rates are scaled inversely
-				dataSetup.popTree->migBands[ext_mig_band].migRate *= c;
-				dataSetup.popTree->migBands[ext_mig_band].startTime /= c;
-				dataSetup.popTree->migBands[ext_mig_band].endTime /= c;
+				dataSetup.popTree->migBands[mig_band].migRate *= c;
+				dataSetup.popTree->migBands[mig_band].startTime /= c;
+				dataSetup.popTree->migBands[mig_band].endTime /= c;
   }
 
   return 0;
