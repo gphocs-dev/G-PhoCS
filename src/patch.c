@@ -5,7 +5,6 @@
 */
 
 #include "patch.h"
-//#include "MultiCoreUtils.h"
 #include <omp.h>
 
 
@@ -23,11 +22,15 @@ int GetMem (void)		{
   int gen, count, i, maxNodes = 2*dataSetup.numSamples-1;
   int leaf1, leaf2;
 
-  locus_data = (Locus_SuperStruct*) malloc (dataSetup.numLoci*sizeof(Locus_SuperStruct));
-
-  i = 0;
-
   // for debugging purposes   ELIMINATE LATER !!!!
+
+  locus_data = (Locus_SuperStruct*) malloc (dataSetup.numLoci*sizeof(Locus_SuperStruct));
+  if(locus_data == NULL) {
+
+    fprintf(stderr, "\nError: Out Of Memory genLogLikelihood.\n");
+    exit(-1);
+  }
+
 	
   // get mem for auxiliary node arrays
   nodePops = (int**)malloc(2*dataSetup.numLoci*sizeof(int*));
@@ -63,11 +66,6 @@ int GetMem (void)		{
     fprintf(stderr, "\nError: Out Of Memory genetree stats total partitioned.\n");
     exit(-1);
   }
-  /*rubberband_migs=(RUBBERBAND_MIGS*)malloc(dataSetup.numLoci*sizeof( RUBBERBAND_MIGS));
-  if(rubberband_migs == NULL) {
-    fprintf(stderr, "\nError: Out Of Memory rubberband migs.\n");
-    exit(-1);
-  }*/
   event_chains=(struct EVENT_CHAIN*)malloc(dataSetup.numLoci*sizeof(struct EVENT_CHAIN));
   if(event_chains == NULL) {
     fprintf(stderr, "\nError: Out Of Memory event chains.\n");
@@ -736,7 +734,8 @@ double rubberBand(int gen, int pop, double static_point, double moving_point, do
 #ifdef DEBUG_RUBBERBAND
         if(age < end_time) printf("\nrubber band for pop %d, gen %d ended at end-chain (%g time to go).\n",pop,gen, end_time- age);
 #endif
-        age = end_time; break;
+        age = end_time;
+        break;
       default:
         break;
     }// end of switch

@@ -4,17 +4,17 @@
 CC=@gcc
 
 # Multi threading enabling flag
-ENABLE_OMP_THREADS = 1 
+# ENABLE_OMP_THREADS = 1 
 
 #CC=/usr/bin/i586-mingw32msvc-gcc 
 #AR=/usr/bin/i586-mingw32msvc-ar
 
 # compiler options
 #Debugging
-CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -std=c99 -fopenmp -ggdb
+#CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -fopenmp -ggdb
 
 #Production
-#CFLAGS+= -fstack-protector-all -Wall -O3  -std=c99 
+CFLAGS+= -fstack-protector-all -Wall -O3   
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty
