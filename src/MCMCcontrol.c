@@ -76,6 +76,7 @@ int initGeneralInfo() {
 	strcpy(ioSetup.seqFileName,"NONE");
 	strcpy(ioSetup.rateFileName,"NONE");
 	strcpy(ioSetup.nodeStatsFileName, "NONE");
+	strcpy(ioSetup.combStatsFileName, "NONE");
 	strcpy(ioSetup.traceFileName, "mcmc-trace.out");
 
 	ioSetup.samplesPerLog 	= 100;
@@ -476,8 +477,7 @@ char* getNextToken(FILE* file, char* space) {
   res =	fscanf(file,"%s",space);
   if(0 > res)
     return space;
-  while(!feof(file) && space[0] == '#')
-  {
+  while(!feof(file) && space[0] == '#')   {
     flushLine(file);
     res = fscanf(file,"%s",space);
     if(0 > res)
@@ -592,6 +592,8 @@ int readGeneralInfo(FILE* fctl) {
 			strncpy(ioSetup.traceFileName, token2, NAME_LENGTH-1);
 		} else if(0 == strcmp("coal-stats-file",token)) {
 			strncpy(ioSetup.nodeStatsFileName, token2, NAME_LENGTH-1);
+		} else if(0 == strcmp("comb-stats-file",token)) {
+			strncpy(ioSetup.combStatsFileName, token2, NAME_LENGTH-1);
 		} else if(0 == strcmp("num-pop-partitions",token)) {
 			if (sscanf(token2, "%d", &dataSetup.numPopPartitions) != 1 || dataSetup.numPopPartitions <= 0) {
 				fprintf(stderr,"Error: value for num-pop-partitions should be positive integer, got %s.\n", token2);
@@ -1269,7 +1271,7 @@ int readSampleLine(char* sampleLine, int pop) {
 	nameORformat = 1;
 	while(str != NULL) {
 		if(nameORformat == 0) {
-			if((str[0] != 'h' && str[0] != 'd')) {
+			if(strlen(str) != 1 || (str[0] != 'h' && str[0] != 'd')) {
 				fprintf(stderr, "Error: faulty format %s for sample pop %d. Expected h or d.\n",str,pop+1);
 				numErrors++;
 			}

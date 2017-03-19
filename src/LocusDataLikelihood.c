@@ -202,9 +202,6 @@ LocusData* createLocusData (int numLeaves, unsigned short hetMode) {
   locusData->seqData.numPatterns = 0;
 
   // initialize node data structures (other than conditional array
-#ifdef THREAD_COUNT_LDL
-  #pragma omp parallel for private(node) num_threads(THREAD_COUNT_LDL)
-#endif
   for(node=0; node<2*numNodes; node++) {
     locusData->nodeArray_m[node].conditionalProbs = NULL;
     locusData->nodeArray_m[node].age = 0.0;
@@ -214,9 +211,6 @@ LocusData* createLocusData (int numLeaves, unsigned short hetMode) {
   }
 	
   // initialize node pointers
-#ifdef THREAD_COUNT_LDL
-  #pragma omp parallel for private(node) num_threads(THREAD_COUNT_LDL)
-#endif
   for(node=0; node<numNodes; node++) {
     locusData->nodeArray[node] = &locusData->nodeArray_m[2*node];			
     locusData->savedVersion.savedNodes[node] = &locusData->nodeArray_m[2*node + 1];			
@@ -269,9 +263,6 @@ int initializeLocusData(LocusData* locusData, char** patternArray, int numPatter
   locusData->seqData.patternList = locusData->intArray_m + numPatterns;
   locusData->seqData.patternCount = locusData->intArray_m + 2*numPatterns;
 
-#ifdef THREAD_COUNT_LDL
-  #pragma omp parallel for private(node) num_threads(THREAD_COUNT_LDL)
-#endif
   for(node=0; node < 2*locusData->numLeaves-1; node++) {
     locusData->nodeArray[node]->conditionalProbs = locusData->doubleArray_m + (2*node)*numPatterns*CODE_SIZE;
     locusData->savedVersion.savedNodes[node]->conditionalProbs = locusData->doubleArray_m + (2*node+1)*numPatterns*CODE_SIZE;
@@ -281,7 +272,6 @@ int initializeLocusData(LocusData* locusData, char** patternArray, int numPatter
   locusData->seqData.numPatterns = 0;
   locusData->seqData.numLivePatterns = 0;
   unphasedPatt = 0;
-
 
   for(patt=0; patt<numPatterns; patt++) {
     locusData->seqData.numPhases[patt] = numPhases[patt];
@@ -441,9 +431,6 @@ double computeLocusDataLikelihood (LocusData* locusData, unsigned short useOldCo
   if(locusData->seqData.numLivePatterns == 0) return 0.0;
 	
   if(!useOldConditionals) {
-#ifdef THREAD_COUNT_LDL
-  #pragma omp parallel for private(node) num_threads(THREAD_COUNT_LDL)
-#endif
     for(node = locusData->numLeaves; node < 2*locusData->numLeaves-1; node++) {
       copyNodeConditionals(locusData,node);
     }
@@ -510,9 +497,6 @@ double computePatternLogLikelihood (LocusData* locusData, int numPatterns, int* 
   // sum over root conditionals assuming uniform distribution at root
   double logLikelihood = 0.0;
 
-#ifdef THREAD_COUNT_LDL
-  #pragma omp parallel for private(patt) num_threads(THREAD_COUNT_LDL)
-#endif
 	for (patt = 0; patt < numPatterns; patt++) {
 		int  conditional;
 		int pattId = patternIds[patt];
@@ -523,9 +507,6 @@ double computePatternLogLikelihood (LocusData* locusData, int numPatterns, int* 
 					locusData->nodeArray[locusData->root]->conditionalProbs[pattId
 							* CODE_SIZE + conditional];
 		}
-#ifdef ENABLE_OMP_THREADS
-#pragma omp atomic
-#endif
 		logLikelihood += log(prob / numConditionals) * patternCounts[patt];
 	}
 	
@@ -547,9 +528,6 @@ double computeLocusDataLikelihood_deb (LocusData* locusData, unsigned short useO
   if(locusData->seqData.numLivePatterns == 0) return 0.0;
 	
   if(!useOldConditionals) {
-#ifdef THREAD_COUNT_LDL
-  #pragma omp parallel for private(node) num_threads(THREAD_COUNT_LDL)
-#endif
     for(node = locusData->numLeaves; node < 2*locusData->numLeaves-1; node++) {
       copyNodeConditionals(locusData,node);
     }
@@ -585,7 +563,6 @@ double computeLocusDataLikelihood_deb (LocusData* locusData, unsigned short useO
   //	printf("Locus likelihood computation:\n");
 	
   // sum over root conditionals assuming uniform distribution at root
-
   for(patt=0; patt<numLivePatterns; patt+=locusData->seqData.numPhases[pattId]) {
     pattId = locusData->seqData.patternList[patt];
     prob = 0.0;
@@ -789,8 +766,9 @@ int checkLocusDataLikelihood (LocusData* locusData) {
  *	- returns 0
  ***********************************************************************************/
 int revertToSaved(LocusData* locusData) {
-  int i;
+  int nodeId, i;
   LikelihoodNode** tmp_nodeArray;
+  double* conditionalPointer;
 	
 	
   //	printf("Reverting to saved version of locus\n");
@@ -822,12 +800,8 @@ int revertToSaved(LocusData* locusData) {
   //	printf("Reverting to saved version of locus (3)\n");
 	
   // replace all changed nodes with saved versions	
-#ifdef THREAD_COUNT_LDL
-  #pragma omp parallel for private(i) num_threads(THREAD_COUNT_LDL)
-#endif
   for(i=0; i<locusData->savedVersion.numChangedNodes; i++) {
-	double* conditionalPointer;
-    int nodeId = locusData->savedVersion.changedNodeIds[i];
+    nodeId = locusData->savedVersion.changedNodeIds[i];
     //		printf("Reverting node %d\n",nodeId);
     // switch entire pointer to node likelihood struct
     LikelihoodNode* tmp_node;
@@ -847,15 +821,8 @@ int revertToSaved(LocusData* locusData) {
 	
   // for nodes which have not been changed, but whose conditional probabilities have been recomputed
   // switch pointers to conditional array
-
-  //PARELEL REDUCE PERFORMANCE
-#ifdef THREAD_COUNT_LDL
-  #pragma omp parallel for private(i) num_threads(THREAD_COUNT_LDL)
-#endif
   for(i=0; i<locusData->savedVersion.numChangedConditionals; i++) {
-//	  printf("locusData->savedVersion.numChangedConditionals %d omp_get_num_threads() %d\n",locusData->savedVersion.numChangedConditionals,omp_get_num_threads());
-	double* conditionalPointer;
-    int nodeId = locusData->savedVersion.changedCondIds[i];
+    nodeId = locusData->savedVersion.changedCondIds[i];
     if(locusData->savedVersion.recalcConditionals[nodeId]) {
       // if conditionals were not already copied in previous loop, copy them now
       conditionalPointer = locusData->nodeArray[nodeId]->conditionalProbs;
@@ -934,19 +901,12 @@ double	scaleAllNodeAges(LocusData* locusData, double factor){
 	
 
   // save all fathers of leaves (for quick switch back to saved)
-#ifdef THREAD_COUNT_LDL
-  #pragma omp parallel for private(nodeId) num_threads(THREAD_COUNT_LDL)
-#endif
   for(nodeId = 0; nodeId < locusData->numLeaves; nodeId++) {
     locusData->savedVersion.savedNodes[nodeId]->father = locusData->nodeArray[nodeId]->father;
   }
 	
   // traverse all internal nodes and change age by factor
 //  for(nodeId = locusData->numLeaves; nodeId<2*locusData->numLeaves-1; nodeId++) {
-
-#ifdef THREAD_COUNT_LDL
-  #pragma omp parallel for private(nodeId) num_threads(THREAD_COUNT_LDL)
-#endif
   for(nodeId = 0; nodeId<2*locusData->numLeaves-1; nodeId++) {
     adjustGenNodeAge(locusData, nodeId, factor*locusData->nodeArray[nodeId]->age);
   }
@@ -1064,9 +1024,6 @@ int copyGenericTreeToLocus(LocusData* locusData, GenericBinaryTree* genericTree)
   int node, numNodes = 2*locusData->numLeaves - 1;
 
   locusData->root = genericTree->rootId;
-#ifdef THREAD_COUNT_LDL
-  #pragma omp parallel for private(node) num_threads(THREAD_COUNT_LDL)
-#endif
   for(node=0; node<numNodes; node++) {
     locusData->nodeArray[node]->father   = genericTree->father[node];
     locusData->nodeArray[node]->leftSon  = genericTree->leftSon[node];
@@ -1138,9 +1095,6 @@ void printLocusDataStats(LocusData* locusData, int maxStat)	{
   numColArray = numPattArray + maxStat + 1;
 	
   // initialize counts
-#ifdef THREAD_COUNT_LDL
-#pragma omp parallel for private(numHetsPerPatt) num_threads(THREAD_COUNT_LDL)
-#endif
   for(numHetsPerPatt=0; numHetsPerPatt<=maxStat; numHetsPerPatt++) {
     numColArray [numHetsPerPatt] = 0;
     numPattArray[numHetsPerPatt] = 0;
@@ -1431,9 +1385,6 @@ int computeLeafConditionals(LocusData* locusData, char* patternString)	{
       return -1;
     }// end of switch
     // copy conditionals to saved
-#ifdef THREAD_COUNT_LDL
-#pragma omp parallel for private(base) num_threads(THREAD_COUNT_LDL)
-#endif
     for(base=0; base<CODE_SIZE; base++) {
       conditionalsForSaved[base] = conditionals[base];
     }
@@ -1499,9 +1450,8 @@ int computeConditionalJC (LocusData* locusData, int nodeId, int numPatterns, int
   edgeLength = locusData->mutationRate * (node->age - rightSon->age);
   rightEdgeConditionalProb[1] = computeEdgeConditionalJC(edgeLength);
   rightEdgeConditionalProb[0] = 1 - 3.0*rightEdgeConditionalProb[1];
-#ifdef THREAD_COUNT_LDL
-#pragma omp parallel for private(patt) num_threads(THREAD_COUNT_LDL)
-#endif
+
+
   for (patt=0; patt < numPatterns; patt++) {
     int pattId = patternIds[patt];
     int base = 0;
@@ -1656,8 +1606,6 @@ int computeConditionalJC_new (LocusData* locusData, int nodeId, int numPatterns,
     //         nodeId, node->leftSon, node->rightSon,node->age, leftSon->age, rightSon->age,leftEdgeConditionalProb[0],rightEdgeConditionalProb[0]);
   }
 
-  // PERFORMANCE REDUCTION ON PARALEL LOOP HERE
-////#pragma omp parallel for private(patt) num_threads(THREAD_COUNT_LDL) if(numPatterns > THEAD_PARALEL_THRESHOLD)
   for (patt=0; patt < numPatterns; patt++) {
     int pattId = patternIds[patt];
 	int base = 1;
@@ -1716,7 +1664,6 @@ void computeSubtreeConditionals_new (double* sonConditionals, double* parentCond
 
   probSumTimesSubst = probSum * edgeSubstProb[0];
   
-
   for(base=0; base<CODE_SIZE; base++)  {
       parentConditionals[base] *= (probSumTimesSubst + sonConditionals[base]*edgeSubstProb[1]);
       //			printf(" %3lf",parentConditionals[fatherBase]);
@@ -1765,7 +1712,6 @@ int computePairwiseLCAs_rec (LocusData* locusData, int nodeId, int** lcaMatrix, 
   }
 
   // fill in matrix elements with node id
-//#pragma omp parallel for private(l,r) num_threads(THREAD_COUNT_LDL) if((arrayOffset+numLeftLeaves) > THEAD_PARALEL_THRESHOLD)
   for(l=arrayOffset; l<arrayOffset+numLeftLeaves; l++) {
 	for(r=arrayOffset+numLeftLeaves; r<arrayOffset+numLeftLeaves+numRightLeaves; r++) {
 	  lcaMatrix [leafArray[l]] [leafArray[r]] = nodeId;
@@ -1838,7 +1784,6 @@ int getSortedAges_rec (LocusData* locusData, int nodeId, double* sortedAges, dou
   }
 
   // move to auxilliary array
-//#pragma omp parallel for private(i) num_threads(THREAD_COUNT_LDL) if((numLeftInternalNodes+numRightInternalNodes) > THEAD_PARALEL_THRESHOLD)
   for(i=0; i<=numLeftInternalNodes+numRightInternalNodes; i++) {
 	  sortedAges_aux[i] = sortedAges[arrayOffset+i];
   }
