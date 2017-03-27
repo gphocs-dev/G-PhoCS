@@ -21,9 +21,11 @@
 	#define THREAD_UpdateSampleAge
 
 #else
-	extern void omp_set_num_threads(int n);
-	extern int omp_get_max_threads();
-	extern int omp_get_thread_num();
+extern "C"{
+  void omp_set_num_threads(int n);
+  int omp_get_max_threads();
+  int omp_get_thread_num();
+}
 #endif
 
 

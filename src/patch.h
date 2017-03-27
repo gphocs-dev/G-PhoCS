@@ -9,22 +9,7 @@
 #define SRC_PATCH_H_
 
 
-#ifndef NULL
-#define NULL   ((void *) 0)
-#endif
-
-
-#define MAX_MIG_BANDS	40			// max migration bands in the population tree
-#define MAX_MIGS		10			// max migration events per genealogy
-#define NSPECIES		20			// max # of species
-#define NS				200			// max # of sequences
-#define OLDAGE			999			// upper bound on age (can be extended...)
-#define MAX_EVENTS   (NS + 2*NSPECIES + 3*MAX_MIGS)
-#define NUM_DELTA_STATS_INSTANCES 2
-
-#define DEBUG_NODE_CHANGE_NOT
-#define DEBUG_RUBBERBAND_NOT
-/* END OF PATCH.C DEFS */
+#include "DataLayerConstants.h"
 
 
 /***************************************************************************************************************/
@@ -147,29 +132,6 @@ struct GENETREE_MIGS {
   } mignodes[MAX_MIGS];
 }* genetree_migs;
 
-
-/* event chain
-   Each event corresponds to a time band within a population where no events
-   (coalescence/migration) take place. An event is attributed with one of 5 types
-   corresponding to the event taking place at the end of the interval. Events are
-   sorted in a list according to chronology within a population.
-   Actual array of events is allocated in getMem()
-*/
-
-typedef enum event_type {COAL, IN_MIG, OUT_MIG, MIG_BAND_START, MIG_BAND_END, SAMPLES_START, END_CHAIN, DUMMY} EventType;
-typedef struct EVENT{
-	EventType type;
-    int node_id, next, prev;
-    double elapsed_time;				// time from last event
-    int num_lineages;					// number of lineages before the event
-} Event;
-struct EVENT_CHAIN{
-  int total_events;						// total number of events pre-allocated to this chain
-  int first_event[2*NSPECIES-1];		// pointers to first event for every population
-  int last_event[2*NSPECIES-1];			// pointers to last event for every population
-  int free_events;						// pointer to a chain of free events for use. Always have at least one free event
-  Event* events;
-} *event_chains;
 
 
 /*	genetree stats
