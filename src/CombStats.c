@@ -272,6 +272,11 @@ int isFeasibleComb(int pop){
 int isAncestralTo(int father, int son){
 	return dataSetup.popTree->pops[father]->isAncestralTo[son];
 }
+
+int isMigOfComb(int mig, int comb){ // TODO - implement
+	return TRUE;
+}
+
 char* getEventTypeName(int eventType){
 	switch(eventType){
 		case COAL:
@@ -308,15 +313,19 @@ Stats* getCombPopStats(int comb, int pop){
 }
 
 
-void initCombStats(){
-	for (int comb = 0 ; comb < dataSetup.popTree->numPops ; comb++){
-		if (isFeasibleComb(comb)){
 
+void initCombStats(){
+	initPopStats();
+	initMigStats();
+}
+
+void initPopStats() {
+	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
+		if (isFeasibleComb(comb)) {
 			initStats(&comb_stats[comb].total);
 			comb_stats[comb].age = getCombAge(comb);
-
-			for (int pop = 0 ; pop < dataSetup.popTree->numPops ; pop++){
-				if (isLeaf(pop)){
+			for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+				if (isLeaf(pop)) {
 					initStats(&comb_stats[comb].leaves[pop].above_comb);
 					initStats(&comb_stats[comb].leaves[pop].below_comb);
 				} else {
@@ -326,40 +335,72 @@ void initCombStats(){
 		}
 	}
 }
-void initStats(Stats* stats){
+
+void initStats(Stats* stats){ // TODO - rename with POP
 	stats->coal_stats = 0.0;
-	stats->mig_stats = 0.0;
 	stats->num_coals  = 0;
 	stats->num_events = 0;
-	stats->num_migs = 0;
 }
+
+
+void initMigStats() {
+	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
+		if (isFeasibleComb(comb)) {
+			for (int mig = 0; mig < dataSetup.popTree->numMigBands; mig++) {
+				if (isMigOfComb(mig, comb)) {
+					comb_stats[comb].migs[mig].mig_stats = 0.0;
+					comb_stats[comb].migs[mig].num_migs = 0;
+				}
+			}
+		}
+	}
+}
+
 void allocateCombMem(){
 	comb_stats=malloc(dataSetup.popTree->numPops*sizeof(struct COMB_STATS));
 
+	allocatePopsMem();
+	allocateMigBandsMem();
+}
+
+void allocatePopsMem() {
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		allocateStats(&comb_stats[comb].total);
-		comb_stats[comb].leaves=malloc(dataSetup.popTree->numCurPops*sizeof(LeafStats));
-		comb_stats[comb].clades=malloc(dataSetup.popTree->numCurPops*sizeof(Stats));
-		for (int pop = 0 ; pop < dataSetup.popTree->numPops ; pop++){
-			if (isLeaf(pop)){
+		comb_stats[comb].leaves = malloc(
+				dataSetup.popTree->numCurPops * sizeof(LeafStats));
+		comb_stats[comb].clades = malloc(
+				dataSetup.popTree->numCurPops * sizeof(Stats));
+		for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+			if (isLeaf(pop)) {
 				allocateStats(&comb_stats[comb].leaves[pop].below_comb);
 				allocateStats(&comb_stats[comb].leaves[pop].above_comb);
 			} else {
 				allocateStats(&comb_stats[comb].clades[pop]);
 			}
 		}
-		if(comb_stats == NULL){ // TODO - add memory allocation test for all of comb_stats
+		if (comb_stats == NULL) {
+			// TODO - add memory allocation test for all of comb_stats
 			fprintf(stderr, "\nError: Out Of Memory comb_stats\n");
 			exit(-1);
 		}
 	}
 }
-void allocateStats(Stats* stats){
+
+void allocateStats(Stats* stats){ // TODO - rename with POP
 	int max_events = 2*dataSetup.numSamples+ 4*MAX_MIGS + 3*dataSetup.popTree->numMigBands + dataSetup.popTree->numPops + 10;
 	stats->sorted_ages   = (double*)malloc(max_events*sizeof(double));
 	stats->elapsed_times = (double*)malloc(max_events*sizeof(double));
 	stats->num_lineages  = (int*)malloc(max_events*sizeof(int));
 	stats->event_types   = (int*)malloc(max_events*sizeof(int));
+}
+
+void allocateMigBandsMem() {
+	int maxMigBands = dataSetup.popTree->numMigBands;
+	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
+		if (isFeasibleComb(comb)) {
+			comb_stats[comb].migs = malloc(maxMigBands * sizeof(MigStats));
+		}
+	}
 }
 
 void freeCombMem(){ // TODO - implement

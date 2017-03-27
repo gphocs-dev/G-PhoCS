@@ -9,8 +9,8 @@
 // --- GLOBAL DATA STRUCTURES -------------------------------------------------
 
 typedef struct STATS {
-			int num_coals, num_migs;
-			double coal_stats, mig_stats;
+			int num_coals;
+			double coal_stats;
 			double* sorted_ages; 	// temporary array to hold sorted node ages of a specific genealogy.
 			double* elapsed_times;	// temporary array to hold elapsed_time between adjacent events of a specific genealogy.
 			int* num_lineages; 		// temporary array to hold num of lineages of a specific genealogy.
@@ -18,6 +18,10 @@ typedef struct STATS {
 			/** size of stats arrays (event_types, num_lineages, elapsed_times, sorted_ages)*/
 			int num_events;
 } Stats;
+typedef struct MIGSTATS {
+			int num_migs;
+			double mig_stats;
+} MigStats;
 typedef struct LEAF_STATS {
 	Stats above_comb, below_comb;
   } LeafStats;
@@ -26,6 +30,7 @@ struct COMB_STATS{
 	Stats total;
 	Stats* clades;
 	LeafStats* leaves;
+	MigStats* migs;
 } *comb_stats;
 
 
@@ -53,14 +58,19 @@ int	isLeaf(int pop);
 int areChildrenLeaves(int pop);
 int isFeasibleComb(int pop);
 int isAncestralTo(int father, int son);
+int isMigOfComb(int mig, int comb);
 
 double getCombAge(int comb);
 int getSon(int pop, int SON);
 Stats* getCombPopStats(int comb, int pop);
 void initCombStats();
+void initPopStats();
+void initMigStats();
 void initStats(Stats* stats);
 
 void allocateCombMem();
+void allocatePopsMem();
+void allocateMigBandsMem();
 void allocateStats(Stats* stats);
 
 void freeCombMem();
