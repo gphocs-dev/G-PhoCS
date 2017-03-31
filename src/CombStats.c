@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
+#include <string.h>
 
 #include "utils.h"
 #include "MCMCcontrol.h"
@@ -32,12 +33,6 @@ void calculateCombStats() {
 	assertCombLeaves();
 }
 
-void finalizeCombCoalStats(int comb){
-	double* elapsedTimes = comb_stats[comb].clades[comb].elapsed_times;
-	int* numLineages = comb_stats[comb].clades[comb].num_lineages;
-	int size = comb_stats[comb].clades[comb].num_events;
-	comb_stats[comb].total.coal_stats += calculateCoalStats(elapsedTimes, numLineages, size);
-}
 
 void calculateSufficientStats(int comb, int gene){
 	coalescence(comb, gene);
@@ -49,7 +44,28 @@ void coalescence(int comb, int gene){
 }
 
 void migrations(int comb, int gene){
-//	printf("inside migrations\n");
+	for (int mig = 0 ; mig < dataSetup.popTree->numMigBands ; mig++){
+		char* migName = getMigName(mig);
+		char* combName = getPopName(comb);
+		if (isMigOfComb(mig, comb)){
+//			printf("\n%s is Mig Of Comb %s", migName, popName);
+			if (isLeafMigBand(mig, comb)){
+				printf("\n%s isLeafMigBand of %s", migName, combName);
+			}
+			if (isMigBandInternal(mig, comb)) {
+				printf("\n%s isInternalMigBand of %s", migName, combName);
+			}
+			if (isMigBandFromOutside(mig, comb)){
+				printf("\n%s isExternalMigBand of %s", migName, combName);
+			}
+			if (!isLeafMigBand(mig, comb) && !isMigBandInternal(mig, comb) && !isMigBandFromOutside(mig, comb)){
+				printf("\n%s is Uncategorized MigBand", migName);
+			}
+		} else {
+			printf("\n%s is NOT MigOfComb of %s", migName, combName);
+		}
+	}
+	exit(0);
 }
 
 void coalescence_rec(int comb, int currentPop, int gene){
@@ -62,7 +78,6 @@ void coalescence_rec(int comb, int currentPop, int gene){
 		handleNonLeafCoals(comb, currentPop, gene);
 	}
 }
-
 
 void handleLeafCoals(int comb, int leaf, int gene) {
 
@@ -199,6 +214,13 @@ void appendCurrent(int comb, int currentPop, int gene){
 	currentStats->num_events = i;
 }
 
+void finalizeCombCoalStats(int comb){
+	double* elapsedTimes = comb_stats[comb].clades[comb].elapsed_times;
+	int* numLineages = comb_stats[comb].clades[comb].num_lineages;
+	int size = comb_stats[comb].clades[comb].num_events;
+	comb_stats[comb].total.coal_stats += calculateCoalStats(elapsedTimes, numLineages, size);
+}
+
 double calculateCoalStats(double* elapsed_times, int* num_lineages, int size){
 	int n;
 	double t;
@@ -272,9 +294,31 @@ int isFeasibleComb(int pop){
 int isAncestralTo(int father, int son){
 	return dataSetup.popTree->pops[father]->isAncestralTo[son];
 }
+int isMigOfComb(int mig, int comb){ // if migrations flow into the comb
+	int target = getTargetPop(mig);
+	return isAncestralTo(comb, target) || target == comb;
+}
+int isMigBandFromOutside(int mig, int comb){
+	if (!isMigOfComb(mig, comb)) return FALSE;
 
-int isMigOfComb(int mig, int comb){ // TODO - implement
-	return TRUE;
+	int source = getSourcePop(mig);
+	int target = getTargetPop(mig);
+	return isAncestralTo(comb, target)  && !isAncestralTo(comb, source);
+}
+int isMigBandInternal(int mig, int comb){
+	if (!isMigOfComb(mig, comb)) return FALSE;
+
+	int source = getSourcePop(mig);
+	int target = getTargetPop(mig);
+
+	return isAncestralTo(comb, source) && isAncestralTo(comb, target) && !isLeaf(target);
+}
+int isLeafMigBand(int mig, int comb){
+	if (!isMigOfComb(mig, comb)) return FALSE;
+
+	int target = getTargetPop(mig);
+	int source = getSourcePop(mig);
+	return isLeaf(target) && isAncestralTo(comb, target);
 }
 
 char* getEventTypeName(int eventType){
@@ -299,11 +343,33 @@ char* getEventTypeName(int eventType){
 			return "UNDEFINED";
 	}
 }
-
-
 int getSon(int pop, int SON){
 	return dataSetup.popTree->pops[pop]->sons[SON]->id;
 }
+
+int getSourcePop(int mig){
+	return dataSetup.popTree->migBands[mig].sourcePop;
+}
+int getTargetPop(int mig){
+	return dataSetup.popTree->migBands[mig].targetPop;
+}
+char* getPopName(int pop){
+	return dataSetup.popTree->pops[pop]->name;
+}
+char* getMigName(int mig){
+	char* sourceName = getPopName(getSourcePop(mig));
+	char* targetName = getPopName(getTargetPop(mig));
+	return concat(sourceName, targetName);
+}
+char* concat(const char *s1, const char *s2){ // TODO - THIS SHOULD NOT BE USED  IN PRODUCTION SINCE THE MEMORY ISN'T RELEASED
+    char *result = malloc(strlen(s1)+strlen(s2)+3);//+3 for the zero-terminator and arrow
+    strcpy(result, s1);
+    strcat(result, "->");
+    strcat(result, s2);
+    return result;
+}
+
+
 Stats* getCombPopStats(int comb, int pop){
 	if (isLeaf(pop)){
 		return &comb_stats[comb].leaves[pop].above_comb;
@@ -312,13 +378,10 @@ Stats* getCombPopStats(int comb, int pop){
 	}
 }
 
-
-
 void initCombStats(){
 	initPopStats();
 	initMigStats();
 }
-
 void initPopStats() {
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		if (isFeasibleComb(comb)) {
@@ -335,14 +398,11 @@ void initPopStats() {
 		}
 	}
 }
-
-void initStats(Stats* stats){ // TODO - rename with POP
+void initStats(Stats* stats){ // TODO - rename signature to include "pop"
 	stats->coal_stats = 0.0;
 	stats->num_coals  = 0;
 	stats->num_events = 0;
 }
-
-
 void initMigStats() {
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		if (isFeasibleComb(comb)) {
@@ -355,14 +415,12 @@ void initMigStats() {
 		}
 	}
 }
-
 void allocateCombMem(){
 	comb_stats=malloc(dataSetup.popTree->numPops*sizeof(struct COMB_STATS));
 
 	allocatePopsMem();
 	allocateMigBandsMem();
 }
-
 void allocatePopsMem() {
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		allocateStats(&comb_stats[comb].total);
@@ -385,15 +443,13 @@ void allocatePopsMem() {
 		}
 	}
 }
-
-void allocateStats(Stats* stats){ // TODO - rename with POP
+void allocateStats(Stats* stats){ // TODO - rename signature to include "pop"
 	int max_events = 2*dataSetup.numSamples+ 4*MAX_MIGS + 3*dataSetup.popTree->numMigBands + dataSetup.popTree->numPops + 10;
 	stats->sorted_ages   = (double*)malloc(max_events*sizeof(double));
 	stats->elapsed_times = (double*)malloc(max_events*sizeof(double));
 	stats->num_lineages  = (int*)malloc(max_events*sizeof(int));
 	stats->event_types   = (int*)malloc(max_events*sizeof(int));
 }
-
 void allocateMigBandsMem() {
 	int maxMigBands = dataSetup.popTree->numMigBands;
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
@@ -402,16 +458,12 @@ void allocateMigBandsMem() {
 		}
 	}
 }
-
 void freeCombMem(){ // TODO - implement
 }
 
 
-
-
 // TODO - extract tests to different source file
 double COMB_RELATIVE_PERCISION = 	0.000000000001;
-
 void debug_printCombGene(int comb){
 	char* combName = dataSetup.popTree->pops[comb]->name;
 	double combAge = comb_stats[comb].age;
@@ -427,7 +479,6 @@ void debug_printCombGene(int comb){
 		currentAge += elapsedTimes[i];
 	}
 }
-
 void assertRootNumCoals(){
 	int root = getPopIdByName(dataSetup.popTree, "root");
 
@@ -464,7 +515,6 @@ void assertRootCoalStats(){
 		exit(-1);
 	}
 }
-
 /**
  * Compares trivial combs (pops directly above two leaves) with regular pops.
  * Can only be used when isFeasibleComb() allows trivial combs (and it usually shouldn't)
