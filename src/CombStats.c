@@ -43,23 +43,6 @@ void coalescence(int comb, int gene){
 	coalescence_rec(comb, comb, gene);
 }
 
-void migrations(int comb, int gene){
-	for (int mig = 0 ; mig < dataSetup.popTree->numMigBands ; mig++){
-		char* migName = getMigName(mig);
-		char* combName = getPopName(comb);
-		if (isMigOfComb(mig, comb)){
-			if (isLeafMigBand(mig, comb)){
-				// handle mig bands between leaves below the comb body
-			}
-			if (isMigBandInternal(mig, comb)) {
-				// ignore internal migbands. their stats aren't used
-			}
-			if (isMigBandExternal(mig, comb)){
-				// handle migbands from outside to the comb body
-			}
-		}
-	}
-}
 
 void coalescence_rec(int comb, int currentPop, int gene){
 	if (isLeaf(currentPop)){
@@ -84,19 +67,16 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 
 	int eventId = event_chains[gene].first_event[leaf];
 	while (eventId >= 0) {
-		elapsedTime = event_chains[gene].events[eventId].elapsed_time;
-		eventType = event_chains[gene].events[eventId].type;
-		numLineages = event_chains[gene].events[eventId].num_lineages;
-		eventAge += elapsedTime;
+		updateEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
 
-		if (eventAge < combAge){
+		if (eventAge <= combAge){
 			if (eventType == COAL){
 				belowCombLeafStats->num_coals++;
 			}
 			// you've got all the data you need so just update coal_stats -
 			belowCombLeafStats->coal_stats += numLineages*(numLineages-1)*elapsedTime;
 		}
-		else if (eventAge >= combAge){
+		else if (eventAge > combAge){
 			if (eventType == COAL){
 				aboveCombLeafStats->num_coals++;
 				combTotalStats->num_coals++;
@@ -109,7 +89,6 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 
 			numEventsAboveComb++;
 		}
-		eventId = event_chains[gene].events[eventId].next;
 	}
 
 	aboveCombLeafStats->num_events = numEventsAboveComb;
@@ -227,6 +206,48 @@ double calculateCoalStats(double* elapsed_times, int* num_lineages, int size){
 }
 
 
+void migrations(int comb, int gene){
+	for (int mig = 0 ; mig < dataSetup.popTree->numMigBands ; mig++){
+		if (isMigOfComb(mig, comb)){
+			if (isLeafMigBand(mig, comb)){
+				handleLeafMigStats(comb, mig, gene);
+			}
+			if (isMigBandInternal(mig, comb)) {
+				// ignore internal migbands. their stats aren't used
+			}
+			if (isMigBandExternal(mig, comb)){
+				// handle migbands from outside to the comb body
+			}
+		}
+	}
+}
+
+void handleLeafMigStats(int comb, int mig, int gene){
+	double elapsedTime, eventAge = 0.0;
+	int numLineages, eventType;
+	double combAge = comb_stats[comb].age;
+
+	int targetLeaf = getTargetPop(mig);
+
+	MigStats* migLeafStats = &comb_stats[comb].leafMigs[targetLeaf];
+
+	int eventId = event_chains[gene].first_event[targetLeaf];
+	while (eventAge <= combAge && eventId > 0) {
+		updateEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
+
+		migLeafStats->mig_stats += numLineages*elapsedTime;
+		if (eventType == IN_MIG) migLeafStats->num_migs++;
+	}
+}
+
+void updateEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge) {
+	*elapsedTime = event_chains[gene].events[*eventId].elapsed_time;
+	*eventType = event_chains[gene].events[*eventId].type;
+	*numLineages = event_chains[gene].events[*eventId].num_lineages;
+	*eventAge += *elapsedTime;
+
+	*eventId = event_chains[gene].events[*eventId].next;
+}
 
 
 
@@ -396,8 +417,8 @@ void initMigStats() {
 		if (isFeasibleComb(comb)) {
 			for (int mig = 0; mig < dataSetup.popTree->numMigBands; mig++) {
 				if (isMigOfComb(mig, comb)) {
-					comb_stats[comb].migs[mig].mig_stats = 0.0;
-					comb_stats[comb].migs[mig].num_migs = 0;
+					comb_stats[comb].leafMigs[mig].mig_stats = 0.0;
+					comb_stats[comb].leafMigs[mig].num_migs = 0;
 				}
 			}
 		}
@@ -442,7 +463,7 @@ void allocateMigBandsMem() {
 	int maxMigBands = dataSetup.popTree->numMigBands;
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		if (isFeasibleComb(comb)) {
-			comb_stats[comb].migs = malloc(maxMigBands * sizeof(MigStats));
+			comb_stats[comb].leafMigs = malloc(maxMigBands * sizeof(MigStats));
 		}
 	}
 }

@@ -22,6 +22,7 @@ typedef struct MIGSTATS {
 			int num_migs;
 			double mig_stats;
 } MigStats;
+
 typedef struct LEAF_STATS {
 	Stats above_comb, below_comb;
   } LeafStats;
@@ -30,7 +31,8 @@ struct COMB_STATS{
 	Stats total;
 	Stats* clades;
 	LeafStats* leaves;
-	MigStats* migs;
+	MigStats* leafMigs;
+	//MigStats* combMigs; //TODO - uncomment to see horrible bug
 } *comb_stats;
 
 
@@ -52,7 +54,8 @@ void appendCurrent(int comb, int currentPop, int gene);
 double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
 
 void migrations(int comb, int gene);
-
+void handleLeafMigStats(int comb, int mig, int gene);
+void updateEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge);
 
 int	isLeaf(int pop);
 int areChildrenLeaves(int pop);
