@@ -48,24 +48,17 @@ void migrations(int comb, int gene){
 		char* migName = getMigName(mig);
 		char* combName = getPopName(comb);
 		if (isMigOfComb(mig, comb)){
-//			printf("\n%s is Mig Of Comb %s", migName, popName);
 			if (isLeafMigBand(mig, comb)){
-				printf("\n%s isLeafMigBand of %s", migName, combName);
+				// handle mig bands between leaves below the comb body
 			}
 			if (isMigBandInternal(mig, comb)) {
-				printf("\n%s isInternalMigBand of %s", migName, combName);
+				// ignore internal migbands. their stats aren't used
 			}
-			if (isMigBandFromOutside(mig, comb)){
-				printf("\n%s isExternalMigBand of %s", migName, combName);
+			if (isMigBandExternal(mig, comb)){
+				// handle migbands from outside to the comb body
 			}
-			if (!isLeafMigBand(mig, comb) && !isMigBandInternal(mig, comb) && !isMigBandFromOutside(mig, comb)){
-				printf("\n%s is Uncategorized MigBand", migName);
-			}
-		} else {
-			printf("\n%s is NOT MigOfComb of %s", migName, combName);
 		}
 	}
-	exit(0);
 }
 
 void coalescence_rec(int comb, int currentPop, int gene){
@@ -298,27 +291,22 @@ int isMigOfComb(int mig, int comb){ // if migrations flow into the comb
 	int target = getTargetPop(mig);
 	return isAncestralTo(comb, target) || target == comb;
 }
-int isMigBandFromOutside(int mig, int comb){
-	if (!isMigOfComb(mig, comb)) return FALSE;
-
+int isMigBandExternal(int mig, int comb){
 	int source = getSourcePop(mig);
 	int target = getTargetPop(mig);
 	return isAncestralTo(comb, target)  && !isAncestralTo(comb, source);
 }
 int isMigBandInternal(int mig, int comb){
-	if (!isMigOfComb(mig, comb)) return FALSE;
-
 	int source = getSourcePop(mig);
 	int target = getTargetPop(mig);
 
-	return isAncestralTo(comb, source) && isAncestralTo(comb, target) && !isLeaf(target);
+	return isAncestralTo(comb, source) && isAncestralTo(comb, target) && (!isLeaf(source) || !isLeaf(target));
 }
-int isLeafMigBand(int mig, int comb){
-	if (!isMigOfComb(mig, comb)) return FALSE;
 
+int isLeafMigBand(int mig, int comb){
 	int target = getTargetPop(mig);
 	int source = getSourcePop(mig);
-	return isLeaf(target) && isAncestralTo(comb, target);
+	return isLeaf(target) && (isLeaf(source) || !isAncestralTo(comb, source));
 }
 
 char* getEventTypeName(int eventType){

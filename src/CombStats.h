@@ -59,7 +59,7 @@ int areChildrenLeaves(int pop);
 int isFeasibleComb(int pop);
 int isAncestralTo(int father, int son);
 int isMigOfComb(int mig, int comb);
-int isMigBandFromOutside(int mig, int comb);
+int isMigBandExternal(int mig, int comb);
 int isMigBandInternal(int mig, int comb);
 int isLeafMigBand(int mig, int comb);
 
