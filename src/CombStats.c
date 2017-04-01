@@ -67,7 +67,7 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 
 	int eventId = event_chains[gene].first_event[leaf];
 	while (eventId >= 0) {
-		updateEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
+		incrementEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
 
 		if (eventAge <= combAge){
 			if (eventType == COAL){
@@ -222,25 +222,38 @@ void migrations(int comb, int gene){
 	}
 }
 
+void updateLeafMigStats(int numLineages, double elapsedTime, int eventType, MigStats* migLeafStats) {
+	migLeafStats->mig_stats += numLineages * elapsedTime;
+	if (eventType == IN_MIG) migLeafStats->num_migs++;// TODO - make sure the event is on the right migband
+}
+
 void handleLeafMigStats(int comb, int mig, int gene){
 	double elapsedTime, eventAge = 0.0;
-	int numLineages, eventType;
 	double combAge = comb_stats[comb].age;
-
+	int numLineages;
 	int targetLeaf = getTargetPop(mig);
-
+	int eventId = event_chains[gene].first_event[targetLeaf];
+	int eventType = event_chains[gene].events[eventId].type;
 	MigStats* migLeafStats = &comb_stats[comb].leafMigs[targetLeaf];
 
-	int eventId = event_chains[gene].first_event[targetLeaf];
-	while (eventAge <= combAge && eventId > 0) {
-		updateEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
+	fastFwdPastMigBandStart(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
 
-		migLeafStats->mig_stats += numLineages*elapsedTime;
-		if (eventType == IN_MIG) migLeafStats->num_migs++;
+	while (eventAge <= combAge && eventId > 0) {
+		updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
+
+		incrementEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
+		if (eventType == MIG_BAND_END) break;
 	}
 }
 
-void updateEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge) {
+void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge) {
+	while (*eventType != MIG_BAND_START && *eventId > 0){
+		incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge);
+	}
+	incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge);
+}
+
+void incrementEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge) {
 	*elapsedTime = event_chains[gene].events[*eventId].elapsed_time;
 	*eventType = event_chains[gene].events[*eventId].type;
 	*numLineages = event_chains[gene].events[*eventId].num_lineages;
@@ -365,18 +378,18 @@ int getTargetPop(int mig){
 char* getPopName(int pop){
 	return dataSetup.popTree->pops[pop]->name;
 }
-char* getMigName(int mig){
-	char* sourceName = getPopName(getSourcePop(mig));
-	char* targetName = getPopName(getTargetPop(mig));
-	return concat(sourceName, targetName);
-}
-char* concat(const char *s1, const char *s2){ // TODO - THIS SHOULD NOT BE USED  IN PRODUCTION SINCE THE MEMORY ISN'T RELEASED
-    char *result = malloc(strlen(s1)+strlen(s2)+3);//+3 for the zero-terminator and arrow
-    strcpy(result, s1);
-    strcat(result, "->");
-    strcat(result, s2);
-    return result;
-}
+//char* getMigName(int mig){
+//	char* sourceName = getPopName(getSourcePop(mig));
+//	char* targetName = getPopName(getTargetPop(mig));
+//	return concat(sourceName, targetName);
+//}
+//char* concat(const char *s1, const char *s2){ // TODO - THIS SHOULD NOT BE USED  IN PRODUCTION SINCE THE MEMORY ISN'T RELEASED
+//    char *result = malloc(strlen(s1)+strlen(s2)+3);//+3 for the zero-terminator and arrow
+//    strcpy(result, s1);
+//    strcat(result, "->");
+//    strcat(result, s2);
+//    return result;
+//}
 
 
 Stats* getCombPopStats(int comb, int pop){

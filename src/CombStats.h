@@ -55,7 +55,8 @@ double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
 
 void migrations(int comb, int gene);
 void handleLeafMigStats(int comb, int mig, int gene);
-void updateEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge);
+void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge);
+void incrementEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge);
 
 int	isLeaf(int pop);
 int areChildrenLeaves(int pop);
@@ -66,6 +67,7 @@ int isMigBandExternal(int mig, int comb);
 int isMigBandInternal(int mig, int comb);
 int isLeafMigBand(int mig, int comb);
 
+char* getEventTypeName(int eventType);
 
 double getCombAge(int comb);
 int getSon(int pop, int SON);
