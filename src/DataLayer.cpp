@@ -25,81 +25,6 @@ num_lineages_(-1)
 {
 }
 
-/*-----------------------------------------------------------------------------
- * Setters/Getters section
- * */
-EventType
-Event::getType() const
-{
-  return this->type_;
-}
-
-void
-Event::setType(EventType t)
-{
-  this->type_ = t;
-}
-
-int
-Event::getId() const
-{
-  return this->id_;
-}
-
-void
-Event::setId(int id)
-{
-  this->id_ = id;
-}
-
-int
-Event::getNextIdx() const
-{
-  return this->next_;
-}
-
-void
-Event::setNextIdx(int i)
-{
-  this->next_ = i;
-}
-
-int
-Event::getPrevIdx() const
-{
-  return this->prev_;
-}
-
-void
-Event::setPrevIdx(int i)
-{
-  this->prev_ = i;
-}
-
-double
-Event::getElapsedTime() const
-{
-  return this->elapsed_time_;
-}
-
-void
-Event::setElapsedTime(double t)
-{
-  this->elapsed_time_ = t;
-}
-
-
-int
-Event::getNumLineages() const
-{
-  return this->num_lineages_;
-}
-
-void
-Event::setNumLineages(int n)
-{
-  this->num_lineages_ = n;
-}
 
 /*-----------------------------------------------------------------------------
  * Object state modifiers
@@ -140,7 +65,8 @@ Event::decrementLineages()
 bool
 Event::isOfType(int eventTypeMask) const
 {
-  return (this->getType() & eventTypeMask) > 0;
+	bool r = this->type_ & eventTypeMask;
+  return r > 0;
 }
 
 //=============================================================================

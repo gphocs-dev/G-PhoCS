@@ -86,5 +86,82 @@ public:
 };
 
 extern vector<EventChain> event_chains;
+
+
 //-----------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------
+ * Setters/Getters section
+ * */
+inline int
+Event::getId() const
+{
+  return this->id_;
+}
+
+inline void
+Event::setId(int id)
+{
+  this->id_ = id;
+}
+
+inline EventType
+Event::getType() const
+{
+  return this->type_;
+}
+
+inline void
+Event::setType(EventType t)
+{
+  this->type_ = t;
+}
+
+inline int
+Event::getNextIdx() const
+{
+  return this->next_;
+}
+
+inline void
+Event::setNextIdx(int i)
+{
+  this->next_ = i;
+}
+
+inline int
+Event::getPrevIdx() const
+{
+  return this->prev_;
+}
+
+inline void
+Event::setPrevIdx(int i)
+{
+  this->prev_ = i;
+}
+
+inline double
+Event::getElapsedTime() const
+{
+  return this->elapsed_time_;
+}
+
+inline void
+Event::setElapsedTime(double t)
+{
+  this->elapsed_time_ = t;
+}
+
+inline int
+Event::getNumLineages() const
+{
+  return this->num_lineages_;
+}
+
+inline void
+Event::setNumLineages(int n)
+{
+  this->num_lineages_ = n;
+}
+
 //============================ END OF FILE ====================================
