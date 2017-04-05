@@ -1,8 +1,12 @@
-/** 
-   \file patch.c 
-   Old MCMCcoal code remaining in the GPhoCS implementation, global memory allocation, correctness checks.
-	
-*/
+/*============================================================================
+ File: patch.cpp
+
+ Old MCMCcoal code remaining in the GPhoCS implementation,
+ global memory allocation, correctness checks.
+
+ Version history:
+ 05-Apr-2017  evgenyidc      Splitting traceLineage.
+ ============================================================================*/
 
 #include "patch.h"
 #ifdef ENABLE_OMP_THREADS
@@ -10,7 +14,7 @@
 #endif
 
 #include "DataLayer.h"
-
+#include "DbgErrMsg.h"
 /******************************************************************************************************/
 /******                               FUNCTION IMPLEMENTATION                                    ******/
 /******************************************************************************************************/
@@ -837,31 +841,23 @@ double rubberBandRipple(int gen, int do_or_redo) {
 
 }
 
-
-
-/*	traceLineage
-	Traces a lineage up a genetree. 
-	It reconnect == 0, then traces original edge, reduces number of lineages
-	in events along the way by 1, and records the stat changes in genetree_stats_delta[0].
-	If reconnect == 1, then re-coalesces lineage with rest of genetree according to 
-	coalescence with migration process determined by model parameters.
-	records stat changes in genetree_stats_delta[0].
-	
-	In both cases, sets the appropriate entries in mig_spr_stats.
-	
-	Returns -1 if too many migration events were sampled (otherwise 0).
-	
-*/
-int traceLineage(int gen, int node, int reconnect) {
-	
-  int i, pop, event, node_id, mig_band, mig_source, proceed;
-  int num_live_mig_bands, live_mig_bands[MAX_MIG_BANDS];
-  double age=-1.0, t;
-  // these variables are needed only for reconnecting or delta_lnLd computation
-  int target, num_targets, targets[2*NS-1];
-  double 	event_sample, rate, mig_rate, theta, 
-    heredity_factor = 1;
-
+//----------------------------------------------------------------------------
+void traceLineage_init(int& gen,
+		  								 int& node,
+											 int& reconnect,
+											 int& pop,
+											 int& event,
+											 int& num_live_mig_bands,
+											 int& mig_band,
+											 int& mig_source,
+											 int& proceed,
+											 int* live_mig_bands,
+											 double& theta,
+											 double& heredity_factor,
+											 double& age,
+											 double& mig_rate)
+{
+	int i = 0;
   /******** initialization start  **************/
   pop = nodePops[gen][node];
 
@@ -926,17 +922,252 @@ int traceLineage(int gen, int node, int reconnect) {
   mig_source = -1;
   proceed = 1;
   /******** initialization end    **************/
-   
+}
+
+//----------------------------------------------------------------------------
+int traceLineage_sample_event_in_interval(int& gen,
+																					int& pop,
+																					int& node,
+																					int& event,
+																					int& num_live_mig_bands,
+																					int& mig_band,
+																					int& proceed,
+																					int& mig_source,
+																					int& num_targets,
+																					int& target,
+																					int* targets,
+																					int* live_mig_bands,
+																					double& event_sample,
+																					double& t,
+																					double& rate,
+																					double& theta,
+																					double& mig_rate,
+																					double& age)
+{
+	int i;
+  // sample event in this interval
+  age += t;
+  event_sample = rate*rndu();
+
+  if(event_sample < mig_rate)
+  {
+    // migration event - figure out where to migrate
+    if(MAX_MIGS <=
+    		genetree_migs[gen].num_migs
+				+ locus_data[gen].mig_spr_stats.num_new_migs
+				- locus_data[gen].mig_spr_stats.num_old_migs)
+    {
+      misc_stats.not_enough_migs++;
+      return -1;
+    }
+    DEBUG_TRACE_LINEAGE_ASSERT_EVENT_SAMPLE_IS_ZERO
+    for(i=0; event_sample >= 0 && i < num_live_mig_bands; i++)
+    {
+      event_sample -= dataSetup.popTree->migBands[ live_mig_bands[i] ].migRate;
+    }
+    if(event_sample >= 0.0)
+    {	// at this point i = num_live_mig_bands
+    		TRACE_LINEAGE_FATAL_0009
+    }
+
+    if(i <= 0)
+    {
+		  TRACE_LINEAGE_FATAL_0009A
+    }
+    // create in and out events and follow out event
+    // do not mark the events yet (unless accepted)
+    locus_data[gen].mig_spr_stats.new_migs_bands[locus_data[gen].\
+		 										           mig_spr_stats.num_new_migs] =
+												            		              mig_band =
+												            		              live_mig_bands[i-1];
+    if(dataSetup.popTree->migBands[mig_band].targetPop != pop)
+    {
+    		TRACE_LINEAGE_FATAL_0009B
+    }
+
+    locus_data[gen].mig_spr_stats.new_migs_ages[
+										locus_data[gen].mig_spr_stats.num_new_migs] = age;
+    event = locus_data[gen].mig_spr_stats.new_migs_in[
+														locus_data[gen].mig_spr_stats.num_new_migs]
+					= createEventBefore(gen,pop,event,t);
+    // mark source event for migration
+    mig_source = locus_data[gen].mig_spr_stats.new_migs_out[
+										locus_data[gen].mig_spr_stats.num_new_migs]
+							 = createEvent(gen,
+														 dataSetup.popTree->migBands[
+																										mig_band].sourcePop,
+														 age);
+    if( mig_source < 0 )
+    {
+    		TRACE_LINEAGE_FATAL_0010
+    }
+    locus_data[gen].mig_spr_stats.num_new_migs++;
+  } // event_sample < mig_rate
+  else
+  {
+    // coalescence event - figure out with whom to coalesce
+    //getLineagesAtInterval(gen,event,pop,node,targets);  <-- UNUSED
+    num_targets = getEdgesForTimePop(gen, (age-t)+event_chains[gen].events[event].getElapsedTime()/2, pop, node, targets);
+    if(num_targets !=  event_chains[gen].events[event].getNumLineages())
+    {
+    		TRACE_LINEAGE_FATAL_0011
+    }
+    /*					printf("\nFound %d targets at gen %d for node %d, at event %d, pop %d, age %f:",
+					num_targets, gen, node, event, pop, age);
+                          for(i=0; i< num_targets; i++) {
+                          printf(" %d", targets[i]);
+                          }
+                          printf("\n");
+    */
+    // this simulates choosing a lineage uniformly at random
+    i = (int)((event_sample - mig_rate) * theta/2);
+    target = targets[i];
+    // attach lineage in genetree and create new event
+    //printf("\nGrafting subtree below node %d to edge above node %d at time %g.",node, target, age);
+
+    executeGenSPR(dataState.lociData[gen], node, target, age);
+    locus_data[gen].mig_spr_stats.father_pop_new = pop;
+
+    //GraftNode(node, target, age, pop);
+    //printf("\nOriginal data log-likelihood was %g and after re-grafting it is %g.",data.lnpDi[gen], lnpD_gen(gen));
+    locus_data[gen].mig_spr_stats.target = target;
+    locus_data[gen].mig_spr_stats.father_event_new = event = createEventBefore(gen,pop,event,t);
+    // signal to terminate
+    proceed = 0;
+  }// if event == mig/coal
+  return 0;
+}
+
+//----------------------------------------------------------------------------
+void traceLineage_record_stat_changes_epilogue(int& gen,
+																							 int& reconnect,
+ 																							 int& pop,
+																							 int& event,
+																							 int& node_id,
+																							 int& num_live_mig_bands,
+																							 int& mig_band,
+																							 int& mig_source,
+																							 int* live_mig_bands,
+																							 double& t,
+																							 double& age,
+																							 double& mig_rate,
+																							 double& theta,
+																							 double& heredity_factor)
+{
+  int i = 0;
+	locus_data[gen].genetree_stats_delta[reconnect].coal_stats_delta[pop] += 2*event_chains[gen].events[event].getNumLineages()*t;
+	for(i=0; i<num_live_mig_bands; i++) {
+		locus_data[gen].genetree_stats_delta[reconnect].mig_stats_delta[live_mig_bands[i]] += t;
+	}
+	locus_data[gen].genetree_stats_delta[reconnect].changed_events[locus_data[gen].genetree_stats_delta[reconnect].num_changed_events++] = event;
+
+	// add log-likelihood of no events during interval
+	locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] -= (mig_rate + 2*event_chains[gen].events[event].getNumLineages()/theta) * t;
+
+	// if event is migration (original or new)
+	// follow to source and recalculate living mig_bands
+	// if event starts/ends migration band, change mig_rate
+	if(mig_source >= 0) {
+		// add log-likelihood of migration event
+		locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] += log(dataSetup.popTree->migBands[mig_band].migRate);
+		event = mig_source;
+		pop = dataSetup.popTree->migBands[mig_band].sourcePop;
+		theta = dataSetup.popTree->pops[pop]->theta*heredity_factor;
+		mig_source = -1;
+		mig_rate = 0.0;
+		num_live_mig_bands = 0;
+		for(mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
+			if(dataSetup.popTree->migBands[mig_band].targetPop == pop &&
+				 dataSetup.popTree->migBands[mig_band].startTime <= age &&
+				 dataSetup.popTree->migBands[mig_band].endTime   >  age)
+				{
+					mig_rate += dataSetup.popTree->migBands[mig_band].migRate;
+					live_mig_bands[num_live_mig_bands++] = mig_band;
+				}
+		}
+
+	}
+	else if(event_chains[gen].events[event].getType()== MIG_BAND_START)
+	{
+		mig_rate += dataSetup.popTree->migBands[node_id].migRate;
+		live_mig_bands[num_live_mig_bands] = node_id;
+		num_live_mig_bands++;
+	}
+	else if(event_chains[gen].events[event].getType() == MIG_BAND_END)
+	{
+		mig_rate -= dataSetup.popTree->migBands[node_id].migRate;
+	  if(num_live_mig_bands == 1 && mig_rate > 0.0000001 && debug)
+	  {
+		  fprintf(stderr, "\ntraceLineage() mig_rate=%g when all mig bands have been emptied at pop=%d, age=%g.\n",mig_rate,pop,age);
+		  printPopulationTree(dataSetup.popTree, stderr, 1);
+	    printLocusGenTree(dataState.lociData[gen], stderr, nodePops[gen], nodeEvents[gen]);
+	    printEventChains(stderr, gen);
+	    fprintf(stderr, "\n\n********************************************************************\n\n");
+	  }
+	  if(num_live_mig_bands == 1)
+	  {
+		  mig_rate = 0.0;
+	  }
+		for(i=0; i< num_live_mig_bands; i++)
+		{
+			if(live_mig_bands[i] == node_id)
+			{
+				live_mig_bands[i] = live_mig_bands[--num_live_mig_bands];
+				break;
+			}
+		}
+  }
+}
+
+//----------------------------------------------------------------------------
+/*	traceLineage
+	Traces a lineage up a genetree.
+	It reconnect == 0, then traces original edge, reduces number of lineages
+	in events along the way by 1, and records the stat changes in genetree_stats_delta[0].
+	If reconnect == 1, then re-coalesces lineage with rest of genetree according to
+	coalescence with migration process determined by model parameters.
+	records stat changes in genetree_stats_delta[0].
+
+	In both cases, sets the appropriate entries in mig_spr_stats.
+
+	Returns -1 if too many migration events were sampled (otherwise 0).
+
+*/
+int traceLineage(int gen, int node, int reconnect) {
+
+  int i, pop, event, node_id, mig_band, mig_source, proceed;
+  int num_live_mig_bands, live_mig_bands[MAX_MIG_BANDS];
+  double age=-1.0, t;
+  // these variables are needed only for reconnecting or delta_lnLd computation
+  int target, num_targets, targets[2*NS-1];
+  double 	event_sample, rate, mig_rate, theta, heredity_factor = 1;
+
+  traceLineage_init(gen,
+  		  						node,
+  									reconnect,
+  									pop,
+  									event,
+  									num_live_mig_bands,
+  									mig_band,
+  									mig_source,
+  									proceed,
+  									live_mig_bands,
+  									theta,
+  									heredity_factor,
+  									age,
+  									mig_rate);
   // loop will stop when reaching original father's event (if !reconnect)
   // or when creating new coalescent event for lineage (if reconnect)
-  while(proceed) {
-	
-		
+  while(proceed)
+  {
     // if last event in population, move to next pop
-    if(event < 0) {
-      if(dataSetup.popTree->pops[pop]->father == NULL) {
+    if(event < 0)
+    {
+      if(dataSetup.popTree->pops[pop]->father == NULL)
+      {
         // reject if trying to reconnect above OLDAGE
-        if(reconnect == 1) {
+        if(reconnect == 1)
+        {
 //          fprintf(stderr, "\nError: In traceLineage: while tracing edge above node %d in gen %d:",node,gen);
 //          fprintf(stderr, "  trying to reconnect above OLDAGE.\n");
           return -1;
@@ -944,51 +1175,22 @@ int traceLineage(int gen, int node, int reconnect) {
         // if detaching subtree, you can reach top only if detaching the root edge
         // this has to be considered in migration scenarios
         //				if(node != getLocusRoot(dataState.lociData[gen]) {
-		if(debug) {
-	        fprintf(stderr, "\nError: traceLineage: while tracing edge above node %d in gen %d.\n",node,gen);
-        	fprintf(stderr, "  Reached top event at age %f (reconnect == %d).\n",age,reconnect);
-        	fprintf(stderr, "  Events visited:");
-			for(i=0;i<locus_data[gen].genetree_stats_delta[reconnect].num_changed_events; i++) {
-          		fprintf(stderr, " %d",locus_data[gen].genetree_stats_delta[reconnect].changed_events[i]);
-        	}
-        	fprintf(stderr, ".\n");
-		} else {
-			fprintf(stderr, "Fatal Error 0006.\n");
-		}
-        printGenealogyAndExit(gen,-1);
+        TRACE_LINEAGE_FATAL_0006
         //				}
       }
       pop = dataSetup.popTree->pops[pop]->father->id;
       theta = dataSetup.popTree->pops[pop]->theta*heredity_factor;
       event = event_chains[gen].first_event[pop];
 			
-      if(fabs(mig_rate) > 0.00000001 || num_live_mig_bands > 0) {
-		if(debug) {
-			fprintf(stderr, "\nError: traceLineage: while tracing edge above node %d in gen %d.\n",node,gen);
-			fprintf(stderr, "  %d living migration bands when moving to population %d (with total rate %f):\n",num_live_mig_bands,pop, mig_rate);
-			for(i=0;i<num_live_mig_bands; i++) {
-				fprintf(stderr, " %d (rate %f)",live_mig_bands[i], dataSetup.popTree->migBands[ live_mig_bands[i] ].migRate);
-			}
-			fprintf(stderr, ".\n");
-		} else {
-			fprintf(stderr, "Fatal Error 0007.\n");
-		}
-        printGenealogyAndExit(gen,-1);
+      if(fabs(mig_rate) > 0.00000001 || num_live_mig_bands > 0)
+      {
+        TRACE_LINEAGE_FATAL_0007
       }
       mig_rate = 0.0;
 	  
-      if(fabs(age/dataSetup.popTree->pops[pop]->age-1) > 0.01) {
-		if(debug) {
-			fprintf(stderr, "\nError traceLineage: while tracing edge above node %d in gen %d.\n",node,gen);
-    	    fprintf(stderr, "  age recorded at start of pop %d is %g, while age of pop is %g (diff = %g).\n",pop, age, dataSetup.popTree->pops[pop]->age,age-dataSetup.popTree->pops[pop]->age);
-        	for(i=0;i<num_live_mig_bands; i++) {
-          		fprintf(stderr, " %d (rate %f)",live_mig_bands[i], dataSetup.popTree->migBands[ live_mig_bands[i] ].migRate);
-        	}
-        	fprintf(stderr, ".\n");
-		} else {
-			fprintf(stderr, "Fatal Error 0008.\n");
-		}
-        printGenealogyAndExit(gen,-1);
+      if(fabs(age/dataSetup.popTree->pops[pop]->age-1) > 0.01)
+      {
+      		TRACE_LINEAGE_FATAL_0008
       }
       age = dataSetup.popTree->pops[pop]->age;
     }// end of moving to next pop
@@ -997,7 +1199,8 @@ int traceLineage(int gen, int node, int reconnect) {
 		
     node_id = event_chains[gen].events[event].getId();
 		
-    if(!reconnect) {
+    if(!reconnect)
+    {
       // if(!reconnect) then reduce the number of lineages along pruned edge by 1
       event_chains[gen].events[event].decrementLineages();
       t = event_chains[gen].events[event].getElapsedTime();
@@ -1006,217 +1209,76 @@ int traceLineage(int gen, int node, int reconnect) {
 		
       // if event is an in-migration event of edge above node,
       // record it and follow it to source population
-      if(event_chains[gen].events[event].getType() == IN_MIG){
+      if(event_chains[gen].events[event].getType() == IN_MIG)
+      {
         //				printf("\nIn traceLineage(%d,%d,%d) encountering in-mig event %d for mignode %d on branch %d.",
         //								gen,node,reconnect, event, node_id, genetree_migs[gen].mignodes[node_id].gtree_branch);
-        if(genetree_migs[gen].mignodes[node_id].gtree_branch == node)	{
+        if(genetree_migs[gen].mignodes[node_id].gtree_branch == node)
+        {
           //					printf("... following.");
           mig_band = genetree_migs[gen].mignodes[node_id].migration_band;
           mig_source = genetree_migs[gen].mignodes[node_id].source_event;
           locus_data[gen].mig_spr_stats.old_migs[locus_data[gen].mig_spr_stats.num_old_migs++] = node_id;
         } 
       }			
-    } else {
+    }
+    else
+    {
       // if(reconnet) then sample new event within interval (coal or mig)
       // if coal - create new event, record point of coalescence and terminate process
       // if mig  - create 2 new events, and record source of migration for later processing
       rate = mig_rate + 2*event_chains[gen].events[event].getNumLineages()/theta;
       // rate can be zero, if no lineages and no incoming migration bands
-      if(rate <= 0) {
+      if(rate <= 0)
         t = event_chains[gen].events[event].getElapsedTime();
-      } else {
+      else
         t=rndexp( 1/rate );
-      }
 
-      if(t >= event_chains[gen].events[event].getElapsedTime()) {
+      if(t >= event_chains[gen].events[event].getElapsedTime())
+      {
         // no event sampled in this interval
         t = event_chains[gen].events[event].getElapsedTime();
         age += t;
-      } else {
-        // sample event in this interval
-        age += t;
-        event_sample = rate*rndu();
- 				
-        if(event_sample < mig_rate) {
-          // migration event - figure out where to migrate
-          if(MAX_MIGS <= genetree_migs[gen].num_migs + locus_data[gen].mig_spr_stats.num_new_migs  - locus_data[gen].mig_spr_stats.num_old_migs) {
-            misc_stats.not_enough_migs++;
-            return -1;
-          }
-          if(event_sample == 0.0 && debug) {
-			  	fprintf(stderr, "\ntraceLineage() event_sample=%g when rate=%g at pop=%d, age=%g.\n",event_sample,rate,pop,age);
- 			 	printPopulationTree(dataSetup.popTree, stderr, 1);	
-  				printLocusGenTree(dataState.lociData[gen], stderr, nodePops[gen], nodeEvents[gen]);
-  				printEventChains(stderr, gen);
-				fprintf(stderr, "\n\n********************************************************************\n\n");
-		  }
-          for(i=0; event_sample >= 0 && i < num_live_mig_bands; i++) {
-            event_sample -= dataSetup.popTree->migBands[ live_mig_bands[i] ].migRate; 
-          }
-          if(event_sample >= 0.0) {	// at this point i = num_live_mig_bands
-			  	fprintf(stderr, "\ntraceLineage() after iterating through all migration bands, event_sample=%g when rate=%g, mig_rate=%g at pop=%d, age=%g.\n",
-						event_sample,rate,mig_rate,pop,age);
-				if(num_live_mig_bands <= 0) {
-					if(debug) {
-						fprintf(stderr, "\nError: traceLineage: while re-coalescing edge above node %d in gen %d:\n",node,gen);
-						fprintf(stderr, "  num_live_mig_bands=%d but migration rate is %g (event_sample = %g, pop=%d, age=%g).\n", 
-							num_live_mig_bands,mig_rate,event_sample,pop,age);
-					} else {
-						fprintf(stderr, "Fatal Error 0009.\n");
-					}
-					printGenealogyAndExit(gen,-1);
-				}
-				fprintf(stderr, "%d live mig bands:",num_live_mig_bands);
-				for(i=0, event_sample=mig_rate; i < num_live_mig_bands; i++) {
-					fprintf(stderr, " %d (rate=%g)", live_mig_bands[i], dataSetup.popTree->migBands[ live_mig_bands[i] ].migRate);
-					event_sample -= dataSetup.popTree->migBands[ live_mig_bands[i] ].migRate;
-				}
-				fprintf(stderr, " mig_rate - all rates = %g.\n", event_sample);
- 			 	printPopulationTree(dataSetup.popTree, stderr, 1);	
-  				printLocusGenTree(dataState.lociData[gen], stderr, nodePops[gen], nodeEvents[gen]);
-  				printEventChains(stderr, gen);
-				fprintf(stderr, "\n\n********************************************************************\n\n");
-		  }
-				
-			if(i <= 0) {
-				if(debug) {
-					fprintf(stderr, "\nError: traceLineage: while re-coalescing edge above node %d in gen %d:\n",node,gen);
-					fprintf(stderr, "  i=%d and event_sample=%g (migration rate = %g, pop=%d, age=%g).\n", 
-						i,event_sample,mig_rate,pop,age);
-				} else {
-					fprintf(stderr, "Fatal Error 0009A.\n");
-				}
-				printGenealogyAndExit(gen,-1);
-			}
-          // create in and out events and follow out event
-          // do not mark the events yet (unless accepted)
-          locus_data[gen].mig_spr_stats.new_migs_bands[locus_data[gen].mig_spr_stats.num_new_migs] = mig_band = live_mig_bands[i-1];
-		  if(dataSetup.popTree->migBands[mig_band].targetPop != pop) {
-				if(debug) {
-					fprintf(stderr, "\nError: traceLineage: while re-coalescing edge above node %d in gen %d:\n",node,gen);
-					fprintf(stderr, "  selected mig_band=%d but target population %d does not fit current population %d (age=%g).\n", 
-						mig_band,dataSetup.popTree->migBands[mig_band].targetPop,pop,age);
-					fprintf(stderr, "%d live mig bands:",num_live_mig_bands);
-					for(i=0, event_sample=mig_rate; i < num_live_mig_bands; i++) {
-						fprintf(stderr, " %d (rate=%g)", live_mig_bands[i], dataSetup.popTree->migBands[ live_mig_bands[i] ].migRate);
-						event_sample -= dataSetup.popTree->migBands[ live_mig_bands[i] ].migRate;
-					}
-					fprintf(stderr, " mig_rate - all rates = %g.\n", event_sample);
-				} else {
-					fprintf(stderr, "Fatal Error 0009B.\n");
-				}
-				printGenealogyAndExit(gen,-1);
-		  }
-          locus_data[gen].mig_spr_stats.new_migs_ages [locus_data[gen].mig_spr_stats.num_new_migs] = age;
-          event = locus_data[gen].mig_spr_stats.new_migs_in[locus_data[gen].mig_spr_stats.num_new_migs]  = createEventBefore(gen,pop,event,t);
-          // mark source event for migration
-          mig_source = locus_data[gen].mig_spr_stats.new_migs_out[locus_data[gen].mig_spr_stats.num_new_migs] =
-            createEvent(gen,dataSetup.popTree->migBands[mig_band].sourcePop,age);
-          if( mig_source < 0 ) {
-			if(debug) {
-				fprintf(stderr, "Error: problem encountered when creating new migration event for locus %d, mig band %d pops %d-->%d, in trace lineage.\n",
-								gen, mig_band,dataSetup.popTree->migBands[mig_band].sourcePop, dataSetup.popTree->migBands[mig_band].targetPop );
-			} else {
-				fprintf(stderr, "Fatal Error 0010.\n");
-			}
-            printGenealogyAndExit(gen,-1);
-          }
-          locus_data[gen].mig_spr_stats.num_new_migs++;
-        } else {
-          // coalescence event - figure out with whom to coalesce
-          //getLineagesAtInterval(gen,event,pop,node,targets);  <-- UNUSED
-          num_targets = getEdgesForTimePop(gen, (age-t)+event_chains[gen].events[event].getElapsedTime()/2, pop, node, targets);
-          if(num_targets !=  event_chains[gen].events[event].getNumLineages()) {
-			if(debug) {
- 	           fprintf(stderr, "\nError: in traceLineage: %d targets and %d lineages (at gen %d, node %d, pop %d, , event %d, age %g)\n", 
-    	               num_targets, event_chains[gen].events[event].getNumLineages(), gen, node, pop, event,
-        	           (age-t)+event_chains[gen].events[event].getElapsedTime()/2);
-			} else {
-				fprintf(stderr, "Fatal Error 0011.\n");
-			}
-            printGenealogyAndExit(gen,-1);
-          }
-          /*					printf("\nFound %d targets at gen %d for node %d, at event %d, pop %d, age %f:",
-								num_targets, gen, node, event, pop, age);
-                                for(i=0; i< num_targets; i++) {
-                                printf(" %d", targets[i]);
-                                }
-                                printf("\n"); 							
-          */				
-          // this simulates choosing a lineage uniformly at random
-          i = (int)((event_sample - mig_rate) * theta/2);
-          target = targets[i];
-          // attach lineage in genetree and create new event
-          //printf("\nGrafting subtree below node %d to edge above node %d at time %g.",node, target, age);
-					
-          executeGenSPR(dataState.lociData[gen], node, target, age);
-          locus_data[gen].mig_spr_stats.father_pop_new = pop;
-					
-          //GraftNode(node, target, age, pop);
-          //printf("\nOriginal data log-likelihood was %g and after re-grafting it is %g.",data.lnpDi[gen], lnpD_gen(gen));
-          locus_data[gen].mig_spr_stats.target = target;
-          locus_data[gen].mig_spr_stats.father_event_new = event = createEventBefore(gen,pop,event,t);
-          // signal to terminate
-          proceed = 0;
-        }// if event == mig/coal
+      }
+      else
+      {
+        if( 0 != traceLineage_sample_event_in_interval(gen,
+																												pop,
+																												node,
+																												event,
+																												num_live_mig_bands,
+																												mig_band,
+																												proceed,
+																												mig_source,
+																												num_targets,
+																												target,
+																												targets,
+																												live_mig_bands,
+																												event_sample,
+																												t,
+																												rate,
+																												theta,
+																												mig_rate,
+																												age) )
+        	return -1;
       }// if event in interval 
     }// if (reconnect)  			
 		
     // record stat changes
-    locus_data[gen].genetree_stats_delta[reconnect].coal_stats_delta[pop] += 2*event_chains[gen].events[event].getNumLineages()*t;
-    for(i=0; i<num_live_mig_bands; i++) {
-      locus_data[gen].genetree_stats_delta[reconnect].mig_stats_delta[live_mig_bands[i]] += t;
-    }
-    locus_data[gen].genetree_stats_delta[reconnect].changed_events[locus_data[gen].genetree_stats_delta[reconnect].num_changed_events++] = event;
-		
-    // add log-likelihood of no events during interval		
-    locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] -= (mig_rate + 2*event_chains[gen].events[event].getNumLineages()/theta) * t;
-
-    // if event is migration (original or new)
-    // follow to source and recalculate living mig_bands
-    // if event starts/ends migration band, change mig_rate
-    if(mig_source >= 0) {
-      // add log-likelihood of migration event
-      locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] += log(dataSetup.popTree->migBands[mig_band].migRate);
-      event = mig_source;
-      pop = dataSetup.popTree->migBands[mig_band].sourcePop;
-      theta = dataSetup.popTree->pops[pop]->theta*heredity_factor;
-      mig_source = -1;
-      mig_rate = 0.0;
-      num_live_mig_bands = 0;
-      for(mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
-        if(dataSetup.popTree->migBands[mig_band].targetPop == pop &&
-           dataSetup.popTree->migBands[mig_band].startTime <= age &&
-           dataSetup.popTree->migBands[mig_band].endTime   >  age)
-          {
-            mig_rate += dataSetup.popTree->migBands[mig_band].migRate;
-            live_mig_bands[num_live_mig_bands++] = mig_band;
-          }
-      }
-			
-    } else if(event_chains[gen].events[event].getType()== MIG_BAND_START) {
-      mig_rate += dataSetup.popTree->migBands[node_id].migRate;
-      live_mig_bands[num_live_mig_bands] = node_id;
-      num_live_mig_bands++;
-    } else if(event_chains[gen].events[event].getType() == MIG_BAND_END) {
-      mig_rate -= dataSetup.popTree->migBands[node_id].migRate;
-	  if(num_live_mig_bands == 1 && mig_rate > 0.0000001 && debug) {
-	  	fprintf(stderr, "\ntraceLineage() mig_rate=%g when all mig bands have been emptied at pop=%d, age=%g.\n",mig_rate,pop,age);
-	 	printPopulationTree(dataSetup.popTree, stderr, 1);	
-		printLocusGenTree(dataState.lociData[gen], stderr, nodePops[gen], nodeEvents[gen]);
-		printEventChains(stderr, gen);
-		fprintf(stderr, "\n\n********************************************************************\n\n");
-	  }
-	  if(num_live_mig_bands == 1) {
-	  	mig_rate = 0.0;
-	  }
-      for(i=0; i< num_live_mig_bands; i++) {
-        if(live_mig_bands[i] == node_id) {
-          live_mig_bands[i] = live_mig_bands[--num_live_mig_bands];
-          break;
-        }
-      }
-    }
+    traceLineage_record_stat_changes_epilogue(gen,
+																							reconnect,
+																							pop,
+																							event,
+																							node_id,
+																							num_live_mig_bands,
+																							mig_band,
+																							mig_source,
+																							live_mig_bands,
+																							t,
+																							age,
+																							mig_rate,
+																							theta,
+																							heredity_factor);
 		
     event = event_chains[gen].events[event].getNextIdx();
 		
