@@ -606,3 +606,4 @@ void assertCombLeafCoalStats(int comb, int leaf){
 		exit(-1);
 	}
 }
+
