@@ -15,6 +15,7 @@ typedef struct STATS {
 			double* elapsed_times;	// temporary array to hold elapsed_time between adjacent events of a specific genealogy.
 			int* num_lineages; 		// temporary array to hold num of lineages of a specific genealogy.
 			int* event_types; 		// temporary array to hold event types
+			int* event_ids;
 			/** size of stats arrays (event_types, num_lineages, elapsed_times, sorted_ages)*/
 			int num_events;
 } Stats;
@@ -50,6 +51,7 @@ void handleNonLeafCoals(int comb, int currentPop, int gene);
 void handleNonLeafNumCoals(int comb, int currentPop, int gene);
 void handleNonLeafCoalStats(int comb, int currentPop, int gene);
 void mergeChildernIntoCurrent(int comb, int currentPop, int gen);
+void copyStaticEventStats(Stats* sourceStats, int n, Stats* targetStats, int m);
 void appendCurrent(int comb, int currentPop, int gene);
 double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
 
@@ -57,6 +59,8 @@ void migrations(int comb, int gene);
 void handleLeafMigStats(int comb, int mig, int gene);
 void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge);
 void incrementEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge);
+void handleExternalMigStats(int comb, int mig, int gene); // TODO - rename to better explain "O->C" type migband
+
 
 int	isLeaf(int pop);
 int areChildrenLeaves(int pop);
