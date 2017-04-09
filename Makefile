@@ -141,3 +141,5 @@ clean:
 	@echo "Cleaning"
 	@rm -rf obj/*.o bin/readTrace bin/G-PhoCS
 	@rm -rf bin/readTrace.exe bin/G-PhoCS.exe out/comb-trace.tsv
+
+
