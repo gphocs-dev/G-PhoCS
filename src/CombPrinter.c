@@ -13,6 +13,10 @@ void printCombStatsHeader(FILE* file){
 		}
 	}
 
+	for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+		printOnePopHeader(pop, file);
+	}
+
 	fprintf(file, "\n");
 }
 void printOneCombHeader(int comb, FILE* file){
@@ -46,6 +50,14 @@ void printCombMigHeaders(int comb, char* combName, FILE* file) {
 	}
 }
 
+void printOnePopHeader(int pop, FILE* file){
+	char* popName = dataSetup.popTree->popArray[pop].name;
+	fprintf(file, "P_%s %s\tP_%s %s\t",
+			popName, "cs",
+			popName, "nc");
+}
+
+
 void printCombStats(int iteration, FILE* file){
 
 	fprintf(file, "%d\t", iteration);
@@ -53,6 +65,10 @@ void printCombStats(int iteration, FILE* file){
 		if (isFeasibleComb(comb)){
 			printOneCombStats(comb, file);
 		}
+	}
+
+	for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+		printOnePopStats(pop, file);
 	}
 
 	fprintf(file, "\n");
@@ -82,4 +98,10 @@ void printCombMigStats(int comb, FILE* file) {
 					comb_stats[comb].leafMigs[mig].num_migs);
 		}
 	}
+}
+
+void printOnePopStats(int pop, FILE* file){
+	fprintf(file, "%0.35f\t%d\t",
+			genetree_stats_total.coal_stats[pop],
+			genetree_stats_total.num_coals[pop]);
 }
