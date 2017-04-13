@@ -1165,7 +1165,7 @@ int performMCMC() {
 
 		if (mcmcSetup.mutRateMode == 1)
 				fprintf(ioSetup.traceFile, "\tVariance-Mut");
-		fprintf(ioSetup.traceFile, "\tData-ld-ln\tFull-ld-ln\n");
+		fprintf(ioSetup.traceFile, "\tData-ld-ln\tFull-ld-ln\tGene-ld-ln\n");
 
 		printf(	"Starting MCMC: %d burnin, %d running, sampled every %d iteration(s).\n",
 						mcmcSetup.burnin, mcmcSetup.numSamples, mcmcSetup.sampleSkip);
@@ -1556,7 +1556,7 @@ int performMCMC() {
 				if (iteration >= 0 && iteration % (mcmcSetup.sampleSkip + 1) == 0) {
 						fprintf(ioSetup.traceFile, "%d\t", iteration);
 						printParamVals(paramVals, 0, mcmcSetup.numParameters,	ioSetup.traceFile);
-						fprintf(ioSetup.traceFile, "\t%.6f\t%.6f\n", dataState.logLikelihood, dataState.dataLogLikelihood);
+						fprintf(ioSetup.traceFile, "\t%.6f\t%.6f\t%.6f\n", dataState.logLikelihood, dataState.dataLogLikelihood, dataState.genealogyLogLikelihood);
 						fflush(ioSetup.traceFile);
 
 						if (recordCoalStats  && 0) {
