@@ -1556,7 +1556,7 @@ int performMCMC() {
 				if (iteration >= 0 && iteration % (mcmcSetup.sampleSkip + 1) == 0) {
 						fprintf(ioSetup.traceFile, "%d\t", iteration);
 						printParamVals(paramVals, 0, mcmcSetup.numParameters,	ioSetup.traceFile);
-						fprintf(ioSetup.traceFile, "\t%.6f\t%.6f\t%.6f\n", dataState.logLikelihood, dataState.dataLogLikelihood, dataState.genealogyLogLikelihood);
+						fprintf(ioSetup.traceFile, "%.6f\t%.6f\t%.6f\n", dataState.logLikelihood, dataState.dataLogLikelihood, dataState.genealogyLogLikelihood);
 						fflush(ioSetup.traceFile);
 
 						if (recordCoalStats  && 0) {
