@@ -11,10 +11,10 @@ CC=@gcc
 
 # compiler options
 #Debugging
-CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -fopenmp -ggdb
+#CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -fopenmp -ggdb
 
 #Production
-#CFLAGS+= -fstack-protector-all -Wall -O3   
+CFLAGS+= -fstack-protector-all -Wall -O3   
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty
