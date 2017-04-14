@@ -84,8 +84,7 @@ local.properties
 # ===========================
 #  G-PhoCS Specifics
 # ===========================
-mcmc.log
 out/*
 ron
-
+*.log
 
