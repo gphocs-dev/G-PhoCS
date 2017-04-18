@@ -841,165 +841,244 @@ double rubberBandRipple(int gen, int do_or_redo) {
 
 }
 
+//======================== Trace Lineages Code ===============================
+
 //----------------------------------------------------------------------------
-void traceLineage_init(int& gen,
-		  								 int& node,
-											 int& reconnect,
-											 int& pop,
-											 int& event,
-											 int& num_live_mig_bands,
-											 int& mig_band,
-											 int& mig_source,
-											 int& proceed,
-											 int* live_mig_bands,
-											 double& theta,
-											 double& heredity_factor,
-											 double& age,
-											 double& mig_rate)
+typedef struct __TraceLineageAutoVars
 {
-	int i = 0;
+	int gen, node, reconnect;
+  int pop, event, node_id, mig_band, mig_source, proceed;
+  int num_live_mig_bands, live_mig_bands[MAX_MIG_BANDS];
+  double age, t;
+  // these variables are needed only for reconnecting or delta_lnLd computation
+  int target, num_targets, targets[2*NS-1];
+  double 	event_sample, rate, mig_rate, theta, heredity_factor;
+} TraceLineageAutoVars;
+
+//----------------------------------------------------------------------------
+void traceLineage_init(TraceLineageAutoVars* p_stack)
+{
+  int i = 0;
+
+  int& gen                 = p_stack->gen;
+  int& node                = p_stack->node;
+  int& reconnect           = p_stack->reconnect;
+  p_stack->age             = -1.0;
+  p_stack->heredity_factor = 1.0;
+
   /******** initialization start  **************/
-  pop = nodePops[gen][node];
+  p_stack->pop = nodePops[gen][node];
 
-  if(node < dataSetup.numSamples) {
-    event = event_chains[gen].first_event[pop];
-	while( !event_chains[gen].events[event].isOfType( SAMPLES_START | END_CHAIN ) ) {
-		event = event_chains[gen].events[event].getNextIdx();
-	}
-	if(event_chains[gen].events[event].getType() == END_CHAIN) {
-		if(debug) {
-	        fprintf(stderr, "\nError: traceLineage: while tracing edge above node %d in gen %d.\n",node,gen);
-        	fprintf(stderr, "  Could not find start event in pop %d.\n",pop);
-        	fprintf(stderr, ".\n");
-		} else {
-			fprintf(stderr, "Fatal Error 0101.\n");
-		}
-	}
-	event = event_chains[gen].events[event].getNextIdx();
-  } else {
-    event = event_chains[gen].events[nodeEvents[gen][node]].getNextIdx();
+  if(node < dataSetup.numSamples)
+  {
+    p_stack->event = event_chains[gen].first_event[p_stack->pop];
+    while( !event_chains[gen].events[p_stack->event].\
+            isOfType(SAMPLES_START|END_CHAIN ))
+    {
+      p_stack->event = event_chains[gen].events[p_stack->event].getNextIdx();
+    }
+    if(event_chains[gen].events[p_stack->event].getType() == END_CHAIN)
+    {
+      TRACE_LINEAGE_INIT_FATAL_0101
+    }
+    p_stack->event = event_chains[gen].events[p_stack->event].getNextIdx();
   }
-  theta = dataSetup.popTree->pops[pop]->theta*heredity_factor;
+  else
+  {
+    p_stack->event =
+                 event_chains[gen].events[nodeEvents[gen][node]].getNextIdx();
+  }
+  p_stack->theta =   dataSetup.popTree->pops[p_stack->pop]->theta
+                   * p_stack->heredity_factor;
 
-  age = getNodeAge(dataState.lociData[gen], node);
+  p_stack->age = getNodeAge(dataState.lociData[gen], node);
   //age = nodes[node].age;
   locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] = 0.0;
-  if(!reconnect) {
+  if(!reconnect)
+  {
     locus_data[gen].mig_spr_stats.num_old_migs = 0;
-    if(node != getLocusRoot(dataState.lociData[gen])) {
-      locus_data[gen].mig_spr_stats.father_event_old = nodeEvents[gen][ getNodeFather(dataState.lociData[gen], node) ];
+    if(node != getLocusRoot(dataState.lociData[gen]))
+    {
+      locus_data[gen].mig_spr_stats.father_event_old =
+      		nodeEvents[gen][ getNodeFather(dataState.lociData[gen], node) ];
     }
-    // locus_data[gen].mig_spr_stats.father_event_old = nodes[nodes[node].father].event_id;
-  } else {
+    // locus_data[gen].mig_spr_stats.father_event_old =
+    //    nodes[nodes[node].father].event_id;
+  }
+  else
+  {
     locus_data[gen].mig_spr_stats.num_new_migs = 0;
   }
 		
 	
   locus_data[gen].genetree_stats_delta[reconnect].num_changed_events = 0;
   // assume all migration bands and populations are affected
-  locus_data[gen].genetree_stats_delta[reconnect].num_pops_changed = dataSetup.popTree->numPops;
-  for(i=0; i<dataSetup.popTree->numPops; i++) {
+  locus_data[gen].genetree_stats_delta[reconnect].num_pops_changed =
+  		                                             dataSetup.popTree->numPops;
+  for(i = 0; i < dataSetup.popTree->numPops; ++i)
+  {
     locus_data[gen].genetree_stats_delta[reconnect].pops_changed[i] = i;
     locus_data[gen].genetree_stats_delta[reconnect].coal_stats_delta[i] = 0.0;
   }
-  locus_data[gen].genetree_stats_delta[reconnect].num_mig_bands_changed = dataSetup.popTree->numMigBands;
-  for(i=0; i<dataSetup.popTree->numMigBands; i++) {
+  locus_data[gen].genetree_stats_delta[reconnect].num_mig_bands_changed =
+  		                                          dataSetup.popTree->numMigBands;
+  for(i = 0; i < dataSetup.popTree->numMigBands; ++i)
+  {
     locus_data[gen].genetree_stats_delta[reconnect].mig_bands_changed[i] = i;
     locus_data[gen].genetree_stats_delta[reconnect].mig_stats_delta[i] = 0.0;
   }
 	
-  mig_rate = 0.0;
-  num_live_mig_bands = 0;
-  for(mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
-    if(dataSetup.popTree->migBands[mig_band].targetPop == pop &&
-       dataSetup.popTree->migBands[mig_band].startTime < age &&
-       dataSetup.popTree->migBands[mig_band].endTime   > age)
-      {
-        mig_rate += dataSetup.popTree->migBands[mig_band].migRate;
-        live_mig_bands[num_live_mig_bands++] = mig_band;
-      }
+  p_stack->mig_rate = 0.0;
+  p_stack->num_live_mig_bands = 0;
+  int& mb = p_stack->mig_band;
+  for(mb = 0; mb < dataSetup.popTree->numMigBands; ++mb)
+  {
+    if(    dataSetup.popTree->migBands[mb].targetPop == p_stack->pop
+    		&& dataSetup.popTree->migBands[mb].startTime  < p_stack->age
+				&& dataSetup.popTree->migBands[mb].endTime    > p_stack->age )
+    {
+      p_stack->mig_rate += dataSetup.popTree->migBands[mb].migRate;
+      p_stack->live_mig_bands[p_stack->num_live_mig_bands++] = mb;
+    }
   }
-  mig_source = -1;
-  proceed = 1;
+  p_stack->mig_source = -1;
+  p_stack->proceed    =  1;
   /******** initialization end    **************/
 }
 
 //----------------------------------------------------------------------------
-int traceLineage_sample_event_in_interval(int& gen,
-																					int& pop,
-																					int& node,
-																					int& event,
-																					int& num_live_mig_bands,
-																					int& mig_band,
-																					int& proceed,
-																					int& mig_source,
-																					int& num_targets,
-																					int& target,
-																					int* targets,
-																					int* live_mig_bands,
-																					double& event_sample,
-																					double& t,
-																					double& rate,
-																					double& theta,
-																					double& mig_rate,
-																					double& age)
+int traceLineage_move_to_next_pop(TraceLineageAutoVars* p_stack)
+{
+	int i = 0;
+  if(dataSetup.popTree->pops[p_stack->pop]->father == NULL)
+  {
+    // reject if trying to reconnect above OLDAGE
+    if(p_stack->reconnect == 1)
+    {
+      return -1;
+    }
+    // if detaching subtree, you can reach top only if detaching the root edge
+    // this has to be considered in migration scenarios
+    TRACE_LINEAGE_FATAL_0006
+  }
+  p_stack->pop = dataSetup.popTree->pops[p_stack->pop]->father->id;
+  p_stack->theta =   dataSetup.popTree->pops[p_stack->pop]->theta
+  		             * p_stack->heredity_factor;
+  p_stack->event = event_chains[p_stack->gen].first_event[p_stack->pop];
+
+  if(fabs(p_stack->mig_rate) > 0.00000001 || p_stack->num_live_mig_bands > 0)
+  {
+    TRACE_LINEAGE_FATAL_0007
+  }
+  p_stack->mig_rate = 0.0;
+
+  if(fabs(p_stack->age/dataSetup.popTree->pops[p_stack->pop]->age-1) > 0.01)
+  {
+    TRACE_LINEAGE_FATAL_0008
+  }
+  p_stack->age = dataSetup.popTree->pops[p_stack->pop]->age;
+  return 0;
+}
+
+//----------------------------------------------------------------------------
+void traceLineage_reduce_lineages_along_pruned_edge(
+		                                            TraceLineageAutoVars* p_stack)
+{
+  // if(!reconnect) then reduce the number of lineages along pruned edge by 1
+  event_chains[p_stack->gen].events[p_stack->event].decrementLineages();
+  p_stack->t =
+            event_chains[p_stack->gen].events[p_stack->event].getElapsedTime();
+  p_stack->age += p_stack->t;
+  p_stack->proceed = (p_stack->event !=
+                      locus_data[p_stack->gen].mig_spr_stats.father_event_old);
+
+  // if event is an in-migration event of edge above node,
+  // record it and follow it to source population
+  if(event_chains[p_stack->gen].events[p_stack->event].getType() == IN_MIG)
+  {
+    if(    genetree_migs[p_stack->gen].mignodes[p_stack->node_id].gtree_branch
+        == p_stack->node)
+    {
+      p_stack->mig_band =
+          genetree_migs[p_stack->gen].mignodes[p_stack->node_id].migration_band;
+      p_stack->mig_source =
+          genetree_migs[p_stack->gen].mignodes[p_stack->node_id].source_event;
+      locus_data[p_stack->gen].mig_spr_stats.\
+			    old_migs[locus_data[p_stack->gen].mig_spr_stats.num_old_migs++] =
+                                                              p_stack->node_id;
+    }
+  }
+}
+
+//----------------------------------------------------------------------------
+int traceLineage_sample_event_in_interval(TraceLineageAutoVars* p_stack)
 {
 	int i;
-  // sample event in this interval
-  age += t;
-  event_sample = rate*rndu();
+  int& gen                 = p_stack->gen;
+  int& node                = p_stack->node;
+  int& reconnect           = p_stack->reconnect;
 
-  if(event_sample < mig_rate)
+  // sample event in this interval
+	p_stack->age += p_stack->t;
+	p_stack->event_sample = p_stack->rate * rndu();
+
+  if(p_stack->event_sample < p_stack->mig_rate)
   {
     // migration event - figure out where to migrate
     if(MAX_MIGS <=
-    		genetree_migs[gen].num_migs
-				+ locus_data[gen].mig_spr_stats.num_new_migs
-				- locus_data[gen].mig_spr_stats.num_old_migs)
+          genetree_migs[gen].num_migs
+        + locus_data[gen].mig_spr_stats.num_new_migs
+        - locus_data[gen].mig_spr_stats.num_old_migs)
     {
       misc_stats.not_enough_migs++;
       return -1;
     }
     DEBUG_TRACE_LINEAGE_ASSERT_EVENT_SAMPLE_IS_ZERO
-    for(i=0; event_sample >= 0 && i < num_live_mig_bands; i++)
+    for( i = 0;
+         p_stack->event_sample >= 0 && i < p_stack->num_live_mig_bands;
+         ++i)
     {
-      event_sample -= dataSetup.popTree->migBands[ live_mig_bands[i] ].migRate;
+      p_stack->event_sample -=
+        dataSetup.popTree->migBands[p_stack->live_mig_bands[i]].migRate;
     }
-    if(event_sample >= 0.0)
+    if( p_stack->event_sample >= 0.0 )
     {	// at this point i = num_live_mig_bands
-    		TRACE_LINEAGE_FATAL_0009
+      TRACE_LINEAGE_FATAL_0009
     }
 
     if(i <= 0)
     {
-		  TRACE_LINEAGE_FATAL_0009A
+      TRACE_LINEAGE_FATAL_0009A
     }
     // create in and out events and follow out event
     // do not mark the events yet (unless accepted)
     locus_data[gen].mig_spr_stats.new_migs_bands[locus_data[gen].\
-		 										           mig_spr_stats.num_new_migs] =
-												            		              mig_band =
-												            		              live_mig_bands[i-1];
-    if(dataSetup.popTree->migBands[mig_band].targetPop != pop)
+      mig_spr_stats.num_new_migs] = p_stack->mig_band
+                                  = p_stack->live_mig_bands[i-1];
+    if(dataSetup.popTree->migBands[p_stack->mig_band].targetPop != p_stack->pop)
     {
     		TRACE_LINEAGE_FATAL_0009B
     }
 
-    locus_data[gen].mig_spr_stats.new_migs_ages[
-										locus_data[gen].mig_spr_stats.num_new_migs] = age;
-    event = locus_data[gen].mig_spr_stats.new_migs_in[
-														locus_data[gen].mig_spr_stats.num_new_migs]
-					= createEventBefore(gen,pop,event,t);
+    locus_data[gen].mig_spr_stats.\
+      new_migs_ages[locus_data[gen].mig_spr_stats.num_new_migs] = p_stack->age;
+    p_stack->event =
+      locus_data[gen].mig_spr_stats.\
+                     new_migs_in[locus_data[gen].mig_spr_stats.num_new_migs]
+        = createEventBefore( gen,
+                             p_stack->pop,
+                             p_stack->event,
+                             p_stack->t);
     // mark source event for migration
-    mig_source = locus_data[gen].mig_spr_stats.new_migs_out[
-										locus_data[gen].mig_spr_stats.num_new_migs]
-							 = createEvent(gen,
-														 dataSetup.popTree->migBands[
-																										mig_band].sourcePop,
-														 age);
-    if( mig_source < 0 )
+    p_stack->mig_source =
+      locus_data[gen].mig_spr_stats.\
+                      new_migs_out[locus_data[gen].mig_spr_stats.num_new_migs]
+        = createEvent( gen,
+                       dataSetup.popTree->migBands[p_stack->mig_band].sourcePop,
+                       p_stack->age);
+    if( p_stack->mig_source < 0 )
     {
-    		TRACE_LINEAGE_FATAL_0010
+      TRACE_LINEAGE_FATAL_0010
     }
     locus_data[gen].mig_spr_stats.num_new_migs++;
   } // event_sample < mig_rate
@@ -1007,33 +1086,40 @@ int traceLineage_sample_event_in_interval(int& gen,
   {
     // coalescence event - figure out with whom to coalesce
     //getLineagesAtInterval(gen,event,pop,node,targets);  <-- UNUSED
-    num_targets = getEdgesForTimePop(gen, (age-t)+event_chains[gen].events[event].getElapsedTime()/2, pop, node, targets);
-    if(num_targets !=  event_chains[gen].events[event].getNumLineages())
+    double tm =   (p_stack->age - p_stack->t)
+             + event_chains[gen].events[p_stack->event].getElapsedTime() / 2.0;
+    p_stack->num_targets = getEdgesForTimePop( gen, tm, p_stack->pop,
+                                               node, p_stack->targets);
+    if(     p_stack->num_targets
+        !=  event_chains[gen].events[p_stack->event].getNumLineages())
     {
-    		TRACE_LINEAGE_FATAL_0011
+      TRACE_LINEAGE_FATAL_0011
     }
-    /*					printf("\nFound %d targets at gen %d for node %d, at event %d, pop %d, age %f:",
-					num_targets, gen, node, event, pop, age);
+    /* printf("\nFound %d targets at gen %d for node %d, at event %d, pop %d, age %f:",
+			 num_targets, gen, node, event, pop, age);
                           for(i=0; i< num_targets; i++) {
                           printf(" %d", targets[i]);
                           }
                           printf("\n");
     */
     // this simulates choosing a lineage uniformly at random
-    i = (int)((event_sample - mig_rate) * theta/2);
-    target = targets[i];
+    i = (int)
+        ( (p_stack->event_sample - p_stack->mig_rate) * p_stack->theta/2.0 );
+    p_stack->target = p_stack->targets[i];
     // attach lineage in genetree and create new event
     //printf("\nGrafting subtree below node %d to edge above node %d at time %g.",node, target, age);
 
-    executeGenSPR(dataState.lociData[gen], node, target, age);
-    locus_data[gen].mig_spr_stats.father_pop_new = pop;
+    executeGenSPR( dataState.lociData[gen], node,
+                   p_stack->target, p_stack->age );
+    locus_data[gen].mig_spr_stats.father_pop_new = p_stack->pop;
 
     //GraftNode(node, target, age, pop);
     //printf("\nOriginal data log-likelihood was %g and after re-grafting it is %g.",data.lnpDi[gen], lnpD_gen(gen));
-    locus_data[gen].mig_spr_stats.target = target;
-    locus_data[gen].mig_spr_stats.father_event_new = event = createEventBefore(gen,pop,event,t);
+    locus_data[gen].mig_spr_stats.target = p_stack->target;
+    locus_data[gen].mig_spr_stats.father_event_new = p_stack->event =
+      createEventBefore( gen, p_stack->pop, p_stack->event, p_stack->t);
     // signal to terminate
-    proceed = 0;
+    p_stack->proceed = 0;
   }// if event == mig/coal
   return 0;
 }
@@ -1133,164 +1219,75 @@ void traceLineage_record_stat_changes_epilogue(int& gen,
 	Returns -1 if too many migration events were sampled (otherwise 0).
 
 */
-int traceLineage(int gen, int node, int reconnect) {
 
-  int i, pop, event, node_id, mig_band, mig_source, proceed;
-  int num_live_mig_bands, live_mig_bands[MAX_MIG_BANDS];
-  double age=-1.0, t;
-  // these variables are needed only for reconnecting or delta_lnLd computation
-  int target, num_targets, targets[2*NS-1];
-  double 	event_sample, rate, mig_rate, theta, heredity_factor = 1;
+int traceLineage(int gen, int node, int reconnect)
+{
+	TraceLineageAutoVars stack_vars;
+	stack_vars.gen       = gen;
+	stack_vars.node      = node;
+	stack_vars.reconnect = reconnect;
 
-  traceLineage_init(gen,
-  		  						node,
-  									reconnect,
-  									pop,
-  									event,
-  									num_live_mig_bands,
-  									mig_band,
-  									mig_source,
-  									proceed,
-  									live_mig_bands,
-  									theta,
-  									heredity_factor,
-  									age,
-  									mig_rate);
+  traceLineage_init(&stack_vars);
+
   // loop will stop when reaching original father's event (if !reconnect)
   // or when creating new coalescent event for lineage (if reconnect)
-  while(proceed)
+  while(stack_vars.proceed)
   {
     // if last event in population, move to next pop
-    if(event < 0)
+    if(stack_vars.event < 0)
+      if(0 != traceLineage_move_to_next_pop(&stack_vars))
+      	return -1;
+		
+    stack_vars.node_id = event_chains[gen].\
+    		                 events[stack_vars.event].getId();
+		
+    if(!stack_vars.reconnect)
     {
-      if(dataSetup.popTree->pops[pop]->father == NULL)
-      {
-        // reject if trying to reconnect above OLDAGE
-        if(reconnect == 1)
-        {
-//          fprintf(stderr, "\nError: In traceLineage: while tracing edge above node %d in gen %d:",node,gen);
-//          fprintf(stderr, "  trying to reconnect above OLDAGE.\n");
-          return -1;
-        }
-        // if detaching subtree, you can reach top only if detaching the root edge
-        // this has to be considered in migration scenarios
-        //				if(node != getLocusRoot(dataState.lociData[gen]) {
-        TRACE_LINEAGE_FATAL_0006
-        //				}
-      }
-      pop = dataSetup.popTree->pops[pop]->father->id;
-      theta = dataSetup.popTree->pops[pop]->theta*heredity_factor;
-      event = event_chains[gen].first_event[pop];
-			
-      if(fabs(mig_rate) > 0.00000001 || num_live_mig_bands > 0)
-      {
-        TRACE_LINEAGE_FATAL_0007
-      }
-      mig_rate = 0.0;
-	  
-      if(fabs(age/dataSetup.popTree->pops[pop]->age-1) > 0.01)
-      {
-      		TRACE_LINEAGE_FATAL_0008
-      }
-      age = dataSetup.popTree->pops[pop]->age;
-    }// end of moving to next pop
-
-    //printf("\ntraceLineage(%d,%d,%d): event %d.",gen,node,reconnect,event);
-		
-    node_id = event_chains[gen].events[event].getId();
-		
-    if(!reconnect)
-    {
-      // if(!reconnect) then reduce the number of lineages along pruned edge by 1
-      event_chains[gen].events[event].decrementLineages();
-      t = event_chains[gen].events[event].getElapsedTime();
-      age += t;
-      proceed = (event != locus_data[gen].mig_spr_stats.father_event_old);
-		
-      // if event is an in-migration event of edge above node,
-      // record it and follow it to source population
-      if(event_chains[gen].events[event].getType() == IN_MIG)
-      {
-        //				printf("\nIn traceLineage(%d,%d,%d) encountering in-mig event %d for mignode %d on branch %d.",
-        //								gen,node,reconnect, event, node_id, genetree_migs[gen].mignodes[node_id].gtree_branch);
-        if(genetree_migs[gen].mignodes[node_id].gtree_branch == node)
-        {
-          //					printf("... following.");
-          mig_band = genetree_migs[gen].mignodes[node_id].migration_band;
-          mig_source = genetree_migs[gen].mignodes[node_id].source_event;
-          locus_data[gen].mig_spr_stats.old_migs[locus_data[gen].mig_spr_stats.num_old_migs++] = node_id;
-        } 
-      }			
+    		traceLineage_reduce_lineages_along_pruned_edge(&stack_vars);
     }
     else
     {
       // if(reconnet) then sample new event within interval (coal or mig)
       // if coal - create new event, record point of coalescence and terminate process
       // if mig  - create 2 new events, and record source of migration for later processing
-      rate = mig_rate + 2*event_chains[gen].events[event].getNumLineages()/theta;
+    	int num_lngs =
+    		           event_chains[gen].events[stack_vars.event].getNumLineages();
+      stack_vars.rate =  stack_vars.mig_rate
+      		               + 2.0 * num_lngs / stack_vars.theta;
       // rate can be zero, if no lineages and no incoming migration bands
-      if(rate <= 0)
-        t = event_chains[gen].events[event].getElapsedTime();
+      double curr_elapsed_time =
+      		         event_chains[gen].events[stack_vars.event].getElapsedTime();
+      if(stack_vars.rate <= 0)
+      	stack_vars.t = curr_elapsed_time;
       else
-        t=rndexp( 1/rate );
+      	stack_vars.t = rndexp( 1.0/stack_vars.rate );
 
-      if(t >= event_chains[gen].events[event].getElapsedTime())
+      if(curr_elapsed_time <= stack_vars.t)
       {
         // no event sampled in this interval
-        t = event_chains[gen].events[event].getElapsedTime();
-        age += t;
+        stack_vars.t = curr_elapsed_time;
+        stack_vars.age += stack_vars.t;
       }
       else
       {
-        if( 0 != traceLineage_sample_event_in_interval(gen,
-																												pop,
-																												node,
-																												event,
-																												num_live_mig_bands,
-																												mig_band,
-																												proceed,
-																												mig_source,
-																												num_targets,
-																												target,
-																												targets,
-																												live_mig_bands,
-																												event_sample,
-																												t,
-																												rate,
-																												theta,
-																												mig_rate,
-																												age) )
+        if( 0 != traceLineage_sample_event_in_interval(&stack_vars) )
         	return -1;
       }// if event in interval 
     }// if (reconnect)  			
 		
     // record stat changes
-    traceLineage_record_stat_changes_epilogue(gen,
-																							reconnect,
-																							pop,
-																							event,
-																							node_id,
-																							num_live_mig_bands,
-																							mig_band,
-																							mig_source,
-																							live_mig_bands,
-																							t,
-																							age,
-																							mig_rate,
-																							theta,
-																							heredity_factor);
+    traceLineage_record_stat_changes_epilogue(&stack_vars);
 		
-    event = event_chains[gen].events[event].getNextIdx();
-		
+    stack_vars.event = event_chains[gen].events[stack_vars.event].getNextIdx();
   }// end of while
-	
-  // add log-likelihood of father coalescent
-  locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] += log(2/theta);
 
-	
+  // add log-likelihood of father coalescent
+  locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] +=
+  		                                               log(2.0/stack_vars.theta);
   return 0;
 }
 
+//============================================================================
 /* replaceMigNodes
    This function is called by UpdateGB_MigSPR, if SPR is accepted.
    - it removes all old migration events
