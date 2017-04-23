@@ -7,6 +7,7 @@
  Version history:
  05-Apr-2017  evgenyidc      Splitting traceLineage.
  19-Apr-2017  evgenyidc      Wrapping traceLineage auto vars as a struct.
+ 23-Apr-2017  evgenyidc      Splitting traceLineage main loop epilogue.
  ============================================================================*/
 
 #include "patch.h"
@@ -1134,12 +1135,84 @@ traceLineage_sample_coalescence_event_in_interval(TraceLineageAutoVars* p_stack)
 }
 
 //----------------------------------------------------------------------------
+// if event is migration (original or new)
+// follow to source and recalculate living mig_bands
+// if event starts/ends migration band, change mig_rate
 void
-traceLineage_record_stat_changes_epilogue(TraceLineageAutoVars* p_stack)
+traceLineage_epilogue_recalc_mig_bands(TraceLineageAutoVars* p_stack)
+{
+  int& gen       = p_stack->gen;
+  int& reconnect = p_stack->reconnect;
+
+  // add log-likelihood of migration event
+  locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] +=
+                 log(dataSetup.popTree->migBands[p_stack->mig_band].migRate);
+  p_stack->event = p_stack->mig_source;
+  p_stack->pop = dataSetup.popTree->migBands[p_stack->mig_band].sourcePop;
+  p_stack->theta =   dataSetup.popTree->pops[p_stack->pop]->theta
+                   * p_stack->heredity_factor;
+  p_stack->mig_source = -1;
+  p_stack->mig_rate = 0.0;
+  p_stack->num_live_mig_bands = 0;
+  for( p_stack->mig_band = 0;
+       p_stack->mig_band < dataSetup.popTree->numMigBands;
+       p_stack->mig_band++) {
+    if( dataSetup.popTree->migBands[p_stack->mig_band].targetPop ==
+                                                             p_stack->pop &&
+        dataSetup.popTree->migBands[p_stack->mig_band].startTime <=
+                                                             p_stack->age &&
+        dataSetup.popTree->migBands[p_stack->mig_band].endTime > p_stack->age)
+      {
+        p_stack->mig_rate +=
+                      dataSetup.popTree->migBands[p_stack->mig_band].migRate;
+        p_stack->live_mig_bands[p_stack->num_live_mig_bands++] =
+                                                           p_stack->mig_band;
+      }
+  }
+}
+
+//----------------------------------------------------------------------------
+void
+traceLineage_epilogue_record_mig_band_end(TraceLineageAutoVars* p_stack)
 {
   int i = 0;
-  int& gen                 = p_stack->gen;
-  int& reconnect           = p_stack->reconnect;
+  int& gen       = p_stack->gen;
+
+  p_stack->mig_rate -= dataSetup.popTree->migBands[p_stack->node_id].migRate;
+  if(p_stack->num_live_mig_bands == 1 && p_stack->mig_rate > 0.0000001 && debug)
+  {
+    fprintf(stderr, "\ntraceLineage() mig_rate=%g when all mig bands "\
+                    "have been emptied at pop=%d, age=%g.\n",
+                    p_stack->mig_rate, p_stack->pop, p_stack->age);
+    printPopulationTree(dataSetup.popTree, stderr, 1);
+    printLocusGenTree(dataState.lociData[gen], stderr,
+                      nodePops[gen], nodeEvents[gen]);
+    printEventChains(stderr, gen);
+    fprintf(stderr, "\n\n************************************"
+                    "********************************\n\n");
+  }
+  if(p_stack->num_live_mig_bands == 1)
+  {
+    p_stack->mig_rate = 0.0;
+  }
+  for(i=0; i< p_stack->num_live_mig_bands; i++)
+  {
+    if( p_stack->live_mig_bands[i] == p_stack->node_id )
+    {
+      p_stack->live_mig_bands[i] =
+                     p_stack->live_mig_bands[--p_stack->num_live_mig_bands];
+      break;
+    }
+  }
+}
+
+//----------------------------------------------------------------------------
+void
+traceLineage_epilogue_record_stat_changes(TraceLineageAutoVars* p_stack)
+{
+  int i = 0;
+  int& gen       = p_stack->gen;
+  int& reconnect = p_stack->reconnect;
 
   locus_data[gen].genetree_stats_delta[reconnect].\
     coal_stats_delta[p_stack->pop] +=   2.0
@@ -1168,32 +1241,7 @@ traceLineage_record_stat_changes_epilogue(TraceLineageAutoVars* p_stack)
 	// if event starts/ends migration band, change mig_rate
 	if( p_stack->mig_source >= 0 )
   {
-		// add log-likelihood of migration event
-		locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] +=
-		               log(dataSetup.popTree->migBands[p_stack->mig_band].migRate);
-		p_stack->event = p_stack->mig_source;
-		p_stack->pop = dataSetup.popTree->migBands[p_stack->mig_band].sourcePop;
-		p_stack->theta =   dataSetup.popTree->pops[p_stack->pop]->theta
-		                 * p_stack->heredity_factor;
-		p_stack->mig_source = -1;
-		p_stack->mig_rate = 0.0;
-		p_stack->num_live_mig_bands = 0;
-		for( p_stack->mig_band = 0;
-		     p_stack->mig_band < dataSetup.popTree->numMigBands;
-		     p_stack->mig_band++) {
-			if( dataSetup.popTree->migBands[p_stack->mig_band].targetPop ==
-			                                                         p_stack->pop &&
-				  dataSetup.popTree->migBands[p_stack->mig_band].startTime <=
-				                                                       p_stack->age &&
-				  dataSetup.popTree->migBands[p_stack->mig_band].endTime > p_stack->age)
-				{
-			  p_stack->mig_rate +=
-			                  dataSetup.popTree->migBands[p_stack->mig_band].migRate;
-			  p_stack->live_mig_bands[p_stack->num_live_mig_bands++] =
-                                                             p_stack->mig_band;
-				}
-		}
-
+	  traceLineage_epilogue_recalc_mig_bands(p_stack);
 	}
 	else if(event_chains[gen].events[p_stack->event].getType()== MIG_BAND_START)
 	{
@@ -1203,32 +1251,7 @@ traceLineage_record_stat_changes_epilogue(TraceLineageAutoVars* p_stack)
 	}
 	else if(event_chains[gen].events[p_stack->event].getType() == MIG_BAND_END)
 	{
-	  p_stack->mig_rate -= dataSetup.popTree->migBands[p_stack->node_id].migRate;
-	  if(p_stack->num_live_mig_bands == 1 && p_stack->mig_rate > 0.0000001 && debug)
-	  {
-		  fprintf(stderr, "\ntraceLineage() mig_rate=%g when all mig bands "\
-		                  "have been emptied at pop=%d, age=%g.\n",
-		                  p_stack->mig_rate, p_stack->pop, p_stack->age);
-		  printPopulationTree(dataSetup.popTree, stderr, 1);
-	    printLocusGenTree(dataState.lociData[gen], stderr,
-	                      nodePops[gen], nodeEvents[gen]);
-	    printEventChains(stderr, gen);
-	    fprintf(stderr, "\n\n************************************"
-	                    "********************************\n\n");
-	  }
-	  if(p_stack->num_live_mig_bands == 1)
-	  {
-	    p_stack->mig_rate = 0.0;
-	  }
-		for(i=0; i< p_stack->num_live_mig_bands; i++)
-		{
-			if( p_stack->live_mig_bands[i] == p_stack->node_id )
-			{
-			  p_stack->live_mig_bands[i] =
-			                 p_stack->live_mig_bands[--p_stack->num_live_mig_bands];
-				break;
-			}
-		}
+	  traceLineage_epilogue_record_mig_band_end(p_stack);
   }
 }
 
@@ -1303,26 +1326,28 @@ int traceLineage (int gen, int node, int reconnect)
 
         if(stack_vars.event_sample < stack_vars.mig_rate)
         {
-          if (0 != traceLineage_sample_migration_event_in_interval(&stack_vars))
+          if (0 != traceLineage_sample_migration_event_in_interval(
+                                                                  &stack_vars))
             return -1;
         }
         else
         {
-          if (0 != traceLineage_sample_coalescence_event_in_interval(&stack_vars))
+          if (0 != traceLineage_sample_coalescence_event_in_interval(
+                                                                  &stack_vars))
             return -1;
         }
       }      // if event in interval
     }      // if (reconnect)
 
     // record stat changes
-    traceLineage_record_stat_changes_epilogue (&stack_vars);
+    traceLineage_epilogue_record_stat_changes(&stack_vars);
 
-    stack_vars.event = event_chains[gen].events[stack_vars.event].getNextIdx ();
+    stack_vars.event = event_chains[gen].events[stack_vars.event].getNextIdx();
   }      // end of while
 
   // add log-likelihood of father coalescent
   locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] +=
-           log (2.0 / stack_vars.theta);
+                                                  log (2.0 / stack_vars.theta);
   return 0;
 }
 
