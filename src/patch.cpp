@@ -848,7 +848,7 @@ double rubberBandRipple(int gen, int do_or_redo) {
 //----------------------------------------------------------------------------
 typedef struct __TraceLineageAutoVars
 {
-	int gen, node, reconnect;
+  int gen, node, reconnect;
   int pop, event, node_id, mig_band, mig_source, proceed;
   int num_live_mig_bands, live_mig_bands[MAX_MIG_BANDS];
   double age, t;
@@ -1018,8 +1018,8 @@ traceLineage_reduce_lineages_along_pruned_edge (TraceLineageAutoVars* p_stack)
 int
 traceLineage_sample_migration_event_in_interval(TraceLineageAutoVars* p_stack)
 {
-	int i;
-  int& gen                 = p_stack->gen;
+  int i;
+  int& gen = p_stack->gen;
 
   // migration event - figure out where to migrate
   if(MAX_MIGS <=
@@ -1087,8 +1087,8 @@ int
 traceLineage_sample_coalescence_event_in_interval(TraceLineageAutoVars* p_stack)
 {
   int i;
-  int& gen                 = p_stack->gen;
-  int& node                = p_stack->node;
+  int& gen  = p_stack->gen;
+  int& node = p_stack->node;
 
   // coalescence event - figure out with whom to coalesce
   //getLineagesAtInterval(gen,event,pop,node,targets);  <-- UNUSED
@@ -1134,6 +1134,51 @@ traceLineage_sample_coalescence_event_in_interval(TraceLineageAutoVars* p_stack)
   return 0;
 }
 
+//----------------------------------------------------------------------------
+// If reconnet is true then sample new event within interval
+// (coal or mig). If coal is true then create new event, record point
+// of coalescence and terminate process. If mig is true then create 2
+// new events, and record source of migration for later processing.
+int
+traceLineage_sample_event_in_interval(TraceLineageAutoVars* p_stack)
+{
+  int& gen = p_stack->gen;
+  int num_lngs =
+      event_chains[gen].events[p_stack->event].getNumLineages ();
+  p_stack->rate = p_stack->mig_rate + 2.0 * num_lngs / p_stack->theta;
+  // rate can be zero, if no lineages and no incoming migration bands
+  double curr_elapsed_time =
+      event_chains[gen].events[p_stack->event].getElapsedTime ();
+  if (p_stack->rate <= 0)
+    p_stack->t = curr_elapsed_time;
+  else
+    p_stack->t = rndexp (1.0 / p_stack->rate);
+
+  if (curr_elapsed_time <= p_stack->t)
+  {
+    // no event sampled in this interval
+    p_stack->t = curr_elapsed_time;
+    p_stack->age += p_stack->t;
+  }
+  else
+  {
+    // sample event in this interval
+    p_stack->age += p_stack->t;
+    p_stack->event_sample = p_stack->rate * rndu();
+
+    if(p_stack->event_sample < p_stack->mig_rate)
+    {
+      if (0 != traceLineage_sample_migration_event_in_interval(p_stack))
+        return -1;
+    }
+    else
+    {
+      if (0 != traceLineage_sample_coalescence_event_in_interval(p_stack))
+        return -1;
+    }
+  }      // if event in interval
+  return 0;
+}
 //----------------------------------------------------------------------------
 // if event is migration (original or new)
 // follow to source and recalculate living mig_bands
@@ -1297,46 +1342,8 @@ int traceLineage (int gen, int node, int reconnect)
     }
     else
     {
-      // If reconnet is true then sample new event within interval
-      // (coal or mig). If coal is true then create new event, record point
-      // of coalescence and terminate process. If mig is true then create 2
-      // new events, and record source of migration for later processing.
-      int num_lngs =
-          event_chains[gen].events[stack_vars.event].getNumLineages ();
-      stack_vars.rate = stack_vars.mig_rate + 2.0 * num_lngs / stack_vars.theta;
-      // rate can be zero, if no lineages and no incoming migration bands
-      double curr_elapsed_time =
-          event_chains[gen].events[stack_vars.event].getElapsedTime ();
-      if (stack_vars.rate <= 0)
-        stack_vars.t = curr_elapsed_time;
-      else
-        stack_vars.t = rndexp (1.0 / stack_vars.rate);
-
-      if (curr_elapsed_time <= stack_vars.t)
-      {
-        // no event sampled in this interval
-        stack_vars.t = curr_elapsed_time;
-        stack_vars.age += stack_vars.t;
-      }
-      else
-      {
-        // sample event in this interval
-        stack_vars.age += stack_vars.t;
-        stack_vars.event_sample = stack_vars.rate * rndu();
-
-        if(stack_vars.event_sample < stack_vars.mig_rate)
-        {
-          if (0 != traceLineage_sample_migration_event_in_interval(
-                                                                  &stack_vars))
-            return -1;
-        }
-        else
-        {
-          if (0 != traceLineage_sample_coalescence_event_in_interval(
-                                                                  &stack_vars))
-            return -1;
-        }
-      }      // if event in interval
+      if( 0 != traceLineage_sample_event_in_interval(&stack_vars))
+        return -1;
     }      // if (reconnect)
 
     // record stat changes
