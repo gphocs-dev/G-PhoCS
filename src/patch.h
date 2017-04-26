@@ -9,22 +9,7 @@
 #define SRC_PATCH_H_
 
 
-#ifndef NULL
-#define NULL   ((void *) 0)
-#endif
-
-
-#define MAX_MIG_BANDS	40			// max migration bands in the population tree
-#define MAX_MIGS		10			// max migration events per genealogy
-#define NSPECIES		20			// max # of species
-#define NS				200			// max # of sequences
-#define OLDAGE			999			// upper bound on age (can be extended...)
-#define MAX_EVENTS   (NS + 2*NSPECIES + 3*MAX_MIGS)
-#define NUM_DELTA_STATS_INSTANCES 2
-
-#define DEBUG_NODE_CHANGE_NOT
-#define DEBUG_RUBBERBAND_NOT
-/* END OF PATCH.C DEFS */
+#include "DataLayerConstants.h"
 
 
 /***************************************************************************************************************/
@@ -83,11 +68,13 @@ typedef struct {
    rubberband_migs is an array of size numLoci allocated in getMem().
 */
 
-typedef struct {
-
-  int num_moved_events, orig_events[MAX_MIGS+MAX_MIG_BANDS], new_events[MAX_MIGS+MAX_MIG_BANDS], pops[MAX_MIGS+MAX_MIG_BANDS];
+typedef struct 
+{
+  int num_moved_events;
+  int orig_events[MAX_MIGS+MAX_MIG_BANDS];
+  int new_events[MAX_MIGS+MAX_MIG_BANDS];
+  int pops[MAX_MIGS+MAX_MIG_BANDS];
   double new_ages[MAX_MIGS+MAX_MIG_BANDS];
-
 } RUBBERBAND_MIGS;
 
 /*	mig_spr_stats
@@ -114,62 +101,52 @@ typedef struct {
 	RUBBERBAND_MIGS rubberband_migs;
 	int mig_conflict_log;
 } Locus_SuperStruct;
-Locus_SuperStruct *locus_data;
+
+extern Locus_SuperStruct* locus_data;
 
 //double averageMigTimes[MAX_MIG_BANDS]; //Unused
 
 /* node surrogates.
  */
-int**	nodePops;			// a 2D array (numLoci X numNodes) for populations per genealogy node.
-int**	nodeEvents;			// a 2D array (numLoci X numNodes) for event ids per genealogy node.
+extern int** nodePops;   // a 2D array (numLoci X numNodes) for populations per genealogy node.
+extern int** nodeEvents; // a 2D array (numLoci X numNodes) for event ids per genealogy node.
 
-struct ADMIXTURE_STATUS {
-	int 	numSampledLoci;				// number of loci for which to show admixture status
-	int*	sampledLoci;				// array of sampled loci
-	double** sampleLocusAdmixRate;			// array of admixture rates (up to the curent point of sampling) for each locus and each admixed sample
-	int*	admixtureCounts;			// number of loci in which sample is in alternative population
-	double* admixtureCoefficients;		// estimated coefficients for all samples
-} admixture_status;
+typedef struct _ADMIXTURE_STATUS 
+{
+  int      numSampledLoci;         // number of loci for which to show 
+                                   // admixture status
+  int*     sampledLoci;            // array of sampled loci
+  double** sampleLocusAdmixRate;   // array of admixture rates (up to 
+                                   // the curent point of sampling) 
+                                   // for each locus and each admixed sample
+  int*     admixtureCounts;        // number of loci in which sample is 
+                                   //in alternative population
+  double*  admixtureCoefficients;  // estimated coefficients for all samples
+} ADMIXTURE_STATUS;
+
+extern ADMIXTURE_STATUS admixture_status;
 
 /* genetree_migs is a struct which contains information about
    migration events in a specific genealogy.
    Array of structs (of length numLoci is allocated in GetMem().
 */
-struct GENETREE_MIGS {
-  int num_migs;							// number of migration event in genetree
-  int living_mignodes[MAX_MIGS];	// array of indices for mignodes for dynamic managing of migration nodes
-  struct MIGNODE{
-    int gtree_branch;						// id of gene tree node below the migration node
-    int migration_band;					// id of migration band relevant to this node
-    int target_pop, source_pop;		// source and target populations of migration event (backwards view)
-    int target_event, source_event;	// ids of event corresponding to this migration node.
-    double age;								// time of event
+typedef struct _GENETREE_MIGS 
+{
+  int num_migs;                     // number of migration event in genetree
+  int living_mignodes[MAX_MIGS];    // array of indices for mignodes for 
+                                    // dynamic managing of migration nodes
+  struct MIGNODE
+  {
+    int gtree_branch;               // id of gene tree node below the migration node
+    int migration_band;             // id of migration band relevant to this node
+    int target_pop, source_pop;     // source and target populations of migration event (backwards view)
+    int target_event, source_event; // ids of event corresponding to this migration node.
+    double age;                     // time of event
   } mignodes[MAX_MIGS];
-}* genetree_migs;
+}GENETREE_MIGS;
 
+extern GENETREE_MIGS* genetree_migs;
 
-/* event chain
-   Each event corresponds to a time band within a population where no events
-   (coalescence/migration) take place. An event is attributed with one of 5 types
-   corresponding to the event taking place at the end of the interval. Events are
-   sorted in a list according to chronology within a population.
-   Actual array of events is allocated in getMem()
-*/
-
-typedef enum event_type {COAL, IN_MIG, OUT_MIG, MIG_BAND_START, MIG_BAND_END, SAMPLES_START, END_CHAIN, DUMMY} EventType;
-typedef struct EVENT{
-	EventType type;
-    int node_id, next, prev;
-    double elapsed_time;				// time from last event
-    int num_lineages;					// number of lineages before the event
-} Event;
-struct EVENT_CHAIN{
-  int total_events;						// total number of events pre-allocated to this chain
-  int first_event[2*NSPECIES-1];		// pointers to first event for every population
-  int last_event[2*NSPECIES-1];			// pointers to last event for every population
-  int free_events;						// pointer to a chain of free events for use. Always have at least one free event
-  Event* events;
-} *event_chains;
 
 
 /*	genetree stats
@@ -183,24 +160,31 @@ struct EVENT_CHAIN{
     considers also all gen-specific heredity factors (but not thetas).
 */
 
-GENETREE_STATS *genetree_stats, *genetree_stats_total_partitioned, genetree_stats_total , genetree_stats_total_check;
+extern GENETREE_STATS* genetree_stats;
+extern GENETREE_STATS* genetree_stats_total_partitioned;
+extern GENETREE_STATS  genetree_stats_total;
+extern GENETREE_STATS  genetree_stats_total_check;
+
+
 
 /*	genetree stats flat
 	holds relevant statistics for fast computation of probability of tree
 	given a null model (single population).
     array allocated in GetMem().
 */
-struct GENETREE_STATS_FLAT{
+typedef struct _GENETREE_STATS_FLAT{
   double coal_stats_flat, mig_stats_flat;
   int num_coals_total, num_migs_total;
   double* sortedAgesArray;
-} genetree_stats_flat;
+} GENETREE_STATS_FLAT;
+
+extern GENETREE_STATS_FLAT genetree_stats_flat;
 
 /*	genetree node stata
 	holds relevant statistics for coalescent distribution across populations
     array allocated in GetMem().
 */
-struct GENETREE_NODE_STATS{
+typedef struct _GENETREE_NODE_STATS{
   /*** memory allocation ***/
   double*   doubleArray;
   double**  doublePtrArray;
@@ -219,7 +203,8 @@ struct GENETREE_NODE_STATS{
   double*** probCoalMatrix;       // Prob[sample pair coalesce in pop]
   double*** probFirstCoalMatrix;  // Prob[sample pair is the first coalescence in pop]
   double*** coalTimeMatrix;       // mean coal time for coalescence of pair (given they coalesce in pop)
-} genetree_node_stats;
+} GENETREE_NODE_STATS;
+extern GENETREE_NODE_STATS genetree_node_stats;
 
 
 

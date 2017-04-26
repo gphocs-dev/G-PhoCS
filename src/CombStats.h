@@ -21,12 +21,15 @@ typedef struct STATS {
 typedef struct LEAF_STATS {
 	Stats above_comb, below_comb;
   } LeafStats;
-struct COMB_STATS{
+
+typedef struct _COMB_STATS{
 	double age; 			// temporary value of comb-age
 	Stats total;
 	Stats* clades;
 	LeafStats* leaves;
-} *comb_stats;
+} COMB_STATS;
+
+extern COMB_STATS* comb_stats;
 
 
 // --- FUNCTION DECLARATIONS -----------------------------------------------
