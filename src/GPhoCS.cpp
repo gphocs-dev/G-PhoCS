@@ -1577,7 +1577,8 @@ int performMCMC() {
 								//@@ron: please enter here :)
 								calculateCombStats();
 								printCombStats(iteration, ioSetup.combStatsFile);
-								printCombDebugStats(iteration, ioSetup.combDebugStatsFile);
+								printCombDebugStats(iteration, ioSetup.combDebugStatsFile); //TODO - remove debug printing
+								fflush(ioSetup.combDebugStatsFile);
 						}
 
 

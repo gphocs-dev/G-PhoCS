@@ -232,11 +232,6 @@ void migrations(int comb, int gene){
 	}
 }
 
-void updateLeafMigStats(int numLineages, double elapsedTime, int eventType, MigStats* migLeafStats) {
-	migLeafStats->mig_stats += numLineages * elapsedTime;
-	if (eventType == IN_MIG) migLeafStats->num_migs++;// TODO - make sure the event is on the right migband
-}
-
 void handleLeafMigStats(int comb, int mig, int gene){
 	double elapsedTime, eventAge = 0.0;
 	double combAge = comb_stats[comb].age;
@@ -252,7 +247,11 @@ void handleLeafMigStats(int comb, int mig, int gene){
 		updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
 
 		incrementEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
-		if (eventType == MIG_BAND_END) break;
+
+		if (eventType == MIG_BAND_END) {
+			updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
+			break;
+		}
 	}
 }
 
@@ -261,6 +260,11 @@ void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* ev
 		incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge);
 	}
 	incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge);
+}
+
+void updateLeafMigStats(int numLineages, double elapsedTime, int eventType, MigStats* migLeafStats) {
+	migLeafStats->mig_stats += numLineages * elapsedTime;
+	if (eventType == IN_MIG) migLeafStats->num_migs++;// TODO - make sure the event is on the right migband
 }
 
 void incrementEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge) {

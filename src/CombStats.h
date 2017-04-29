@@ -60,6 +60,7 @@ double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
 
 void migrations(int comb, int gene);
 void handleLeafMigStats(int comb, int mig, int gene);
+void updateLeafMigStats(int numLineages, double elapsedTime, int eventType, MigStats* migLeafStats);
 void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge);
 void incrementEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge);
 void handleExternalMigStats(int comb, int mig, int gene); // TODO - rename to better explain "O->C" type migband
