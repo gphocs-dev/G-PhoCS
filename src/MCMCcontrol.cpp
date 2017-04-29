@@ -29,7 +29,10 @@ struct GLOBAL_SETUP {
 	double finetuneTaus;
 }  globalSetup;
 
-
+struct IO_SETUP ioSetup;
+struct MCMC_SETUP mcmcSetup;
+struct DATA_SETUP dataSetup;
+struct ADMIXED_SAMPLES admixed_samples;
 
 
 /***************************************************************************************************************/

@@ -46,7 +46,8 @@ struct GLOBAL_SPACE_STRUCT{
   char*	fourColumns;		    /**< work space for 4 alignment columns */
 }AlignmentGlobal;
 
-
+struct ALIGNMENT_DATA_STRUCT AlignmentData;
+struct PHASED_PATTERNS_STRUCT PhasedPatterns;
 
 /** baseTransformation
     Holds all 24 permutations of base identities, and their projections on ambiguity characters
@@ -2535,7 +2536,7 @@ int	twoSiteFourGameteTest(int patternId1, int patternId2) {
       optionalConfigs[1] = optionalConfigs[2];
     } else {
       //			printf("choosing pair (%d,%d).\n",optionalConfigs[0],optionalConfigs[3]);
-      //optionalConfigs[0] = optionalConfigs[0];   <-- COMMENTED OUT BECAUSE IT IS REDUNDANT
+      //optionalConfigs[0] = optionalConfigs[0];
       optionalConfigs[1] = optionalConfigs[3];
     }
 			

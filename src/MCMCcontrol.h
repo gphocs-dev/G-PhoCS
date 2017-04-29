@@ -65,8 +65,9 @@ struct IO_SETUP {
 	FILE*	combStatsFile;					// comb stats (coalescent & migration) file for all possible combs
 	FILE*	combDebugStatsFile;				// file for all stats needed just to validate comb implementation
 
-}  ioSetup;
+};
 
+extern struct IO_SETUP ioSetup;
 
 /*********
  * mcmc setup
@@ -98,7 +99,9 @@ struct MCMC_SETUP {
 	
 	double* printFactors;			// array of factors in which to output parameters (allocated in readControlFile)
 //  char traceFileTitle[500];
-}  mcmcSetup;
+};
+
+extern struct MCMC_SETUP mcmcSetup;
 
 
 
@@ -114,8 +117,8 @@ struct DATA_SETUP {
 	int* numSamplesPerPop;			// number of samples per population
 	char**		sampleNames;		// array of sample names - ordered according to population order
 	PopulationTree* popTree;		// population tree	
-} dataSetup;
-
+};
+extern struct DATA_SETUP dataSetup;
 
 
 /*********
@@ -126,7 +129,9 @@ struct ADMIXED_SAMPLES {
 	int* samples;	// list of admixed samples
 	int** popPairs;	// list of population pairs (one per sample)
 	int* index;		// index for each admixed sample (-1 for non-admixed)
-} admixed_samples;
+};
+
+extern struct ADMIXED_SAMPLES admixed_samples;
 
 /***************************************************************************************************************/
 /******                               EXTERNAL FUNCTION DECLARATION                                       ******/

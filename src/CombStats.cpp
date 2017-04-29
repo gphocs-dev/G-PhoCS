@@ -10,8 +10,11 @@
 #include "PopulationTree.h"
 #include "LocusDataLikelihood.h"
 #include "patch.h"
+#include "DataLayer.h"
 
 #include "CombStats.h"
+
+COMB_STATS* comb_stats;
 
 // --- FUNCTION IMPLEMENTATIONS -----------------------------------------------
 
@@ -91,6 +94,7 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 
 			numEventsAboveComb++;
 		}
+
 	}
 
 	aboveCombLeafStats->num_events = numEventsAboveComb;
@@ -179,12 +183,12 @@ void appendCurrent(int comb, int currentPop, int gene){
 	double startTime = dataSetup.popTree->pops[currentPop]->age; // do I need to start from pop age or from last eventId age (or are they equal)?
 	double eventAge = startTime;
 
-	for ( ; eventId >= 0 ; i++, eventId = event_chains[gene].events[eventId].next){
-		eventAge += event_chains[gene].events[eventId].elapsed_time;
+	for ( ; eventId >= 0 ; i++, eventId = event_chains[gene].events[eventId].getNextIdx()){
+		eventAge += event_chains[gene].events[eventId].getElapsedTime();
 		currentStats->sorted_ages[i]   = eventAge;
-		currentStats->elapsed_times[i] = event_chains[gene].events[eventId].elapsed_time;
-		currentStats->num_lineages[i]  = event_chains[gene].events[eventId].num_lineages;
-		currentStats->event_types[i]   = event_chains[gene].events[eventId].type;
+		currentStats->elapsed_times[i] = event_chains[gene].events[eventId].getElapsedTime();
+		currentStats->num_lineages[i]  = event_chains[gene].events[eventId].getNumLineages();
+		currentStats->event_types[i]   = event_chains[gene].events[eventId].getType();
 		currentStats->event_ids[i]     = eventId;
 	}
 	currentStats->num_events = i;
@@ -239,7 +243,7 @@ void handleLeafMigStats(int comb, int mig, int gene){
 	int numLineages;
 	int targetLeaf = getTargetPop(mig);
 	int eventId = event_chains[gene].first_event[targetLeaf];
-	int eventType = event_chains[gene].events[eventId].type;
+	int eventType = event_chains[gene].events[eventId].getType();
 	MigStats* migLeafStats = &comb_stats[comb].leafMigs[targetLeaf];
 
 	fastFwdPastMigBandStart(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
@@ -260,12 +264,12 @@ void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* ev
 }
 
 void incrementEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge) {
-	*elapsedTime = event_chains[gene].events[*eventId].elapsed_time;
-	*eventType = event_chains[gene].events[*eventId].type;
-	*numLineages = event_chains[gene].events[*eventId].num_lineages;
+	*elapsedTime = event_chains[gene].events[*eventId].getElapsedTime();
+	*eventType = event_chains[gene].events[*eventId].getType();
+	*numLineages = event_chains[gene].events[*eventId].getNumLineages();
 	*eventAge += *elapsedTime;
 
-	*eventId = event_chains[gene].events[*eventId].next;
+	*eventId = event_chains[gene].events[*eventId].getNextIdx();
 }
 
 void handleExternalMigStats(int comb, int mig, int gene){
@@ -461,7 +465,7 @@ void initMigStats() {
 	}
 }
 void allocateCombMem(){
-	comb_stats=malloc(dataSetup.popTree->numPops*sizeof(struct COMB_STATS));
+	comb_stats=malloc(dataSetup.popTree->numPops*sizeof(COMB_STATS));
 
 	allocatePopsMem();
 	allocateMigBandsMem();
