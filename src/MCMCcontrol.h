@@ -63,6 +63,8 @@ struct IO_SETUP {
 	FILE*	coalStatsFile;					// coalescent stats file
 	FILE**	nodeStatsFile;					// coalescent stats files for nodes (one per pop)
 	FILE*	combStatsFile;					// comb stats (coalescent & migration) file for all possible combs
+	FILE*	combDebugStatsFile;				// file for all stats needed just to validate comb implementation
+
 }  ioSetup;
 
 

@@ -213,15 +213,15 @@ double calculateCoalStats(double* elapsed_times, int* num_lineages, int size){
 
 
 void migrations(int comb, int gene){
-	for (int mig = 0 ; mig < dataSetup.popTree->numMigBands ; mig++){
-		if (isMigOfComb(mig, comb)){
-			if (isLeafMigBand(mig, comb)){
-				handleLeafMigStats(comb, mig, gene);
+	for (int migband = 0 ; migband < dataSetup.popTree->numMigBands ; migband++){
+		if (isMigOfComb(migband, comb)){
+			if (isLeafMigBand(migband, comb)){
+				handleLeafMigStats(comb, migband, gene);
 			}
-			if (isMigBandInternal(mig, comb)) {
+			if (isMigBandInternal(migband, comb)) {
 				// ignore internal migbands. their stats aren't used
 			}
-			if (isMigBandExternal(mig, comb)){
+			if (isMigBandExternal(migband, comb)){
 				// handleExternalMigStats(comb, mig, gene);
 			}
 		}

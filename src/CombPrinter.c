@@ -99,9 +99,19 @@ void printCombMigStats(int comb, FILE* file) {
 		}
 	}
 }
-
 void printOnePopStats(int pop, FILE* file){
 	fprintf(file, "%0.35f\t%d\t",
 			genetree_stats_total.coal_stats[pop],
 			genetree_stats_total.num_coals[pop]);
+}
+
+
+void printCombDebugStatsHeader(FILE* file){
+	fprintf(file, "mig_stats\tnum_migs\n");
+}
+void printCombDebugStats(int iteration, FILE* file){
+	int mig_band = 0;
+	double mig_stats = genetree_stats_total.mig_stats[mig_band];
+	int num_migs = genetree_stats_total.num_migs[mig_band];
+	fprintf(file, "%f\t%d\n", mig_stats, num_migs);
 }

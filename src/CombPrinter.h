@@ -20,6 +20,9 @@ void printCombCoalStats(int comb, FILE* file);
 void printCombMigStats(int comb, FILE* file);
 void printOnePopStats(int pop, FILE* file);
 
+void printCombDebugStatsHeader(FILE* file);
+void printCombDebugStats(int iteration, FILE* file);
+
 
 #endif /* SRC_COMBSTATSHEADER_H_ */
 
