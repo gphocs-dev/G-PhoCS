@@ -222,7 +222,7 @@ void migrations(int comb, int gene){
 				// ignore internal migbands. their stats aren't used
 			}
 			if (isMigBandExternal(mig, comb)){
-//				handleExternalMigStats(comb, mig, gene);
+				// handleExternalMigStats(comb, mig, gene);
 			}
 		}
 	}
