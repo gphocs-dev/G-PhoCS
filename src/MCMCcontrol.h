@@ -22,7 +22,7 @@
  * UpdateStats used to hold information on MCMC update steps
  *		(finetunes, acceptance rates, etc.)
  *********/
-typedef struct UPDATE_STAST{
+typedef struct UPDATE_STATS{
   double coalTime;
   double SPR;
   double migTime;

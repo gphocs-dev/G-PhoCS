@@ -272,7 +272,9 @@ int isFeasibleComb(int pop){
 int isAncestralTo(int father, int son){
 	return dataSetup.popTree->pops[father]->isAncestralTo[son];
 }
-char* getEventTypeName(int eventType){
+
+const char* getEventTypeName(int eventType)
+{
 	switch(eventType){
 		case COAL:
 			return "COAL";
@@ -334,12 +336,12 @@ void initStats(Stats* stats){
 	stats->num_migs = 0;
 }
 void allocateCombMem(){
-	comb_stats=malloc(dataSetup.popTree->numPops*sizeof(COMB_STATS));
+	comb_stats= (COMB_STATS*) malloc(dataSetup.popTree->numPops*sizeof(COMB_STATS));
 
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		allocateStats(&comb_stats[comb].total);
-		comb_stats[comb].leaves=malloc(dataSetup.popTree->numCurPops*sizeof(LeafStats));
-		comb_stats[comb].clades=malloc(dataSetup.popTree->numCurPops*sizeof(Stats));
+		comb_stats[comb].leaves = (LeafStats*) malloc(dataSetup.popTree->numCurPops*sizeof(LeafStats));
+		comb_stats[comb].clades = (Stats*) malloc(dataSetup.popTree->numCurPops*sizeof(Stats));
 		for (int pop = 0 ; pop < dataSetup.popTree->numPops ; pop++){
 			if (isLeaf(pop)){
 				allocateStats(&comb_stats[comb].leaves[pop].below_comb);
