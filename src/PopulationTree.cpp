@@ -250,7 +250,7 @@ void printPopulationTree(PopulationTree* popTree, FILE* stream, int printTauThet
     if(strlen(popTree->pops[pop]->name) > maxNameLen)
       maxNameLen = strlen(popTree->pops[pop]->name);
   }
-  sprintf(formatStr, " pop %%2d (%%%lus), ", maxNameLen);
+  sprintf(formatStr, " pop %%2d (%%%us), ", maxNameLen);
   if (printTauTheta == 1)
     sprintf(formatStr, "%stau [%%7f], theta[%%7f], ", formatStr);
   for(pop=0; pop<popTree->numPops; pop++) {
