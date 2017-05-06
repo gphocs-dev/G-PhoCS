@@ -51,7 +51,7 @@ int main (int argc, char*argv[]) {
   char formatStr[bufferLen];
   double **data;
 
-  int *width;
+  unsigned int *width = NULL;
   
   int option_index;
   int c;
@@ -161,7 +161,7 @@ int main (int argc, char*argv[]) {
 //	printf("Reading trace for file %s with %d columns.\n",argv[optind], numCols);
 
 
-  width = (int*)malloc(sizeof(int) * numCols);
+  width = (unsigned int*)malloc(sizeof(int) * numCols);
   //Allocate space to hold each float from the file
   data = (double**)malloc(sizeof(double*) * (((numLines-1)/blockSize)+1));
   for(i=0;i<=((numLines-1)/blockSize);i++) {
@@ -179,7 +179,7 @@ int main (int argc, char*argv[]) {
   token = strtok(tempStr, delims);
   token = strtok(NULL, delims);
   for(i=0;i<numCols;i++) {
-    colNames[i] = malloc(sizeof(char) * (strlen(token)+1));
+    colNames[i] = (char*) malloc(sizeof(char) * (strlen(token)+1));
     strcpy(colNames[i],token);
 	token = strtok(NULL, delims);
   }   

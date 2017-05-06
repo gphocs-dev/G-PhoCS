@@ -237,7 +237,8 @@ int freePopTree(PopulationTree* popTree) {
  *	- prints population tree
  ***********************************************************************************/
 void printPopulationTree(PopulationTree* popTree, FILE* stream, int printTauTheta)	{
-  int pop, pop1, migBand, maxNameLen=0;
+  int pop, pop1, migBand;
+  size_t maxNameLen=0;
   char formatStr[100];
 	
   if ((!(printTauTheta == 0) || (printTauTheta == 1))) //If user specified something other than boolean don't print tau & theta
@@ -249,7 +250,7 @@ void printPopulationTree(PopulationTree* popTree, FILE* stream, int printTauThet
     if(strlen(popTree->pops[pop]->name) > maxNameLen)
       maxNameLen = strlen(popTree->pops[pop]->name);
   }
-  sprintf(formatStr, " pop %%2d (%%%ds), ", maxNameLen);
+  sprintf(formatStr, " pop %%2d (%%%us), ", maxNameLen);
   if (printTauTheta == 1)
     sprintf(formatStr, "%stau [%%7f], theta[%%7f], ", formatStr);
   for(pop=0; pop<popTree->numPops; pop++) {

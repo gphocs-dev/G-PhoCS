@@ -503,7 +503,7 @@ char* getNextToken(FILE* file, char* space) {
  *  - returns -1 if reached EOF in process (0 otherwise)
  *	- a pointer to space is returned
  ***********************************************************************************/
-int expectNextToken(FILE* file, char* expectedToken, char* tokenSpace) {
+int expectNextToken(FILE* file, const char* expectedToken, char* tokenSpace) {
 	int numErrors = 0;
 	// read general info
 	while(0 != strcmp(expectedToken,getNextToken(file,tokenSpace))) {
@@ -528,7 +528,11 @@ int expectNextToken(FILE* file, char* expectedToken, char* tokenSpace) {
  *	- receives pointer for space
  *	- returns count
  ***********************************************************************************/
-int countTokens(FILE* file, char* countToken, char* endToken, char* tokenSpace) {
+int countTokens(      FILE* file,
+                const char* countToken,
+                const char* endToken,
+                      char* tokenSpace)
+{
 	int count = 0;
 	fpos_t filePos;	
 

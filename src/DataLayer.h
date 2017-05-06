@@ -12,16 +12,17 @@
 
 using namespace std;
 
+/*-----------------------------------------------------------------------------
+ * Event
+ * Each event corresponds to a time band within a population where no events
+ * (coalescence/migration) take place. An event is attributed with one
+ * of 5 types corresponding to the event taking place at the end of
+ * the interval. Events are sorted in a list according to chronology within
+ * a population.
+ * Actual array of events is allocated in getMem()
+ *---------------------------------------------------------------------------*/
+
 //-----------------------------------------------------------------------------
-/* event chain
-   Each event corresponds to a time band within a population where no events
-   (coalescence/migration) take place. An event is attributed with one of 5 types
-   corresponding to the event taking place at the end of the interval. Events are
-   sorted in a list according to chronology within a population.
-   Actual array of events is allocated in getMem()
-*/
-
-
 enum EventType{COAL           = 0x01,
                IN_MIG         = 0x02,
                OUT_MIG        = 0x04,
@@ -30,6 +31,8 @@ enum EventType{COAL           = 0x01,
                SAMPLES_START  = 0x10,
                END_CHAIN      = 0x20,
                DUMMY          = 0x00};
+
+//-----------------------------------------------------------------------------
 class Event
 {
 public:
@@ -57,8 +60,6 @@ public:
   int       decrementLineages();
   bool      isOfType(int eventTypeMask) const;
 
-
-
 protected:
   int        id_;
   EventType  type_;
@@ -68,10 +69,11 @@ protected:
   int        num_lineages_;	// number of lineages before the event
 };
 
+//-----------------------------------------------------------------------------
 class EventChain
 {
 public:
-  int total_events;		  // total number of events pre-allocated
+  int total_events;               // total number of events pre-allocated
                                   // to this chain
 
   int first_event[2*NSPECIES-1];  // pointers to first event
@@ -85,10 +87,11 @@ public:
   Event* events;
 };
 
+//-----------------------------------------------------------------------------
+
 extern vector<EventChain> event_chains;
 
 
-//-----------------------------------------------------------------------------
 /*-----------------------------------------------------------------------------
  * Setters/Getters section
  * */
