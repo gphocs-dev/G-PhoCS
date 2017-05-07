@@ -12,6 +12,7 @@
 
 #include "GPhoCS.h"
 #include "patch.h"
+#include "MemoryMng.h"
 
 
 #include <stdio.h>

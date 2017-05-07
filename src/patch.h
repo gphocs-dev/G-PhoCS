@@ -11,7 +11,12 @@
  ============================================================================*/
 
 #include "DataLayerConstants.h"
+#include "MCMCcontrol.h"
+#include "GenericTree.h"
+#include "PopulationTree.h"
 
+extern DATA_SETUP dataSetup;
+extern int debug;
 
 /*=============================================================================
  *
@@ -262,31 +267,9 @@ typedef struct _GENETREE_NODE_STATS
 
 /*-----------------------------------------------------------------------------
  *
- * Global variables
- *
- *---------------------------------------------------------------------------*/
-extern GENETREE_NODE_STATS genetree_node_stats;
-extern GENETREE_STATS*     genetree_stats;
-extern GENETREE_STATS*     genetree_stats_total_partitioned;
-extern GENETREE_STATS      genetree_stats_total;
-extern GENETREE_STATS      genetree_stats_total_check;
-extern ADMIXTURE_STATUS    admixture_status;
-extern GENETREE_MIGS*      genetree_migs;
-extern GENETREE_STATS_FLAT genetree_stats_flat;
-extern Locus_SuperStruct*  locus_data;
-
-// Node surrogates.
-// a 2D array (numLoci X numNodes) for populations per genealogy node.
-extern int**               nodePops;
-// a 2D array (numLoci X numNodes) for event ids per genealogy node.
-extern int**               nodeEvents;
-
-/*-----------------------------------------------------------------------------
- *
  * FUNCTION DECLARATIONS
  *
  *---------------------------------------------------------------------------*/
-
 int analyzeGenetreeFile( char*               genetree_file );
 int writeMScommandLine ( char*               outfile );
 int findLastMig(         int                 gen,
@@ -295,6 +278,8 @@ int findLastMig(         int                 gen,
 int findFirstMig(        int                 gen,
                          int                 node_id,
                          double              time );
+
+
 int Coalescence1Pop(     PopulationTree*     popTree,
                          GenericBinaryTree*  tree,
                          int                 gen,
@@ -304,6 +289,10 @@ int removeEvent(         int                 gen,
                          int                 event );
 
 // auxiliary functions
+
+int GetRandomGtree(GenericBinaryTree* tree, int gen);
+int adjustRootEvents();
+
 int findInconsistency( int gen, int node );
 int getSptreeNodeByName( const char* name );
 int orderByAge( int subtree_root, int* ordered_nodes );
