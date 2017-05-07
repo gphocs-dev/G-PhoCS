@@ -11,10 +11,10 @@
  ============================================================================*/
 
 #include "DataLayerConstants.h"
-#include "MCMCcontrol.h"
 #include "GenericTree.h"
 #include "PopulationTree.h"
 
+#include "MCMCcontrol.h"
 extern DATA_SETUP dataSetup;
 extern int debug;
 
@@ -358,7 +358,5 @@ rubberBand (int gen, int pop, double static_point, double moving_point,
             double factor, unsigned short postORpre, int* out_num_events);
 int
 replaceMigNodes (int gen, int node);
-int
-traceLineage (int gen, int node, int reconnect);
 
 //============================ END OF FILE ====================================

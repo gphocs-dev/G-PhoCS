@@ -50,6 +50,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/omp_stub.o \
                    obj/DataLayer.o \
                    obj/MemoryMng.o \
+                   obj/TraceLineages.o \
                    obj/patch.o
 	$(CC) $(CFLAGS) obj/GPhoCS.o \
 	                obj/MCMCcontrol.o \
@@ -63,6 +64,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                   obj/omp_stub.o \
                   obj/DataLayer.o \
                   obj/MemoryMng.o \
+                  obj/TraceLineages.o \
                   obj/patch.o \
 	                $(CFLAGS) -lm -o bin/G-PhoCS
 
@@ -145,6 +147,10 @@ obj/DataLayer.o: src/DataLayer.cpp \
 obj/MemoryMng.o: src/MemoryMng.cpp \
                  src/MemoryMng.h
 	$(CC) $(CFLAGS) -c src/MemoryMng.cpp -o obj/MemoryMng.o
+
+obj/TraceLineages.o: src/TraceLineages.cpp \
+                 src/TraceLineages.h
+	$(CC) $(CFLAGS) -c src/TraceLineages.cpp -o obj/TraceLineages.o
 
 obj/patch.o: src/patch.cpp \
              src/patch.h

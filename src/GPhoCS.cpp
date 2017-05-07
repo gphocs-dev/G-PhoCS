@@ -24,6 +24,7 @@
 
 #include "MemoryMng.h"
 #include "DataLayer.h"
+#include "TraceLineages.h"
 
 /** CombStats & Printer require patch.c 
     (event_chains, genetree_stats, 
