@@ -108,7 +108,8 @@ struct POPULATION {
 *	PopulationTree
 *	- Holds relevant info for population
 ***********************************************************************************/
-typedef struct POPULATION_TREE {
+typedef struct _POPULATION_TREE
+{
 	int 	numCurPops;			// number of current populations
 	int 	numPops;			// number of populations in tree ( = 2*numCurPops-1 )
 	int		numMigBands;		// number of migration bands in tree

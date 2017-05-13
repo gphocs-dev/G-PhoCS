@@ -27,14 +27,17 @@ typedef struct MIGSTATS {
 typedef struct LEAF_STATS {
 	Stats above_comb, below_comb;
   } LeafStats;
-struct COMB_STATS{
+
+typedef struct _COMB_STATS{
 	double age; 			// temporary value of comb-age
 	Stats total;
 	Stats* clades;
 	LeafStats* leaves;
 	MigStats* leafMigs;
-	//MigStats* combMigs; //TODO - uncomment to see horrible bug
-} *comb_stats;
+	//MigStats* combMigs;
+} COMB_STATS;
+
+extern COMB_STATS* comb_stats;
 
 
 // --- FUNCTION DECLARATIONS -----------------------------------------------
@@ -57,6 +60,7 @@ double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
 
 void migrations(int comb, int gene);
 void handleLeafMigStats(int comb, int mig, int gene);
+void updateLeafMigStats(int numLineages, double elapsedTime, int eventType, MigStats* migLeafStats);
 void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge);
 void incrementEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge);
 void handleExternalMigStats(int comb, int mig, int gene); // TODO - rename to better explain "O->C" type migband
@@ -71,7 +75,7 @@ int isMigBandExternal(int mig, int comb);
 int isMigBandInternal(int mig, int comb);
 int isLeafMigBand(int mig, int comb);
 
-char* getEventTypeName(int eventType);
+const char* getEventTypeName(int eventType);
 
 double getCombAge(int comb);
 int getSon(int pop, int SON);

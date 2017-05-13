@@ -10,8 +10,11 @@
 #include "PopulationTree.h"
 #include "LocusDataLikelihood.h"
 #include "patch.h"
-
+#include "DataLayer.h"
+#include "MemoryMng.h"
 #include "CombStats.h"
+
+COMB_STATS* comb_stats;
 
 // --- FUNCTION IMPLEMENTATIONS -----------------------------------------------
 
@@ -91,6 +94,7 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 
 			numEventsAboveComb++;
 		}
+
 	}
 
 	aboveCombLeafStats->num_events = numEventsAboveComb;
@@ -179,12 +183,12 @@ void appendCurrent(int comb, int currentPop, int gene){
 	double startTime = dataSetup.popTree->pops[currentPop]->age; // do I need to start from pop age or from last eventId age (or are they equal)?
 	double eventAge = startTime;
 
-	for ( ; eventId >= 0 ; i++, eventId = event_chains[gene].events[eventId].next){
-		eventAge += event_chains[gene].events[eventId].elapsed_time;
+	for ( ; eventId >= 0 ; i++, eventId = event_chains[gene].events[eventId].getNextIdx()){
+		eventAge += event_chains[gene].events[eventId].getElapsedTime();
 		currentStats->sorted_ages[i]   = eventAge;
-		currentStats->elapsed_times[i] = event_chains[gene].events[eventId].elapsed_time;
-		currentStats->num_lineages[i]  = event_chains[gene].events[eventId].num_lineages;
-		currentStats->event_types[i]   = event_chains[gene].events[eventId].type;
+		currentStats->elapsed_times[i] = event_chains[gene].events[eventId].getElapsedTime();
+		currentStats->num_lineages[i]  = event_chains[gene].events[eventId].getNumLineages();
+		currentStats->event_types[i]   = event_chains[gene].events[eventId].getType();
 		currentStats->event_ids[i]     = eventId;
 	}
 	currentStats->num_events = i;
@@ -213,24 +217,19 @@ double calculateCoalStats(double* elapsed_times, int* num_lineages, int size){
 
 
 void migrations(int comb, int gene){
-	for (int mig = 0 ; mig < dataSetup.popTree->numMigBands ; mig++){
-		if (isMigOfComb(mig, comb)){
-			if (isLeafMigBand(mig, comb)){
-				handleLeafMigStats(comb, mig, gene);
+	for (int migband = 0 ; migband < dataSetup.popTree->numMigBands ; migband++){
+		if (isMigOfComb(migband, comb)){
+			if (isLeafMigBand(migband, comb)){
+				handleLeafMigStats(comb, migband, gene);
 			}
-			if (isMigBandInternal(mig, comb)) {
+			if (isMigBandInternal(migband, comb)) {
 				// ignore internal migbands. their stats aren't used
 			}
-			if (isMigBandExternal(mig, comb)){
-//				handleExternalMigStats(comb, mig, gene);
+			if (isMigBandExternal(migband, comb)){
+				// handleExternalMigStats(comb, mig, gene);
 			}
 		}
 	}
-}
-
-void updateLeafMigStats(int numLineages, double elapsedTime, int eventType, MigStats* migLeafStats) {
-	migLeafStats->mig_stats += numLineages * elapsedTime;
-	if (eventType == IN_MIG) migLeafStats->num_migs++;// TODO - make sure the event is on the right migband
 }
 
 void handleLeafMigStats(int comb, int mig, int gene){
@@ -239,7 +238,7 @@ void handleLeafMigStats(int comb, int mig, int gene){
 	int numLineages;
 	int targetLeaf = getTargetPop(mig);
 	int eventId = event_chains[gene].first_event[targetLeaf];
-	int eventType = event_chains[gene].events[eventId].type;
+	int eventType = event_chains[gene].events[eventId].getType();
 	MigStats* migLeafStats = &comb_stats[comb].leafMigs[targetLeaf];
 
 	fastFwdPastMigBandStart(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
@@ -248,7 +247,11 @@ void handleLeafMigStats(int comb, int mig, int gene){
 		updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
 
 		incrementEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
-		if (eventType == MIG_BAND_END) break;
+
+		if (eventType == MIG_BAND_END) {
+			updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
+			break;
+		}
 	}
 }
 
@@ -259,13 +262,18 @@ void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* ev
 	incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge);
 }
 
+void updateLeafMigStats(int numLineages, double elapsedTime, int eventType, MigStats* migLeafStats) {
+	migLeafStats->mig_stats += numLineages * elapsedTime;
+	if (eventType == IN_MIG) migLeafStats->num_migs++;// TODO - make sure the event is on the right migband
+}
+
 void incrementEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge) {
-	*elapsedTime = event_chains[gene].events[*eventId].elapsed_time;
-	*eventType = event_chains[gene].events[*eventId].type;
-	*numLineages = event_chains[gene].events[*eventId].num_lineages;
+	*elapsedTime = event_chains[gene].events[*eventId].getElapsedTime();
+	*eventType = event_chains[gene].events[*eventId].getType();
+	*numLineages = event_chains[gene].events[*eventId].getNumLineages();
 	*eventAge += *elapsedTime;
 
-	*eventId = event_chains[gene].events[*eventId].next;
+	*eventId = event_chains[gene].events[*eventId].getNextIdx();
 }
 
 void handleExternalMigStats(int comb, int mig, int gene){
@@ -369,7 +377,8 @@ double getCombAge(int comb){
 		return DBL_MAX;
 	}
 }
-char* getEventTypeName(int eventType){
+const char* getEventTypeName(int eventType)
+{
 	switch(eventType){
 	case COAL:
 		return "COAL";
@@ -461,7 +470,7 @@ void initMigStats() {
 	}
 }
 void allocateCombMem(){
-	comb_stats=malloc(dataSetup.popTree->numPops*sizeof(struct COMB_STATS));
+	comb_stats= (COMB_STATS*) malloc(dataSetup.popTree->numPops*sizeof(COMB_STATS));
 
 	allocatePopsMem();
 	allocateMigBandsMem();
@@ -469,12 +478,10 @@ void allocateCombMem(){
 void allocatePopsMem() {
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		allocateStats(&comb_stats[comb].total);
-		comb_stats[comb].leaves = malloc(
-				dataSetup.popTree->numCurPops * sizeof(LeafStats));
-		comb_stats[comb].clades = malloc(
-				dataSetup.popTree->numCurPops * sizeof(Stats));
-		for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-			if (isLeaf(pop)) {
+		comb_stats[comb].leaves = (LeafStats*) malloc(dataSetup.popTree->numCurPops*sizeof(LeafStats));
+		comb_stats[comb].clades = (Stats*) malloc(dataSetup.popTree->numCurPops*sizeof(Stats));
+		for (int pop = 0 ; pop < dataSetup.popTree->numPops ; pop++){
+			if (isLeaf(pop)){
 				allocateStats(&comb_stats[comb].leaves[pop].below_comb);
 				allocateStats(&comb_stats[comb].leaves[pop].above_comb);
 			} else {
@@ -490,11 +497,11 @@ void allocatePopsMem() {
 }
 void allocateStats(Stats* stats){ // TODO - rename signature to include "pop"
 	int max_events = 2*dataSetup.numSamples+ 4*MAX_MIGS + 3*dataSetup.popTree->numMigBands + dataSetup.popTree->numPops + 10;
-	stats->sorted_ages   = (double*)malloc(max_events*sizeof(double));
-	stats->elapsed_times = (double*)malloc(max_events*sizeof(double));
-	stats->num_lineages  = (int*)malloc(max_events*sizeof(int));
-	stats->event_types   = (int*)malloc(max_events*sizeof(int));
-	stats->event_ids   = (int*)malloc(max_events*sizeof(int));
+	stats->sorted_ages   = malloc(max_events*sizeof(double));
+	stats->elapsed_times = malloc(max_events*sizeof(double));
+	stats->num_lineages  = malloc(max_events*sizeof(int));
+	stats->event_types   = malloc(max_events*sizeof(int));
+	stats->event_ids     = malloc(max_events*sizeof(int));
 }
 void allocateMigBandsMem() {
 	int maxMigBands = dataSetup.popTree->numMigBands;

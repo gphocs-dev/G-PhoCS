@@ -1,20 +1,20 @@
 # Makefile should be placed in a folder above the src/ , obj/ , and bin/ subfolders
 
 # the compiler to use.
-CC=@gcc
+CC=@g++
 
 # Multi threading enabling flag
-# ENABLE_OMP_THREADS = 1 
+#ENABLE_OMP_THREADS = 1 
 
-#CC=/usr/bin/i586-mingw32msvc-gcc 
+#CC=/usr/bin/i586-mingw32msvc-g.cpp 
 #AR=/usr/bin/i586-mingw32msvc-ar
 
 # compiler options
 #Debugging
-#CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -fopenmp -ggdb
+#CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -fopenmp -ggdb -fpermissive
 
 #Production
-CFLAGS+= -fstack-protector-all -Wall -O3   
+CFLAGS += -fstack-protector-all -Wall -O3  -fpermissive 
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty
@@ -29,8 +29,7 @@ endif
 
 all: print_message \
 	 bin/G-PhoCS \
-     bin/readTrace
-     
+     bin/readTrace 
 
 print_message:
 	@echo ${BUILD_MSG}
@@ -48,7 +47,11 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/AlignmentProcessor.o \
                    obj/CombStats.o \
                    obj/CombPrinter.o \
-                   obj/omp_stub.o
+                   obj/omp_stub.o \
+                   obj/DataLayer.o \
+                   obj/MemoryMng.o \
+                   obj/TraceLineages.o \
+                   obj/patch.o
 	$(CC) $(CFLAGS) obj/GPhoCS.o \
 	                obj/MCMCcontrol.o \
 	                obj/utils.o \
@@ -57,8 +60,12 @@ bin/G-PhoCS:       obj/GPhoCS.o \
 	                obj/LocusDataLikelihood.o \
 	                obj/AlignmentProcessor.o \
 	                obj/CombStats.o \
-                    obj/CombPrinter.o \
-                    obj/omp_stub.o \
+                  obj/CombPrinter.o \
+                  obj/omp_stub.o \
+                  obj/DataLayer.o \
+                  obj/MemoryMng.o \
+                  obj/TraceLineages.o \
+                  obj/patch.o \
 	                $(CFLAGS) -lm -o bin/G-PhoCS
 
 bin/AlignmentProcessor: obj/utils.o \
@@ -69,12 +76,11 @@ bin/AlignmentProcessor: obj/utils.o \
 	                obj/AlignmentMain.o \
 	                $(CFLAGS) -lm -o bin/AlignmentProcessor
 
-obj/readTrace.o: src/readTrace.c 
-	$(CC) $(CFLAGS) -c src/readTrace.c -o obj/readTrace.o
+obj/readTrace.o: src/readTrace.cpp 
+	$(CC) $(CFLAGS) -c src/readTrace.cpp -o obj/readTrace.o
 
-obj/GPhoCS.o: src/GPhoCS.c \
-              src/patch.c \
-              src/omp_stub.c \
+obj/GPhoCS.o: src/GPhoCS.cpp \
+              src/omp_stub.cpp \
               src/MCMCcontrol.h \
               src/LocusDataLikelihood.h \
               src/utils.h \
@@ -84,58 +90,71 @@ obj/GPhoCS.o: src/GPhoCS.c \
               src/CombStats.h \
               src/CombPrinter.h \
               src/MultiCoreUtils.h
-	$(CC) $(CFLAGS) -c src/GPhoCS.c -o obj/GPhoCS.o
+	$(CC) $(CFLAGS) -c src/GPhoCS.cpp -o obj/GPhoCS.o
 
-obj/omp_stub.o: src/omp_stub.c 
-	$(CC) $(CFLAGS) -c src/omp_stub.c -o obj/omp_stub.o
+obj/omp_stub.o: src/omp_stub.cpp 
+	$(CC) $(CFLAGS) -c src/omp_stub.cpp -o obj/omp_stub.o
 
-obj/utils.o: src/utils.c \
-             src/omp_stub.c \
+obj/utils.o: src/utils.cpp \
+             src/omp_stub.cpp \
              src/utils.h  \
              src/MultiCoreUtils.h
-	$(CC) $(CFLAGS) -c src/utils.c -o obj/utils.o
+	$(CC) $(CFLAGS) -c src/utils.cpp -o obj/utils.o
 
-obj/GenericTree.o: src/GenericTree.c \
+obj/GenericTree.o: src/GenericTree.cpp \
                    src/GenericTree.h \
                    src/utils.h 
-	$(CC) $(CFLAGS) -c src/GenericTree.c -o obj/GenericTree.o
+	$(CC) $(CFLAGS) -c src/GenericTree.cpp -o obj/GenericTree.o
 
-obj/PopulationTree.o: src/PopulationTree.c \
+obj/PopulationTree.o: src/PopulationTree.cpp \
                       src/PopulationTree.h \
                       src/utils.h
-	$(CC) $(CFLAGS) -c src/PopulationTree.c -o obj/PopulationTree.o
+	$(CC) $(CFLAGS) -c src/PopulationTree.cpp -o obj/PopulationTree.o
 
-obj/LocusDataLikelihood.o: src/LocusDataLikelihood.c \
+obj/LocusDataLikelihood.o: src/LocusDataLikelihood.cpp \
                            src/LocusDataLikelihood.h \
                            src/utils.h \
                            src/GenericTree.h
-	$(CC) $(CFLAGS) -c src/LocusDataLikelihood.c -o obj/LocusDataLikelihood.o
+	$(CC) $(CFLAGS) -c src/LocusDataLikelihood.cpp -o obj/LocusDataLikelihood.o
 
-obj/MCMCcontrol.o: src/MCMCcontrol.c \
+obj/MCMCcontrol.o: src/MCMCcontrol.cpp \
                    src/MCMCcontrol.h \
                    src/PopulationTree.h \
                    src/utils.h
-	$(CC) $(CFLAGS) -c src/MCMCcontrol.c -o obj/MCMCcontrol.o
+	$(CC) $(CFLAGS) -c src/MCMCcontrol.cpp -o obj/MCMCcontrol.o
 
-obj/AlignmentProcessor.o: src/AlignmentProcessor.c \
+obj/AlignmentProcessor.o: src/AlignmentProcessor.cpp \
                           src/AlignmentProcessor.h \
                           src/utils.h
-	$(CC) $(CFLAGS) -c src/AlignmentProcessor.c -o obj/AlignmentProcessor.o
+	$(CC) $(CFLAGS) -c src/AlignmentProcessor.cpp -o obj/AlignmentProcessor.o
 
-obj/AlignmentMain.o: src/AlignmentMain.c \
+obj/AlignmentMain.o: src/AlignmentMain.cpp \
                      src/AlignmentProcessor.h
-	$(CC) $(CFLAGS) -c src/AlignmentMain.c -o obj/AlignmentMain.o
-		
-obj/CombPrinter.o:   src/CombPrinter.c \
+	$(CC) $(CFLAGS) -c src/AlignmentMain.cpp -o obj/AlignmentMain.o
+
+obj/CombPrinter.o:   src/CombPrinter.cpp \
                      src/CombPrinter.h
-	$(CC) $(CFLAGS) -c src/CombPrinter.c -o obj/CombPrinter.o
+	$(CC) $(CFLAGS) -c src/CombPrinter.cpp -o obj/CombPrinter.o
 		
-obj/CombStats.o:     src/CombStats.c \
+obj/CombStats.o:     src/CombStats.cpp \
                      src/CombStats.h
-	$(CC) $(CFLAGS) -c src/CombStats.c -o obj/CombStats.o
-		
+	$(CC) $(CFLAGS) -c src/CombStats.cpp -o obj/CombStats.o
 
+obj/DataLayer.o: src/DataLayer.cpp \
+                     src/DataLayer.h
+	$(CC) $(CFLAGS) -c src/DataLayer.cpp -o obj/DataLayer.o
 
+obj/MemoryMng.o: src/MemoryMng.cpp \
+                 src/MemoryMng.h
+	$(CC) $(CFLAGS) -c src/MemoryMng.cpp -o obj/MemoryMng.o
+
+obj/TraceLineages.o: src/TraceLineages.cpp \
+                 src/TraceLineages.h
+	$(CC) $(CFLAGS) -c src/TraceLineages.cpp -o obj/TraceLineages.o
+
+obj/patch.o: src/patch.cpp \
+             src/patch.h
+	$(CC) $(CFLAGS) -c src/patch.cpp -o obj/patch.o
 
 clean:
 	@echo "Cleaning"

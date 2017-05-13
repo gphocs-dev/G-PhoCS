@@ -46,7 +46,8 @@ struct GLOBAL_SPACE_STRUCT{
   char*	fourColumns;		    /**< work space for 4 alignment columns */
 }AlignmentGlobal;
 
-
+struct ALIGNMENT_DATA_STRUCT AlignmentData;
+struct PHASED_PATTERNS_STRUCT PhasedPatterns;
 
 /** baseTransformation
     Holds all 24 permutations of base identities, and their projections on ambiguity characters
@@ -1464,9 +1465,9 @@ void printAlignmentError() {
  *	getBaseType
  * 	- returns the base type of a given character (see BASE_TYPE type)
  ***********************************************************************************/
-BASE_TYPE getBaseType(char base)	{
-	
-  char* ptr = strchr(cannonizedBaseSymbols,base);
+BASE_TYPE getBaseType(char base)
+{
+  char* ptr = strchr((char*) cannonizedBaseSymbols, (int) base);
 	
   if(ptr == NULL)		return NO_BASE;
   if(ptr<cannonizedBaseSymbols+4) 	return NUCLEOTIDE;
@@ -1609,7 +1610,7 @@ int cannonizeJCpattern(const char* column, char* pattern, int numSeqs)	{
   }
 	
   for(seq=0; seq<numSeqs; seq++) {
-    ptr = strchr(cannonizedBaseSymbols,column[seq]);
+    ptr = strchr((char*)cannonizedBaseSymbols,column[seq]);
     if(ptr == NULL) {
       AlignmentGlobal.errorMessageEnd += 
         sprintf(AlignmentGlobal.errorMessageEnd,"Illegal base symbol %c.\n",column[seq]);
@@ -1660,7 +1661,8 @@ int cannonizeJCpattern(const char* column, char* pattern, int numSeqs)	{
  *	- doubles it by 2
  *	- called only when adding pattern to array (in processLocusAlignment())
  ***********************************************************************************/
-int increasePatternArraySize(){
+int increasePatternArraySize()
+{
   char* origPointer = AlignmentData.patternArray[0];
   int patt;
 	
@@ -1668,14 +1670,22 @@ int increasePatternArraySize(){
 	
   //	printf("increasing pattern array to size %d.\n",AlignmentGlobal.maxNumPatterns);
 	
-  AlignmentData.patternArray[0] = realloc(AlignmentData.patternArray[0], AlignmentGlobal.maxNumPatterns*AlignmentData.numSamples*sizeof(char));
-  if(AlignmentData.patternArray[0] == NULL) {
+  AlignmentData.patternArray[0] = (char*) realloc(AlignmentData.patternArray[0],
+                                            AlignmentGlobal.maxNumPatterns
+                                          * AlignmentData.numSamples
+                                          * sizeof(char));
+  if(AlignmentData.patternArray[0] == NULL)
+  {
     AlignmentGlobal.errorMessageEnd += 
-      sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory reallocating AlignmentData.patternArray[0] to %d patterns.\n",AlignmentGlobal.maxNumPatterns);
+      sprintf( AlignmentGlobal.errorMessageEnd,
+               "Out Of Memory reallocating AlignmentData.patternArray[0]"
+               " to %d patterns.\n",AlignmentGlobal.maxNumPatterns);
     return -1;
   }
 	
-  AlignmentData.patternArray = realloc(AlignmentData.patternArray, AlignmentGlobal.maxNumPatterns*sizeof(char*));
+  AlignmentData.patternArray = (char**) realloc(AlignmentData.patternArray,
+                                         AlignmentGlobal.maxNumPatterns
+                                       * sizeof(char*));
   if(AlignmentData.patternArray == NULL) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory reallocating AlignmentData.patternArray to %d patterns.\n",AlignmentGlobal.maxNumPatterns);
@@ -2535,7 +2545,7 @@ int	twoSiteFourGameteTest(int patternId1, int patternId2) {
       optionalConfigs[1] = optionalConfigs[2];
     } else {
       //			printf("choosing pair (%d,%d).\n",optionalConfigs[0],optionalConfigs[3]);
-      //optionalConfigs[0] = optionalConfigs[0];   <-- COMMENTED OUT BECAUSE IT IS REDUNDANT
+      //optionalConfigs[0] = optionalConfigs[0];
       optionalConfigs[1] = optionalConfigs[3];
     }
 			

@@ -22,18 +22,25 @@
 
 #include "GPhoCS.h"
 
-/** patch for intermediate G-PhoCS version **/
-#include "patch.c"
-#include "patch.h"
+#include "MemoryMng.h"
+#include "DataLayer.h"
+#include "TraceLineages.h"
 
-/** CombStats & Printer require patch.c (event_chains, genetree_stats, genetree_stats_total & genetree_stats_flat) **/
+/** CombStats & Printer require patch.c 
+    (event_chains, genetree_stats, 
+  genetree_stats_total & genetree_stats_flat) **/
 #include "CombStats.h"
 #include "CombPrinter.h"
+
 
 static struct option long_options[] = { { "help", no_argument, 0, 'h' },
                                         { "verbose", no_argument, 0, 'v' },
                                         { "nthreads", no_argument, 0, 'n' },
                                         { 0, 0, 0, 0 } };
+DATA_STATE dataState;
+MISC_STATS misc_stats;
+int typeCount[NUM_TYPES];
+extern int debug;
 
 // --- FUNCTION IMPLEMENTATIONS -----------------------------------------------
 void printUsage(char *programName) {
@@ -130,7 +137,7 @@ int main(int argc, char*argv[]) {
 
 		printf("****************************"
                "**********************************\n\n");
-		printf("G-Phocs version "GPHOCS_VERSION_NUM",  "GPHOCS_VERSION_DATE"\n\n");
+		printf("G-Phocs version " GPHOCS_VERSION_NUM " " GPHOCS_VERSION_DATE "\n\n");
 		printf("**************************************************************\n");
 
 		int final_num_threads = 1;
@@ -525,7 +532,7 @@ int freeAllMemory() {
 	    if (isCombStatsActivated()){
 	    	fclose(ioSetup.combStatsFile);
 	    	freeCombMem();
-	    }
+		}
 
 		if (ioSetup.admixFile != NULL) fclose(ioSetup.admixFile);
 		//Freeing print factors array
@@ -553,7 +560,6 @@ int freeAllMemory() {
 		// NEXTGEN - NEED TO REMOVE THIS PART !!!
 		//Freeing event chains
 		free(event_chains[0].events);
-		free(event_chains);
 		free(genetree_stats);
 		//free(rubberband_migs);
 		free(nodePops[0]);
@@ -1048,10 +1054,11 @@ int initializeMCMC() {
 
 }/** end of initializeMCMC **/
 
-int isCombStatsActivated(){
-	return (0 != strcmp(ioSetup.combStatsFileName, "NONE")); // set to 1 for recording coal stats
+int isCombStatsActivated()
+{
+  // set to 1 for recording coal stats
+  return (0 != strcmp(ioSetup.combStatsFileName, "NONE")); 
 }
-
 /***********************************************************************************
  *	performMCMC
  *	- main procedure in program.
@@ -1066,7 +1073,7 @@ int performMCMC() {
 		UpdateStats acceptanceCounts, acceptancePercents, finetuneMaxes, finetuneMins;
 
 		int acceptCount;
-		int *acceptCountArray = malloc(sizeof(int) * dataSetup.popTree->numPops);
+		int *acceptCountArray = (int*) malloc(sizeof(int) * dataSetup.popTree->numPops);
 		int i, j, logCount, totalNumMigNodes, migBand;
 		int numSamplesPerLog, logsPerLine;
 
@@ -1122,14 +1129,16 @@ int performMCMC() {
 
 		if (isCombStatsActivated()) {
 		  ioSetup.combStatsFile = fopen(ioSetup.combStatsFileName, "w");
+		  ioSetup.combDebugStatsFile = fopen("out/combDebugStats.tsv", "w"); // TODO - remove debug stats
+
 		  if (ioSetup.combStatsFile == NULL) {
 		    fprintf(stderr, "Error: Could not open comb stats file %s.\n",
 		        ioSetup.combStatsFileName);
 		    return (-1);
 		  }
 		  printCombStatsHeader(ioSetup.combStatsFile);
+		  printCombDebugStatsHeader(ioSetup.combDebugStatsFile); // TODO - remove debug stats
 		}
-
 
 #ifdef LOG_STEPS
 		ioSetup.debugFile = fopen("G-PhoCS-debug.txt","w");
@@ -1556,24 +1565,22 @@ int performMCMC() {
 				if (iteration >= 0 && iteration % (mcmcSetup.sampleSkip + 1) == 0) {
 						fprintf(ioSetup.traceFile, "%d\t", iteration);
 						printParamVals(paramVals, 0, mcmcSetup.numParameters,	ioSetup.traceFile);
-						fprintf(ioSetup.traceFile, "\t%.6f\t%.6f\t%.6f\n", dataState.logLikelihood, dataState.dataLogLikelihood, dataState.genealogyLogLikelihood);
+						fprintf(ioSetup.traceFile, "%.6f\t%.6f\t%.6f\n", dataState.logLikelihood, dataState.dataLogLikelihood, dataState.genealogyLogLikelihood);
 						fflush(ioSetup.traceFile);
 
-						if (recordCoalStats  && 0) {
-//								@@eug: never enter here
+						if (recordCoalStats) {
 								computeFlatStats();
 								computeNodeStats();
 								computeGenetreeStats_partitioned();
 								printCoalStats(iteration);
 						}
-
-
 						if (isCombStatsActivated()) {
 								//@@ron: please enter here :)
 								calculateCombStats();
 								printCombStats(iteration, ioSetup.combStatsFile);
+								printCombDebugStats(iteration, ioSetup.combDebugStatsFile); //TODO - remove debug printing
+								fflush(ioSetup.combDebugStatsFile);
 						}
-
 
 
 						if (admixed_samples.number > 0 && iteration % 1000 == 0) {
@@ -2323,8 +2330,8 @@ int UpdateGB_MigSPR() {
 								 */
 								// remove old coalescent event and configure new one
 								removeEvent(gen,locus_data[gen].mig_spr_stats.father_event_old);
-								event_chains[gen].events[locus_data[gen].mig_spr_stats.father_event_new].type = COAL;
-								event_chains[gen].events[locus_data[gen].mig_spr_stats.father_event_new].node_id = father;
+								event_chains[gen].events[locus_data[gen].mig_spr_stats.father_event_new].setType(COAL);
+								event_chains[gen].events[locus_data[gen].mig_spr_stats.father_event_new].setId(father);
 								nodeEvents[gen][father] = locus_data[gen].mig_spr_stats.father_event_new;
 
 								// update number of coalescences for new and old father populations (if necessary)
@@ -2350,7 +2357,7 @@ int UpdateGB_MigSPR() {
 								// add lineage to all events in new path to new father
 								for (i=0; i<locus_data[gen].genetree_stats_delta[1].num_changed_events; i++) {
 										event = locus_data[gen].genetree_stats_delta[1].changed_events[i];
-										event_chains[gen].events[event].num_lineages++;
+										event_chains[gen].events[event].incrementLineages();
 								}
 
 								// apply changes to genetree stats
@@ -2404,7 +2411,7 @@ int UpdateGB_MigSPR() {
 								// return reduced lineage to all events of original edge
 								for (i = 0; i < locus_data[gen].genetree_stats_delta[0].num_changed_events; i++) {
 										event = locus_data[gen].genetree_stats_delta[0].changed_events[i];
-										event_chains[gen].events[event].num_lineages++;
+										event_chains[gen].events[event].incrementLineages();
 								}
 								// change back population assignment (due to admixture)
 								if (admixSwitch) {
@@ -3051,10 +3058,10 @@ void UpdateTau(double *finetunes, int *accepted) {
 										for (i = 0; i < num_affected_mig_bands; i++) {
 												mig_band = affected_mig_bands[i];
 												targetPop_mt = dataSetup.popTree->migBands[mig_band].targetPop;
-												for (event = event_chains[gen].first_event[targetPop_mt]; event >= 0; event = event_chains[gen].events[event].next) {
-														if (event_chains[gen].events[event].node_id == mig_band &&
-																		((start_or_end[i] && event_chains[gen].events[event].type == MIG_BAND_START) ||
-																						event_chains[gen].events[event].type == MIG_BAND_END))  break;
+												for (event = event_chains[gen].first_event[targetPop_mt]; event >= 0; event = event_chains[gen].events[event].getNextIdx()) {
+														if (event_chains[gen].events[event].getId() == mig_band &&
+																		((start_or_end[i] && event_chains[gen].events[event].getType() == MIG_BAND_START) ||
+																						event_chains[gen].events[event].getType() == MIG_BAND_END))  break;
 												}
 												if (event < 0) {
 														if (debug) {
@@ -3185,15 +3192,14 @@ void UpdateTau(double *finetunes, int *accepted) {
 								int i = 0;
 								for (i = 0; i < locus_data[gen].rubberband_migs.num_moved_events; i++) {
 										// set pointers from mignodes to new events
-										int mig = event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].node_id;
-										if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].type == IN_MIG) {
+										int mig = event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].getId();
+										if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].getType() == IN_MIG) {
 												genetree_migs[gen].mignodes[mig].target_event = locus_data[gen].rubberband_migs.new_events[i];
 												// adjust ages of mignodes for migrations out of rubberband
 												// the ones coming in are adjusted in rubberBand.
 												genetree_migs[gen].mignodes[mig].age =
 																locus_data[gen].rubberband_migs.new_ages[i];
-										} else if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].type
-														== OUT_MIG) {
+										} else if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].getType() == OUT_MIG) {
 												genetree_migs[gen].mignodes[mig].source_event =
 																locus_data[gen].rubberband_migs.new_events[i];
 										}
@@ -3518,10 +3524,10 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 										for (i = 0; i < num_affected_mig_bands; i++) {
 												mig_band = affected_mig_bands[i];
 												targetPop_mt = dataSetup.popTree->migBands[mig_band].targetPop;
-												for (event = event_chains[gen].first_event[targetPop_mt]; event >= 0; event = event_chains[gen].events[event].next) {
-														if (event_chains[gen].events[event].node_id == mig_band &&
-																		((start_or_end[i] && event_chains[gen].events[event].type == MIG_BAND_START) ||
-																						event_chains[gen].events[event].type == MIG_BAND_END))   break;
+												for (event = event_chains[gen].first_event[targetPop_mt]; event >= 0; event = event_chains[gen].events[event].getNextIdx()) {
+														if (event_chains[gen].events[event].getId() == mig_band &&
+																		((start_or_end[i] && event_chains[gen].events[event].getType() == MIG_BAND_START) ||
+																						event_chains[gen].events[event].getType() == MIG_BAND_END))   break;
 												}
 												if (event < 0) {
 														if (debug) {
@@ -3622,15 +3628,15 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 								// remove original added events for migrations and migration bands
 								for (i = 0; i < locus_data[gen].rubberband_migs.num_moved_events; i++) {
 										// set pointers from mignodes to new events
-										int mig = event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].node_id;
-										if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].type == IN_MIG) {
+										int mig = event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].getId();
+										if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].getType() == IN_MIG) {
 												genetree_migs[gen].mignodes[mig].target_event = locus_data[gen].rubberband_migs.new_events[i];
 												// adjust ages of mignodes for migrations out of rubberband
 												// the ones coming in are adjusted in rubberBand.
 												// THIS IS TO ENSURE CORRECTLY ADDRESSING MIGRATIONS BETWEEN TWO CHILDREN POPULATIONS
 												// AFFECTED BY THE RUBBER BAND
 												genetree_migs[gen].mignodes[mig].age = locus_data[gen].rubberband_migs.new_ages[i];
-										} else if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].type == OUT_MIG) {
+										} else if (event_chains[gen].events[locus_data[gen].rubberband_migs.new_events[i]].getType() == OUT_MIG) {
 												genetree_migs[gen].mignodes[mig].source_event = locus_data[gen].rubberband_migs.new_events[i];
 										}
 										removeEvent(gen, locus_data[gen].rubberband_migs.orig_events[i]);
@@ -3908,7 +3914,8 @@ int mixing(double finetune) {
 
 								// update elapsed times of all valid events
 								for (i = 0; i < event_chains[gen].total_events; i++) {
-										if (event_chains[gen].events[i].elapsed_time > 0) event_chains[gen].events[i].elapsed_time *= c;
+										if (event_chains[gen].events[i].getElapsedTime() > 0)
+										  event_chains[gen].events[i].multiplyElapsedTime(c);
 								}
 						}    // end of for(gen)
 

@@ -48,8 +48,8 @@ struct ALIGNMENT_DATA_STRUCT{
   char**	patternArray;	    /**< list of all site patterns observed */
   int		numLoci;		    /**< number of loci analyzed (or to be analized) */
   LocusProfile*	locusProfiles;	/**< a list of locus profiles */
-}AlignmentData;
-
+};
+extern struct ALIGNMENT_DATA_STRUCT AlignmentData;
 
 
 /** AlignmentHets
@@ -62,8 +62,9 @@ struct PHASED_PATTERNS_STRUCT{
   char**	patternArray;		/**< list of all phased site patterns observed */
   int		numLoci;			/**< number of loci analyzed (or to be analized) */
   LocusProfile*	locusProfiles;	/**< a list of locus profiles per phased pattern */
-}PhasedPatterns;
+};
 
+extern struct PHASED_PATTERNS_STRUCT PhasedPatterns;
 
 
 /******************************************************************************************************/
