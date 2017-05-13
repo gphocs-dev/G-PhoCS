@@ -14,7 +14,7 @@ CC=@g++
 #CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -fopenmp -ggdb -fpermissive
 
 #Production
-CFLAGS+= -fstack-protector-all -Wall -O3  -fpermissive 
+CFLAGS += -fstack-protector-all -Wall -O3  -fpermissive 
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty
@@ -48,7 +48,10 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/CombStats.o \
                    obj/CombPrinter.o \
                    obj/omp_stub.o \
-                   obj/DataLayer.o
+                   obj/DataLayer.o \
+                   obj/MemoryMng.o \
+                   obj/TraceLineages.o \
+                   obj/patch.o
 	$(CC) $(CFLAGS) obj/GPhoCS.o \
 	                obj/MCMCcontrol.o \
 	                obj/utils.o \
@@ -57,9 +60,12 @@ bin/G-PhoCS:       obj/GPhoCS.o \
 	                obj/LocusDataLikelihood.o \
 	                obj/AlignmentProcessor.o \
 	                obj/CombStats.o \
-                        obj/CombPrinter.o \
-                        obj/omp_stub.o \
-                        obj/DataLayer.o \
+                  obj/CombPrinter.o \
+                  obj/omp_stub.o \
+                  obj/DataLayer.o \
+                  obj/MemoryMng.o \
+                  obj/TraceLineages.o \
+                  obj/patch.o \
 	                $(CFLAGS) -lm -o bin/G-PhoCS
 
 bin/AlignmentProcessor: obj/utils.o \
@@ -74,7 +80,6 @@ obj/readTrace.o: src/readTrace.cpp
 	$(CC) $(CFLAGS) -c src/readTrace.cpp -o obj/readTrace.o
 
 obj/GPhoCS.o: src/GPhoCS.cpp \
-              src/patch.cpp \
               src/omp_stub.cpp \
               src/MCMCcontrol.h \
               src/LocusDataLikelihood.h \
@@ -138,6 +143,18 @@ obj/CombStats.o:     src/CombStats.cpp \
 obj/DataLayer.o: src/DataLayer.cpp \
                      src/DataLayer.h
 	$(CC) $(CFLAGS) -c src/DataLayer.cpp -o obj/DataLayer.o
+
+obj/MemoryMng.o: src/MemoryMng.cpp \
+                 src/MemoryMng.h
+	$(CC) $(CFLAGS) -c src/MemoryMng.cpp -o obj/MemoryMng.o
+
+obj/TraceLineages.o: src/TraceLineages.cpp \
+                 src/TraceLineages.h
+	$(CC) $(CFLAGS) -c src/TraceLineages.cpp -o obj/TraceLineages.o
+
+obj/patch.o: src/patch.cpp \
+             src/patch.h
+	$(CC) $(CFLAGS) -c src/patch.cpp -o obj/patch.o
 
 clean:
 	@echo "Cleaning"

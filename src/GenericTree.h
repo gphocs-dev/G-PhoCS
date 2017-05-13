@@ -27,7 +27,7 @@
 *	- label1 read after ':' sign and label2 read after '#' sign - typically correspond to age and additional info
 ***********************************************************************************/
 
-typedef struct GENERIC_BINARY_TREE{
+typedef struct _GENERIC_BINARY_TREE{
 	int		numLeaves;		// number of nodes in tree
 	int		rootId;			// index of root node
 	char**	leafNames;		// array of strings for leaf names

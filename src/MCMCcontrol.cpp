@@ -19,7 +19,8 @@
 /*********
  * globalSetup
  *********/
-struct GLOBAL_SETUP {
+typedef struct _GLOBAL_SETUP
+{
 	double alpha;
 	double beta;
 	double printFactor;
@@ -27,12 +28,14 @@ struct GLOBAL_SETUP {
 	double migBeta;
 	double migFactor;
 	double finetuneTaus;
-}  globalSetup;
+}GLOBAL_SETUP;
 
 struct IO_SETUP ioSetup;
 struct MCMC_SETUP mcmcSetup;
-struct DATA_SETUP dataSetup;
 struct ADMIXED_SAMPLES admixed_samples;
+
+DATA_SETUP  dataSetup;
+GLOBAL_SETUP globalSetup;
 
 
 /***************************************************************************************************************/

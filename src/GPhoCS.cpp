@@ -22,15 +22,16 @@
 
 #include "GPhoCS.h"
 
-/** patch for intermediate G-PhoCS version **/
-#include "patch.cpp"
-#include "patch.h"
+#include "MemoryMng.h"
+#include "DataLayer.h"
+#include "TraceLineages.h"
 
 /** CombStats & Printer require patch.c 
     (event_chains, genetree_stats, 
   genetree_stats_total & genetree_stats_flat) **/
 #include "CombStats.h"
 #include "CombPrinter.h"
+
 
 static struct option long_options[] = { { "help", no_argument, 0, 'h' },
                                         { "verbose", no_argument, 0, 'v' },
@@ -39,6 +40,7 @@ static struct option long_options[] = { { "help", no_argument, 0, 'h' },
 DATA_STATE dataState;
 MISC_STATS misc_stats;
 int typeCount[NUM_TYPES];
+extern int debug;
 
 // --- FUNCTION IMPLEMENTATIONS -----------------------------------------------
 void printUsage(char *programName) {

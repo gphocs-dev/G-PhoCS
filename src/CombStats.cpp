@@ -11,7 +11,7 @@
 #include "LocusDataLikelihood.h"
 #include "patch.h"
 #include "DataLayer.h"
-
+#include "MemoryMng.h"
 #include "CombStats.h"
 
 COMB_STATS* comb_stats;
