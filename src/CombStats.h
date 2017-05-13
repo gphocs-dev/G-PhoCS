@@ -75,7 +75,7 @@ int isMigBandExternal(int mig, int comb);
 int isMigBandInternal(int mig, int comb);
 int isLeafMigBand(int mig, int comb);
 
-char* getEventTypeName(int eventType);
+const char* getEventTypeName(int eventType);
 
 double getCombAge(int comb);
 int getSon(int pop, int SON);
