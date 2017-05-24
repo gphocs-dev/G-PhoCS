@@ -1171,7 +1171,8 @@ int performMCMC() {
 
 		if (mcmcSetup.mutRateMode == 1)
 				fprintf(ioSetup.traceFile, "\tVariance-Mut");
-		fprintf(ioSetup.traceFile, "\tData-ld-ln\tFull-ld-ln\n");
+//		fprintf(ioSetup.traceFile, "\tData-ld-ln\tFull-ld-ln\n");
+		fprintf(ioSetup.traceFile, "\tComplete-ld-ln-avg\tData-ld-ln\n");
 
 		printf(	"Starting MCMC: %d burnin, %d running, sampled every %d iteration(s).\n",
 						mcmcSetup.burnin, mcmcSetup.numSamples, mcmcSetup.sampleSkip);
