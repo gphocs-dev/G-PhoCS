@@ -1568,7 +1568,8 @@ int performMCMC() {
 						fprintf(ioSetup.traceFile, "%.6f\t%.6f\t%.6f\n", dataState.logLikelihood, dataState.dataLogLikelihood, dataState.genealogyLogLikelihood);
 						fflush(ioSetup.traceFile);
 
-						if (recordCoalStats) {
+						if (recordCoalStats  && 0) {
+//								@@eug: never enter here
 								computeFlatStats();
 								computeNodeStats();
 								computeGenetreeStats_partitioned();
