@@ -46,6 +46,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/LocusDataLikelihood.o \
                    obj/AlignmentProcessor.o \
                    obj/CombStats.o \
+                   obj/McRefCommon.o \
                    obj/CombPrinter.o \
                    obj/CladeStats.o \
                    obj/CladePrinter.o \
@@ -61,6 +62,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
 	                obj/PopulationTree.o \
 	                obj/LocusDataLikelihood.o \
 	                obj/AlignmentProcessor.o \
+	                obj/McRefCommon.o \
 	                obj/CombStats.o \
                     obj/CombPrinter.o \
 	                obj/CladeStats.o \
@@ -138,19 +140,27 @@ obj/AlignmentMain.o: src/AlignmentMain.cpp \
                      src/AlignmentProcessor.h
 	$(CC) $(CFLAGS) -c src/AlignmentMain.cpp -o obj/AlignmentMain.o
 
+obj/McRefCommon.o:   src/McRefCommon.cpp \
+                     src/McRefCommon.h
+	$(CC) $(CFLAGS) -c src/McRefCommon.cpp -o obj/McRefCommon.o
+
 obj/CombPrinter.o:   src/CombPrinter.cpp \
                      src/CombPrinter.h
 	$(CC) $(CFLAGS) -c src/CombPrinter.cpp -o obj/CombPrinter.o
 		
-obj/CombStats.o:     src/CombStats.cpp \
+obj/CombStats.o:     src/McRefCommon.cpp \
+                     src/McRefCommon.h \
+					 src/CombStats.cpp \
                      src/CombStats.h
 	$(CC) $(CFLAGS) -c src/CombStats.cpp -o obj/CombStats.o
 
-obj/CladePrinter.o:   src/CladePrinter.cpp \
+obj/CladePrinter.o:  src/CladePrinter.cpp \
                      src/CladePrinter.h
 	$(CC) $(CFLAGS) -c src/CladePrinter.cpp -o obj/CladePrinter.o
 		
-obj/CladeStats.o:     src/CladeStats.cpp \
+obj/CladeStats.o:	 src/McRefCommon.cpp \
+                     src/McRefCommon.h \
+					 src/CladeStats.cpp \
                      src/CladeStats.h
 	$(CC) $(CFLAGS) -c src/CladeStats.cpp -o obj/CladeStats.o
 

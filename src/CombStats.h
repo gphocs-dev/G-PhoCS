@@ -56,7 +56,6 @@ void handleNonLeafCoalStats(int comb, int currentPop, int gene);
 void mergeChildernIntoCurrent(int comb, int currentPop, int gen);
 void copyStaticEventStats(Stats* sourceStats, int n, Stats* targetStats, int m);
 void appendCurrent(int comb, int currentPop, int gene);
-double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
 
 void migrations(int comb, int gene);
 void handleLeafMigStats(int comb, int mig, int gene);

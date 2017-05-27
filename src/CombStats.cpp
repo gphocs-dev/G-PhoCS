@@ -13,6 +13,7 @@
 #include "DataLayer.h"
 #include "MemoryMng.h"
 #include "CombStats.h"
+#include "McRefCommon.h"
 
 COMB_STATS* comb_stats;
 
@@ -200,19 +201,6 @@ void finalizeCombCoalStats(int comb){
 	int size = comb_stats[comb].clades[comb].num_events;
 	comb_stats[comb].total.coal_stats += calculateCoalStats(elapsedTimes, numLineages, size);
 }
-
-double calculateCoalStats(double* elapsed_times, int* num_lineages, int size){
-	int n;
-	double t;
-	double result = 0.0;
-	for( int i = 0 ; i < size ; i++) {
-		n = num_lineages[i];
-		t = elapsed_times[i];
-		result += n*(n-1)*t;
-	}
-	return result;
-}
-
 
 
 
@@ -474,8 +462,6 @@ void allocateCombMem(){
 
 	allocatePopsMem();
 	allocateMigBandsMem();
-}
-void allocateCladeMem(){
 }
 void allocatePopsMem() {
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
