@@ -65,25 +65,6 @@ void incrementEventVars(int gene, int* eventId, double*elapsedTime, int* eventTy
 void handleExternalMigStats(int comb, int mig, int gene); // TODO - rename to better explain "O->C" type migband
 
 
-int	isLeaf(int pop);
-int areChildrenLeaves(int pop);
-int isFeasibleComb(int pop);
-int isAncestralTo(int father, int son);
-int isMigOfComb(int mig, int comb);
-int isMigBandExternal(int mig, int comb);
-int isMigBandInternal(int mig, int comb);
-int isLeafMigBand(int mig, int comb);
-
-const char* getEventTypeName(int eventType);
-
-double getCombAge(int comb);
-int getSon(int pop, int SON);
-int getSourcePop(int mig);
-int getTargetPop(int mig);
-char* getPopName(int pop);
-char* getMigName(int mig);
-char* concat(const char *s1, const char *s2); // TODO - THIS SHOULD NOT BE USED  IN PRODUCTION SINCE THE MEMORY ISN'T RELEASED
-
 Stats* getCombPopStats(int comb, int pop);
 void initCombStats();
 void initPopStats();

@@ -4,6 +4,7 @@
 #include "GPhoCS.h"
 #include "patch.h"
 #include "MemoryMng.h"
+#include "McRefCommon.h"
 #include <stdio.h>
 
 void printCombStatsHeader(FILE* file){

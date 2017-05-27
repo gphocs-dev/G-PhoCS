@@ -144,7 +144,9 @@ obj/McRefCommon.o:   src/McRefCommon.cpp \
                      src/McRefCommon.h
 	$(CC) $(CFLAGS) -c src/McRefCommon.cpp -o obj/McRefCommon.o
 
-obj/CombPrinter.o:   src/CombPrinter.cpp \
+obj/CombPrinter.o:   src/McRefCommon.cpp \
+                     src/McRefCommon.h \
+					 src/CombPrinter.cpp \
                      src/CombPrinter.h
 	$(CC) $(CFLAGS) -c src/CombPrinter.cpp -o obj/CombPrinter.o
 		
@@ -154,7 +156,9 @@ obj/CombStats.o:     src/McRefCommon.cpp \
                      src/CombStats.h
 	$(CC) $(CFLAGS) -c src/CombStats.cpp -o obj/CombStats.o
 
-obj/CladePrinter.o:  src/CladePrinter.cpp \
+obj/CladePrinter.o:  src/McRefCommon.cpp \
+                     src/McRefCommon.h \
+					 src/CladePrinter.cpp \
                      src/CladePrinter.h
 	$(CC) $(CFLAGS) -c src/CladePrinter.cpp -o obj/CladePrinter.o
 		
@@ -164,7 +168,7 @@ obj/CladeStats.o:	 src/McRefCommon.cpp \
                      src/CladeStats.h
 	$(CC) $(CFLAGS) -c src/CladeStats.cpp -o obj/CladeStats.o
 
-obj/DataLayer.o: src/DataLayer.cpp \
+obj/DataLayer.o: 	 src/DataLayer.cpp \
                      src/DataLayer.h
 	$(CC) $(CFLAGS) -c src/DataLayer.cpp -o obj/DataLayer.o
 
