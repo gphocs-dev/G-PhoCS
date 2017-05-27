@@ -1,23 +1,18 @@
 #ifndef SRC_MCREFCOMMON_H_
 #define SRC_MCREFCOMMON_H_
 
-#define TRUE 1 // TODO - move this to common place with comb stats
+#define TRUE 1
 #define FALSE 0
 
 double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
 
 int	isLeaf(int pop);
 int areChildrenLeaves(int pop);
-int isFeasibleComb(int pop);
 int isAncestralTo(int father, int son);
-int isMigOfComb(int mig, int comb);
-int isMigBandExternal(int mig, int comb);
-int isMigBandInternal(int mig, int comb);
-int isLeafMigBand(int mig, int comb);
+
 
 const char* getEventTypeName(int eventType);
 
-double getCombAge(int comb);
 int getSon(int pop, int SON);
 int getSourcePop(int mig);
 int getTargetPop(int mig);

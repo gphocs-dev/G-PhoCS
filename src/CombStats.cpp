@@ -382,6 +382,56 @@ void allocateMigBandsMem() {
 		}
 	}
 }
+
+
+int isFeasibleComb(int pop){
+	if (isLeaf(pop)){
+		return FALSE;
+	} else if (areChildrenLeaves(pop)){ // a population whos two children are leaves is considered a "trivial comb" and is usually not interesting (except for algorithm test purposes)
+		return FALSE; // Set TRUE if you want to run "assertBottomCombs()" test // TODO - always set back to FALSE after testing
+	} else {
+		return TRUE;
+	}
+}
+int isMigOfComb(int mig, int comb){ // if migrations flow into the comb
+	int target = getTargetPop(mig);
+	return isAncestralTo(comb, target) || target == comb;
+}
+int isMigBandExternal(int mig, int comb){
+	int source = getSourcePop(mig);
+	int target = getTargetPop(mig);
+	return isAncestralTo(comb, target)  && !isAncestralTo(comb, source);
+}
+int isMigBandInternal(int mig, int comb){
+	int source = getSourcePop(mig);
+	int target = getTargetPop(mig);
+
+	return isAncestralTo(comb, source) && isAncestralTo(comb, target) && (!isLeaf(source) || !isLeaf(target));
+}
+int isLeafMigBand(int mig, int comb){
+	int target = getTargetPop(mig);
+	int source = getSourcePop(mig);
+	return isLeaf(target) && (isLeaf(source) || !isAncestralTo(comb, source));
+}
+double getCombAge(int comb){
+	if (isLeaf(comb)){
+		return DBL_MAX;
+	} else if (areChildrenLeaves(comb)){
+		return dataSetup.popTree->pops[comb]->age;
+	} else if (isFeasibleComb(comb)){
+		double left_min = getCombAge(dataSetup.popTree->pops[comb]->sons[LEFT]->id);
+		double right_min = getCombAge(dataSetup.popTree->pops[comb]->sons[RIGHT]->id);
+		return fmin(left_min, right_min);
+	} else {
+		printf("ERROR: bug in combAge algorithm. Should not reach here!");
+		exit(-1);
+		return DBL_MAX;
+	}
+}
+
+
+
+
 void freeCombMem(){ // TODO - implement
 }
 

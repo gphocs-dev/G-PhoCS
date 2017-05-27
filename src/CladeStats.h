@@ -1,18 +1,10 @@
-/*
- * CladeStats.h
- *
- *  Created on: May 27, 2017
- *      Author: ronvis
- */
-
 #ifndef SRC_CLADESTATS_H_
 #define SRC_CLADESTATS_H_
 
 /*	clade_stats - holds statistics of all clades of tree.
  *  clade_stats[pop] holds statistics of the clade under (and including) pop.
- *  arrays allocated in GetMem().
  */
-struct CLADE_STATS{
+typedef struct _CLADE_STATS{
 	double coal_stats_total, mig_stats_total;
 	int num_coals_total, num_migs_total;
 
@@ -25,7 +17,10 @@ struct CLADE_STATS{
 	// used as an "array length" variable for sortedAges, event_types & num_lineages arrays
 	double debug_total_error;
 
-};
+} CLADE_STATS;
+extern CLADE_STATS* clade_stats;
+
+
 
 
 void calculateCladeStats();

@@ -23,7 +23,6 @@ typedef struct MIGSTATS {
 			int num_migs;
 			double mig_stats;
 } MigStats;
-
 typedef struct LEAF_STATS {
 	Stats above_comb, below_comb;
   } LeafStats;
@@ -77,6 +76,12 @@ void allocateMigBandsMem();
 void allocateStats(Stats* stats);
 
 void freeCombMem();
+double getCombAge(int comb);
+int isFeasibleComb(int pop);
+int isMigOfComb(int mig, int comb);
+int isMigBandExternal(int mig, int comb);
+int isMigBandInternal(int mig, int comb);
+int isLeafMigBand(int mig, int comb);
 
 
 // TODO - extract tests to different source file

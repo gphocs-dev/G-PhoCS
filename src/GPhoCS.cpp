@@ -1605,7 +1605,7 @@ int performMCMC() {
 						}
 						if (isCladeStatsActivated()) {
 								calculateCladeStats();
-								printCladeStats(iteration, ioSetup.combStatsFile);
+								printCladeStats(iteration, ioSetup.cladeStatsFile);
 						}
 
 

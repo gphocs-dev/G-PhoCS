@@ -12,10 +12,10 @@
 #include "patch.h"
 #include "DataLayer.h"
 #include "MemoryMng.h"
-#include "CladeStats.h"
 #include "McRefCommon.h"
+#include "CladeStats.h"
 
-CLADE_STATS  *clade_stats;
+CLADE_STATS* clade_stats;
 
 void calculateCladeStats() {
 	initCladeStats();
@@ -198,8 +198,9 @@ void addCurrentPopIntoCladeStats(int clade, int gen){
 
 
 void allocateCladeMem(){
-	int max_events = 7000; // TODO - get actual data
-	clade_stats=(struct CLADE_STATS*)malloc(dataSetup.popTree->numPops*sizeof(struct CLADE_STATS));
+	int max_events = 2*dataSetup.numSamples+ 4*MAX_MIGS + 3*dataSetup.popTree->numMigBands + dataSetup.popTree->numPops + 10;
+	clade_stats = (CLADE_STATS*)malloc(dataSetup.popTree->numPops*sizeof(CLADE_STATS));
+
 	for (int clade = 0; clade < dataSetup.popTree->numPops; clade++) {
 		clade_stats[clade].sorted_ages = (double*)malloc(max_events*sizeof(double));
 		clade_stats[clade].elapsed_times = (double*)malloc(max_events*sizeof(double));
