@@ -31,6 +31,8 @@
   genetree_stats_total & genetree_stats_flat) **/
 #include "CombStats.h"
 #include "CombPrinter.h"
+#include "CladeStats.h"
+#include "CladePrinter.h"
 
 
 static struct option long_options[] = { { "help", no_argument, 0, 'h' },
@@ -509,6 +511,9 @@ void allocateAllMemory() {
 	if (isCombStatsActivated()) {
 		allocateCombMem();
 	}
+	if (isCladeStatsActivated()) {
+		allocateCladeMem();
+	}
 }
 
 /***********************************************************************************
@@ -532,6 +537,10 @@ int freeAllMemory() {
 	    if (isCombStatsActivated()){
 	    	fclose(ioSetup.combStatsFile);
 	    	freeCombMem();
+		}
+	    if (isCladeStatsActivated()){
+	    	fclose(ioSetup.cladeStatsFile);
+	    	freeCladeMem();
 		}
 
 		if (ioSetup.admixFile != NULL) fclose(ioSetup.admixFile);
@@ -1054,10 +1063,13 @@ int initializeMCMC() {
 
 }/** end of initializeMCMC **/
 
-int isCombStatsActivated()
-{
+int isCombStatsActivated(){
   // set to 1 for recording coal stats
   return (0 != strcmp(ioSetup.combStatsFileName, "NONE")); 
+}
+int isCladeStatsActivated(){
+  // set to 1 for recording coal stats
+  return (0 != strcmp(ioSetup.cladeStatsFileName, "NONE"));
 }
 /***********************************************************************************
  *	performMCMC
@@ -1138,6 +1150,16 @@ int performMCMC() {
 		  }
 		  printCombStatsHeader(ioSetup.combStatsFile);
 		  printCombDebugStatsHeader(ioSetup.combDebugStatsFile); // TODO - remove debug stats
+		}
+		if (isCladeStatsActivated()) {
+		  ioSetup.cladeStatsFile = fopen(ioSetup.cladeStatsFileName, "w");
+
+		  if (ioSetup.cladeStatsFile == NULL) {
+		    fprintf(stderr, "Error: Could not open clade stats file %s.\n",
+		        ioSetup.cladeStatsFileName);
+		    return (-1);
+		  }
+		  printCladeStatsHeader(ioSetup.cladeStatsFile);
 		}
 
 #ifdef LOG_STEPS
@@ -1576,11 +1598,14 @@ int performMCMC() {
 								printCoalStats(iteration);
 						}
 						if (isCombStatsActivated()) {
-								//@@ron: please enter here :)
 								calculateCombStats();
 								printCombStats(iteration, ioSetup.combStatsFile);
 								printCombDebugStats(iteration, ioSetup.combDebugStatsFile); //TODO - remove debug printing
 								fflush(ioSetup.combDebugStatsFile);
+						}
+						if (isCladeStatsActivated()) {
+								calculateCladeStats();
+								printCladeStats(iteration, ioSetup.combStatsFile);
 						}
 
 

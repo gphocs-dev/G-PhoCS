@@ -475,6 +475,8 @@ void allocateCombMem(){
 	allocatePopsMem();
 	allocateMigBandsMem();
 }
+void allocateCladeMem(){
+}
 void allocatePopsMem() {
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		allocateStats(&comb_stats[comb].total);

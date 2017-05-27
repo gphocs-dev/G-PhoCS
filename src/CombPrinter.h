@@ -14,7 +14,6 @@ void printCombMigHeaders(int comb, char* combName, FILE* file);
 void printOnePopHeader(int pop, FILE* file);
 
 
-void printCombStats(int iteration, FILE* file);
 void printOneCombStats(int clade, FILE* file);
 void printCombCoalStats(int comb, FILE* file);
 void printCombMigStats(int comb, FILE* file);

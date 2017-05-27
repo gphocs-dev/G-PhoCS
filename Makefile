@@ -47,6 +47,8 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/AlignmentProcessor.o \
                    obj/CombStats.o \
                    obj/CombPrinter.o \
+                   obj/CladeStats.o \
+                   obj/CladePrinter.o \
                    obj/omp_stub.o \
                    obj/DataLayer.o \
                    obj/MemoryMng.o \
@@ -60,12 +62,14 @@ bin/G-PhoCS:       obj/GPhoCS.o \
 	                obj/LocusDataLikelihood.o \
 	                obj/AlignmentProcessor.o \
 	                obj/CombStats.o \
-                  obj/CombPrinter.o \
-                  obj/omp_stub.o \
-                  obj/DataLayer.o \
-                  obj/MemoryMng.o \
-                  obj/TraceLineages.o \
-                  obj/patch.o \
+                    obj/CombPrinter.o \
+	                obj/CladeStats.o \
+                    obj/CladePrinter.o \
+                    obj/omp_stub.o \
+                    obj/DataLayer.o \
+                    obj/MemoryMng.o \
+                    obj/TraceLineages.o \
+                    obj/patch.o \
 	                $(CFLAGS) -lm -o bin/G-PhoCS
 
 bin/AlignmentProcessor: obj/utils.o \
@@ -89,6 +93,8 @@ obj/GPhoCS.o: src/GPhoCS.cpp \
               src/AlignmentProcessor.h \
               src/CombStats.h \
               src/CombPrinter.h \
+              src/CladeStats.h \
+              src/CladePrinter.h \
               src/MultiCoreUtils.h
 	$(CC) $(CFLAGS) -c src/GPhoCS.cpp -o obj/GPhoCS.o
 
@@ -139,6 +145,14 @@ obj/CombPrinter.o:   src/CombPrinter.cpp \
 obj/CombStats.o:     src/CombStats.cpp \
                      src/CombStats.h
 	$(CC) $(CFLAGS) -c src/CombStats.cpp -o obj/CombStats.o
+
+obj/CladePrinter.o:   src/CladePrinter.cpp \
+                     src/CladePrinter.h
+	$(CC) $(CFLAGS) -c src/CladePrinter.cpp -o obj/CladePrinter.o
+		
+obj/CladeStats.o:     src/CladeStats.cpp \
+                     src/CladeStats.h
+	$(CC) $(CFLAGS) -c src/CladeStats.cpp -o obj/CladeStats.o
 
 obj/DataLayer.o: src/DataLayer.cpp \
                      src/DataLayer.h
