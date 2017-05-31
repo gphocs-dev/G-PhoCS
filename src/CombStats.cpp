@@ -313,7 +313,7 @@ void initCombStats(){
 }
 void initPopStats() {
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
-		if (isFeasibleComb(comb)) {
+		if (!isLeaf(comb)) {
 			initStats(&comb_stats[comb].total);
 			comb_stats[comb].age = getCombAge(comb);
 			for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
