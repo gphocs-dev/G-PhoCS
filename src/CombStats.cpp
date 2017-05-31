@@ -40,7 +40,7 @@ void calculateCombStats() {
 
 void calculateSufficientStats(int comb, int gene){
 	coalescence(comb, gene);
-	migrations(comb, gene);
+	//	migrations(comb, gene);
 }
 
 void coalescence(int comb, int gene){
@@ -122,41 +122,45 @@ void handleNonLeafCoalStats(int comb, int currentPop, int gene){
 void mergeChildernIntoCurrent(int comb, int currentPop, int gen){
 	int i, j = 0, k = 0;
 	double leftAge, rightAge;
-	int leftSon, rightSon;
 	Stats *leftStats, *rightStats, *currentStats;
 
-	leftSon = getSon(currentPop, LEFT);
-	rightSon = getSon(currentPop, RIGHT);
-
 	currentStats = getCombPopStats(comb, currentPop);
-	leftStats = getCombPopStats(comb, leftSon);
-	rightStats = getCombPopStats(comb, rightSon);
+	leftStats = getCombPopStats(comb, getSon(currentPop, LEFT));
+	rightStats = getCombPopStats(comb, getSon(currentPop, RIGHT));
 
 
 	int m = leftStats->num_events;
 	int n = rightStats->num_events;
 
 	for (i = 0 ; i < m + n; i++) {
-		if ( j < m && k < n) {
+		if (m == 0){ // there are no events in left son, so choose the event from the right son
+			copyStaticEventStats(rightStats, k, currentStats, i);
+			k++;
+		}
+		else if (n == 0){ // there are no events in left son, so choose the event from the left son
+			copyStaticEventStats(leftStats, j, currentStats, i);
+			j++;
+		}
+		else if ( j < m && k < n) { // both sons have more events
+			currentStats->num_lineages[i] = leftStats->num_lineages[j] + rightStats->num_lineages[k];
+
 			leftAge = leftStats->sorted_ages[j];
 			rightAge = rightStats->sorted_ages[k];
-
-			currentStats->num_lineages[i] = leftStats->num_lineages[j] + rightStats->num_lineages[k];
-			if (leftAge < rightAge){
+			if (leftAge < rightAge){ // since left event is more recent, choose it
 				copyStaticEventStats(leftStats, j, currentStats, i);
 				j++;
 			}
-			else{
+			else{  // since right event is more recent, choose it
 				copyStaticEventStats(rightStats, k, currentStats, i);
 				k++;
 			}
 		}
-		else if (j == m) {
+		else if (j == m) { // all events in left son were handled
 			copyStaticEventStats(rightStats, k, currentStats, i);
 			currentStats->num_lineages[i] = leftStats->num_lineages[j-1] + rightStats->num_lineages[k];
 			k++;
 		}
-		else if (k == n){
+		else if (k == n){ // all events in right son were handled
 			copyStaticEventStats(leftStats, j, currentStats, i);
 			currentStats->num_lineages[i] = leftStats->num_lineages[j] + rightStats->num_lineages[k-1];
 			j++;
@@ -196,9 +200,9 @@ void appendCurrent(int comb, int currentPop, int gene){
 }
 
 void finalizeCombCoalStats(int comb){
-	double* elapsedTimes = comb_stats[comb].clades[comb].elapsed_times;
-	int* numLineages = comb_stats[comb].clades[comb].num_lineages;
-	int size = comb_stats[comb].clades[comb].num_events;
+	double* elapsedTimes = comb_stats[comb].combs[comb].elapsed_times;
+	int* numLineages = comb_stats[comb].combs[comb].num_lineages;
+	int size = comb_stats[comb].combs[comb].num_events;
 	comb_stats[comb].total.coal_stats += calculateCoalStats(elapsedTimes, numLineages, size);
 }
 
@@ -265,10 +269,10 @@ void incrementEventVars(int gene, int* eventId, double*elapsedTime, int* eventTy
 }
 
 void handleExternalMigStats(int comb, int mig, int gene){
-	int* eventIds = comb_stats[comb].clades[comb].event_ids;
-	int* eventTypes = comb_stats[comb].clades[comb].event_types;
-	double* sortedAges = comb_stats[comb].clades[comb].sorted_ages;
-	int numEvents = comb_stats[comb].clades[comb].num_events;
+	int* eventIds = comb_stats[comb].combs[comb].event_ids;
+	int* eventTypes = comb_stats[comb].combs[comb].event_types;
+	double* sortedAges = comb_stats[comb].combs[comb].sorted_ages;
+	int numEvents = comb_stats[comb].combs[comb].num_events;
 
 	for (int i = 0 ; i < numEvents ; i++){
 		printf("%s\n", getEventTypeName(eventTypes[i]));
@@ -299,7 +303,7 @@ Stats* getCombPopStats(int comb, int pop){
 	if (isLeaf(pop)){
 		return &comb_stats[comb].leaves[pop].above_comb;
 	} else {
-		return &comb_stats[comb].clades[pop];
+		return &comb_stats[comb].combs[pop];
 	}
 }
 
@@ -317,7 +321,7 @@ void initPopStats() {
 					initStats(&comb_stats[comb].leaves[pop].above_comb);
 					initStats(&comb_stats[comb].leaves[pop].below_comb);
 				} else {
-					initStats(&comb_stats[comb].clades[pop]);
+					initStats(&comb_stats[comb].combs[pop]);
 				}
 			}
 		}
@@ -349,14 +353,14 @@ void allocateCombMem(){
 void allocatePopsMem() {
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		allocateStats(&comb_stats[comb].total);
-		comb_stats[comb].leaves = (LeafStats*) malloc(dataSetup.popTree->numCurPops*sizeof(LeafStats));
-		comb_stats[comb].clades = (Stats*) malloc(dataSetup.popTree->numCurPops*sizeof(Stats));
+		comb_stats[comb].leaves = (LeafStats*) malloc(dataSetup.popTree->numPops*sizeof(LeafStats));
+		comb_stats[comb].combs  = (Stats*)     malloc(dataSetup.popTree->numPops*sizeof(Stats));
 		for (int pop = 0 ; pop < dataSetup.popTree->numPops ; pop++){
 			if (isLeaf(pop)){
 				allocateStats(&comb_stats[comb].leaves[pop].below_comb);
 				allocateStats(&comb_stats[comb].leaves[pop].above_comb);
 			} else {
-				allocateStats(&comb_stats[comb].clades[pop]);
+				allocateStats(&comb_stats[comb].combs[pop]);
 			}
 		}
 		if (comb_stats == NULL) {
@@ -377,7 +381,7 @@ void allocateStats(Stats* stats){ // TODO - rename signature to include "pop"
 void allocateMigBandsMem() {
 	int maxMigBands = dataSetup.popTree->numMigBands;
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
-		if (isFeasibleComb(comb)) {
+		if (!isLeaf(comb)) {
 			comb_stats[comb].leafMigs = malloc(maxMigBands * sizeof(MigStats));
 		}
 	}
@@ -442,10 +446,10 @@ double COMB_RELATIVE_PERCISION = 	0.000000000001;
 void debug_printCombGene(int comb){
 	char* combName = dataSetup.popTree->pops[comb]->name;
 	double combAge = comb_stats[comb].age;
-	double* elapsedTimes = comb_stats[comb].clades[comb].elapsed_times;
-	int* numLineages = comb_stats[comb].clades[comb].num_lineages;
-	int* eventTypes = comb_stats[comb].clades[comb].event_types;
-	int size = comb_stats[comb].clades[comb].num_events;
+	double* elapsedTimes = comb_stats[comb].combs[comb].elapsed_times;
+	int* numLineages = comb_stats[comb].combs[comb].num_lineages;
+	int* eventTypes = comb_stats[comb].combs[comb].event_types;
+	int size = comb_stats[comb].combs[comb].num_events;
 	double currentAge = combAge + elapsedTimes[0];
 
 	printf("\ncomb:%s, size:%d\n",combName, size);

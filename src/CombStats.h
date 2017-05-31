@@ -30,7 +30,7 @@ typedef struct LEAF_STATS {
 typedef struct _COMB_STATS{
 	double age; 			// temporary value of comb-age
 	Stats total;
-	Stats* clades;
+	Stats* combs;
 	LeafStats* leaves;
 	MigStats* leafMigs;
 	//MigStats* combMigs;
