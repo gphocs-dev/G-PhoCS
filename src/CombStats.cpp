@@ -372,17 +372,17 @@ void allocatePopsMem() {
 }
 void allocateStats(Stats* stats){ // TODO - rename signature to include "pop"
 	int max_events = 2*dataSetup.numSamples+ 4*MAX_MIGS + 3*dataSetup.popTree->numMigBands + dataSetup.popTree->numPops + 10;
-	stats->sorted_ages   = malloc(max_events*sizeof(double));
-	stats->elapsed_times = malloc(max_events*sizeof(double));
-	stats->num_lineages  = malloc(max_events*sizeof(int));
-	stats->event_types   = malloc(max_events*sizeof(int));
-	stats->event_ids     = malloc(max_events*sizeof(int));
+	stats->sorted_ages   = (double*) malloc(max_events*sizeof(double));
+	stats->elapsed_times = (double*) malloc(max_events*sizeof(double));
+	stats->num_lineages  = (int*) malloc(max_events*sizeof(int));
+	stats->event_types   = (int*) malloc(max_events*sizeof(int));
+	stats->event_ids     = (int*) malloc(max_events*sizeof(int));
 }
 void allocateMigBandsMem() {
 	int maxMigBands = dataSetup.popTree->numMigBands;
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		if (!isLeaf(comb)) {
-			comb_stats[comb].leafMigs = malloc(maxMigBands * sizeof(MigStats));
+			comb_stats[comb].leafMigs = (MigStats*) malloc(maxMigBands * sizeof(MigStats));
 		}
 	}
 }
