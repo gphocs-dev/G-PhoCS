@@ -381,7 +381,7 @@ void allocateStats(Stats* stats){ // TODO - rename signature to include "pop"
 void allocateMigBandsMem() {
 	int maxMigBands = dataSetup.popTree->numMigBands;
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
-		if (!isLeaf(comb)) {
+		if (isFeasibleComb(comb)) {
 			comb_stats[comb].leafMigs = (MigStats*) malloc(maxMigBands * sizeof(MigStats));
 		}
 	}
@@ -389,13 +389,7 @@ void allocateMigBandsMem() {
 
 
 int isFeasibleComb(int pop){
-	if (isLeaf(pop)){
-		return FALSE;
-	} else if (areChildrenLeaves(pop)){ // a population whos two children are leaves is considered a "trivial comb" and is usually not interesting (except for algorithm test purposes)
-		return FALSE; // Set TRUE if you want to run "assertBottomCombs()" test // TODO - always set back to FALSE after testing
-	} else {
-		return TRUE;
-	}
+	return !isLeaf(pop);
 }
 int isMigOfComb(int mig, int comb){ // if migrations flow into the comb
 	int target = getTargetPop(mig);
