@@ -31,7 +31,7 @@ void calculateCombStats() {
 			}
 		}
 	}
-	assertRootNumCoals();
+	//	assertRootNumCoals();
 	//	assertRootCoalStats();
 	//	assertBottomCombs();
 	assertCombLeaves();
@@ -61,49 +61,111 @@ void coalescence_rec(int comb, int currentPop, int gene){
 
 void handleLeafCoals(int comb, int leaf, int gene) {
 
-	double elapsedTime, eventAge = 0.0;
-	int numLineages, eventType, numEventsAboveComb = 0;
+	double elapsedTime = 0.0, eventAge = 0.0, previousAge = 0.0;
+	int numLineages, eventType, eventId;
 	double combAge = comb_stats[comb].age;
 
 	Stats* belowCombLeafStats = &comb_stats[comb].leaves[leaf].below_comb;
 	Stats* aboveCombLeafStats = &comb_stats[comb].leaves[leaf].above_comb;
 	Stats* combTotalStats = &comb_stats[comb].total;
 
-	int eventId = event_chains[gene].first_event[leaf];
-	while (eventId >= 0) {
-		incrementEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
+	setupFirstEventVars(gene, leaf, &eventId, &elapsedTime, &eventType, &numLineages);
 
-		if (eventAge <= combAge){
-			if (eventType == COAL){
-				belowCombLeafStats->num_coals++;
-			}
-			// you've got all the data you need so just update coal_stats -
-			belowCombLeafStats->coal_stats += numLineages*(numLineages-1)*elapsedTime;
-		}
-		else if (eventAge > combAge){
-			if (eventType == COAL){
-				aboveCombLeafStats->num_coals++;
-				combTotalStats->num_coals++;
-			}
-			// you're a tiny part of the comb so supply future methods the data they need -
-			aboveCombLeafStats->sorted_ages[numEventsAboveComb] 	= eventAge;
-			aboveCombLeafStats->elapsed_times[numEventsAboveComb] 	= elapsedTime;
-			aboveCombLeafStats->num_lineages[numEventsAboveComb] 	= numLineages;
-			aboveCombLeafStats->event_types[numEventsAboveComb] 	= eventType;
-			aboveCombLeafStats->event_ids[numEventsAboveComb] 	    = eventId;
+	handleBelowCombAge(gene, combAge, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge, belowCombLeafStats);
+	handleAboveCombAge(gene, combAge, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge, belowCombLeafStats, aboveCombLeafStats, combTotalStats);
 
+}
 
-			numEventsAboveComb++;
-		}
+void handleBelowCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats) {
+	while (*eventAge < combAge){
+		if (*eventType == COAL) belowCombLeafStats->num_coals++;
+		belowCombLeafStats->coal_stats += (*numLineages) * (*numLineages-1) * (*elapsedTime);
 
+		incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
+	}
+}
+
+void handleAboveCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats, Stats* combTotalStats){
+	handleFirstEventAboveCombAge  (gene, combAge, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge, belowCombLeafStats, aboveCombLeafStats);
+	handleRestOfEventsAboveCombAge(gene,          eventId, elapsedTime, eventType, numLineages, eventAge, previousAge,                     aboveCombLeafStats, combTotalStats);
+}
+
+void handleFirstEventAboveCombAge(int gene, double combAge, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats){
+
+	double pseudoEventAge, pseudoElapsedTimeBelow, pseudoElapsedTimeAbove;
+
+	if (*eventAge == combAge) {
+		if (*eventType == COAL) belowCombLeafStats->num_coals++;
+		belowCombLeafStats->coal_stats += (*numLineages)*(*numLineages-1)*(*elapsedTime);
+
+		pseudoElapsedTimeAbove	= 0.0;
+
+	} else {
+		pseudoEventAge = combAge;
+		pseudoElapsedTimeBelow = pseudoEventAge - *previousAge;
+		belowCombLeafStats->coal_stats += (*numLineages)*(*numLineages-1)*(pseudoElapsedTimeBelow);
+
+		pseudoElapsedTimeAbove = *eventAge - pseudoEventAge;
 	}
 
+	aboveCombLeafStats->elapsed_times[0]	= pseudoElapsedTimeAbove;
+	aboveCombLeafStats->sorted_ages[0] 		= *eventAge;
+	aboveCombLeafStats->num_lineages[0] 	= *numLineages;
+	aboveCombLeafStats->event_types[0] 		= *eventType;
+	aboveCombLeafStats->event_ids[0] 	    = *eventId;
+	aboveCombLeafStats->num_events 			= 1;
+
+	incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
+}
+
+void handleRestOfEventsAboveCombAge(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* aboveCombLeafStats, Stats* combTotalStats){
+
+	int numEventsAboveComb = aboveCombLeafStats->num_events;
+
+	while (*eventId >= 0) {
+
+		if (*eventType == COAL){
+			aboveCombLeafStats->num_coals++;
+			combTotalStats->num_coals++;
+		}
+		// you're a tiny part of the comb so supply future methods the data they need -
+		aboveCombLeafStats->sorted_ages[numEventsAboveComb] 	= *eventAge;
+		aboveCombLeafStats->elapsed_times[numEventsAboveComb] 	= *elapsedTime;
+		aboveCombLeafStats->num_lineages[numEventsAboveComb] 	= *numLineages;
+		aboveCombLeafStats->event_types[numEventsAboveComb] 	= *eventType;
+		aboveCombLeafStats->event_ids[numEventsAboveComb] 	    = *eventId;
+
+		numEventsAboveComb++;
+		incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
+	}
 	aboveCombLeafStats->num_events = numEventsAboveComb;
 	combTotalStats->num_events += numEventsAboveComb;
 
 	// TODO - this stat is not outputed. consider removing it performancewise
 	aboveCombLeafStats->coal_stats += calculateCoalStats(aboveCombLeafStats->elapsed_times, aboveCombLeafStats->num_lineages, numEventsAboveComb);
 }
+
+void setupFirstEventVars(int gene, int leaf, int* eventId, double* elapsedTime, int* eventType, int* numLineages) {
+	*eventId = event_chains[gene].first_event[leaf];
+	*elapsedTime = event_chains[gene].events[*eventId].getElapsedTime(); // TODO - assert this is zero
+	*eventType = event_chains[gene].events[*eventId].getType();
+	*numLineages = event_chains[gene].events[*eventId].getNumLineages();
+
+	if (*elapsedTime != 0.0) {
+		printf("BAAAAAAAAAADDDDDDDDDD!!!"); // TODO DEBUG REMOVE
+	}
+
+}
+
+void incrementEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge) {
+	*eventId = event_chains[gene].events[*eventId].getNextIdx();
+	*elapsedTime = event_chains[gene].events[*eventId].getElapsedTime();
+	*eventType = event_chains[gene].events[*eventId].getType();
+	*numLineages = event_chains[gene].events[*eventId].getNumLineages();
+	*previousAge = *eventAge;
+	*eventAge += *elapsedTime;
+}
+
 
 void handleNonLeafCoals(int comb, int currentPop, int gene) {
 	handleNonLeafNumCoals(comb, currentPop, gene);
@@ -225,7 +287,7 @@ void migrations(int comb, int gene){
 }
 
 void handleLeafMigStats(int comb, int mig, int gene){
-	double elapsedTime, eventAge = 0.0;
+	double elapsedTime, eventAge = 0.0, previousAge;
 	double combAge = comb_stats[comb].age;
 	int numLineages;
 	int targetLeaf = getTargetPop(mig);
@@ -233,12 +295,12 @@ void handleLeafMigStats(int comb, int mig, int gene){
 	int eventType = event_chains[gene].events[eventId].getType();
 	MigStats* migLeafStats = &comb_stats[comb].leafMigs[targetLeaf];
 
-	fastFwdPastMigBandStart(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
+	fastFwdPastMigBandStart(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge);
 
 	while (eventAge <= combAge && eventId > 0) {
 		updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
 
-		incrementEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge);
+		incrementEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge);
 
 		if (eventType == MIG_BAND_END) {
 			updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
@@ -247,11 +309,11 @@ void handleLeafMigStats(int comb, int mig, int gene){
 	}
 }
 
-void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge) {
+void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge) {
 	while (*eventType != MIG_BAND_START && *eventId > 0){
-		incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge);
+		incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
 	}
-	incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge);
+	incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
 }
 
 void updateLeafMigStats(int numLineages, double elapsedTime, int eventType, MigStats* migLeafStats) {
@@ -259,14 +321,6 @@ void updateLeafMigStats(int numLineages, double elapsedTime, int eventType, MigS
 	if (eventType == IN_MIG) migLeafStats->num_migs++;// TODO - make sure the event is on the right migband
 }
 
-void incrementEventVars(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge) {
-	*elapsedTime = event_chains[gene].events[*eventId].getElapsedTime();
-	*eventType = event_chains[gene].events[*eventId].getType();
-	*numLineages = event_chains[gene].events[*eventId].getNumLineages();
-	*eventAge += *elapsedTime;
-
-	*eventId = event_chains[gene].events[*eventId].getNextIdx();
-}
 
 void handleExternalMigStats(int comb, int mig, int gene){
 	int* eventIds = comb_stats[comb].combs[comb].event_ids;
@@ -412,6 +466,7 @@ int isLeafMigBand(int mig, int comb){
 	return isLeaf(target) && (isLeaf(source) || !isAncestralTo(comb, source));
 }
 double getCombAge(int comb){
+
 	if (isLeaf(comb)){
 		return DBL_MAX;
 	} else if (areChildrenLeaves(comb)){
@@ -435,7 +490,7 @@ void freeCombMem(){ // TODO - implement
 
 
 // TODO - extract tests to different source file
-double COMB_RELATIVE_PERCISION = 	0.000000000001;
+double COMB_RELATIVE_PERCISION = 	0.00000000000001;
 
 void debug_printCombGene(int comb){
 	char* combName = dataSetup.popTree->pops[comb]->name;
@@ -452,7 +507,7 @@ void debug_printCombGene(int comb){
 		currentAge += elapsedTimes[i];
 	}
 }
-void assertRootNumCoals(){
+void assertRootNumCoals(){ // this test only works when I hard-codedly force combAge to Zero
 	int root = getPopIdByName(dataSetup.popTree, "root");
 
 	int maxCoals = dataSetup.numLoci*(dataSetup.numSamples-1);
@@ -465,7 +520,7 @@ void assertRootNumCoals(){
 	}
 
 	if (actualCoals != maxCoals) {
-		printf("comb %s: Expected coalescence - %d. Actual coalescence - %d",
+		printf("comb %s: Expected coalescence events - %d. Actual coalescence events - %d",
 				"root", maxCoals, actualCoals);
 		exit(-1);
 	}
@@ -527,7 +582,7 @@ void assertCombLeaves(){
 		if (isFeasibleComb(comb)){
 			for (int leaf = 0; leaf < dataSetup.popTree->numPops ; leaf++){
 				if (isLeaf(leaf) && isAncestralTo(comb, leaf)){
-					assertCombLeafNumCoals(comb, leaf);
+//					assertCombLeafNumCoals(comb, leaf);
 					assertCombLeafCoalStats(comb, leaf);
 				}
 			}
