@@ -140,8 +140,6 @@ void handleRestOfEventsAboveCombAge(int gene, int* eventId, int* nextId, double*
 	}
 	aboveCombLeafStats->num_events = numEventsAboveComb;
 	combTotalStats->num_events += numEventsAboveComb;
-
-	// TODO - this stat is not outputed. consider removing it performancewise
 	aboveCombLeafStats->coal_stats += calculateCoalStats(aboveCombLeafStats->elapsed_times, aboveCombLeafStats->num_lineages, numEventsAboveComb);
 }
 
