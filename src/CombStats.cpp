@@ -239,19 +239,20 @@ void copyStaticEventStats(Stats* sourceStats, int n, Stats* targetStats, int m) 
 
 void appendCurrent(int comb, int currentPop, int gene){
 	Stats *currentStats = getCombPopStats(comb, currentPop);
+	EventChain chain = event_chains[gene];
 
 	int startingPoint = currentStats->num_events;
 	int i = startingPoint;
-	int eventId = event_chains[gene].first_event[currentPop];
+	int eventId = chain.first_event[currentPop];
 	double startTime = dataSetup.popTree->pops[currentPop]->age; // do I need to start from pop age or from last eventId age (or are they equal)?
 	double eventAge = startTime;
 
-	for ( ; eventId >= 0 ; i++, eventId = event_chains[gene].events[eventId].getNextIdx()){
-		eventAge += event_chains[gene].events[eventId].getElapsedTime();
+	for ( ; eventId >= 0 ; i++, eventId = chain.events[eventId].getNextIdx()){
+		eventAge += chain.events[eventId].getElapsedTime();
 		currentStats->sorted_ages[i]   = eventAge;
-		currentStats->elapsed_times[i] = event_chains[gene].events[eventId].getElapsedTime();
-		currentStats->num_lineages[i]  = event_chains[gene].events[eventId].getNumLineages();
-		currentStats->event_types[i]   = event_chains[gene].events[eventId].getType();
+		currentStats->elapsed_times[i] = chain.events[eventId].getElapsedTime();
+		currentStats->num_lineages[i]  = chain.events[eventId].getNumLineages();
+		currentStats->event_types[i]   = chain.events[eventId].getType();
 		currentStats->event_ids[i]     = eventId;
 	}
 	currentStats->num_events = i;
