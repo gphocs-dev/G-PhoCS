@@ -478,7 +478,7 @@ bool isBorderEvent(double eventAge, double previousAge, double combAge){
 bool isEventCompletelyInsideComb(double eventAge, double combAge){
 	return (eventAge > combAge) && (!practicallyEqual(eventAge, combAge));
 }
-double COMB_AGE_RELATIVE_PERCISION = 0.00000000000000000001;
+double COMB_AGE_RELATIVE_PERCISION = 0.000000000000001;
 bool practicallyEqual(double eventAge, double combAge){
 	return relativeDistance(eventAge, combAge) < COMB_AGE_RELATIVE_PERCISION;
 }
