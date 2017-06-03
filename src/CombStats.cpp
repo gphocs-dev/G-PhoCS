@@ -60,9 +60,12 @@ void coalescence_rec(int comb, int currentPop, int gene){
 
 void handleLeafCoals(int comb, int leaf, int gene) {
 
-	double elapsedTime = 0.0, eventAge = 0.0, previousAge = 0.0;
-	int numLineages, eventType, eventId;
+	double eventAge = 0.0, previousAge = 0.0;
+	int eventId;
 	double combAge = comb_stats[comb].age;
+
+	EventChain chain = event_chains[gene];
+	Event event;
 
 	assertLeafEventChain(comb, leaf, gene);
 
@@ -70,100 +73,95 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 	Stats* aboveCombLeafStats = &comb_stats[comb].leaves[leaf].above_comb;
 	Stats* combTotalStats = &comb_stats[comb].total;
 
-	setupFirstEventVars(gene, leaf, &eventId, &elapsedTime, &eventType, &numLineages);
+	eventId = chain.first_event[leaf];
+	while (eventId >= 0 ){
+		event = chain.events[eventId];
+		previousAge = eventAge;
+		eventAge += event.getElapsedTime();
 
-	handleEventsBelowCombAge(gene, combAge, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge, belowCombLeafStats);
-	handleEventsAboveCombAge(gene, combAge, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge, belowCombLeafStats, aboveCombLeafStats, combTotalStats);
-
-}
-
-void handleEventsBelowCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats) {
-	while (*eventAge < combAge && !closeEnough(*eventAge, combAge)){
-		if (*eventType == COAL) belowCombLeafStats->num_coals++;
-		belowCombLeafStats->coal_stats += (*numLineages) * (*numLineages-1) * (*elapsedTime);
-		incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
+		if (isEventCompletelyBelowComb(eventAge, combAge)){
+			countEventTowardsBelowComb(event, belowCombLeafStats);
+		} else if (isBorderEvent(eventAge, previousAge, combAge)) {
+			countEventTowardsHalfAndHalf(event, eventAge, previousAge, combAge, belowCombLeafStats, aboveCombLeafStats);
+		} else if (isEventCompletelyInsideComb(eventAge, combAge)){
+			countEventTowardsAboveComb(event, eventAge, aboveCombLeafStats, combTotalStats);
+		} else {
+			printErrorAndExit("leaf event wasn't counted towards any Stats"); // TODO - DEBUG REMOVE!
+		}
+		eventId = event.getNextIdx();
 	}
+	aboveCombLeafStats->coal_stats += calculateCoalStats(aboveCombLeafStats->elapsed_times, aboveCombLeafStats->num_lineages, aboveCombLeafStats->num_events);
+	combTotalStats->num_events += aboveCombLeafStats->num_events;
 }
 
-void handleEventsAboveCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats, Stats* combTotalStats){
-	handleFirstEventAboveCombAge(gene, combAge, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge, belowCombLeafStats, aboveCombLeafStats);
-	if (hasNextEvent(event_chains[gene], *eventId)){
-		incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
-		handleRestOfEventsAboveCombAge(gene,          eventId, elapsedTime, eventType, numLineages, eventAge, previousAge,                     aboveCombLeafStats, combTotalStats);
-	}
+bool isEventCompletelyBelowComb(double eventAge, double combAge) {
+	return (eventAge < combAge) && !practicallyEqual(eventAge, combAge);
+}
+bool isBorderEvent(double eventAge, double previousAge, double combAge){
+	return practicallyEqual(eventAge, combAge) ||
+			((eventAge > combAge) && (previousAge < combAge));
+}
+bool isEventCompletelyInsideComb(double eventAge, double combAge){
+	return (eventAge > combAge) && (!practicallyEqual(eventAge, combAge));
 }
 
-void handleFirstEventAboveCombAge(int gene, double combAge, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats){
+void countEventTowardsBelowComb(Event event, Stats* belowCombLeafStats){
+	if (event.getType() == COAL) belowCombLeafStats->num_coals++;
+	double elapsedTime = event.getElapsedTime();
+	int numLins = event.getNumLineages();
+	belowCombLeafStats->coal_stats += (numLins)*(numLins-1)*elapsedTime;
+}
 
+void countEventTowardsHalfAndHalf(Event event, double eventAge, double previousAge, double combAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats){
 	double pseudoEventAge, pseudoElapsedTimeBelow, pseudoElapsedTimeAbove;
+	EventType pseudoEventType;
+	int eventId = event.getId();
+	int numLins = event.getNumLineages();
+	EventType eventType = event.getType();
 
-	if (closeEnough(*eventAge, combAge)) {
-		if (*eventType == COAL) belowCombLeafStats->num_coals++;
-		belowCombLeafStats->coal_stats += (*numLineages)*(*numLineages-1)*(*elapsedTime);
 
+	if (practicallyEqual(eventAge, combAge)) {
+		if (eventType == COAL) {
+			belowCombLeafStats->num_coals++;
+			pseudoEventType = DUMMY;
+		}
+		belowCombLeafStats->coal_stats += (numLins)*(numLins-1)*(event.getElapsedTime());
 		pseudoElapsedTimeAbove	= 0.0;
-
-	} else {
+	} else { // the border event is above combAge so we need to "split it" into two events
 		pseudoEventAge = combAge;
-		pseudoElapsedTimeBelow = pseudoEventAge - *previousAge;
-		belowCombLeafStats->coal_stats += (*numLineages)*(*numLineages-1)*(pseudoElapsedTimeBelow);
+		pseudoElapsedTimeBelow = pseudoEventAge - previousAge;
+		belowCombLeafStats->coal_stats += (numLins)*(numLins-1)*(pseudoElapsedTimeBelow);
 
-		pseudoElapsedTimeAbove = *eventAge - pseudoEventAge;
+		pseudoElapsedTimeAbove = eventAge - pseudoEventAge;
+		pseudoEventType = eventType;
 	}
 
 	aboveCombLeafStats->elapsed_times[0]	= pseudoElapsedTimeAbove;
-	aboveCombLeafStats->sorted_ages[0] 		= *eventAge;
-	aboveCombLeafStats->num_lineages[0] 	= *numLineages;
-	aboveCombLeafStats->event_types[0] 		= *eventType;
-	aboveCombLeafStats->event_ids[0] 	    = *eventId;
+	aboveCombLeafStats->sorted_ages[0] 		= eventAge;
+	aboveCombLeafStats->num_lineages[0] 	= numLins;
+	aboveCombLeafStats->event_types[0] 		= pseudoEventType;
+	aboveCombLeafStats->event_ids[0] 	    = eventId;
 	aboveCombLeafStats->num_events 			= 1;
 
 }
 
-void handleRestOfEventsAboveCombAge(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* aboveCombLeafStats, Stats* combTotalStats){
-
+void countEventTowardsAboveComb(Event event, double eventAge, Stats* aboveCombLeafStats, Stats* combTotalStats){
+	EventType eventType = event.getType();
 	int numEventsAboveComb = aboveCombLeafStats->num_events;
 
-	while (*eventId >= 0) {
-
-		if (*eventType == COAL){
-			aboveCombLeafStats->num_coals++;
-			combTotalStats->num_coals++;
-		}
-		// you're a tiny part of the comb so supply future methods the data they need -
-		aboveCombLeafStats->sorted_ages[numEventsAboveComb] 	= *eventAge;
-		aboveCombLeafStats->elapsed_times[numEventsAboveComb] 	= *elapsedTime;
-		aboveCombLeafStats->num_lineages[numEventsAboveComb] 	= *numLineages;
-		aboveCombLeafStats->event_types[numEventsAboveComb] 	= *eventType;
-		aboveCombLeafStats->event_ids[numEventsAboveComb] 	    = *eventId;
-
-		numEventsAboveComb++;
-		incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
+	if (eventType == COAL){
+		aboveCombLeafStats->num_coals++;
+		combTotalStats->num_coals++;
 	}
-	aboveCombLeafStats->num_events = numEventsAboveComb;
-	combTotalStats->num_events += numEventsAboveComb;
-	aboveCombLeafStats->coal_stats += calculateCoalStats(aboveCombLeafStats->elapsed_times, aboveCombLeafStats->num_lineages, numEventsAboveComb);
+	// you're a tiny part of the comb so supply future methods the data they need -
+	aboveCombLeafStats->sorted_ages[numEventsAboveComb] 	= eventAge;
+	aboveCombLeafStats->elapsed_times[numEventsAboveComb] 	= event.getElapsedTime();
+	aboveCombLeafStats->num_lineages[numEventsAboveComb] 	= event.getNumLineages();
+	aboveCombLeafStats->event_types[numEventsAboveComb] 	= event.getType();
+	aboveCombLeafStats->event_ids[numEventsAboveComb] 	    = event.getId();
+
+	aboveCombLeafStats->num_events += 1;
 }
-
-void setupFirstEventVars(int gene, int leaf, int* eventId, double* elapsedTime, int* eventType, int* numLineages) {
-	*eventId     = event_chains[gene].first_event[leaf];
-	*elapsedTime = event_chains[gene].events[*eventId].getElapsedTime();
-	*eventType   = event_chains[gene].events[*eventId].getType();
-	*numLineages = event_chains[gene].events[*eventId].getNumLineages();
-}
-
-void incrementEventVars(int gene, int *eventId,
-		double*elapsedTime, int* eventType, int* numLineages,
-		double* eventAge, double* previousAge) {
-
-	*eventId = event_chains[gene].events[*eventId].getNextIdx();
-	*elapsedTime = event_chains[gene].events[*eventId].getElapsedTime();
-	*eventType = event_chains[gene].events[*eventId].getType();
-	*numLineages = event_chains[gene].events[*eventId].getNumLineages();
-	*previousAge = *eventAge;
-	*eventAge += *elapsedTime;
-}
-
 
 void handleNonLeafCoals(int comb, int currentPop, int gene) {
 	handleNonLeafNumCoals(comb, currentPop, gene);
@@ -284,33 +282,33 @@ void migrations(int comb, int gene){
 }
 
 void handleLeafMigStats(int comb, int mig, int gene){
-	double elapsedTime, eventAge = 0.0, previousAge;
-	double combAge = comb_stats[comb].age;
-	int numLineages;
-	int targetLeaf = getTargetPop(mig);
-	int eventId = event_chains[gene].first_event[targetLeaf];
-	int eventType = event_chains[gene].events[eventId].getType();
-	MigStats* migLeafStats = &comb_stats[comb].leafMigs[targetLeaf];
-
-	fastFwdPastMigBandStart(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge);
-
-	while (eventAge <= combAge && eventId >= 0) {
-		updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
-
-		incrementEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge);
-
-		if (eventType == MIG_BAND_END) {
-			updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
-			break;
-		}
-	}
+//	double elapsedTime, eventAge = 0.0, previousAge;
+//	double combAge = comb_stats[comb].age;
+//	int numLineages;
+//	int targetLeaf = getTargetPop(mig);
+//	int eventId = event_chains[gene].first_event[targetLeaf];
+//	int eventType = event_chains[gene].events[eventId].getType();
+//	MigStats* migLeafStats = &comb_stats[comb].leafMigs[targetLeaf];
+//
+//	fastFwdPastMigBandStart(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge);
+//
+//	while (eventAge <= combAge && eventId >= 0) {
+//		updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
+//
+//		updateEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge);
+//
+//		if (eventType == MIG_BAND_END) {
+//			updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
+//			break;
+//		}
+//	}
 }
 
 void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge) {
-	while (*eventType != MIG_BAND_START && *eventId > 0){
-		incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
-	}
-	incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
+//	while (*eventType != MIG_BAND_START && *eventId > 0){
+//		updateEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
+//	}
+//	updateEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
 }
 
 void updateLeafMigStats(int numLineages, double elapsedTime, int eventType, MigStats* migLeafStats) {
@@ -481,7 +479,7 @@ bool hasNextEvent(EventChain chain, int event){ // TODO - move to McRefCommon
 	return next >= 0;
 }
 double COMB_AGE_RELATIVE_PERCISION = 0.00000000000000000001;
-bool closeEnough(double eventAge, double combAge){
+bool practicallyEqual(double eventAge, double combAge){
 	return relativeDistance(eventAge, combAge) < COMB_AGE_RELATIVE_PERCISION;
 }
 double relativeDistance(double dbl1, double dbl2){

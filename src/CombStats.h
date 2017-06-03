@@ -51,10 +51,12 @@ void calculateSufficientStats(int comb, int gene);
 void coalescence(int comb, int gene);
 void coalescence_rec(int comb, int currentPop, int gene);
 void handleLeafCoals(int comb, int leaf, int gene);
-void handleEventsBelowCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats);
-void handleEventsAboveCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats, Stats* combTotalStats);
-void handleFirstEventAboveCombAge(int gene, double combAge, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats);
-void handleRestOfEventsAboveCombAge(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* aboveCombLeafStats, Stats* combTotalStats);
+bool isEventCompletelyBelowComb(double eventAge, double combAge);
+bool isBorderEvent(double eventAge, double previousAge, double combAge);
+bool isEventCompletelyInsideComb(double eventAge, double combAge);
+void countEventTowardsBelowComb(Event event, Stats* belowCombLeafStats);
+void countEventTowardsHalfAndHalf(Event event, double eventAge, double previousAge, double combAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats);
+void countEventTowardsAboveComb(Event event, double eventAge, Stats* aboveCombLeafStats, Stats* combTotalStats);
 
 
 void handleNonLeafCoals(int comb, int currentPop, int gene);
@@ -69,7 +71,7 @@ void handleLeafMigStats(int comb, int mig, int gene);
 void updateLeafMigStats(int numLineages, double elapsedTime, int eventType, MigStats* migLeafStats);
 void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge);
 void setupFirstEventVars(int gene, int currentPop, int* eventId, double*elapsedTime, int* eventType, int* numLineages);
-void incrementEventVars(int gene, int *eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge);
+void updateEventVars(int gene, int *eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge);
 void handleExternalMigStats(int comb, int mig, int gene); // TODO - rename to better explain "O->C" type migband
 
 
@@ -92,7 +94,7 @@ int isMigBandExternal(int mig, int comb);
 int isMigBandInternal(int mig, int comb);
 int isLeafMigBand(int mig, int comb);
 bool hasNextEvent(EventChain chain, int event); // TODO - extract method to McRefCommon
-bool closeEnough(double eventAge, double combAge);
+bool practicallyEqual(double eventAge, double combAge);
 double relativeDistance(double dbl1, double dbl2); // TODO - extract method to McRefCommon
 
 
