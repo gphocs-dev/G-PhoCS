@@ -2,6 +2,8 @@
 #ifndef SRC_COMBSTATS_H_
 #define SRC_COMBSTATS_H_
 
+#include "DataLayer.h"
+
 #define TRUE 1 // TODO - ask Ilan: where should these consts be?
 #define FALSE 0
 
