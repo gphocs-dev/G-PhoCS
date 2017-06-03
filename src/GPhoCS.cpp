@@ -1149,7 +1149,7 @@ int performMCMC() {
 		    return (-1);
 		  }
 		  printCombStatsHeader(ioSetup.combStatsFile);
-		  printCombDebugStatsHeader(ioSetup.combDebugStatsFile); // TODO - remove debug stats
+//		  printCombDebugStatsHeader(ioSetup.combDebugStatsFile); // TODO - remove debug stats
 		}
 		if (isCladeStatsActivated()) {
 		  ioSetup.cladeStatsFile = fopen(ioSetup.cladeStatsFileName, "w");
