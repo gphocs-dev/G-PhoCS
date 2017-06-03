@@ -493,7 +493,7 @@ void freeCombMem(){ // TODO - implement
 
 
 // TODO - extract tests to different source file
-double COMB_RELATIVE_PERCISION = 	0.0000000000001;
+double COMB_RELATIVE_PERCISION = 	0.000000000001;
 
 void debug_printCombGene(int comb){
 	char* combName = dataSetup.popTree->pops[comb]->name;
