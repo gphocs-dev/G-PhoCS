@@ -64,14 +64,10 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 	double elapsedTime = 0.0, eventAge = 0.0, previousAge = 0.0;
 	int numLineages, eventType, eventId, nextId;
 	double combAge = comb_stats[comb].age;
-	printf("combAge:%0.35f\n", combAge);
-	fflush(stdout);
 
 	Stats* belowCombLeafStats = &comb_stats[comb].leaves[leaf].below_comb;
 	Stats* aboveCombLeafStats = &comb_stats[comb].leaves[leaf].above_comb;
 	Stats* combTotalStats = &comb_stats[comb].total;
-
-	printf("leaf name : %s\n", getPopName(leaf));
 
 	setupFirstEventVars(gene, leaf, &eventId, &nextId, &elapsedTime, &eventType, &numLineages);
 
@@ -85,9 +81,6 @@ void handleBelowCombAge(int gene, double combAge, int* eventId, int* nextId, dou
 	while (*eventAge < combAge && *nextId >=0){
 		if (*eventType == COAL) belowCombLeafStats->num_coals++;
 		belowCombLeafStats->coal_stats += (*numLineages) * (*numLineages-1) * (*elapsedTime);
-
-		printf("handleBelowCombAge ");
-		fflush(stdout);
 		incrementEventVars(gene, eventId, nextId, elapsedTime, eventType, numLineages, eventAge, previousAge);
 	}
 }
@@ -122,8 +115,6 @@ void handleFirstEventAboveCombAge(int gene, double combAge, int* eventId, int* n
 	aboveCombLeafStats->event_ids[0] 	    = *eventId;
 	aboveCombLeafStats->num_events 			= 1;
 
-	printf("handleFirstEventAboveCombAge ");
-	fflush(stdout);
 	incrementEventVars(gene, eventId, nextId, elapsedTime, eventType, numLineages, eventAge, previousAge);
 }
 
@@ -145,8 +136,6 @@ void handleRestOfEventsAboveCombAge(int gene, int* eventId, int* nextId, double*
 		aboveCombLeafStats->event_ids[numEventsAboveComb] 	    = *eventId;
 
 		numEventsAboveComb++;
-		printf("handleRestOfEventsAboveCombAge ");
-		fflush(stdout);
 		incrementEventVars(gene, eventId, nextId, elapsedTime, eventType, numLineages, eventAge, previousAge);
 	}
 	aboveCombLeafStats->num_events = numEventsAboveComb;
@@ -158,22 +147,20 @@ void handleRestOfEventsAboveCombAge(int gene, int* eventId, int* nextId, double*
 
 void setupFirstEventVars(int gene, int leaf, int* eventId, int *nextId,
 		double* elapsedTime, int* eventType, int* numLineages) {
+
 	*eventId = event_chains[gene].first_event[leaf];
 	*nextId = event_chains[gene].events[*eventId].getNextIdx();
 	*elapsedTime = event_chains[gene].events[*eventId].getElapsedTime(); // TODO - assert this is zero
 	*eventType = event_chains[gene].events[*eventId].getType();
 	*numLineages = event_chains[gene].events[*eventId].getNumLineages();
-	printf("setupFirstEventVars %d\n", *eventId);
-	fflush(stdout);
 }
 
 void incrementEventVars(int gene, int* eventId, int *nextId,
 		double*elapsedTime, int* eventType, int* numLineages,
 		double* eventAge, double* previousAge) {
+
 	*eventId = event_chains[gene].events[*eventId].getNextIdx();
 	*nextId = event_chains[gene].events[*eventId].getNextIdx();
-	printf("eventId:%d %s\n", *eventId, getEventTypeName(*eventId));
-	fflush(stdout);
 	*elapsedTime = event_chains[gene].events[*eventId].getElapsedTime();
 	*eventType = event_chains[gene].events[*eventId].getType();
 	*numLineages = event_chains[gene].events[*eventId].getNumLineages();
