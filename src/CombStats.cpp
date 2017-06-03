@@ -94,17 +94,6 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 	combTotalStats->num_events += aboveCombLeafStats->num_events;
 }
 
-bool isEventCompletelyBelowComb(double eventAge, double combAge) {
-	return (eventAge < combAge) && !practicallyEqual(eventAge, combAge);
-}
-bool isBorderEvent(double eventAge, double previousAge, double combAge){
-	return practicallyEqual(eventAge, combAge) ||
-			((eventAge > combAge) && (previousAge < combAge));
-}
-bool isEventCompletelyInsideComb(double eventAge, double combAge){
-	return (eventAge > combAge) && (!practicallyEqual(eventAge, combAge));
-}
-
 void countEventTowardsBelowComb(Event event, Stats* belowCombLeafStats){
 	if (event.getType() == COAL) belowCombLeafStats->num_coals++;
 	double elapsedTime = event.getElapsedTime();
@@ -479,11 +468,21 @@ bool hasNextEvent(EventChain chain, int event){ // TODO - move to McRefCommon
 	int next = chain.events[event].getNextIdx();
 	return next >= 0;
 }
+bool isEventCompletelyBelowComb(double eventAge, double combAge) {
+	return (eventAge < combAge) && !practicallyEqual(eventAge, combAge);
+}
+bool isBorderEvent(double eventAge, double previousAge, double combAge){
+	return practicallyEqual(eventAge, combAge) ||
+			((eventAge > combAge) && (previousAge < combAge));
+}
+bool isEventCompletelyInsideComb(double eventAge, double combAge){
+	return (eventAge > combAge) && (!practicallyEqual(eventAge, combAge));
+}
 double COMB_AGE_RELATIVE_PERCISION = 0.00000000000000000001;
 bool practicallyEqual(double eventAge, double combAge){
 	return relativeDistance(eventAge, combAge) < COMB_AGE_RELATIVE_PERCISION;
 }
-double relativeDistance(double dbl1, double dbl2){
+double relativeDistance(double dbl1, double dbl2){ // TODO - move to McRefCommon
 	double absDist = fabs(dbl1-dbl2);
 	double sum = dbl1 + dbl2;
 	return (absDist*2)/sum;
