@@ -34,7 +34,7 @@ void calculateCombStats() {
 	//	assertRootNumCoals();
 	//	assertRootCoalStats();
 	//	assertBottomCombs();
-	assertCombLeaves();
+	//	assertCombLeaves(); //	TODO - add an IFDEF
 }
 
 
@@ -67,7 +67,7 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 	EventChain chain = event_chains[gene];
 	Event event;
 
-	assertLeafEventChain(comb, leaf, gene);
+//	assertLeafEventChain(comb, leaf, gene); // TODO - add an IFDEF for all my tests
 
 	Stats* belowCombLeafStats = &comb_stats[comb].leaves[leaf].below_comb;
 	Stats* aboveCombLeafStats = &comb_stats[comb].leaves[leaf].above_comb;
@@ -450,6 +450,7 @@ int isLeafMigBand(int mig, int comb){
 	return isLeaf(target) && (isLeaf(source) || !isAncestralTo(comb, source));
 }
 double getCombAge(int comb){
+	//	return 0.0 //	TODO - add a specific IFDEF
 	if (isLeaf(comb)){
 		return DBL_MAX;
 	} else if (areChildrenLeaves(comb)){
