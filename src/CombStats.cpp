@@ -64,38 +64,40 @@ void handleLeafCoals(int comb, int leaf, int gene) {
 	int numLineages, eventType, eventId;
 	double combAge = comb_stats[comb].age;
 
-
 	assertLeafEventChain(comb, leaf, gene);
-
 
 	Stats* belowCombLeafStats = &comb_stats[comb].leaves[leaf].below_comb;
 	Stats* aboveCombLeafStats = &comb_stats[comb].leaves[leaf].above_comb;
 	Stats* combTotalStats = &comb_stats[comb].total;
 
 	setupFirstEventVars(gene, leaf, &eventId, &elapsedTime, &eventType, &numLineages);
-	handleBelowCombAge(gene, combAge, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge, belowCombLeafStats);
-	handleAboveCombAge(gene, combAge, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge, belowCombLeafStats, aboveCombLeafStats, combTotalStats);
+
+	handleEventsBelowCombAge(gene, combAge, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge, belowCombLeafStats);
+	handleEventsAboveCombAge(gene, combAge, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge, belowCombLeafStats, aboveCombLeafStats, combTotalStats);
 
 }
 
-void handleBelowCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats) {
-	while (*eventAge < combAge && hasNextEvent(event_chains[gene], *eventId)){
+void handleEventsBelowCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats) {
+	while (*eventAge < combAge && !closeEnough(*eventAge, combAge)){
 		if (*eventType == COAL) belowCombLeafStats->num_coals++;
 		belowCombLeafStats->coal_stats += (*numLineages) * (*numLineages-1) * (*elapsedTime);
 		incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
 	}
 }
 
-void handleAboveCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats, Stats* combTotalStats){
-	handleFirstEventAboveCombAge  (gene, combAge, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge, belowCombLeafStats, aboveCombLeafStats);
-	handleRestOfEventsAboveCombAge(gene,          eventId, elapsedTime, eventType, numLineages, eventAge, previousAge,                     aboveCombLeafStats, combTotalStats);
+void handleEventsAboveCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats, Stats* combTotalStats){
+	handleFirstEventAboveCombAge(gene, combAge, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge, belowCombLeafStats, aboveCombLeafStats);
+	if (hasNextEvent(event_chains[gene], *eventId)){
+		incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
+		handleRestOfEventsAboveCombAge(gene,          eventId, elapsedTime, eventType, numLineages, eventAge, previousAge,                     aboveCombLeafStats, combTotalStats);
+	}
 }
 
 void handleFirstEventAboveCombAge(int gene, double combAge, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats){
 
 	double pseudoEventAge, pseudoElapsedTimeBelow, pseudoElapsedTimeAbove;
 
-	if (*eventAge == combAge) {
+	if (closeEnough(*eventAge, combAge)) {
 		if (*eventType == COAL) belowCombLeafStats->num_coals++;
 		belowCombLeafStats->coal_stats += (*numLineages)*(*numLineages-1)*(*elapsedTime);
 
@@ -116,7 +118,6 @@ void handleFirstEventAboveCombAge(int gene, double combAge, int* eventId, double
 	aboveCombLeafStats->event_ids[0] 	    = *eventId;
 	aboveCombLeafStats->num_events 			= 1;
 
-	incrementEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
 }
 
 void handleRestOfEventsAboveCombAge(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* aboveCombLeafStats, Stats* combTotalStats){
@@ -144,12 +145,10 @@ void handleRestOfEventsAboveCombAge(int gene, int* eventId, double*elapsedTime, 
 	aboveCombLeafStats->coal_stats += calculateCoalStats(aboveCombLeafStats->elapsed_times, aboveCombLeafStats->num_lineages, numEventsAboveComb);
 }
 
-void setupFirstEventVars(int gene, int leaf, int* eventId,
-		double* elapsedTime, int* eventType, int* numLineages) {
-
-	*eventId = event_chains[gene].first_event[leaf];
-	*elapsedTime = event_chains[gene].events[*eventId].getElapsedTime(); // TODO - assert this is zero
-	*eventType = event_chains[gene].events[*eventId].getType();
+void setupFirstEventVars(int gene, int leaf, int* eventId, double* elapsedTime, int* eventType, int* numLineages) {
+	*eventId     = event_chains[gene].first_event[leaf];
+	*elapsedTime = event_chains[gene].events[*eventId].getElapsedTime();
+	*eventType   = event_chains[gene].events[*eventId].getType();
 	*numLineages = event_chains[gene].events[*eventId].getNumLineages();
 }
 
@@ -481,8 +480,15 @@ bool hasNextEvent(EventChain chain, int event){ // TODO - move to McRefCommon
 	int next = chain.events[event].getNextIdx();
 	return next >= 0;
 }
-
-
+double COMB_AGE_RELATIVE_PERCISION = 0.00000000000000000001;
+bool closeEnough(double eventAge, double combAge){
+	return relativeDistance(eventAge, combAge) < COMB_AGE_RELATIVE_PERCISION;
+}
+double relativeDistance(double dbl1, double dbl2){
+	double absDist = fabs(dbl1-dbl2);
+	double sum = dbl1 + dbl2;
+	return (absDist*2)/sum;
+}
 
 void freeCombMem(){ // TODO - implement
 }
@@ -604,9 +610,20 @@ void assertCombLeafCoalStats(int comb, int leaf){
 	double error = fabs(actualCoalStats - expectedCoalStats);
 	double relativeError = error/expectedCoalStats;
 	if (relativeError > COMB_TESTS_RELATIVE_PERCISION){
-		printf("\nError while checking leaf %s coal_stats:\nExpected:%0.35f\tActual:%0.35f\tRelative Error:%0.35f\tAbsolute Error:%0.35f",
+		printf("\nError while checking leaf %s coal_stats:\n"
+				"Expected:%0.35f\n"
+				"  Actual:%0.35f\n"
+				"   Above:%0.35f\n"
+				"   Below:%0.35f\n"
+				"RelError:%0.35f\n"
+				"AbsError:%0.35f\n",
 				dataSetup.popTree->pops[leaf]->name,
-				expectedCoalStats, actualCoalStats, relativeError, error);
+				expectedCoalStats,
+				actualCoalStats,
+				comb_stats[comb].leaves[leaf].above_comb.coal_stats,
+				comb_stats[comb].leaves[leaf].below_comb.coal_stats,
+				relativeError,
+				error);
 		exit(-1);
 	}
 }
@@ -616,17 +633,22 @@ void assertLeafEventChain(int comb, int leaf, int gene){
 	EventChain chain = event_chains[gene];
 	int firstEvent = chain.first_event[leaf];
 
-	int lastEvent = firstEvent;
-	while(hasNextEvent(chain, lastEvent)) {
-		lastEvent = chain.events[lastEvent].getNextIdx();
-	}
+	int lastEvent = getLastEvent(chain, firstEvent);
 
 	assertLastEventId(lastEvent);
 	assertLastEventIsSampleEnd(chain, lastEvent);
 	assertLastEventIsAtleastAsOldAsComb(comb, chain, firstEvent);
 
 	assertChainHasAtleastTwoEvents(chain, firstEvent);
+	assertFirstEventZeroElapsedTime(chain, firstEvent);
 	assertFirstEventIsSampleStart(chain, firstEvent);
+}
+int getLastEvent(EventChain chain, int firstEvent){
+	int lastEvent = firstEvent;
+	while(hasNextEvent(chain, lastEvent)) {
+		lastEvent = chain.events[lastEvent].getNextIdx();
+	}
+	return lastEvent;
 }
 void assertLastEventId(int lastEvent){
 	if (lastEvent < 0) printErrorAndExit("Last event is negative");
@@ -635,7 +657,6 @@ void assertLastEventIsSampleEnd(EventChain chain, int lastEvent){
 	EventType type = chain.events[lastEvent].getType();
 	if (type != END_CHAIN) printErrorAndExit("Last event isn't END_CHAIN");
 }
-double COMB_AGE_RELATIVE_PERCISION = 0.00000000000000000001;
 void assertLastEventIsAtleastAsOldAsComb(int comb, EventChain chain, int firstEvent){
 	double combAge = getCombAge(comb);
 	double lastEventAge = 0.0;
@@ -660,14 +681,15 @@ void assertLastEventIsAtleastAsOldAsComb(int comb, EventChain chain, int firstEv
 void assertChainHasAtleastTwoEvents(EventChain chain, int firstEvent){
 	int i = 1;
 	int event = firstEvent;
-
 	while(hasNextEvent(chain, event)) {
 		event = chain.events[event].getNextIdx();
 		i++;
 	}
-
 	if (i < 2) printErrorAndExit("Event chain has less than 2 events");
-
+}
+void assertFirstEventZeroElapsedTime(EventChain chain, int firstEvent){
+	double firstElapsedTime = chain.events[firstEvent].getElapsedTime();
+	if (firstElapsedTime != 0.0) printErrorAndExit("first elapsed time isnt zero");
 }
 void assertFirstEventIsSampleStart(EventChain chain, int firstEvent){
 	EventType type = chain.events[firstEvent].getType();

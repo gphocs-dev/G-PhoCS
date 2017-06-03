@@ -51,8 +51,8 @@ void calculateSufficientStats(int comb, int gene);
 void coalescence(int comb, int gene);
 void coalescence_rec(int comb, int currentPop, int gene);
 void handleLeafCoals(int comb, int leaf, int gene);
-void handleBelowCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats);
-void handleAboveCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats, Stats* combTotalStats);
+void handleEventsBelowCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats);
+void handleEventsAboveCombAge(int gene, double combAge, int* eventId, double* elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats, Stats* combTotalStats);
 void handleFirstEventAboveCombAge(int gene, double combAge, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* belowCombLeafStats, Stats* aboveCombLeafStats);
 void handleRestOfEventsAboveCombAge(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge, Stats* aboveCombLeafStats, Stats* combTotalStats);
 
@@ -92,6 +92,8 @@ int isMigBandExternal(int mig, int comb);
 int isMigBandInternal(int mig, int comb);
 int isLeafMigBand(int mig, int comb);
 bool hasNextEvent(EventChain chain, int event); // TODO - extract method to McRefCommon
+bool closeEnough(double eventAge, double combAge);
+double relativeDistance(double dbl1, double dbl2); // TODO - extract method to McRefCommon
 
 
 // TODO - extract tests to different source file
@@ -106,10 +108,12 @@ void assertCombLeafNumCoals(int comb, int leaf);
 void assertCombLeafCoalStats(int comb, int leaf);
 
 void assertLeafEventChain(int comb, int leaf, int gene);
+int getLastEvent(EventChain chain, int firstEvent);
 void assertLastEventId(int lastEvent);
 void assertLastEventIsSampleEnd(EventChain chain, int lastEvent);
 void assertLastEventIsAtleastAsOldAsComb(int comb, EventChain chain, int lastEvent);
 void assertChainHasAtleastTwoEvents(EventChain chain, int firstEvent);
+void assertFirstEventZeroElapsedTime(EventChain chain, int firstEvent);
 void assertFirstEventIsSampleStart(EventChain chain, int firstEvent);
 void printErrorAndExit(char* errorMessage);
 
