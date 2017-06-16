@@ -1064,11 +1064,9 @@ int initializeMCMC() {
 }/** end of initializeMCMC **/
 
 int isCombStatsActivated(){
-  // set to 1 for recording coal stats
-  return (0 != strcmp(ioSetup.combStatsFileName, "NONE")); 
+  return (0 != strcmp(ioSetup.combStatsFileName, "NONE"));
 }
 int isCladeStatsActivated(){
-  // set to 1 for recording coal stats
   return (0 != strcmp(ioSetup.cladeStatsFileName, "NONE"));
 }
 /***********************************************************************************
