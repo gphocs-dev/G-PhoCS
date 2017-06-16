@@ -1139,7 +1139,7 @@ int performMCMC() {
 
 		if (isCombStatsActivated()) {
 		  ioSetup.combStatsFile = fopen(ioSetup.combStatsFileName, "w");
-		  ioSetup.combDebugStatsFile = fopen("out/combDebugStats.tsv", "w"); // TODO - remove debug stats
+//		  ioSetup.combDebugStatsFile = fopen("out/combDebugStats.tsv", "w"); // TODO - remove debug stats
 
 		  if (ioSetup.combStatsFile == NULL) {
 		    fprintf(stderr, "Error: Could not open comb stats file %s.\n",
