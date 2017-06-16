@@ -11,10 +11,10 @@ CC=@g++
 
 # compiler options
 #Debugging
-CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -fopenmp -ggdb -fpermissive
+#CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -fopenmp -ggdb -fpermissive
 
 #Production
-#CFLAGS += -fstack-protector-all -Wall -O3  -fpermissive
+CFLAGS += -fstack-protector-all -Wall -O3  -fpermissive
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty
