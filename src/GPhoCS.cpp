@@ -1597,16 +1597,18 @@ int performMCMC() {
 								computeGenetreeStats_partitioned();
 								printCoalStats(iteration);
 						}
-						if (isCombStatsActivated()) {
-								calculateCombStats();
-								printCombStats(iteration, ioSetup.combStatsFile);
-//								printCombDebugStats(iteration, ioSetup.combDebugStatsFile); //TODO - remove debug printing
-//								fflush(ioSetup.combDebugStatsFile);
-						}
-						if (isCladeStatsActivated()) {
-								calculateCladeStats();
-								printCladeStats(iteration, ioSetup.cladeStatsFile);
-						}
+                    if (iteration % 5 == 0) {
+                        if (isCombStatsActivated()) {
+                            calculateCombStats();
+                            printCombStats(iteration, ioSetup.combStatsFile);
+                            //								printCombDebugStats(iteration, ioSetup.combDebugStatsFile); //TODO - remove debug printing
+                            //								fflush(ioSetup.combDebugStatsFile);
+                        }
+                        if (isCladeStatsActivated()) {
+                            calculateCladeStats();
+                            printCladeStats(iteration, ioSetup.cladeStatsFile);
+                        }
+                    }
 
 
 						if (admixed_samples.number > 0 && iteration % 1000 == 0) {
