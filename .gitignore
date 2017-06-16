@@ -51,7 +51,8 @@ Temporary Items
 # ===========================
 
 .metadata
-bin/
+bin/*
+!bin/README.md
 obj/*.o
 tmp/
 *.tmp
