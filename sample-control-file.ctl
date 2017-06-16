@@ -1,7 +1,9 @@
 GENERAL-INFO-START
 
 	seq-file            seqs-sample.txt
-	trace-file          mcmc.log				
+	trace-file          mcmc.log
+#   comb-stats-file		out/comb-trace.tsv
+#   clade-stats-file	out/clade-trace.tsv
 	locus-mut-rate      CONST
 
 	mcmc-iterations	  	5000

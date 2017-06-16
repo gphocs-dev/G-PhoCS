@@ -75,6 +75,17 @@ local.properties
 # CDT-specific (C/C++ Development Tooling)
 .cproject
 
+
+.idea
+cmake-build-debug
+
+# Mongo Explorer plugin:
+.idea/**/mongoSettings.xml
+
+## File-based project format:
+*.iws
+
+
 # ====================
 # Others
 # ====================
