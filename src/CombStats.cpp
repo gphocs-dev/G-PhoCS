@@ -35,12 +35,13 @@ void calculateCombStats() {
 	//	assertRootCoalStats();
 	//	assertBottomCombs();
 	//	assertCombLeaves(); //	TODO - add an IFDEF
+		assertLeafMigs();
 }
 
 
 void calculateSufficientStats(int comb, int gene){
 	coalescence(comb, gene);
-	//	migrations(comb, gene);
+	migrations(comb, gene);
 }
 
 void coalescence(int comb, int gene){
@@ -109,7 +110,7 @@ void countEventTowardsHalfAndHalf(Event event, double eventAge, double previousA
 	EventType eventType = event.getType();
 
 
-	if (practicallyEqual(eventAge, combAge)) {
+	if (areAlmostEqual(eventAge, combAge)) {
 		if (eventType == COAL) {
 			belowCombLeafStats->num_coals++;
 			pseudoEventType = DUMMY;
@@ -272,64 +273,39 @@ void migrations(int comb, int gene){
 }
 
 void handleLeafMigStats(int comb, int mig, int gene){
-//	double elapsedTime, eventAge = 0.0, previousAge;
-//	double combAge = comb_stats[comb].age;
-//	int numLineages;
-//	int targetLeaf = getTargetPop(mig);
-//	int eventId = event_chains[gene].first_event[targetLeaf];
-//	int eventType = event_chains[gene].events[eventId].getType();
-//	MigStats* migLeafStats = &comb_stats[comb].leafMigs[targetLeaf];
-//
-//	fastFwdPastMigBandStart(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge);
-//
-//	while (eventAge <= combAge && eventId >= 0) {
-//		updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
-//
-//		updateEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge);
-//
-//		if (eventType == MIG_BAND_END) {
-//			updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
-//			break;
-//		}
-//	}
+	double elapsedTime, eventAge = 0.0, previousAge;
+	double combAge = comb_stats[comb].age;
+	int numLineages;
+	int targetLeaf = getTargetPop(mig);
+	int eventId = event_chains[gene].first_event[targetLeaf];
+	int eventType = event_chains[gene].events[eventId].getType();
+	MigStats* migLeafStats = &comb_stats[comb].leafMigs[targetLeaf];
+
+	fastFwdPastMigBandStart(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge);
+
+	while (eventAge <= combAge && eventId >= 0) {
+		updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
+
+//		updateEventVars(gene, &eventId, &elapsedTime, &eventType, &numLineages, &eventAge, &previousAge); // nocommit
+
+		if (eventType == MIG_BAND_END) {
+			updateLeafMigStats(numLineages, elapsedTime, eventType, migLeafStats);
+			break;
+		}
+	}
 }
 
 void fastFwdPastMigBandStart(int gene, int* eventId, double*elapsedTime, int* eventType, int* numLineages, double* eventAge, double* previousAge) {
-//	while (*eventType != MIG_BAND_START && *eventId > 0){
-//		updateEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
-//	}
-//	updateEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge);
+	while (*eventType != MIG_BAND_START && *eventId > 0){
+//		updateEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge); // nocommit
+	}
+//	updateEventVars(gene, eventId, elapsedTime, eventType, numLineages, eventAge, previousAge); // nocommit
 }
 
 void updateLeafMigStats(int numLineages, double elapsedTime, int eventType, MigStats* migLeafStats) {
 	migLeafStats->mig_stats += numLineages * elapsedTime;
 	if (eventType == IN_MIG) migLeafStats->num_migs++;// TODO - make sure the event is on the right migband
 }
-
-void handleExternalMigStats(int comb, int mig, int gene){
-	int* eventIds = comb_stats[comb].combs[comb].event_ids;
-	int* eventTypes = comb_stats[comb].combs[comb].event_types;
-	double* sortedAges = comb_stats[comb].combs[comb].sorted_ages;
-	int numEvents = comb_stats[comb].combs[comb].num_events;
-
-	for (int i = 0 ; i < numEvents ; i++){
-		printf("%s\n", getEventTypeName(eventTypes[i]));
-		if (eventTypes[i] == IN_MIG || eventTypes[i] == OUT_MIG){
-			int eventId = eventIds[i];
-			double migAge = genetree_migs[gene].mignodes[eventId].age;
-			int migSourceId = genetree_migs[gene].mignodes[eventId].source_event;
-			int migTargetId = genetree_migs[gene].mignodes[eventId].target_event;
-			double eventAge = sortedAges[i];
-
-			printf("eventAge:%f, migAge:%f", eventAge , migAge);
-			printf("eventId:%d, migSourceId:%d, migTargetId:%d", eventId, migSourceId , migTargetId);
-		}
-	}
-}
-
-
-
-
 
 
 
@@ -417,7 +393,7 @@ void allocateStats(Stats* stats){ // TODO - rename signature to include "pop"
 	stats->event_ids     = (int*) malloc(max_events*sizeof(int));
 }
 void allocateMigBandsMem() {
-	int maxMigBands = dataSetup.popTree->numMigBands;
+	int maxMigBands = dataSetup.popTree->numMigBands; // TODO - check if the alloc is legit. do the migband ids allgn with array  inndices?
 	for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
 		if (isFeasibleComb(comb)) {
 			comb_stats[comb].leafMigs = (MigStats*) malloc(maxMigBands * sizeof(MigStats));
@@ -470,17 +446,17 @@ bool hasNextEvent(EventChain chain, int event){ // TODO - move to McRefCommon
 	return next >= 0;
 }
 bool isEventCompletelyBelowComb(double eventAge, double combAge) {
-	return (eventAge < combAge) && !practicallyEqual(eventAge, combAge);
+	return (eventAge < combAge) && !areAlmostEqual(eventAge, combAge);
 }
 bool isBorderEvent(double eventAge, double previousAge, double combAge){
-	return practicallyEqual(eventAge, combAge) ||
+	return areAlmostEqual(eventAge, combAge) ||
 			((eventAge > combAge) && (previousAge < combAge));
 }
 bool isEventCompletelyInsideComb(double eventAge, double combAge){
-	return (eventAge > combAge) && (!practicallyEqual(eventAge, combAge));
+	return (eventAge > combAge) && (!areAlmostEqual(eventAge, combAge));
 }
 double COMB_AGE_RELATIVE_PERCISION = 0.000000000000001;
-bool practicallyEqual(double eventAge, double combAge){
+bool areAlmostEqual(double eventAge, double combAge){
 	return relativeDistance(eventAge, combAge) < COMB_AGE_RELATIVE_PERCISION;
 }
 double relativeDistance(double dbl1, double dbl2){ // TODO - move to McRefCommon
@@ -626,6 +602,12 @@ void assertCombLeafCoalStats(int comb, int leaf){
 		exit(-1);
 	}
 }
+
+
+void assertLeafMigs() {
+    exit(-1);
+}
+
 
 void assertLeafEventChain(int comb, int leaf, int gene){
 

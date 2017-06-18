@@ -35,7 +35,7 @@ typedef struct _COMB_STATS{
 	Stats* combs;
 	LeafStats* leaves;
 	MigStats* leafMigs;
-	//MigStats* combMigs;
+	MigStats* combMigs;
 } COMB_STATS;
 
 extern COMB_STATS* comb_stats;
@@ -94,7 +94,7 @@ int isMigBandExternal(int mig, int comb);
 int isMigBandInternal(int mig, int comb);
 int isLeafMigBand(int mig, int comb);
 bool hasNextEvent(EventChain chain, int event); // TODO - extract method to McRefCommon
-bool practicallyEqual(double eventAge, double combAge);
+bool areAlmostEqual(double eventAge, double combAge);
 double relativeDistance(double dbl1, double dbl2); // TODO - extract method to McRefCommon
 
 
@@ -108,7 +108,7 @@ void assertBottomCombsNumCoals(int comb);
 void assertCombLeaves();
 void assertCombLeafNumCoals(int comb, int leaf);
 void assertCombLeafCoalStats(int comb, int leaf);
-
+void assertLeafMigs();
 void assertLeafEventChain(int comb, int leaf, int gene);
 int getLastEvent(EventChain chain, int firstEvent);
 void assertLastEventId(int lastEvent);
