@@ -85,8 +85,19 @@ void appendCurrent(int comb, int currentPop, int gene);
 
 void migrations(int comb, int gene);
 
-void handleCombLeavesMigStats(int comb, int mig, int gene);
+void handleCombLeavesMigBand(int comb, int mig, int gene);
 
+void countMigEventTowardsBelowComb(Event event, MigStats *leafMigStats);
+
+void countMigEventTowardsHalfAndHalf(Event event, double eventAge, double previousAge, double combAge, MigStats *leafMigStats);
+
+void assertLeafMigStats(int migband, int comb);
+
+void assertLeafMigMigStats(int migband, int comb);
+
+void assertLeafMigNumMigs(int migband, int comb);
+
+void countMigEventTowardsAboveComb(Event event, MigStats *leafMigStats);
 
 void handleExternalMigStats(int comb, int mig, int gene); // TODO - rename to better explain "O->C" type migband
 
@@ -121,7 +132,7 @@ int isMigBandExternal(int mig, int comb);
 
 int isMigBandInternal(int mig, int comb);
 
-int isLeafMigBand(int mig, int comb);
+int isCombLeafMigBand(int mig, int comb);
 
 bool hasNextEvent(EventChain chain, int event); // TODO - extract method to McRefCommon
 bool areAlmostEqual(double eventAge, double combAge);

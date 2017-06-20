@@ -17,6 +17,7 @@ COMB_STATS *comb_stats;
 
 
 void calculateCombStats() {
+    bool debug = false;
     initCombStats();
     for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
         if (isFeasibleComb(comb)) {
@@ -27,13 +28,13 @@ void calculateCombStats() {
             }
         }
     }
-    if (FALSE) {
+    if (debug) {
         assertRootNumCoals();
         assertRootCoalStats();
         assertBottomCombs();
         assertCombLeaves(); //	TODO - add an IFDEF
     }
-    assertMigStats();
+    assertMigStats(); // TODO - move into the debug scope
 }
 
 
@@ -256,8 +257,8 @@ void finalizeCombCoalStats(int comb) {
 void migrations(int comb, int gene) {
     for (int migband = 0; migband < dataSetup.popTree->numMigBands; migband++) {
         if (isMigOfComb(migband, comb)) {
-            if (isLeafMigBand(migband, comb)) {
-                handleCombLeavesMigStats(comb, migband, gene);
+            if (isCombLeafMigBand(migband, comb)) {
+                handleCombLeavesMigBand(comb, migband, gene);
             }
             if (isMigBandInternal(migband, comb)) {
                 // ignore internal migbands. their stats aren't used
@@ -269,17 +270,8 @@ void migrations(int comb, int gene) {
     }
 }
 
-void countMigEventTowardsBelowComb(Event event, MigStats *leafMigStats);
 
-void countMigEventTowardsHalf(Event event, double age, double previousAge, double combAge, MigStats *leafMigStats);
-
-void assertLeafMigStats(int migband, int comb);
-
-void assertLeafMigMigStats(int migband, int comb);
-
-void assertLeafMigNumMigs(int migband, int comb);
-
-void handleCombLeavesMigStats(int comb, int mig, int gene) {
+void handleCombLeavesMigBand(int comb, int mig, int gene) {
     double previousAge, eventAge = 0.0;
     double combAge = comb_stats[comb].age;
 
@@ -297,21 +289,47 @@ void handleCombLeavesMigStats(int comb, int mig, int gene) {
         if (isEventCompletelyBelowComb(eventAge, combAge)) {
             countMigEventTowardsBelowComb(event, leafMigStats);
         } else if (isBorderEvent(eventAge, previousAge, combAge)) {
-            countMigEventTowardsHalf(event, eventAge, previousAge, combAge, leafMigStats);
+            countMigEventTowardsHalfAndHalf(event, eventAge, previousAge, combAge, leafMigStats);
         } else if (isEventCompletelyInsideComb(eventAge, combAge)) {
-            break;
+            countMigEventTowardsAboveComb(event, leafMigStats);
         } else {
             printErrorAndExit("leaf event wasn't counted towards any Stats");
         };
     }
 }
 
-void countMigEventTowardsHalf(Event event, double age, double previousAge, double combAge, MigStats *leafMigStats) {
-
+void countMigEventTowardsBelowComb(Event event, MigStats *leafMigStats) {
+    if (event.getType() == IN_MIG) leafMigStats->num_migs++;
+    double elapsedTime = event.getElapsedTime();
+    int numLins = event.getNumLineages();
+    leafMigStats->mig_stats += (numLins) * elapsedTime;
 }
 
-void countMigEventTowardsBelowComb(Event event, MigStats *leafMigStats) {
+void countMigEventTowardsHalfAndHalf(Event event, double eventAge, double previousAge, double combAge, MigStats *leafMigStats) {
+    double pseudoEventAge, pseudoElapsedTimeBelow, pseudoElapsedTimeAbove;
+    int numLins = event.getNumLineages();
+    EventType eventType = event.getType();
 
+    if (areAlmostEqual(eventAge, combAge)) {
+        if (eventType == IN_MIG) leafMigStats->num_migs++;
+        leafMigStats->mig_stats += numLins * (event.getElapsedTime());
+    } else { // the border event is above combAge so we need to "split it" into two events
+        pseudoEventAge = combAge;
+        pseudoElapsedTimeBelow = pseudoEventAge - previousAge;
+        leafMigStats->mig_stats += numLins * pseudoElapsedTimeBelow;
+
+        if (eventType == IN_MIG) leafMigStats->num_migs_above++;
+        pseudoElapsedTimeAbove = eventAge - pseudoEventAge;
+        leafMigStats->mig_stats_above += numLins * pseudoElapsedTimeAbove;
+    }
+}
+
+void countMigEventTowardsAboveComb(Event event, MigStats *leafMigStats) {
+
+    if (event.getType() == IN_MIG) leafMigStats->num_migs_above++;
+    double elapsedTime = event.getElapsedTime();
+    int numLins = event.getNumLineages();
+    leafMigStats->mig_stats_above += numLins * elapsedTime;
 }
 
 
@@ -436,7 +454,7 @@ int isMigBandInternal(int mig, int comb) {
     return isAncestralTo(comb, source) && isAncestralTo(comb, target) && (!isLeaf(source) || !isLeaf(target));
 }
 
-int isLeafMigBand(int mig, int comb) {
+int isCombLeafMigBand(int mig, int comb) {
     int target = getTargetPop(mig);
     int source = getSourcePop(mig);
     return isLeaf(target) && isLeaf(source) && isAncestralTo(comb, target) && isAncestralTo(comb, source);
@@ -640,7 +658,7 @@ void assertCombLeafCoalStats(int comb, int leaf) {
 void assertMigStats() {
     for (int migband = 0; migband < dataSetup.popTree->numMigBands; migband++) {
         for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
-            if (isFeasibleComb(comb) && isLeafMigBand(migband, comb)) {
+            if (isFeasibleComb(comb) && isCombLeafMigBand(migband, comb)) {
                 assertLeafMigStats(migband, comb);
             }
         }
