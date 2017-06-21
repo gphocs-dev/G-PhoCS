@@ -786,7 +786,7 @@ void assertFirstEventIsSampleStart(EventChain chain, int firstEvent) {
     if (type != SAMPLES_START) printErrorAndExit("first event isn't SAMPLE_START");
 }
 
-void printErrorAndExit(char *errorMessage) {
-    fprintf(stderr, errorMessage);
+void printErrorAndExit(const char *errorMessage) {
+    fprintf(stderr, "%s", errorMessage);
     exit(-1);
 }

@@ -177,6 +177,6 @@ void assertFirstEventZeroElapsedTime(EventChain chain, int firstEvent);
 
 void assertFirstEventIsSampleStart(EventChain chain, int firstEvent);
 
-void printErrorAndExit(char *errorMessage);
+void printErrorAndExit(const char *errorMessage);
 
 #endif /* SRC_COMBSTATS_H_ */
