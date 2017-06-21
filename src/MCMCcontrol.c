@@ -39,7 +39,7 @@ struct GLOBAL_SETUP {
 
 
 char* getNextToken(FILE* file, char* space);
-int expectNextToken(FILE* file, char* expectedToken, char* tokenSpace);
+int expectNextToken(FILE* file, const char* expectedToken, char* tokenSpace);
 int countTokens(FILE* file, char* countToken, char* endToken, char* tokenSpace);
 
 int readGeneralInfo(FILE* fctl);
@@ -492,27 +492,38 @@ char* getNextToken(FILE* file, char* space) {
 
 
 
-/***********************************************************************************
+/*****************************************************************************
  *	expectNextToken
  * 	- reads file until reach a pre-specified token
  *	- uses given tokenSpace to read tokens
  *	- outputs warnings if reads other tokens before reaching expected token
  *  - returns -1 if reached EOF in process (0 otherwise)
  *	- a pointer to space is returned
- ***********************************************************************************/
-int expectNextToken(FILE* file, char* expectedToken, char* tokenSpace) {
-	int numErrors = 0;
-	// read general info
-	while(0 != strcmp(expectedToken,getNextToken(file,tokenSpace))) {
-		if(feof(file)) {
-			break;
-		}
-		numErrors++;
-		fprintf(stderr, "Error: unexpected token '%s' before '%s'. Will Ignore this.\n",tokenSpace, expectedToken);
-	}
-	
-	return numErrors;
+ ****************************************************************************/
+int expectNextToken(FILE* file, const char* expectedToken, char* tokenSpace) 
+{
+  int numErrors = 0;
+  if( NULL == expectedToken )
+    return 1;
+  if( NULL == tokenSpace )
+    return 1;
+
+  // read general info
+  while( 0 != strcmp( expectedToken,
+                      getNextToken( file,
+                                    tokenSpace ) ) ) 
+  {
+    if( feof( file ) ) 
+      break;
+    
+    ++numErrors;
+    fprintf( stderr, 
+             "Error: unexpected token '%s' before '%s'. "
+             "Will Ignore this.\n",tokenSpace, expectedToken );
+  }
+  return numErrors;
 }
+
 /** end of expectNextToken **/
 
 
