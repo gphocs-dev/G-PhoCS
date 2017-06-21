@@ -51,7 +51,8 @@ Temporary Items
 # ===========================
 
 .metadata
-bin/
+bin/*
+!bin/README.md
 obj/*.o
 tmp/
 *.tmp
@@ -75,6 +76,17 @@ local.properties
 # CDT-specific (C/C++ Development Tooling)
 .cproject
 
+
+.idea
+cmake-build-debug
+
+# Mongo Explorer plugin:
+.idea/**/mongoSettings.xml
+
+## File-based project format:
+*.iws
+
+
 # ====================
 # Others
 # ====================
@@ -84,9 +96,7 @@ local.properties
 # ===========================
 #  G-PhoCS Specifics
 # ===========================
-mcmc.log
 out/*
 ron
-
-
+*.log
 

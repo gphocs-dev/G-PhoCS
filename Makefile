@@ -14,7 +14,7 @@ CC=@g++
 #CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -fopenmp -ggdb -fpermissive
 
 #Production
-CFLAGS += -fstack-protector-all -Wall -O3  -fpermissive 
+CFLAGS += -fstack-protector-all -Wall -O3  -fpermissive
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty
@@ -45,8 +45,11 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/PopulationTree.o \
                    obj/LocusDataLikelihood.o \
                    obj/AlignmentProcessor.o \
+                   obj/McRefCommon.o \
                    obj/CombStats.o \
                    obj/CombPrinter.o \
+                   obj/CladeStats.o \
+                   obj/CladePrinter.o \
                    obj/omp_stub.o \
                    obj/DataLayer.o \
                    obj/MemoryMng.o \
@@ -59,13 +62,16 @@ bin/G-PhoCS:       obj/GPhoCS.o \
 	                obj/PopulationTree.o \
 	                obj/LocusDataLikelihood.o \
 	                obj/AlignmentProcessor.o \
+	                obj/McRefCommon.o \
 	                obj/CombStats.o \
-                  obj/CombPrinter.o \
-                  obj/omp_stub.o \
-                  obj/DataLayer.o \
-                  obj/MemoryMng.o \
-                  obj/TraceLineages.o \
-                  obj/patch.o \
+                    obj/CombPrinter.o \
+	                obj/CladeStats.o \
+                    obj/CladePrinter.o \
+                    obj/omp_stub.o \
+                    obj/DataLayer.o \
+                    obj/MemoryMng.o \
+                    obj/TraceLineages.o \
+                    obj/patch.o \
 	                $(CFLAGS) -lm -o bin/G-PhoCS
 
 bin/AlignmentProcessor: obj/utils.o \
@@ -87,8 +93,11 @@ obj/GPhoCS.o: src/GPhoCS.cpp \
               src/GenericTree.h \
               src/PopulationTree.h \
               src/AlignmentProcessor.h \
+              src/McRefCommon.h \
               src/CombStats.h \
               src/CombPrinter.h \
+              src/CladeStats.h \
+              src/CladePrinter.h \
               src/MultiCoreUtils.h
 	$(CC) $(CFLAGS) -c src/GPhoCS.cpp -o obj/GPhoCS.o
 
@@ -132,15 +141,33 @@ obj/AlignmentMain.o: src/AlignmentMain.cpp \
                      src/AlignmentProcessor.h
 	$(CC) $(CFLAGS) -c src/AlignmentMain.cpp -o obj/AlignmentMain.o
 
-obj/CombPrinter.o:   src/CombPrinter.cpp \
+
+obj/McRefCommon.o:   src/McRefCommon.cpp \
+					 src/MCMCcontrol.h \
+					 src/DataLayer.h \
+                     src/McRefCommon.h
+	$(CC) $(CFLAGS) -c src/McRefCommon.cpp -o obj/McRefCommon.o
+
+obj/CombPrinter.o:	 src/CombPrinter.cpp \
                      src/CombPrinter.h
 	$(CC) $(CFLAGS) -c src/CombPrinter.cpp -o obj/CombPrinter.o
 		
-obj/CombStats.o:     src/CombStats.cpp \
+obj/CombStats.o: 	 src/CombStats.cpp \
                      src/CombStats.h
 	$(CC) $(CFLAGS) -c src/CombStats.cpp -o obj/CombStats.o
 
-obj/DataLayer.o: src/DataLayer.cpp \
+obj/CladePrinter.o:  src/CladePrinter.cpp \
+                     src/CladePrinter.h \
+					 src/CladeStats.h \
+					 src/MemoryMng.h \
+					 src/McRefCommon.h
+	$(CC) $(CFLAGS) -c src/CladePrinter.cpp -o obj/CladePrinter.o
+		
+obj/CladeStats.o:	 src/CladeStats.cpp \
+					 src/CladeStats.h
+	$(CC) $(CFLAGS) -c src/CladeStats.cpp -o obj/CladeStats.o
+
+obj/DataLayer.o: 	 src/DataLayer.cpp \
                      src/DataLayer.h
 	$(CC) $(CFLAGS) -c src/DataLayer.cpp -o obj/DataLayer.o
 

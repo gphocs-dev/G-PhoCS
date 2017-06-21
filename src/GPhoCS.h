@@ -119,6 +119,7 @@ int mixing(double finetune);
 
 void allocateAllMemory() ; // TODO - tidy header file
 int isCombStatsActivated();
+int isCladeStatsActivated();
 double getLogPrior() ;
 
 
