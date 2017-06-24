@@ -15,16 +15,11 @@ typedef struct _CLADE_STATS{
 
 	int num_events; 		// temporary number of events in clade.
 	// used as an "array length" variable for sortedAges, event_types & num_lineages arrays
-	double debug_total_error;
 
 } CLADE_STATS;
 extern CLADE_STATS* clade_stats;
 
-
-
-
 void calculateCladeStats();
-
 
 void allocateCladeMem();
 void initCladeStats();
@@ -35,16 +30,15 @@ void computeCladeNumCoals();
 void computeCladeNumCoals_rec(int pop);
 void computeCladeCoalStats();
 void computeCladeCoalStats_rec(int clade, int gen);
-void fillupLeafCladeStats(int clade, int gen);
+void fillUpLeafCladeStats(int clade, int gen);
 void appendPopToClade(int clade, int gen, int startingPoint);
-void fillupCladeStats(int clade, int gen);
-void addChildenIntoCladeStats(int clade, int gen);
-void mergeChildern(int clade, int gen);
-void addChildrenCladeStats(int clade, int gen);
+void fillUpCladeStats(int clade, int gen);
+void addChildrenIntoCladeStats(int clade);
+void mergeChildren(int clade);
+void addChildrenCladeStats(int clade);
 void addCurrentPopIntoCladeStats(int clade, int gen);
 
-int	isLeafPopulation(int pop);
 
 void freeCladeMem();
 
-#endif /* SRC_CLADESTATS_H_ */
+#endif

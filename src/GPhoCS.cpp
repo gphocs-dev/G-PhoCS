@@ -1599,8 +1599,6 @@ int performMCMC() {
                         if (isCombStatsActivated()) {
                             calculateCombStats();
                             printCombStats(iteration, ioSetup.combStatsFile);
-                            //								printCombDebugStats(iteration, ioSetup.combDebugStatsFile); //TODO - remove debug printing
-                            //								fflush(ioSetup.combDebugStatsFile);
                         }
                         if (isCladeStatsActivated()) {
                             calculateCladeStats();

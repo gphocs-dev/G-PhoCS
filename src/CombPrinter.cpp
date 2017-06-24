@@ -1,11 +1,9 @@
 #include "CombPrinter.h"
 #include "CombStats.h"
 #include "MCMCcontrol.h"
-#include "GPhoCS.h"
 #include "patch.h"
 #include "MemoryMng.h"
 #include "McRefCommon.h"
-#include <stdio.h>
 
 void printCombStatsHeader(FILE* file){
 	fprintf(file, "iteration\t");
@@ -41,7 +39,7 @@ void printCombPopHeaders(int comb, char* combName, FILE* file) {
 }
 void printCombMigHeaders(int comb, char* combName, FILE* file) {
 	for (int mig = 0; mig < dataSetup.popTree->numMigBands; mig++) {
-		if (isMigOfComb(mig, comb)) {
+		if (isCombLeafMigBand(mig, comb)) {
 			int source = getSourcePop(mig);
 			int target = getTargetPop(mig);
 			char* sourceName = getPopName(source);
@@ -77,7 +75,7 @@ void printCombStats(int iteration, FILE* file){
 	fflush(file);
 }
 void printOneCombStats(int comb, FILE* file){
-	fprintf(file, "%0.35f\t%d\t",  //TODO - turn float percision to a MACRO/CONSTS
+	fprintf(file, "%0.35f\t%d\t",  //TODO - turn float precision to a MACRO/CONST
 			comb_stats[comb].total.coal_stats,
 			comb_stats[comb].total.num_coals);
 	printCombCoalStats(comb, file);
@@ -94,7 +92,7 @@ void printCombCoalStats(int comb, FILE* file) {
 }
 void printCombMigStats(int comb, FILE* file) {
 	for (int mig = 0; mig < dataSetup.popTree->numMigBands; mig++) {
-		if (isMigOfComb(mig, comb)) {
+		if (isCombLeafMigBand(mig, comb)) {
 			fprintf(file, "%0.35f\t%d\t",
 					comb_stats[comb].leafMigs[mig].mig_stats,
 					comb_stats[comb].leafMigs[mig].num_migs);
@@ -105,15 +103,4 @@ void printOnePopStats(int pop, FILE* file){
 	fprintf(file, "%0.35f\t%d\t",
 			genetree_stats_total.coal_stats[pop],
 			genetree_stats_total.num_coals[pop]);
-}
-
-
-void printCombDebugStatsHeader(FILE* file){
-	fprintf(file, "mig_stats\tnum_migs\n");
-}
-void printCombDebugStats(int iteration, FILE* file){
-	int mig_band = 0;
-	double mig_stats = genetree_stats_total.mig_stats[mig_band];
-	int num_migs = genetree_stats_total.num_migs[mig_band];
-	fprintf(file, "%f\t%d\n", mig_stats, num_migs);
 }

@@ -47,6 +47,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/AlignmentProcessor.o \
                    obj/McRefCommon.o \
                    obj/CombStats.o \
+                   obj/CombAssertions.o \
                    obj/CombPrinter.o \
                    obj/CladeStats.o \
                    obj/CladePrinter.o \
@@ -64,6 +65,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
 	                obj/AlignmentProcessor.o \
 	                obj/McRefCommon.o \
 	                obj/CombStats.o \
+	                obj/CombAssertions.o \
                     obj/CombPrinter.o \
 	                obj/CladeStats.o \
                     obj/CladePrinter.o \
@@ -95,6 +97,7 @@ obj/GPhoCS.o: src/GPhoCS.cpp \
               src/AlignmentProcessor.h \
               src/McRefCommon.h \
               src/CombStats.h \
+              src/CombAssertions.h \
               src/CombPrinter.h \
               src/CladeStats.h \
               src/CladePrinter.h \
@@ -155,6 +158,10 @@ obj/CombPrinter.o:	 src/CombPrinter.cpp \
 obj/CombStats.o: 	 src/CombStats.cpp \
                      src/CombStats.h
 	$(CC) $(CFLAGS) -c src/CombStats.cpp -o obj/CombStats.o
+
+obj/CombAssertions.o:src/CombAssertions.cpp \
+                     src/CombAssertions.h
+	$(CC) $(CFLAGS) -c src/CombAssertions.cpp -o obj/CombAssertions.o
 
 obj/CladePrinter.o:  src/CladePrinter.cpp \
                      src/CladePrinter.h \
