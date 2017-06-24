@@ -6,8 +6,8 @@
 #define TRUE 1
 #define FALSE 0
 
-#define DEBUG_COMB_STATS FALSE
-#define SET_COMB_AGE_ZERO FALSE
+#define DEBUG_COMB_STATS TRUE
+#define SET_COMB_AGE_TO_ZERO TRUE
 
 double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
 

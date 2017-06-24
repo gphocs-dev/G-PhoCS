@@ -7,7 +7,7 @@
 #include "McRefCommon.h"
 
 void runAssertions() {
-    if (SET_COMB_AGE_ZERO) {
+    if (SET_COMB_AGE_TO_ZERO) {
         computeFlatStats();
         assertRootNumCoals();
         assertRootCoalStats();

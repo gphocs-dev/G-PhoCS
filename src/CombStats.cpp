@@ -438,7 +438,7 @@ int isCombLeafMigBand(int mig, int comb) {
 }
 
 double getCombAge(int comb) {
-    if (SET_COMB_AGE_ZERO) return 0.0;
+    if (SET_COMB_AGE_TO_ZERO) return 0.0;
     if (isLeaf(comb)) {
         return DBL_MAX;
     } else if (areChildrenLeaves(comb)) {
