@@ -1595,17 +1595,16 @@ int performMCMC() {
 								computeGenetreeStats_partitioned();
 								printCoalStats(iteration);
 						}
-                    if (iteration % 5 == 0) {
-                        if (isCombStatsActivated()) {
-                            calculateCombStats();
-                            printCombStats(iteration, ioSetup.combStatsFile);
-                        }
-                        if (isCladeStatsActivated()) {
-                            calculateCladeStats();
-                            printCladeStats(iteration, ioSetup.cladeStatsFile);
-                        }
-                    }
 
+//					@@ronv: please enter here :)
+            if (isCombStatsActivated()) {
+              calculateCombStats();
+              printCombStats(iteration, ioSetup.combStatsFile);
+            }
+            if (isCladeStatsActivated()) {
+              calculateCladeStats();
+              printCladeStats(iteration, ioSetup.cladeStatsFile);
+            }
 
 						if (admixed_samples.number > 0 && iteration % 1000 == 0) {
 								ioSetup.admixFile = fopen(ioSetup.admixFileName, "w");
