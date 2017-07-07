@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 #ifndef SRC_MCREFCOMMON_H_
 #define SRC_MCREFCOMMON_H_
 
@@ -42,3 +44,5 @@ char *getMigName(int mig);
 char *concat(const char *s1, const char *s2); // NOTE - this should not be used in production. the memory isn't released
 
 #endif
+
+#pragma clang diagnostic pop
