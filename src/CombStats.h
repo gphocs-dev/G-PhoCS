@@ -5,9 +5,8 @@
 #include <string>
 #include "DataLayer.h"
 
-#define TRUE 1 // TODO - ask Ilan: where should these consts be?
+#define TRUE 1
 #define FALSE 0
-
 
 
 typedef struct STATS {
@@ -40,7 +39,6 @@ typedef struct _COMB_STATS {
 } COMB_STATS;
 
 extern COMB_STATS *comb_stats;
-
 
 
 // clade_stats calculation functions
