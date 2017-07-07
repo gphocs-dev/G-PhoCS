@@ -41,7 +41,7 @@ set(SOURCE_FILES
         src/TraceLineages.cpp
         src/TraceLineages.h
         src/utils.cpp
-        src/utils.h src/CombAssertions.cpp src/CombAssertions.h)
+        src/utils.h src/CombAssertions.cpp src/CombAssertions.h src/HypothesisPrinter.cpp src/HypothesisPrinter.h)
 
 add_executable(G_PhoCS ${SOURCE_FILES})
 

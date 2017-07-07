@@ -1,0 +1,10 @@
+#ifndef G_PHOCS_HYPOTHESISPRINTER_H
+#define G_PHOCS_HYPOTHESISPRINTER_H
+
+
+
+
+
+
+
+#endif

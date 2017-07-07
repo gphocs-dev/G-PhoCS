@@ -17,6 +17,10 @@ void printCombStatsHeader(FILE *file) {
     printOnePopHeader(pop, file);
   }
 
+  for (int migband = 0; migband < dataSetup.popTree->numMigBands; migband++) {
+    printOneMigBandHeader(migband, file);
+  }
+
   fprintf(file, "\n");
 }
 
@@ -60,6 +64,14 @@ void printOnePopHeader(int pop, FILE *file) {
           popName, "nc");
 }
 
+void printOneMigBandHeader(int migband, FILE *file) {
+  char *source = getPopName(dataSetup.popTree->migBands[migband].sourcePop);
+  char *target = getPopName(dataSetup.popTree->migBands[migband].targetPop);
+  fprintf(file, "MB_%s->%s ms\tMB_%s->%s nm\t",
+          source, target,
+          source, target);
+}
+
 
 void printCombStats(int iteration, FILE *file) {
 
@@ -72,6 +84,11 @@ void printCombStats(int iteration, FILE *file) {
 
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
     printOnePopStats(pop, file);
+  }
+
+
+  for (int migband = 0; migband < dataSetup.popTree->numMigBands; migband++) {
+    printOneMigBandStats(migband, file);
   }
 
   fprintf(file, "\n");
@@ -110,4 +127,10 @@ void printOnePopStats(int pop, FILE *file) {
   fprintf(file, "%0.35f\t%d\t",
           genetree_stats_total.coal_stats[pop],
           genetree_stats_total.num_coals[pop]);
+}
+
+void printOneMigBandStats(int migband, FILE *file) {
+  fprintf(file, "%0.35f\t%d\t",
+          genetree_stats_total.mig_stats[migband],
+          genetree_stats_total.num_migs[migband]);
 }

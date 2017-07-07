@@ -26,5 +26,9 @@ void printCombMigStats(int comb, FILE *file);
 
 void printOnePopStats(int pop, FILE *file);
 
+void printOneMigBandHeader(int migband, FILE *file) ;
+
+void printOneMigBandStats(int migband, FILE *file) ;
+
 #endif
 
