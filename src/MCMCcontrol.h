@@ -55,6 +55,7 @@ struct IO_SETUP {
 	char nodeStatsFileName[NAME_LENGTH];	// name of coalescent stats file (for MCMC model evaluation)
 	char combStatsFileName[NAME_LENGTH];
 	char cladeStatsFileName[NAME_LENGTH];
+	char hypStatsFileName[NAME_LENGTH];
 	int samplesPerLog;						// number of samples for which to generate a log summary in stdout
 	int logsPerLine;						// number of sample logs per log line
 	
@@ -65,6 +66,7 @@ struct IO_SETUP {
 	FILE**	nodeStatsFile;					// coalescent stats files for nodes (one per pop)
 	FILE*	combStatsFile;					// comb stats (coalescent & migration) file for all possible combs
 	FILE*	cladeStatsFile;
+	FILE*	hypStatsFile;
 
 };
 
