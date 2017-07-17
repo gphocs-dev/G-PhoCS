@@ -89,6 +89,8 @@ struct POPULATION {
 	GammaPrior	agePrior;		// parameters for gamma-prior of age (for ancestral population)
 	Population*	father;			// father population
 	Population*	sons[2];		// two child populations (for ancestral population)
+	#define	LEFT	0 			// index of left son population in sons array
+	#define	RIGHT	1 			// index of right son population in sons array
 	unsigned short*	isAncestralTo;	// a boolean array indicating all descendant populations
 
 	// migration bands
@@ -106,7 +108,8 @@ struct POPULATION {
 *	PopulationTree
 *	- Holds relevant info for population
 ***********************************************************************************/
-typedef struct POPULATION_TREE {
+typedef struct _POPULATION_TREE
+{
 	int 	numCurPops;			// number of current populations
 	int 	numPops;			// number of populations in tree ( = 2*numCurPops-1 )
 	int		numMigBands;		// number of migration bands in tree

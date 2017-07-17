@@ -49,28 +49,30 @@ int moveMigBandSource(PopulationTree* popTree, int migBand, double newAge, unsig
  *	- allocates basic memory for population tree (no migration bands yet)
  * 	- returns pointer to newly allocated population tree
  ***********************************************************************************/
-PopulationTree* createPopTree(int numCurPops)	{
+PopulationTree* createPopTree(int numCurPops)
+{
   int pop, migBand, numPops = 2*numCurPops-1;
 	
-  PopulationTree* popTree = (PopulationTree*)malloc(sizeof(PopulationTree));
-  if(popTree == NULL) {
+  PopulationTree* popTree = (PopulationTree*) malloc( sizeof(PopulationTree) );
+  if(popTree == NULL)
+  {
     fprintf(stderr, "\nError: Out Of Memory population tree.\n");
     exit(-1);
   }
 	
-  popTree->popArray = (Population*)malloc(numPops*sizeof(Population));
+  popTree->popArray = (Population*) malloc( numPops * sizeof(Population) );
   if(popTree->popArray == NULL) {
     fprintf(stderr, "\nError: Out Of Memory population array in population tree.\n");
     exit(-1);
   }
 	
-  popTree->pops = (Population**)malloc(numPops*sizeof(Population*));
+  popTree->pops = (Population**) malloc( numPops * sizeof(Population*) );
   if(popTree->pops == NULL) {
     fprintf(stderr, "\nError: Out Of Memory population array in population tree.\n");
     exit(-1);
   }
 	
-  popTree->isAncestralArray = (unsigned short*)malloc(numPops*numPops*sizeof(unsigned short));
+  popTree->isAncestralArray = (unsigned short*) malloc( numPops * numPops * sizeof(unsigned short));
   if(popTree->isAncestralArray == NULL) {
     fprintf(stderr, "\nError: Out Of Memory boolean 2D array for isAncestrals in population tree.\n");
     exit(-1);
@@ -93,47 +95,52 @@ PopulationTree* createPopTree(int numCurPops)	{
   // initialize populations
 	
   popTree->numCurPops  = numCurPops;
-  popTree->numPops 	 = numPops;
+  popTree->numPops 	   = numPops;
   popTree->numMigBands = 0;
 	
-  for(pop=0; pop<numPops; pop++) {
-    popTree->pops[pop] = popTree->popArray + pop;
-    popTree->pops[pop]->id = pop;
-    popTree->pops[pop]->inMigBands  = popTree->migBandIdArray + 2*pop*(numPops-1);
-    popTree->pops[pop]->outMigBands = popTree->migBandIdArray + (2*pop+1)*(numPops-1);
+  for( pop = 0; pop < numPops; ++pop )
+  {
+    popTree->pops[pop]                 = popTree->popArray + pop;
+    popTree->pops[pop]->id             = pop;
+    popTree->pops[pop]->inMigBands     = popTree->migBandIdArray
+                                         + 2 * pop * (numPops-1);
+    popTree->pops[pop]->outMigBands    = popTree->migBandIdArray
+                                         + (2 * pop + 1) * (numPops - 1);
     popTree->pops[pop]->numInMigBands  = 0;
     popTree->pops[pop]->numOutMigBands = 0;
-    popTree->pops[pop]->name[0] = '\0';
-    popTree->pops[pop]->isAncestralTo = popTree->isAncestralArray + pop*numPops;
+    popTree->pops[pop]->name[0]        = '\0';
+    popTree->pops[pop]->isAncestralTo  = popTree->isAncestralArray
+                                         + pop * numPops;
 
-	popTree->pops[pop]->age = 0.0;
-	//MARK CHANGE
-	popTree->pops[pop]->numSamples = 0;
-	popTree->pops[pop]->sampleAge = 0.0;
-	popTree->pops[pop]->theta = 0.0;
-	popTree->pops[pop]->father = NULL;
-	popTree->pops[pop]->sons[0] = NULL;
-	popTree->pops[pop]->sons[1] = NULL;
-	popTree->pops[pop]->thetaPrior.alpha = 0.0;
-	popTree->pops[pop]->thetaPrior.beta = 0.0;
-	popTree->pops[pop]->thetaPrior.sampleStart = 0.0;
-	popTree->pops[pop]->agePrior.alpha = 0.0;
-	popTree->pops[pop]->agePrior.beta = 0.0;
-	popTree->pops[pop]->agePrior.sampleStart = 0.0;
+	  popTree->pops[pop]->age            = 0.0;
+	  //MARK CHANGE
+    popTree->pops[pop]->numSamples     = 0;
+    popTree->pops[pop]->sampleAge      = 0.0;
+    popTree->pops[pop]->theta          = 0.0;
+    popTree->pops[pop]->father         = NULL;
+    popTree->pops[pop]->sons[0]        = NULL;
+    popTree->pops[pop]->sons[1]        = NULL;
+    popTree->pops[pop]->thetaPrior.alpha       = 0.0;
+    popTree->pops[pop]->thetaPrior.beta        = 0.0;
+    popTree->pops[pop]->thetaPrior.sampleStart = 0.0;
+    popTree->pops[pop]->agePrior.alpha         = 0.0;
+    popTree->pops[pop]->agePrior.beta          = 0.0;
+    popTree->pops[pop]->agePrior.sampleStart   = 0.0;
 	
   }
 
-  for(migBand=0; migBand<numPops*(numPops-1); migBand++) {
-	popTree->migBands[migBand].sourcePop = 0;
-	popTree->migBands[migBand].targetPop = 0;
-	popTree->migBands[migBand].migRate = 0.0;
-	popTree->migBands[migBand].startTime = 0.0;
-	popTree->migBands[migBand].endTime = 0.0;
-	popTree->migBands[migBand].firstSet = NULL;
-	popTree->migBands[migBand].lastSet = NULL;
-	popTree->migBands[migBand].migRatePrior.alpha = 0.0;
-	popTree->migBands[migBand].migRatePrior.beta = 0.0;
-	popTree->migBands[migBand].migRatePrior.sampleStart = 0.0;
+  for( migBand = 0; migBand < numPops * (numPops-1); ++migBand )
+  {
+    popTree->migBands[migBand].sourcePop                = 0;
+    popTree->migBands[migBand].targetPop                = 0;
+    popTree->migBands[migBand].migRate                  = 0.0;
+    popTree->migBands[migBand].startTime                = 0.0;
+    popTree->migBands[migBand].endTime                  = 0.0;
+    popTree->migBands[migBand].firstSet                 = NULL;
+    popTree->migBands[migBand].lastSet                  = NULL;
+    popTree->migBands[migBand].migRatePrior.alpha       = 0.0;
+    popTree->migBands[migBand].migRatePrior.beta        = 0.0;
+    popTree->migBands[migBand].migRatePrior.sampleStart = 0.0;
   }
   return popTree;
 }
@@ -237,7 +244,8 @@ int freePopTree(PopulationTree* popTree) {
  *	- prints population tree
  ***********************************************************************************/
 void printPopulationTree(PopulationTree* popTree, FILE* stream, int printTauTheta)	{
-  int pop, pop1, migBand, maxNameLen=0;
+  int pop, pop1, migBand;
+  size_t maxNameLen=0;
   char formatStr[100];
 	
   if ((!(printTauTheta == 0) || (printTauTheta == 1))) //If user specified something other than boolean don't print tau & theta
@@ -249,7 +257,7 @@ void printPopulationTree(PopulationTree* popTree, FILE* stream, int printTauThet
     if(strlen(popTree->pops[pop]->name) > maxNameLen)
       maxNameLen = strlen(popTree->pops[pop]->name);
   }
-  sprintf(formatStr, " pop %%2d (%%%ds), ", maxNameLen);
+  sprintf(formatStr, " pop %%2d (%%%us), ", maxNameLen);
   if (printTauTheta == 1)
     sprintf(formatStr, "%stau [%%7f], theta[%%7f], ", formatStr);
   for(pop=0; pop<popTree->numPops; pop++) {

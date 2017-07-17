@@ -24,48 +24,66 @@
 #define MAX_FINETUNE                 10
 #define ACCEPTANCE_FUDGE             2
 
-#define GPHOCS_VERSION_NUM          "1.3"
-#define GPHOCS_VERSION_DATE         "Jan. 2017"
+#define GPHOCS_VERSION_NUM          "1.4"
+#define GPHOCS_VERSION_DATE         "Apr. 2017"
 
-int typeCount[NUM_TYPES];
+extern int typeCount[NUM_TYPES];
 
 // --- GLOBAL DATA STRUCTURES -------------------------------------------------
 
 // Data setup. "Singleton"
-struct DATA_STATE {
-		              	  	  	  	  	   // average log-likelihood per genealogy of data given pop tree
-		double logLikelihood;			   //  (ln[P(X|Z)]+ln[P(Z|M)])/numLoci
+typedef struct _DATA_STATE 
+{
+  // average log-likelihood per genealogy of data given pop tree
+  // (ln[P(X|Z)]+ln[P(Z|M)])/numLoci
+  double logLikelihood;	
 
-										   // log likelihood (not averaged) of data given all genealogies:
-		double dataLogLikelihood;          //   ln[P(X|Z,M,T)]
+  // log likelihood (not averaged) of data given all genealogies:
+  // ln[P(X|Z,M,T)]
+  double dataLogLikelihood; 
 
-										   // log likelihood of all genealogies given model & parameters -
-		double genealogyLogLikelihood;	   //   ln[P(Z|M,T)]
+  // log likelihood of all genealogies given model & parameters -
+  //   ln[P(Z|M,T)]
+  double genealogyLogLikelihood;	
 
-		double rateVar;                    // the actual variance in locus-specific
-                                           // mutation rate
-		LocusData** lociData;              // array of LocusData data structures
-                                           // (of length numLoci).
-                                           // (allocated in processAlignments)
-} dataState;
+  // the actual variance in locus-specific
+  // mutation rate
+  double rateVar; 
+
+  // array of LocusData data structures
+  // (of length numLoci).
+  // (allocated in processAlignments)
+  LocusData** lociData; 									   
+} DATA_STATE;
+
+extern DATA_STATE dataState;
 
 // Miscellaneous statistics. "Singleton"
-struct MISC_STATS {
-		int rubberband_mig_conflicts;      // number of rubber band conflicts
-                                           // with migration nodes
+typedef struct _MISC_STATS 
+{
+  // number of rubber band conflicts
+  // with migration nodes
+  int rubberband_mig_conflicts; 
 
-		int spr_zero_targets;              // number of times an SPR event
-                                           // encounters zero target edges
+  // number of times an SPR event
+  // encounters zero target edges
+  int spr_zero_targets; 
 
-		int not_enough_migs;               // number of times not enough pre-
-                                           // allocated space for migration nodes
+  // number of times not enough pre-
+  // allocated space for migration nodes
+  int not_enough_migs; 
 
-// int small_interval;                     // very small interval for moving
-// coalescent event or migration event
+  // very small interval for moving
+  // coalescent event or migration event
+  // int small_interval; 
 
-// double spr_lnld_disc;                   // the size of the smallest discrepancy
-//in log-likelihood computation
-} misc_stats;
+  // the size of the smallest discrepancy
+  //in log-likelihood computation
+  // double spr_lnld_disc; 
+} MISC_STATS;
+
+extern MISC_STATS misc_stats;
+
 
 // --- FUNCTION DECLARATIONS --------------------------------------------------
 
@@ -100,8 +118,10 @@ int UpdateAdmixCoeffs(double finetune);      // Shall be skipped ("ledaleg")
 int mixing(double finetune);
 
 void allocateAllMemory() ; // TODO - tidy header file
+int isCombStatsActivated();
 double getLogPrior() ;
 
 
 
 #endif /* SRC_GPHOCS_H_ */
+//========================== END OF FILE =====================================

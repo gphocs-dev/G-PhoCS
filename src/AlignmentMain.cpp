@@ -1,6 +1,7 @@
 /** 
    \file AlignmentMain.c
     Functions for performing 4 gamete test and analyzing patterns in samples.
+   This file isn't maintained for a while.
    
 */
 

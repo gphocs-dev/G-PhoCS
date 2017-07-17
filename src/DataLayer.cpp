@@ -9,8 +9,8 @@
 
 #include "DataLayer.h"
 
-vector<EventChain> event_chains;
-
+EventChains      event_chains;
+EventsDAG<Event> events_dag;
 //=============================================================================
 /*-----------------------------------------------------------------------------
  * CTOR

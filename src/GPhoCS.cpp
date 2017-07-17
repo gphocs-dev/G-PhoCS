@@ -22,14 +22,26 @@
 
 #include "GPhoCS.h"
 
-/** patch for intermediate G-PhoCS version **/
-#include "patch.cpp"
-#include "patch.h"
+#include "MemoryMng.h"
+#include "DataLayer.h"
+#include "TraceLineages.h"
+#include "GTreeStructVal.h"
+
+/** CombStats & Printer require patch.c 
+    (event_chains, genetree_stats, 
+  genetree_stats_total & genetree_stats_flat) **/
+#include "CombStats.h"
+#include "CombPrinter.h"
+
 
 static struct option long_options[] = { { "help", no_argument, 0, 'h' },
                                         { "verbose", no_argument, 0, 'v' },
                                         { "nthreads", no_argument, 0, 'n' },
                                         { 0, 0, 0, 0 } };
+DATA_STATE dataState;
+MISC_STATS misc_stats;
+int typeCount[NUM_TYPES];
+extern int debug;
 
 // --- FUNCTION IMPLEMENTATIONS -----------------------------------------------
 void printUsage(char *programName) {
@@ -84,7 +96,7 @@ int main(int argc, char*argv[]) {
 				exit(-1);
 		}
 
-		debug = 0;
+		debug = 1;
 
 		while (1) {
 				// getopt_long stores the option index here. 
@@ -124,10 +136,12 @@ int main(int argc, char*argv[]) {
 		}
 
 
-		printf("****************************"
-               "**********************************\n\n");
-		printf("G-Phocs version " GPHOCS_VERSION_NUM " " GPHOCS_VERSION_DATE "\n\n");
-		printf("**************************************************************\n");
+		printf( "****************************"
+            "**********************************\n\n");
+		printf( "G-Phocs version " GPHOCS_VERSION_NUM
+		        " " GPHOCS_VERSION_DATE "\n\n");
+		printf( "*****************************"
+		        "*********************************\n");
 
 		int final_num_threads = 1;
 		if(-1 != num_threads_in_cmd)
@@ -137,74 +151,87 @@ int main(int argc, char*argv[]) {
 				//No requests from user on the number of threads. Take maximum.
 				final_num_threads = max_num_threads;
 		printf("Setting Thread Count to: %d\n", final_num_threads);
-        omp_set_num_threads(final_num_threads);
+    omp_set_num_threads(final_num_threads);
 		printf("Reading control settings from file %s...\n", argv[optind]);
 		initGeneralInfo();
 		res = readControlFile(argv[optind]);
-		if (res != 0) {
-				exit(-1);
-		}
+		if( 0 != res )
+				exit( -1 );
 
 		// secondary control file
-		if (argv[optind + 1] != NULL) {
-				printf("Reading control settings from secondary file %s...\n",
-								argv[optind + 1]);
+		if( NULL != argv[optind + 1] )
+		{
+				printf( "Reading control settings from secondary file %s...\n",
+								argv[optind + 1] );
 				res = readSecondaryControlFile(argv[optind + 1]);
-				if (res != 0) {
-						exit(-1);
-				}
+				if( 0 != res )
+						exit( -1 );
 		}
-		if (dataSetup.popTree->numCurPops > NSPECIES) {
-			printf("Error: defined too many populations (%d), maximum allowed is %d.\n", 								dataSetup.popTree->numCurPops, NSPECIES);
-				printf("Please set NSPECIES constant at top of patch.c source file to at least %d, recomplie, and re-run.\n",
-								dataSetup.popTree->numCurPops);
-				exit(-1);
+
+		if( dataSetup.popTree->numCurPops > NSPECIES )
+		{
+      printf( "Error: defined too many populations (%d),"
+              " maximum allowed is %d.\n",
+              dataSetup.popTree->numCurPops, NSPECIES);
+      printf( "Please set NSPECIES constant at top of patch.c "
+              "source file to at least %d, recomplie, and re-run.\n",
+              dataSetup.popTree->numCurPops);
+      exit( -1 );
 		}
-		if (dataSetup.popTree->numMigBands > MAX_MIG_BANDS) {
-				printf("Error: defined too many migration bands (%d), maximum allowed is %d.\n",
-								dataSetup.popTree->numMigBands, MAX_MIG_BANDS);
-				printf("Please set MAX_MIG_BANDS constant at top of patch.c source file to at least %d, recomplie, and re-run.\n",
-								dataSetup.popTree->numMigBands);
-				exit(-1);
+
+		if( dataSetup.popTree->numMigBands > MAX_MIG_BANDS )
+		{
+      printf( "Error: defined too many migration bands (%d), "
+              "maximum allowed is %d.\n",
+              dataSetup.popTree->numMigBands, MAX_MIG_BANDS );
+      printf( "Please set MAX_MIG_BANDS constant at top of patch.c "
+              "source file to at least %d, recomplie, and re-run.\n",
+              dataSetup.popTree->numMigBands );
+      exit( -1 );
 		}
 		printf("Done.\n");
 
 		res = checkSettings();
 		finalizeNumParameters();
 
-		if (res > 0) {
-				fprintf(stderr, "Found %d errors when processing control settings.\n", res);
-				exit(-1);
+		if( res > 0 )
+		{
+      fprintf( stderr,
+               "Found %d errors when processing control settings.\n", res );
+      exit( -1 );
 		}
 
-		if (mcmcSetup.randomSeed < 0) {
-				mcmcSetup.randomSeed = abs(2 * (int) time(NULL) + 1);
-		}
-		setSeed(mcmcSetup.randomSeed);
-		if (verbose) {
-				printPriorSettings();
-				printf("\nRandom seed set to %d\n", mcmcSetup.randomSeed);
+		if( mcmcSetup.randomSeed < 0 )
+      mcmcSetup.randomSeed = abs(2 * (int) time(NULL) + 1);
+
+		setSeed( mcmcSetup.randomSeed );
+		if (verbose)
+		{
+      printPriorSettings();
+      printf("\nRandom seed set to %d\n", mcmcSetup.randomSeed);
 		}
 
-		if (mcmcSetup.useData) {
-				res = processAlignments();
-				if (res < 0) {
-						exit(-1);
-				}
-		} else {
-				res = initLociWithoutData();
-				if (res < 0) {
-						exit(-1);
-				}
+		if( mcmcSetup.useData )
+    {
+      res = processAlignments();
+      if( 0 > res )
+          exit(-1);
+		}
+		else
+		{
+      res = initLociWithoutData();
+      if( res < 0 )
+        exit(-1);
 		}
 
-		if (dataSetup.numSamples > NS) {
-				printf("Error: defined too many samples (%d), maximum allowed is %d.\n",
-								dataSetup.numSamples, NS);
-				printf(
-								"Please set NS constant at top of patch.c source file to at least %d, recomplie, and re-run.\n",
-								dataSetup.numSamples);
-				exit(-1);
+		if( dataSetup.numSamples > NS )
+		{
+      printf("Error: defined too many samples (%d), maximum allowed is %d.\n",
+              dataSetup.numSamples, NS);
+      printf( "Please set NS constant at top of patch.c source file to "
+              "at least %d, recomplie, and re-run.\n",
+              dataSetup.numSamples);
+      exit( -1 );
 		}
 
 		allocateAllMemory();
@@ -493,8 +520,13 @@ int readRateFile(const char* fileName) {
  *	- in charge of allocating all memory used by sampler
  *	- returns 0
  ***********************************************************************************/
-void allocateAllMemory() {
+void allocateAllMemory()
+{
 	GetMem();
+	if (isCombStatsActivated())
+	{
+		allocateCombMem();
+	}
 }
 
 /***********************************************************************************
@@ -514,6 +546,10 @@ int freeAllMemory() {
 						fclose(ioSetup.nodeStatsFile[i]);
 				}
 				free(ioSetup.nodeStatsFile);
+		}
+	    if (isCombStatsActivated()){
+	    	fclose(ioSetup.combStatsFile);
+	    	freeCombMem();
 		}
 
 		if (ioSetup.admixFile != NULL) fclose(ioSetup.admixFile);
@@ -542,7 +578,6 @@ int freeAllMemory() {
 		// NEXTGEN - NEED TO REMOVE THIS PART !!!
 		//Freeing event chains
 		free(event_chains[0].events);
-		//free(event_chains); // Done by STL
 		free(genetree_stats);
 		//free(rubberband_migs);
 		free(nodePops[0]);
@@ -840,16 +875,16 @@ int printCoalStats(int iteration) {
 						dataState.logLikelihood * dataSetup.numLoci,
 						dataState.dataLogLikelihood
            );
-		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-				popName = dataSetup.popTree->pops[pop]->name;
-				for (partition = 0; partition < dataSetup.numPopPartitions;	partition++) {
-						fprintf(ioSetup.coalStatsFile, "\t%9d\t%8f",
-										genetree_stats_total_partitioned[partition].num_coals[pop],
-										genetree_stats_total_partitioned[partition].coal_stats[pop]);
-				}
-		}
-		fprintf(ioSetup.coalStatsFile, "\n");
-		fflush(ioSetup.coalStatsFile);
+//		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+//				popName = dataSetup.popTree->pops[pop]->name;
+//				for (partition = 0; partition < dataSetup.numPopPartitions;	partition++) {
+//						fprintf(ioSetup.coalStatsFile, "\t%9d\t%8f",
+//										genetree_stats_total_partitioned[partition].num_coals[pop],
+//										genetree_stats_total_partitioned[partition].coal_stats[pop]);
+//				}
+//		}
+//		fprintf(ioSetup.coalStatsFile, "\n");
+//		fflush(ioSetup.coalStatsFile);
 
 		for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
 				fprintf(ioSetup.nodeStatsFile[3 * pop], "%7d", iteration);
@@ -1010,9 +1045,8 @@ int initializeMCMC() {
 		}
 		//	printSitePatterns();
 		//	printLocusProfiles();
-		for (gen = 0; gen < dataSetup.numLoci; gen++) {
-//			printf(" %d",gen+1);
-//			fflush(stdout);
+		for (gen = 0; gen < dataSetup.numLoci; gen++)
+    {
 				totalCoals += dataSetup.numSamples - 1;
 				GetRandomGtree(tree, gen);
 				copyGenericTreeToLocus(dataState.lociData[gen], tree);
@@ -1037,6 +1071,11 @@ int initializeMCMC() {
 
 }/** end of initializeMCMC **/
 
+int isCombStatsActivated()
+{
+  // set to 1 for recording coal stats
+  return (0 != strcmp(ioSetup.combStatsFileName, "NONE")); 
+}
 /***********************************************************************************
  *	performMCMC
  *	- main procedure in program.
@@ -1105,6 +1144,15 @@ int performMCMC() {
 				printCoalStats(-1);
 		}
 
+		if (isCombStatsActivated()) {
+		  ioSetup.combStatsFile = fopen(ioSetup.combStatsFileName, "w");
+		  if (ioSetup.combStatsFile == NULL) {
+		    fprintf(stderr, "Error: Could not open comb stats file %s.\n",
+		        ioSetup.combStatsFileName);
+		    return (-1);
+		  }
+		  printCombStatsHeader(ioSetup.combStatsFile);
+		}
 
 #ifdef LOG_STEPS
 		ioSetup.debugFile = fopen("G-PhoCS-debug.txt","w");
@@ -1538,8 +1586,13 @@ int performMCMC() {
 //								@@eug: never enter here
 								computeFlatStats();
 								computeNodeStats();
-								computeGenetreeStats_partitioned();
+								//computeGenetreeStats_partitioned();
 								printCoalStats(iteration);
+						}
+						if (isCombStatsActivated()) {
+								//@@ron: please enter here :)
+								calculateCombStats();
+								printCombStats(iteration, ioSetup.combStatsFile);
 						}
 
 

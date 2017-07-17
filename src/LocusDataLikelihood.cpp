@@ -1271,7 +1271,8 @@ int getLocusRoot (LocusData* locusData)	{
  *	getNodeAge
  *	- returns the age of a node
  ***********************************************************************************/
-double getNodeAge (LocusData* locusData, int nodeId)	{
+double getNodeAge (LocusData* locusData, int nodeId)
+{
   return locusData->nodeArray[nodeId]->age;
 }
 /** end of getNodeAge **/

@@ -22,7 +22,7 @@
  * UpdateStats used to hold information on MCMC update steps
  *		(finetunes, acceptance rates, etc.)
  *********/
-typedef struct UPDATE_STAST{
+typedef struct UPDATE_STATS{
   double coalTime;
   double SPR;
   double migTime;
@@ -106,7 +106,8 @@ extern struct MCMC_SETUP mcmcSetup;
 /*********
  * data setup
  *********/
-struct DATA_SETUP {
+typedef struct _DATA_SETUP
+{
 	int numLoci;					// number of loci in data
 	int numSamples;					// number of total samples
 	int maxSamples;					// maximum number of samples for allocation purposes
@@ -115,8 +116,9 @@ struct DATA_SETUP {
 	int* numSamplesPerPop;			// number of samples per population
 	char**		sampleNames;		// array of sample names - ordered according to population order
 	PopulationTree* popTree;		// population tree	
-};
-extern struct DATA_SETUP dataSetup;
+}DATA_SETUP;
+
+//extern DATA_SETUP dataSetup;
 
 
 /*********
