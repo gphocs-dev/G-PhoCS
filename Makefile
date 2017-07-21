@@ -46,6 +46,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/LocusDataLikelihood.o \
                    obj/AlignmentProcessor.o \
                    obj/McRefCommon.o \
+                   obj/HypothesisPrinter.o \
                    obj/CombStats.o \
                    obj/CombAssertions.o \
                    obj/CombPrinter.o \
@@ -64,6 +65,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
 	                obj/LocusDataLikelihood.o \
 	                obj/AlignmentProcessor.o \
 	                obj/McRefCommon.o \
+	                obj/HypothesisPrinter.o \
 	                obj/CombStats.o \
 	                obj/CombAssertions.o \
                     obj/CombPrinter.o \
@@ -150,6 +152,10 @@ obj/McRefCommon.o:   src/McRefCommon.cpp \
 					 src/DataLayer.h \
                      src/McRefCommon.h
 	$(CC) $(CFLAGS) -c src/McRefCommon.cpp -o obj/McRefCommon.o
+
+obj/HypothesisPrinter.o:	 src/HypothesisPrinter.cpp \
+                     src/HypothesisPrinter.h
+	$(CC) $(CFLAGS) -c src/HypothesisPrinter.cpp -o obj/HypothesisPrinter.o
 
 obj/CombPrinter.o:	 src/CombPrinter.cpp \
                      src/CombPrinter.h
