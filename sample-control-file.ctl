@@ -4,6 +4,8 @@ GENERAL-INFO-START
 	trace-file          out/sample-trace.tsv
     comb-stats-file     out/sample-comb-trace.tsv
     clade-stats-file    out/sample-clade-trace.tsv
+    hyp-stats-file      out/sample-hyp-trace.tsv
+
 	locus-mut-rate      CONST
 
 
