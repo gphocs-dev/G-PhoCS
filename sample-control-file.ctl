@@ -1,10 +1,16 @@
 GENERAL-INFO-START
 
 	seq-file            seqs-sample.txt
-	trace-file          mcmc.log				
+	trace-file          out/sample-trace.tsv
+    comb-stats-file     out/sample-comb-trace.tsv
+    clade-stats-file    out/sample-clade-trace.tsv
+    hyp-stats-file      out/sample-hyp-trace.tsv
+
 	locus-mut-rate      CONST
 
-	mcmc-iterations	  	5000
+
+	mcmc-iterations     5000
+	mcmc-sample-skip    4
 	iterations-per-log  50
 	logs-per-line       10
 
@@ -57,7 +63,7 @@ ANCESTRAL-POPS-START
 	POP-START
 		name			AB
 		children		A		B
-		tau-initial	0.000005
+		tau-initial     0.000005
 		tau-beta		20000.0	
 		finetune-tau	0.0000008
 	POP-END
@@ -65,7 +71,7 @@ ANCESTRAL-POPS-START
 	POP-START
 		name			ABC
 		children		AB		C
-		tau-initial		0.00001
+		tau-initial     0.00001
 		tau-beta		20000.0	
 		finetune-tau	0.0000008
 	POP-END
@@ -73,7 +79,7 @@ ANCESTRAL-POPS-START
 	POP-START
 		name			root
 		children		ABC	D
-		tau-initial		0.00005
+		tau-initial     0.00005
 		tau-beta		20000.0	
 		finetune-tau	0.00000286
 	POP-END

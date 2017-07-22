@@ -5,24 +5,22 @@
 #define SRC_COMBSTATSHEADER_H_
 
 
-void printCombStats(int iteration, FILE* file);
+void printCombStats(int iteration, FILE *file);
 
-void printCombStatsHeader(FILE* file);
-void printOneCombHeader(int comb, FILE* file);
-void printCombPopHeaders(int comb, char* combName, FILE* file);
-void printCombMigHeaders(int comb, char* combName, FILE* file);
-void printOnePopHeader(int pop, FILE* file);
+void printCombStatsHeader(FILE *file);
 
+void printOneCombHeader(int comb, FILE *file);
 
-void printCombStats(int iteration, FILE* file);
-void printOneCombStats(int clade, FILE* file);
-void printCombCoalStats(int comb, FILE* file);
-void printCombMigStats(int comb, FILE* file);
-void printOnePopStats(int pop, FILE* file);
+void printCombPopHeaders(int comb, char *combName, FILE *file);
 
-void printCombDebugStatsHeader(FILE* file);
-void printCombDebugStats(int iteration, FILE* file);
+void printCombMigHeaders(int comb, char *combName, FILE *file);
 
 
-#endif /* SRC_COMBSTATSHEADER_H_ */
+void printOneCombStats(int clade, FILE *file);
+
+void printCombCoalStats(int comb, FILE *file);
+
+void printCombMigStats(int comb, FILE *file);
+
+#endif
 
