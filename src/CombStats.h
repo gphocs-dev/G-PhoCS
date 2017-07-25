@@ -2,13 +2,12 @@
 #ifndef SRC_COMBSTATS_H_
 #define SRC_COMBSTATS_H_
 
+#include <string>
 #include "DataLayer.h"
 
-#define TRUE 1 // TODO - ask Ilan: where should these consts be?
+#define TRUE 1
 #define FALSE 0
 
-
-// --- GLOBAL DATA STRUCTURES -------------------------------------------------
 
 typedef struct STATS {
     int num_coals;
@@ -42,9 +41,6 @@ typedef struct _COMB_STATS {
 extern COMB_STATS *comb_stats;
 
 
-// --- FUNCTION DECLARATIONS -----------------------------------------------
-
-
 // clade_stats calculation functions
 void calculateCombStats();
 
@@ -66,7 +62,7 @@ bool isEventCompletelyInsideComb(double eventAge, double combAge);
 
 void countCoalEventTowardsBelowComb(Event event, Stats *belowCombLeafStats);
 
-void countCoalEventTowardsHalfAndHalf(Event event, double eventAge, double previousAge, double combAge, Stats *belowCombLeafStats, Stats *aboveCombLeafStats);
+void countCoalEventTowardsHalfAndHalf(Event event, double eventAge, double previousAge, double combAge, Stats *belowCombLeafStats, Stats *aboveCombLeafStats, Stats *combTotalStats);
 
 void countCoalEventTowardsAboveComb(Event event, double eventAge, Stats *aboveCombLeafStats, Stats *combTotalStats);
 
@@ -91,15 +87,7 @@ void countMigEventTowardsBelowComb(Event event, MigStats *leafMigStats);
 
 void countMigEventTowardsHalfAndHalf(Event event, double eventAge, double previousAge, double combAge, MigStats *leafMigStats);
 
-void assertLeafMigStats(int migband, int comb);
-
-void assertLeafMigMigStats(int migband, int comb);
-
-void assertLeafMigNumMigs(int migband, int comb);
-
 void countMigEventTowardsAboveComb(Event event, MigStats *leafMigStats);
-
-void handleExternalMigStats(int comb, int mig, int gene); // TODO - rename to better explain "O->C" type migband
 
 
 Stats *getCombPopStats(int comb, int pop);
@@ -134,49 +122,4 @@ int isMigBandInternal(int mig, int comb);
 
 int isCombLeafMigBand(int mig, int comb);
 
-bool hasNextEvent(EventChain chain, int event); // TODO - extract method to McRefCommon
-bool areAlmostEqual(double eventAge, double combAge);
-
-double relativeDistance(double dbl1, double dbl2); // TODO - extract method to McRefCommon
-
-
-// TODO - extract tests to different source file
-void debug_printCombGene(int comb);
-
-void assertRootNumCoals();
-
-void assertRootCoalStats();
-
-void assertBottomCombs();
-
-void assertBottomCombsCoalStats(int comb);
-
-void assertBottomCombsNumCoals(int comb);
-
-void assertCombLeaves();
-
-void assertCombLeafNumCoals(int comb, int leaf);
-
-void assertCombLeafCoalStats(int comb, int leaf);
-
-void assertMigStats();
-
-void assertLeafEventChain(int comb, int leaf, int gene);
-
-int getLastEvent(EventChain chain, int firstEvent);
-
-void assertLastEventId(int lastEvent);
-
-void assertLastEventIsSampleEnd(EventChain chain, int lastEvent);
-
-void assertLastEventIsAtleastAsOldAsComb(int comb, EventChain chain, int lastEvent);
-
-void assertChainHasAtleastTwoEvents(EventChain chain, int firstEvent);
-
-void assertFirstEventZeroElapsedTime(EventChain chain, int firstEvent);
-
-void assertFirstEventIsSampleStart(EventChain chain, int firstEvent);
-
-void printErrorAndExit(const char *errorMessage);
-
-#endif /* SRC_COMBSTATS_H_ */
+#endif

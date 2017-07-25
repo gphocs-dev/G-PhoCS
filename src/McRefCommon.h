@@ -1,22 +1,48 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 #ifndef SRC_MCREFCOMMON_H_
 #define SRC_MCREFCOMMON_H_
+
+#include "DataLayer.h"
 
 #define TRUE 1
 #define FALSE 0
 
-double calculateCoalStats(double* elapsed_times, int* num_lineages, int size);
+#define DEBUG_COMB_STATS FALSE
+#define SET_COMB_AGE_TO_ZERO FALSE
 
-int	isLeaf(int pop);
+double calculateCoalStats(double *elapsed_times, int *num_lineages, int size);
+
+int isLeaf(int pop);
+
 int areChildrenLeaves(int pop);
+
 int isAncestralTo(int father, int son);
 
-
-const char* getEventTypeName(int eventType);
-
 int getSon(int pop, int SON);
+
 int getSourcePop(int mig);
+
 int getTargetPop(int mig);
-char* getPopName(int pop);
-char* getMigName(int mig);
-char* concat(const char *s1, const char *s2); // TODO - THIS SHOULD NOT BE USED  IN PRODUCTION SINCE THE MEMORY ISN'T RELEASED
-#endif /* SRC_MCREFCOMMON_H_ */
+
+bool hasNextEvent(EventChain chain, int event);
+
+char *getPopName(int pop);
+
+bool areAlmostEqual(double eventAge, double combAge);
+
+double relativeDistance(double dbl1, double dbl2);
+
+double requiredRelativePrecision();
+
+
+/*=== Debug functions ===*/
+const char *getEventTypeName(int eventType);
+
+char *getMigName(int mig);
+
+char *concat(const char *s1, const char *s2); // NOTE - this should not be used in production. the memory isn't released
+
+#endif
+
+#pragma clang diagnostic pop
