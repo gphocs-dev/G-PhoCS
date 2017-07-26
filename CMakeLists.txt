@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(G_PhoCS)
 
+#add_definitions(DEBUG)
 set(CMAKE_CXX_STANDARD 11)
+#set(CMAKE_CXX_FLAGS_DEBUG "-g")
+
 # Multi threading enabling flag
 #option(ENABLE_OMP_THREADS "Building with multithread support." ON)
 
@@ -52,4 +55,4 @@ set(SOURCE_FILES
     src/utils.h
     src/EventsDAG.h)
 
-add_executable(G_PhoCS ${SOURCE_FILES})
+add_executable(GPhoCS ${SOURCE_FILES})

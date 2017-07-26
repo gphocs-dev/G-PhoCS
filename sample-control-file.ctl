@@ -4,7 +4,7 @@ GENERAL-INFO-START
 	trace-file          mcmc.log				
 	locus-mut-rate          CONST
 
-	mcmc-iterations	  5000
+	mcmc-iterations	  	2000
 	iterations-per-log  50
 	logs-per-line       10
 

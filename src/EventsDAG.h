@@ -107,10 +107,10 @@ EventsDAG<T>::~EventsDAG()
 template<class T> EventsDAGNode<T>*
 EventsDAG<T>::getNode(int nGenIdx, int nEventIdx) const
 {
-  if( nGenIdx >= this->size() )
+  if( nGenIdx >= this->size() || nEventIdx < 0 || nGenIdx < 0 )
     return nullptr;
   EventsDAGNode<T>* pRes = *(this->begin() + nGenIdx);
-  for( int i = 1 ; i < nEventIdx; ++i )
+  for( int i = 0 ; i < nEventIdx; ++i )
   {
     if(nullptr == pRes)
       break;
@@ -127,7 +127,7 @@ EventsDAG<T>::addEventChainToDag(Event* pEventStart, int nLen)
   EventsDAGNode<Event>* pStartChain = new EventsDAGNode<Event>(pEventStart);
   this->push_back(pStartChain);
   EventsDAGNode<Event>* pPrevEvent = pStartChain;
-  for( int i = 0; i < nLen; ++i )
+  for( int i = 1; i < nLen; ++i )
   {
     EventsDAGNode<Event>* pCurrEvent = new EventsDAGNode<Event>(&(pEventStart[i]));
     pPrevEvent->setNextGenEvent(pCurrEvent);

@@ -22,7 +22,6 @@
 
 #include "MemoryMng.h"
 #include "GPhoCS.h"
-#include "DataLayer.h"
 #include "GTreeStructVal.h"
 #include <assert.h>
 
@@ -1104,19 +1103,35 @@ int createEventBefore(int gen, int pop, int event, double elapsed_time)
   }
 
   // make changes in elapsed time and pointers
+  EventsDAGNode<Event>* pDAGCurrEvent = events_dag.getNode(gen, event);
+  EventsDAGNode<Event>* pDAGNewEvent = events_dag.getNode(gen, new_event);
+  EventsDAGNode<Event>* pDAGPrevEvent = events_dag.getNode(gen, prev_event);
+
+  pDAGNewEvent->setNextGenEvent(pDAGCurrEvent);
+  if(nullptr != pDAGPrevEvent )
+    pDAGNewEvent->setPrevGenEvent(pDAGPrevEvent);
   event_chains[gen].events[new_event].setNextIdx(event);
   event_chains[gen].events[new_event].setPrevIdx(prev_event);
+
   event_chains[gen].events[new_event].setNumLineages(
       event_chains[gen].events[event].getNumLineages());
   event_chains[gen].events[new_event].setElapsedTime(elapsed_time);
   event_chains[gen].events[new_event].setType(DUMMY);
+
   event_chains[gen].events[event].setPrevIdx(new_event);
+  pDAGCurrEvent->setPrevGenEvent(pDAGNewEvent);
+
   event_chains[gen].events[event].addElapsedTime(-elapsed_time);
 
-  if (prev_event < 0) {
+  if (prev_event < 0)
+  {
     event_chains[gen].first_event[pop] = new_event;
-  } else {
+    events_dag[gen] = pDAGNewEvent;
+  }
+  else
+  {
     event_chains[gen].events[prev_event].setNextIdx(new_event);
+    pDAGPrevEvent->setNextGenEvent(pDAGNewEvent);
   }
 
 #ifdef DEBUG_EVENT_CHAIN
@@ -1539,6 +1554,7 @@ int constructEventChain(int gen)
       printf("C%d %d %f ", pop, node, age);
 #endif
       event = createEvent(gen, pop, age);
+
       if (event < 0) {
         if (debug) {
           fprintf(stderr, "Error: Unable to create new coalescence event.\n");
