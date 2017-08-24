@@ -800,7 +800,7 @@ double rubberBandRipple(int gen, int do_or_redo) {
       new_event = locus_data[gen].rubberband_migs.new_events[i] = createEvent(gen, pop, locus_data[gen].rubberband_migs.new_ages[i]);
       if( new_event < 0 ) {
 		if(debug) {
-			fprintf(stderr, "Error: problem creating event in rubber band ripple.\n");
+			fprintf(stderr, "Error: problem creating event in rubber band ripple, gen %d, pop %d, orig_event %d.\n", gen, pop, orig_event);
 		} else {
 			fprintf(stderr, "Fatal Error 0005.\n");
 		}
@@ -1655,8 +1655,8 @@ int createEvent(int gen, int pop, double age) {
 	
   if(delta_time < 0) {
 	if(debug) {
-		fprintf(stderr, "\nError: createEvent: time specified %g is smaller than age of target population %d (%g).\n",
-			age, pop, dataSetup.popTree->pops[pop]->age);
+		fprintf(stderr, "\nError: createEvent: time specified %g is smaller than age of target population %d (%g; diff=%g).\n",
+			age, pop, dataSetup.popTree->pops[pop]->age, dataSetup.popTree->pops[pop]->age-age);
 	} else {
 		fprintf(stderr, "Fatal Error 0016.\n");
 	}

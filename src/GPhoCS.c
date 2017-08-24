@@ -2733,7 +2733,6 @@ void UpdateTau(double *finetunes, int *accepted) {
 										affected_mig_bands[num_affected_mig_bands] = mig_band;
 										start_or_end[num_affected_mig_bands] = 1;//indicate that start time has changed
 										new_band_ages[num_affected_mig_bands] = taub[1] + (dataSetup.popTree->migBands[mig_band].startTime - taub[1]) / taufactor[1];
-										num_affected_mig_bands++;
 										// added this part for v1.3.2 to eliminate Fatal Error 0016 and 0005. Difference should only come from floating point rounding issues
 										if(new_band_ages[num_affected_mig_bands] < tauold) {
 												if(debug) {
@@ -2742,6 +2741,7 @@ void UpdateTau(double *finetunes, int *accepted) {
 												}
 												new_band_ages[num_affected_mig_bands] = tauold;
 										}
+										num_affected_mig_bands++;
 								}
 						} else if (targetPop == sons[0] || targetPop == sons[1]) {
 								// same idea as previous condition, but with lower rubberband
@@ -3326,7 +3326,6 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 										start_or_end[num_affected_mig_bands] = 1;//indicate that start time has changed
 										age = dataSetup.popTree->migBands[mig_band].startTime;
 										new_band_ages[num_affected_mig_bands] = taub[age > taunew] + (age - taub[age > taunew])	/ taufactor[age > taunew];
-										num_affected_mig_bands++;
 										// added this part for v1.3.2 to eliminate Fatal Error 0016 and 0005. Difference should only come from floating point rounding issues
 										if(new_band_ages[num_affected_mig_bands] < tauold) {
 												if(debug) {
@@ -3336,6 +3335,7 @@ void UpdateSampleAge(double *finetunes, int *accepted) {
 												new_band_ages[num_affected_mig_bands] = tauold;
 										}
 								}
+								num_affected_mig_bands++;
 						}
 						//else {
 						//	 printf("not affected.\n");
