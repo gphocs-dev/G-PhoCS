@@ -67,4 +67,7 @@ void printTauBounds(int iteration, FILE *file) {
 
 void allocateTauBoundsMem() {
   current_tau_bounds = (float *) malloc(dataSetup.popTree->numPops * sizeof(float));
+  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+    current_tau_bounds[pop] = 0.0;
+  }
 }
