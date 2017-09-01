@@ -1934,8 +1934,8 @@ void setupMcRefFiles() {
   if (isCladeStatsActivated() || isCombStatsActivated()) {
     ioSetup.hypStatsFile = fopen(ioSetup.hypStatsFileName, "w");
 
-    if (ioSetup.cladeStatsFile == NULL) {
-      fprintf(stderr, "Error: Could not open clade stats file %s.\n",
+    if (ioSetup.hypStatsFile == NULL) {
+      fprintf(stderr, "Error: Could not open hypothesis stats file %s.\n",
               ioSetup.cladeStatsFileName);
       exit(0);
     }
