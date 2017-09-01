@@ -5,10 +5,10 @@
 #include "MCMCcontrol.h"
 #include "patch.h"
 #include "DataLayer.h"
-#include "MemoryMng.h"
 #include "CombStats.h"
 #include "McRefCommon.h"
 #include "CombAssertions.h"
+#include "MemoryMng.h"
 
 COMB_STATS *comb_stats;
 
