@@ -1593,7 +1593,7 @@ int performMCMC() {
       }
       if (isTauBoundsActivated()){
         calculateTauBounds();
-        printTauBounds();
+        printTauBounds(iteration, ioSetup.tauBoundsFile);
       }
 
       if (admixed_samples.number > 0 && iteration % 1000 == 0) {

@@ -5,9 +5,7 @@
 #include "DataLayer.h"
 #include "McRefCommon.h"
 
-void allocateTauBoundsMem() {
-//  printf("allocateTauBoundsMem\n");
-}
+float *current_tau_bounds;
 
 void calculateTauBounds() {
   printf("Calculating Tau Bounds...\n");
@@ -52,9 +50,21 @@ void calculateTauBounds() {
 }
 
 void printTauBoundsHeader(FILE *file) {
-//  printf("printTauBoundsHeader\n");
+  fprintf(file, "iteration");
+  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+    fprintf(file, "\t%s", getPopName(pop));
+  }
+  fprintf(file, "\n");
 }
 
-void printTauBounds() {
-//  printf("printTauBounds\n");
+void printTauBounds(int iteration, FILE *file) {
+  fprintf(file, "%d", iteration);
+  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+    fprintf(file, "\t%.10f", current_tau_bounds[pop]);
+  }
+  fprintf(file, "\n");
+}
+
+void allocateTauBoundsMem() {
+  current_tau_bounds = (float *) malloc(dataSetup.popTree->numPops * sizeof(float));
 }
