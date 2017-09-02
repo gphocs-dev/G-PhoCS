@@ -8,28 +8,25 @@
 double *tau_bounds;
 
 void calculateTauBounds() {
-  int gen = 0;
-  int currentPop;
-  int eventIdx;
-  map<int, int> CoalIDtoPop;
+  map<int, int> eventIdtoPop;
 
-  for (int gene = 0; gene < dataSetup.numLoci; gene++) {
-    for (currentPop = 0; currentPop < dataSetup.popTree->numPops; ++currentPop) {
+  for (int gen = 0; gen < dataSetup.numLoci; gen++) {
+    for (int currentPop = 0; currentPop < dataSetup.popTree->numPops; ++currentPop) {
       if (isLeaf(currentPop)) continue;
-      for (eventIdx = event_chains[gen].first_event[currentPop];
+      for (int eventIdx = event_chains[gen].first_event[currentPop];
            eventIdx >= 0;
            eventIdx = event_chains[gen].events[eventIdx].getNextIdx()) {
         Event &currentEvent = event_chains[gen].events[eventIdx];
         int eventId = currentEvent.getId();
         EventType eventType = currentEvent.getType();
         if (eventType == COAL || eventType == END_CHAIN)
-          CoalIDtoPop.insert(pair<int, int>(eventId, currentPop));
+          eventIdtoPop.insert(pair<int, int>(eventId, currentPop));
       }
     }
 
-    for (currentPop = 0; currentPop < dataSetup.popTree->numPops; ++currentPop) {
+    for (int currentPop = 0; currentPop < dataSetup.popTree->numPops; ++currentPop) {
       if (isLeaf(currentPop)) continue;
-      for (eventIdx = event_chains[gen].first_event[currentPop];
+      for (int eventIdx = event_chains[gen].first_event[currentPop];
            eventIdx >= 0;
            eventIdx = event_chains[gen].events[eventIdx].getNextIdx()) {
         Event &currentEvent = event_chains[gen].events[eventIdx];
@@ -37,9 +34,9 @@ void calculateTauBounds() {
         int currentEventId = currentEvent.getId();
         if (COAL == currentEvent.getType()) { // and if event is COAL,
           int leftSonId = getNodeSon(dataState.lociData[gen], currentEventId, LEFT);
-          int leftSonPop = CoalIDtoPop[leftSonId];
+          int leftSonPop = eventIdtoPop[leftSonId];
           int rightSonId = getNodeSon(dataState.lociData[gen], currentEventId, RIGHT);
-          int rightSonPop = CoalIDtoPop[rightSonId];
+          int rightSonPop = eventIdtoPop[rightSonId];
           if (leftSonPop != rightSonPop && rightSonPop != currentPop && leftSonPop != currentPop) {
             double eventAge = getNodeAge(dataState.lociData[gen], currentEventId);
             tau_bounds[currentPop] = min(eventAge, tau_bounds[currentPop]);
