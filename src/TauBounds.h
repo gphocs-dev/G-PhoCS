@@ -3,7 +3,7 @@
 #ifndef G_PHOCS_TAUBOUNDS_H
 #define G_PHOCS_TAUBOUNDS_H
 
-
+void initializeTauBounds();
 void allocateTauBoundsMem();
 void calculateTauBounds();
 void printTauBoundsHeader(FILE *file);

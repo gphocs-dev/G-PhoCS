@@ -1592,6 +1592,7 @@ int performMCMC() {
         printHypStats(iteration, ioSetup.hypStatsFile);
       }
       if (isTauBoundsActivated()){
+        initializeTauBounds();
         calculateTauBounds();
         printTauBounds(iteration, ioSetup.tauBoundsFile);
       }
