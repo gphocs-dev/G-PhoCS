@@ -25,7 +25,7 @@ int getTargetPop(int mig);
 
 bool hasNextEvent(EventChain chain, int event);
 
-char *getPopName(int pop);
+char *getPopName(int popId);
 
 bool areAlmostEqual(double eventAge, double combAge);
 

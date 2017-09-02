@@ -79,8 +79,8 @@ int getTargetPop(int mig) {
   return dataSetup.popTree->migBands[mig].targetPop;
 }
 
-char *getPopName(int pop) {
-  return dataSetup.popTree->pops[pop]->name;
+char *getPopName(int popId) {
+  return dataSetup.popTree->pops[popId]->name;
 }
 //char* getMigName(int mig){
 //	char* sourceName = getPopName(getSourcePop(mig));
