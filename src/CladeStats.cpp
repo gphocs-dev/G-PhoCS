@@ -87,7 +87,7 @@ void appendPopToClade(int clade, int gen, int startingPoint) {
   double eventAge = cladeStartTime;
 
   for (; event >= 0; i++, event = event_chains[gen].events[event].getNextIdx()) {
-    eventAge += event_chains[gen].events[event].getElapsedTime();
+    eventAge += event_chains[gen].events[event].getElapsedTime();  // TODO - replace with getNodeAge(dataState.lociData[nLociIdx], currentEventID);
     clade_stats[clade].sorted_ages[i] = eventAge;
     clade_stats[clade].elapsed_times[i] = event_chains[gen].events[event].getElapsedTime();
     clade_stats[clade].num_lineages[i] = event_chains[gen].events[event].getNumLineages();

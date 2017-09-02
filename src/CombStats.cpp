@@ -60,7 +60,7 @@ void handleLeafCoals(int comb, int leaf, int gene) {
   while (eventId >= 0) {
     event = chain.events[eventId];
     previousAge = eventAge;
-    eventAge += event.getElapsedTime();
+    eventAge += event.getElapsedTime();  //TODO - replace with getNodeAge(dataState.lociData[nLociIdx], currentEventID);
 
     if (isEventCompletelyBelowComb(eventAge, combAge)) {
       countCoalEventTowardsBelowComb(event, belowCombLeafStats);
