@@ -53,7 +53,7 @@ void calculateTauBounds() {
 void printTauBoundsHeader(FILE *file) {
   fprintf(file, "iteration");
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    fprintf(file, "\t%s", getPopName(pop));
+    fprintf(file, "\t%s_bound\t%s_tau", getPopName(pop), getPopName(pop));
   }
   fprintf(file, "\n");
 }
@@ -61,7 +61,7 @@ void printTauBoundsHeader(FILE *file) {
 void printTauBounds(int iteration, FILE *file) {
   fprintf(file, "%d", iteration);
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    fprintf(file, "\t%.40f", tau_bounds[pop]);
+    fprintf(file, "\t%.40f\t%.40f", tau_bounds[pop], dataSetup.popTree->pops[pop]->age);
   }
   fprintf(file, "\n");
 }
