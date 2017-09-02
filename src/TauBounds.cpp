@@ -8,7 +8,7 @@
 double *tau_bounds;
 
 void calculateTauBounds() {
-  map<int, int> eventIdtoPop;
+  map<int, int> eventToPopMap;
 
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
     for (int currentPop = 0; currentPop < dataSetup.popTree->numPops; ++currentPop) {
@@ -20,7 +20,7 @@ void calculateTauBounds() {
         int eventId = currentEvent.getId();
         EventType eventType = currentEvent.getType();
         if (eventType == COAL || eventType == END_CHAIN)
-          eventIdtoPop.insert(pair<int, int>(eventId, currentPop));
+          eventToPopMap.insert(pair<int, int>(eventId, currentPop));
       }
     }
 
@@ -34,9 +34,9 @@ void calculateTauBounds() {
         int currentEventId = currentEvent.getId();
         if (COAL == currentEvent.getType()) { // and if event is COAL,
           int leftSonId = getNodeSon(dataState.lociData[gen], currentEventId, LEFT);
-          int leftSonPop = eventIdtoPop[leftSonId];
+          int leftSonPop = eventToPopMap[leftSonId];
           int rightSonId = getNodeSon(dataState.lociData[gen], currentEventId, RIGHT);
-          int rightSonPop = eventIdtoPop[rightSonId];
+          int rightSonPop = eventToPopMap[rightSonId];
           if (leftSonPop != rightSonPop && rightSonPop != currentPop && leftSonPop != currentPop) {
             double eventAge = getNodeAge(dataState.lociData[gen], currentEventId);
             tau_bounds[currentPop] = min(eventAge, tau_bounds[currentPop]);
