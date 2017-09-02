@@ -8,51 +8,50 @@
 double *tau_bounds;
 
 void calculateTauBounds() {
-  int nLociIdx = 0;
+  int gen = 0;
   int currentPop;
-  int nEventIdx;
-  map<int, int> CoalIDtoPopIdx;
+  int eventIdx;
+  map<int, int> CoalIDtoPop;
 
-  for (currentPop = 0; currentPop < dataSetup.popTree->numPops; ++currentPop) { // for every population,
-    for (nEventIdx = event_chains[nLociIdx].first_event[currentPop];
-         nEventIdx >= 0;
-         nEventIdx = event_chains[nLociIdx].events[nEventIdx].getNextIdx()) { // run over it's event_chain
-      Event &CurrEvent = event_chains[nLociIdx].events[nEventIdx];
-      int nEventID = CurrEvent.getId(); // get THE event id,
-      EventType eEventType = CurrEvent.getType();
-      if (COAL == eEventType || END_CHAIN == eEventType)
-        CoalIDtoPopIdx.insert(pair<int, int>(nEventID, currentPop)); // and remember for every COAL or END_CHAIN event id, what pop it occurred in.
+  for (currentPop = 0; currentPop < dataSetup.popTree->numPops; ++currentPop) {
+    if (isLeaf(currentPop)) continue;
+    for (eventIdx = event_chains[gen].first_event[currentPop];
+         eventIdx >= 0;
+         eventIdx = event_chains[gen].events[eventIdx].getNextIdx()) {
+      Event &currentEvent = event_chains[gen].events[eventIdx];
+      int eventId = currentEvent.getId();
+      EventType eventType = currentEvent.getType();
+      if (eventType == COAL || eventType == END_CHAIN)
+        CoalIDtoPop.insert(pair<int, int>(eventId, currentPop));
     }
   }
 
-  for (currentPop = 0; currentPop < dataSetup.popTree->numPops; ++currentPop) { // Now, for every population,
-    for (nEventIdx = event_chains[nLociIdx].first_event[currentPop];
-         nEventIdx >= 0;
-         nEventIdx = event_chains[nLociIdx].events[nEventIdx].getNextIdx()) {  // run over it's event_chain,
-      Event &currentEvent = event_chains[nLociIdx].events[nEventIdx];
+  for (currentPop = 0; currentPop < dataSetup.popTree->numPops; ++currentPop) {
+    if (isLeaf(currentPop)) continue;
+    for (eventIdx = event_chains[gen].first_event[currentPop];
+         eventIdx >= 0;
+         eventIdx = event_chains[gen].events[eventIdx].getNextIdx()) {
+      Event &currentEvent = event_chains[gen].events[eventIdx];
 
-      int currentEventID = currentEvent.getId();
-//      printf("[Pop %2d] %2d %s ,", currentPop, currentEventID, getEventTypeName(currentEvent.getType())); // print curr event+pop
+      int currentEventId = currentEvent.getId();
       if (COAL == currentEvent.getType()) { // and if event is COAL,
-        int leftSonID = getNodeSon(dataState.lociData[nLociIdx], currentEventID, LEFT);
-        int leftSonPop = CoalIDtoPopIdx[leftSonID];
-        int rightSonID = getNodeSon(dataState.lociData[nLociIdx], currentEventID, RIGHT);
-        int rightSonPop = CoalIDtoPopIdx[rightSonID];
-        if (leftSonPop != rightSonPop && rightSonPop != currentPop && leftSonPop != currentPop ){
-          double eventAge = getNodeAge(dataState.lociData[nLociIdx], currentEventID);
+        int leftSonId = getNodeSon(dataState.lociData[gen], currentEventId, LEFT);
+        int leftSonPop = CoalIDtoPop[leftSonId];
+        int rightSonId = getNodeSon(dataState.lociData[gen], currentEventId, RIGHT);
+        int rightSonPop = CoalIDtoPop[rightSonId];
+        if (leftSonPop != rightSonPop && rightSonPop != currentPop && leftSonPop != currentPop) {
+          double eventAge = getNodeAge(dataState.lociData[gen], currentEventId);
           tau_bounds[currentPop] = min(eventAge, tau_bounds[currentPop]);
         }
-//        printf("COAL sons = %d [%d], %d [%d]", parentID, leftSonID, leftSonPop, rightSonID, rightSonPop);
       }
-//      puts("");
     }
-//    puts("");
   }
 }
 
 void printTauBoundsHeader(FILE *file) {
   fprintf(file, "iteration");
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+    if (isLeaf(pop)) continue;
     fprintf(file, "\t%s_bound\t%s_tau", getPopName(pop), getPopName(pop));
   }
   fprintf(file, "\n");
@@ -61,6 +60,7 @@ void printTauBoundsHeader(FILE *file) {
 void printTauBounds(int iteration, FILE *file) {
   fprintf(file, "%d", iteration);
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+    if (isLeaf(pop)) continue;
     fprintf(file, "\t%.40f\t%.40f", tau_bounds[pop], dataSetup.popTree->pops[pop]->age);
   }
   fprintf(file, "\n");
@@ -71,7 +71,17 @@ void allocateTauBoundsMem() {
 }
 
 void initializeTauBounds() {
-  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    tau_bounds[pop] = 100.0;  // TODO - init with proper value (tau of father pop? MAX/INF value?)
+  tau_bounds[dataSetup.popTree->rootPop] = 100.0;  // TODO - init with proper value (tau of father pop? MAX/INF value?)
+  for (int fatherId = 0; fatherId < dataSetup.popTree->numPops; fatherId++) {
+    if (isLeaf(fatherId)) continue;
+    Population *father = dataSetup.popTree->pops[fatherId];
+    double tau = father->age;
+
+    int leftSonId = father->sons[LEFT]->id;
+    int rightSonId = father->sons[RIGHT]->id;
+
+    // The maximum allowed tau, without any restricting coalescence event, is tau of father population
+    tau_bounds[leftSonId] = tau;
+    tau_bounds[rightSonId] = tau;
   }
 }
