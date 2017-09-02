@@ -16,11 +16,9 @@ void calculateTauBounds() {
       for (int eventIdx = event_chains[gen].first_event[currentPop];
            eventIdx >= 0;
            eventIdx = event_chains[gen].events[eventIdx].getNextIdx()) {
-        Event &currentEvent = event_chains[gen].events[eventIdx];
-        int eventId = currentEvent.getId();
-        EventType eventType = currentEvent.getType();
-        if (eventType == COAL || eventType == END_CHAIN)
-          eventToPopMap.insert(pair<int, int>(eventId, currentPop));
+        int currentEventId  = event_chains[gen].events[eventIdx].getId();
+
+        eventToPopMap.insert(pair<int, int>(currentEventId, currentPop));
       }
     }
 
@@ -30,20 +28,23 @@ void calculateTauBounds() {
            eventIdx >= 0;
            eventIdx = event_chains[gen].events[eventIdx].getNextIdx()) {
         Event &currentEvent = event_chains[gen].events[eventIdx];
-
         int currentEventId = currentEvent.getId();
-        if (COAL == currentEvent.getType()) { // and if event is COAL,
-          int leftSonId = getNodeSon(dataState.lociData[gen], currentEventId, LEFT);
+        EventType eventType = currentEvent.getType();
+        LocusData *currentLocus = dataState.lociData[gen];
+
+        if (eventType == COAL) {
+          int leftSonId = getNodeSon(currentLocus, currentEventId, LEFT);
           int leftSonPop = eventToPopMap[leftSonId];
-          int rightSonId = getNodeSon(dataState.lociData[gen], currentEventId, RIGHT);
+          int rightSonId = getNodeSon(currentLocus, currentEventId, RIGHT);
           int rightSonPop = eventToPopMap[rightSonId];
           if (leftSonPop != rightSonPop && rightSonPop != currentPop && leftSonPop != currentPop) {
-            double eventAge = getNodeAge(dataState.lociData[gen], currentEventId);
+            double eventAge = getNodeAge(currentLocus, currentEventId);
             tau_bounds[currentPop] = min(eventAge, tau_bounds[currentPop]);
           }
         }
       }
     }
+//    eventToPopMap.clear();
   }
 }
 
