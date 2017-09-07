@@ -45,7 +45,8 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/PopulationTree.o \
                    obj/LocusDataLikelihood.o \
                    obj/AlignmentProcessor.o \
-                   obj/omp_stub.o
+                   obj/omp_stub.o \
+                   obj/patch.o 
 	$(CC) $(CFLAGS) obj/GPhoCS.o \
 	                obj/MCMCcontrol.o \
 	                obj/utils.o \
@@ -54,6 +55,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
 	                obj/LocusDataLikelihood.o \
 	                obj/AlignmentProcessor.o \
                     obj/omp_stub.o \
+					obj/patch.o \
 	                $(CFLAGS) -lm -o bin/G-PhoCS
 
 bin/AlignmentProcessor: obj/utils.o \
@@ -118,6 +120,10 @@ obj/AlignmentProcessor.o: src/AlignmentProcessor.c \
 obj/AlignmentMain.o: src/AlignmentMain.c \
                      src/AlignmentProcessor.h
 	$(CC) $(CFLAGS) -c src/AlignmentMain.c -o obj/AlignmentMain.o
+
+obj/patch.o: src/patch.c \
+             src/patch.h
+		$(CC) $(CFLAGS) -c src/patch.c -o obj/patch.o
 
 clean:
 	@echo "Cleaning"

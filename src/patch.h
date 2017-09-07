@@ -13,7 +13,8 @@
 #define NULL   ((void *) 0)
 #endif
 
-
+#include <stdio.h>
+#include <math.h>
 #define MAX_MIG_BANDS	100			// max migration bands in the population tree (increased in V1.3.2 to 100)
 #define MAX_MIGS		10			// max migration events per genealogy
 #define NSPECIES		20			// max # of species
@@ -234,6 +235,9 @@ struct GENETREE_NODE_STATS{
 /******************************************************************************************************/
 
 
+int GetMem (void);
+int GetRandomGtree(GenericBinaryTree* tree, int gen);
+int adjustRootEvents();
 
 int analyzeGenetreeFile(char* genetree_file);
 int writeMScommandLine(char* outfile);

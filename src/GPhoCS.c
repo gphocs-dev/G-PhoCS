@@ -23,7 +23,6 @@
 #include "GPhoCS.h"
 
 /** patch for intermediate G-PhoCS version **/
-#include "patch.c"
 #include "patch.h"
 
 static struct option long_options[] = { { "help", no_argument, 0, 'h' },
@@ -2810,7 +2809,6 @@ void UpdateTau(double *finetunes, int *accepted) {
 				// restoring old time for various computations - DIRTY !!!!
 				dataSetup.popTree->pops[ancestralPop]->age = tauold;
 
-
 				//      printf("\nConsidering UpdateTau for split of pop %d: %g-->%g. Num affected migration bands is %d.",ancestralPop,tauold,taunew, num_affected_mig_bands);
 
 #ifdef DEBUG_RUBBERBAND
@@ -2837,6 +2835,7 @@ void UpdateTau(double *finetunes, int *accepted) {
 				 *
 				 *
 				 */
+    			//printGenealogyAndExit(0,11);
 
 #ifdef THREAD_UpdateTau
 #pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)

@@ -4,6 +4,11 @@
 	
 */
 
+#include "PopulationTree.h"
+#include "GenericTree.h"
+#include "MCMCcontrol.h"
+#include "GPhoCS.h"
+
 #include "patch.h"
 #include <omp.h>
 
