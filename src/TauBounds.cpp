@@ -18,15 +18,6 @@ void calculateTauBounds() {
   }
 }
 
-void initializeLcaPops(int gen) {
-  for (int nodeId = 0; nodeId < numNodes(); nodeId++) {
-    LikelihoodNode *currentNode = getNode(nodeId, gen);
-    if (isLeafNode(currentNode)) {
-      lca_pops[nodeId] = getLeafNodePop(nodeId, gen);
-    }
-  }
-}
-
 void calculateLociTauBounds(int nodeId, int gen) {
   LikelihoodNode *currentNode = getNode(nodeId, gen);
 
@@ -45,10 +36,25 @@ void calculateLociTauBounds(int nodeId, int gen) {
 void updateTauBoundsOfDescendants(int pop, double bound) {
   if (isLeaf(pop)) return;
 
+  if (bound < dataSetup.popTree->pops[pop]->age) {
+    //nocommit
+    printf("error in tau_bounds");
+    exit(-1);
+  }
+
   tau_bounds[pop] = fmin(tau_bounds[pop], bound);
 
   updateTauBoundsOfDescendants(getSon(pop, LEFT), bound);
   updateTauBoundsOfDescendants(getSon(pop, RIGHT), bound);
+}
+
+void initializeLcaPops(int gen) {
+  for (int nodeId = 0; nodeId < numNodes(); nodeId++) {
+    LikelihoodNode *currentNode = getNode(nodeId, gen);
+    if (isLeafNode(currentNode)) {
+      lca_pops[nodeId] = getLeafNodePop(nodeId, gen);
+    }
+  }
 }
 
 
