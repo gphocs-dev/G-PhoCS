@@ -4,6 +4,8 @@
 #ifndef G_PHOCS_TAUBOUNDS_H
 #define G_PHOCS_TAUBOUNDS_H
 
+#include "LocusDataLikelihood.h"
+
 void initializeTauBounds();
 
 void allocateTauBoundsMem();

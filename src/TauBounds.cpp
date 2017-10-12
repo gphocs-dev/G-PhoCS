@@ -1,5 +1,5 @@
 #include <map>
-#include "LocusDataLikelihood.cpp"
+#include "LocusDataLikelihood.h"
 #include "TauBounds.h"
 #include "patch.h"
 #include "GPhoCS.h"
@@ -17,7 +17,7 @@ void calculateTauBounds1() {
 }
 
 void calculateLociTauBounds(LikelihoodNode *rootNode) {
-  printf("f:%d, l:%d, r:%d", rootNode->father, rootNode->leftSon, rootNode->rightSon);
+  printf("f:%d, l:%d, r:%d\n", rootNode->father, rootNode->leftSon, rootNode->rightSon);
 }
 
 

@@ -33,75 +33,9 @@
 
 double global_prob_val;
 
-/***********************************************************************************
- *	LocusSeqData
- *	- Data type which holds a summary of the sequence data for a given locus
- ***********************************************************************************/
-typedef struct LOCUS_SEQ_DATA {
-  int numPatterns;			// number of column patterns in alignment
-  int numLivePatterns;		// number of patterns relevant for likelihood computation
-  int* patternCount;			// array (of length numPatterns) of counts for each pattern
-  int* numPhases;				// number of phases per pattern
-  int* patternList;			// list of relevant patterns for likelihood computations (established when computing likelihood)
-} LocusSeqData;
 
 
 
-/***********************************************************************************
- *	LikelihoodNode
- *	- Data type which holds data for computing conditional probability
- *		of all base assignments to a certain genealogy (coalescent) node.
- ***********************************************************************************/
-typedef struct LIKELIHOOD_NODE {
-  int father;							// father of node in genealogy (-1 for root)
-  int leftSon, rightSon;				// sons of node in genealogy
-  double age;							// age of node
-  double* conditionalProbs;			// array conditional probabilities for base assignment at node (array of length CODE_SIZE * numPatterns)
-} LikelihoodNode;
-
-
-
-/***********************************************************************************
- *	PreviousVersion
- *	- Data type which saves the unmodified version of the genealogy
- *		in case a certain genealogy change is rejected by sampler.
- ***********************************************************************************/
-typedef struct PREVIOUS_VERSION {
-  double dataLogLikelihood;			// original log-likelihood of data given genealogy
-  int root;							// old root (if root was changed by SPR)
-  unsigned short	copyAll;			// this flag is turned on when all nodes are copied to saved
-  unsigned short* recalcConditionals;	// array of booleans indicating for which nodes we need to recalc conditionals
-  int numChangedNodes;				// number of nodes affected by proposed change
-  int* changedNodeIds;				// array of ids (or indices) of nodes changed
-  int numChangedConditionals;			// number of nodes whose conditional probabilities were changed
-  int* changedCondIds;				// array ids (or indices) of nodes whose conditionals were changed
-  LikelihoodNode** savedNodes;		// an array of pointers to previous versions.
-} PreviousVersion;
-
-
-
-/***********************************************************************************
- *	LocusData
- *	- Data structure which holds likelihood of a locus and also saves
- *		the relevant information for quick recomputation of this likelihood
- *		given changes in the locus genealogy.
- * 	- typedef is done in LocusDataLikelihood.h
- ***********************************************************************************/
-struct LOCUS_LIKELIHOOD {
-  unsigned short hetMode;			// mode for computing likelihood of het alignment columns (0, 1, or 2)
-  int numLeaves;					// number of leaves in genealogy
-  double dataLogLikelihood;		// log-likelihood of data, given genealogy
-  double mutationRate;			// relative locus-specific mutation rate
-  int root;						// index of root in nodeArray[]
-  LikelihoodNode** nodeArray;		// array of pointers to nodes
-  LocusSeqData seqData;			// holds sequence data for locus
-  PreviousVersion savedVersion;	// notes on changes proposed to genealogy
-	
-  // pointers for allocated memory
-  double* doubleArray_m;
-  int* intArray_m;
-  LikelihoodNode* nodeArray_m;
-};
 
 
 /***************************************************************************************************************/
