@@ -84,9 +84,7 @@ void allocateTauBoundsMem() {
 
 void initializeTauBounds() {
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    if (isLeaf(pop)) {
-      tau_bounds[pop] = 0.0;
-    } else {
+    if (!isLeaf(pop)) {
       tau_bounds[pop] = 100.0; // TODO - init with proper value (tau of father pop? MAX/INF value?)
     }
   }
