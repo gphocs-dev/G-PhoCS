@@ -9,7 +9,8 @@ double *tau_bounds;
 int *lca_pops;
 
 
-void calculateTauBounds1() {
+void calculateTauBounds() {
+  initializeTauBounds();
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
     initializeLcaPops(gen);
     int rootNodeId = dataState.lociData[gen]->root;

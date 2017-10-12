@@ -14,16 +14,12 @@ void updateTauBoundsOfDescendants(int pop, double bound);
 
 void allocateTauBoundsMem();
 
-void calculateTauBounds1();
+void calculateTauBounds();
 
 void calculateLociTauBounds(int nodeId, int gen);
-
-void calculateTauBounds2();
 
 void printTauBoundsHeader(FILE *file);
 
 void printTauBounds(int iteration, FILE *file);
-
-//TODO - move to util
 
 #endif //G_PHOCS_TAUBOUNDS_H

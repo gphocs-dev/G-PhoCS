@@ -1596,8 +1596,8 @@ int performMCMC() {
 //        calculateTauBounds2();
 //        printTauBounds(iteration, ioSetup.tauBoundsFile);
 
-        initializeTauBounds();
-        calculateTauBounds1();
+
+        calculateTauBounds();
         printTauBounds(iteration, ioSetup.tauBoundsFile);
       }
 
