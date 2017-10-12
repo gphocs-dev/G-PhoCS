@@ -11,19 +11,36 @@ double *tau_bounds;
 
 void calculateTauBounds1() {
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
-    LikelihoodNode *rootNode = getRootEvent(gen);
-    calculateLociTauBounds(rootNode);
+
+    int rootNodeId = dataState.lociData[gen]->root;
+    calculateLociTauBounds(rootNodeId, gen);
   }
 }
 
-void calculateLociTauBounds(LikelihoodNode *rootNode) {
-  printf("f:%d, l:%d, r:%d\n", rootNode->father, rootNode->leftSon, rootNode->rightSon);
+void calculateLociTauBounds(int nodeId, int gen) {
+  //TOASK - how do I get from LikelihoodNode to its population id?
+  //TOASK - or even, from a leaf LikelihoodNode if it's easier
+
+  printf("calculating tauBounds on node %d in gen %d\n", nodeId, gen);
+
+  LikelihoodNode *currentNode = getNode(nodeId, gen);
+
+  if (isLeafNode(currentNode)) {
+    return;
+  }
+
+  calculateLociTauBounds(currentNode->leftSon, gen);
+  calculateLociTauBounds(currentNode->rightSon, gen);
+
 }
 
+LikelihoodNode *getNode(int nodeId, int gen) { // TODO - move to util
+  LocusData *loci = dataState.lociData[gen];
+  return loci->nodeArray[nodeId];
+}
 
-LikelihoodNode *getRootEvent(int gen) {
-  LocusData* loci = dataState.lociData[gen];
-  return loci->nodeArray[loci->root];
+bool isLeafNode(LikelihoodNode *node) {
+  return (node->leftSon == -1) || (node->rightSon == -1);  //TOASK - make sure this is correct
 }
 
 void calculateTauBounds2() {
@@ -90,17 +107,11 @@ void allocateTauBoundsMem() {
 }
 
 void initializeTauBounds() {
-  tau_bounds[dataSetup.popTree->rootPop] = 100.0;  // TODO - init with proper value (tau of father pop? MAX/INF value?)
-  for (int fatherId = 0; fatherId < dataSetup.popTree->numPops; fatherId++) {
-    if (isLeaf(fatherId)) continue;
-    Population *father = dataSetup.popTree->pops[fatherId];
-    double tau = father->age;
-
-    int leftSonId = father->sons[LEFT]->id;
-    int rightSonId = father->sons[RIGHT]->id;
-
-    // The maximum allowed tau, without any restricting coalescence event, is tau of father population
-    tau_bounds[leftSonId] = tau;
-    tau_bounds[rightSonId] = tau;
+  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+    if (isLeaf(pop)) {
+      tau_bounds[pop] = 0.0;
+    } else {
+      tau_bounds[pop] = 100.0; // TODO - init with proper value (tau of father pop? MAX/INF value?)
+    }
   }
 }
