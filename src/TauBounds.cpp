@@ -1,4 +1,5 @@
 #include <map>
+#include "LocusDataLikelihood.cpp"
 #include "TauBounds.h"
 #include "patch.h"
 #include "GPhoCS.h"
@@ -7,7 +8,25 @@
 
 double *tau_bounds;
 
-void calculateTauBounds() {
+
+void calculateTauBounds1() {
+  for (int gen = 0; gen < dataSetup.numLoci; gen++) {
+    LikelihoodNode *rootNode = getRootEvent(gen);
+    calculateLociTauBounds(rootNode);
+  }
+}
+
+void calculateLociTauBounds(LikelihoodNode *rootNode) {
+  printf("f:%d, l:%d, r:%d", rootNode->father, rootNode->leftSon, rootNode->rightSon);
+}
+
+
+LikelihoodNode *getRootEvent(int gen) {
+  LocusData* loci = dataState.lociData[gen];
+  return loci->nodeArray[loci->root];
+}
+
+void calculateTauBounds2() {
   map<int, int> eventToPopMap;
 
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
@@ -16,7 +35,7 @@ void calculateTauBounds() {
       for (int eventIdx = event_chains[gen].first_event[currentPop];
            eventIdx >= 0;
            eventIdx = event_chains[gen].events[eventIdx].getNextIdx()) {
-        int currentEventId  = event_chains[gen].events[eventIdx].getId();
+        int currentEventId = event_chains[gen].events[eventIdx].getId();
 
         eventToPopMap.insert(pair<int, int>(currentEventId, currentPop));
       }
@@ -44,7 +63,7 @@ void calculateTauBounds() {
         }
       }
     }
-//    eventToPopMap.clear();
+    eventToPopMap.clear();
   }
 }
 

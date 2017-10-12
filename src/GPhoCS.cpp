@@ -1593,7 +1593,11 @@ int performMCMC() {
       }
       if (isTauBoundsActivated()){
         initializeTauBounds();
-        calculateTauBounds();
+        calculateTauBounds2();
+        printTauBounds(iteration, ioSetup.tauBoundsFile);
+
+        initializeTauBounds();
+        calculateTauBounds1();
         printTauBounds(iteration, ioSetup.tauBoundsFile);
       }
 
