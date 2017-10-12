@@ -19,15 +19,10 @@ void calculateTauBounds() {
 }
 
 void initializeLcaPops(int gen) {
-
   for (int nodeId = 0; nodeId < numNodes(); nodeId++) {
-
     LikelihoodNode *currentNode = getNode(nodeId, gen);
-
     if (isLeafNode(currentNode)) {
       lca_pops[nodeId] = getLeafNodePop(nodeId, gen);
-    } else {
-      lca_pops[nodeId] = -1;
     }
   }
 }
