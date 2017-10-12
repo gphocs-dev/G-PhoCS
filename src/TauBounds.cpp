@@ -3,10 +3,7 @@
 #include "TauBounds.h"
 #include "patch.h"
 #include "GPhoCS.h"
-#include "DataLayer.h"
 #include "McRefCommon.h"
-#include "MemoryMng.h"
-#include <unordered_set>
 
 double *tau_bounds;
 int *lca_pops;
@@ -34,10 +31,6 @@ void initializeLcaPops(int gen) {
   }
 }
 
-int getLeafNodePop(int nodeId, int gen) {
-  return nodePops[gen][nodeId]; // TODO - implement
-}
-
 void calculateLociTauBounds(int nodeId, int gen) {
   LikelihoodNode *currentNode = getNode(nodeId, gen);
 
@@ -53,32 +46,6 @@ void calculateLociTauBounds(int nodeId, int gen) {
   updateTauBoundsOfDescendants(lca_pops[nodeId], currentNode->age);
 }
 
-int lca(int pop1, int pop2) {
-  std::unordered_set<int> pop1_ancestors = {}; //TODO - do I need to release this set?
-  int pop1_ancestor = pop1;
-  while (pop1_ancestor != -1) {
-    pop1_ancestors.insert(pop1_ancestor);
-    pop1_ancestor = getPopFather(pop1_ancestor);
-  }
-
-
-  int pop2_ancestor = pop2;
-  while (pop2_ancestor != -1) {
-    if (pop1_ancestors.count(pop2_ancestor)) {
-      return pop2_ancestor;
-    }
-    pop2_ancestor = getPopFather(pop2_ancestor);
-  }
-
-  return -1;
-}
-
-int getPopFather(int popId) {
-  Population *pop = dataSetup.popTree->pops[popId];
-  if (pop && pop->father) return pop->father->id;
-  else return -1;
-}
-
 void updateTauBoundsOfDescendants(int pop, double bound) {
   if (isLeaf(pop)) return;
 
@@ -88,55 +55,6 @@ void updateTauBoundsOfDescendants(int pop, double bound) {
   updateTauBoundsOfDescendants(getSon(pop, RIGHT), bound);
 }
 
-LikelihoodNode *getNode(int nodeId, int gen) { // TODO - move to util
-  LocusData *loci = dataState.lociData[gen];
-  return loci->nodeArray[nodeId];
-}
-
-bool isLeafNode(LikelihoodNode *node) {
-  return (node->leftSon == -1) || (node->rightSon == -1);  //TOASK - make sure this is correct
-}
-
-void calculateTauBounds2() {
-  map<int, int> eventToPopMap;
-
-  for (int gen = 0; gen < dataSetup.numLoci; gen++) {
-    for (int currentPop = 0; currentPop < dataSetup.popTree->numPops; ++currentPop) {
-      if (isLeaf(currentPop)) continue;
-      for (int eventIdx = event_chains[gen].first_event[currentPop];
-           eventIdx >= 0;
-           eventIdx = event_chains[gen].events[eventIdx].getNextIdx()) {
-        int currentEventId = event_chains[gen].events[eventIdx].getId();
-
-        eventToPopMap.insert(pair<int, int>(currentEventId, currentPop));
-      }
-    }
-
-    for (int currentPop = 0; currentPop < dataSetup.popTree->numPops; ++currentPop) {
-      if (isLeaf(currentPop)) continue;
-      for (int eventIdx = event_chains[gen].first_event[currentPop];
-           eventIdx >= 0;
-           eventIdx = event_chains[gen].events[eventIdx].getNextIdx()) {
-        Event &currentEvent = event_chains[gen].events[eventIdx];
-        int currentEventId = currentEvent.getId();
-        EventType eventType = currentEvent.getType();
-        LocusData *currentLocus = dataState.lociData[gen];
-
-        if (eventType == COAL) {
-          int leftSonId = getNodeSon(currentLocus, currentEventId, LEFT);
-          int leftSonPop = eventToPopMap[leftSonId];
-          int rightSonId = getNodeSon(currentLocus, currentEventId, RIGHT);
-          int rightSonPop = eventToPopMap[rightSonId];
-          if (leftSonPop != rightSonPop && rightSonPop != currentPop && leftSonPop != currentPop) {
-            double eventAge = getNodeAge(currentLocus, currentEventId);
-            tau_bounds[currentPop] = min(eventAge, tau_bounds[currentPop]);
-          }
-        }
-      }
-    }
-    eventToPopMap.clear();
-  }
-}
 
 void printTauBoundsHeader(FILE *file) {
   fprintf(file, "iteration");
@@ -172,5 +90,3 @@ void initializeTauBounds() {
     }
   }
 }
-
-int numNodes() { return (2 * dataSetup.numSamples) - 1; } // TODO - make MACRO?

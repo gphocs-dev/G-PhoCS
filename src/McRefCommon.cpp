@@ -1,7 +1,10 @@
+#include <unordered_set>
 #include "CombStats.h"
 #include "MCMCcontrol.h"
 #include "McRefCommon.h"
 #include "patch.h"
+#include "GPhoCS.h"
+#include "MemoryMng.h"
 
 
 double calculateCoalStats(double *elapsed_times, int *num_lineages, int size) {
@@ -94,6 +97,52 @@ char *getPopName(int popId) {
 //    strcat(result, s2);
 //    return result;
 //}
+
+
+
+int lca(int pop1, int pop2) {
+  std::unordered_set<int> pop1_ancestors = {}; //TODO - do I need to release this set?
+  int pop1_ancestor = pop1;
+  while (pop1_ancestor != -1) {
+    pop1_ancestors.insert(pop1_ancestor);
+    pop1_ancestor = getPopFather(pop1_ancestor);
+  }
+
+
+  int pop2_ancestor = pop2;
+  while (pop2_ancestor != -1) {
+    if (pop1_ancestors.count(pop2_ancestor)) {
+      return pop2_ancestor;
+    }
+    pop2_ancestor = getPopFather(pop2_ancestor);
+  }
+
+  return -1;
+}
+
+int getPopFather(int popId) {
+  Population *pop = dataSetup.popTree->pops[popId];
+  if (pop && pop->father) return pop->father->id;
+  else return -1;
+}
+
+
+
+LikelihoodNode *getNode(int nodeId, int gen) { // TODO - move to util
+  LocusData *loci = dataState.lociData[gen];
+  return loci->nodeArray[nodeId];
+}
+
+int getLeafNodePop(int nodeId, int gen) {
+  return nodePops[gen][nodeId]; // TODO - implement
+}
+
+bool isLeafNode(LikelihoodNode *node) {
+  return (node->leftSon == -1) || (node->rightSon == -1);  //TOASK - make sure this is correct
+}
+
+int numNodes() { return (2 * dataSetup.numSamples) - 1; } // TODO - make MACRO?
+
 
 
 bool hasNextEvent(EventChain chain, int event) {
