@@ -1,28 +1,44 @@
 #include <map>
-#include "LocusDataLikelihood.h"
+
 #include "TauBounds.h"
 #include "patch.h"
 #include "GPhoCS.h"
 #include "DataLayer.h"
 #include "McRefCommon.h"
+#include "MemoryMng.h"
+#include <unordered_set>
 
 double *tau_bounds;
+int *lca_pops;
 
 
 void calculateTauBounds1() {
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
-
+    initializeLcaPops(gen);
     int rootNodeId = dataState.lociData[gen]->root;
     calculateLociTauBounds(rootNodeId, gen);
   }
 }
 
+void initializeLcaPops(int gen) {
+
+  for (int nodeId = 0; nodeId < numNodes(); nodeId++) {
+
+    LikelihoodNode *currentNode = getNode(nodeId, gen);
+
+    if (isLeafNode(currentNode)) {
+      lca_pops[nodeId] = getLeafNodePop(nodeId, gen);
+    } else {
+      lca_pops[nodeId] = -1;
+    }
+  }
+}
+
+int getLeafNodePop(int nodeId, int gen) {
+  return nodePops[gen][nodeId]; // TODO - implement
+}
+
 void calculateLociTauBounds(int nodeId, int gen) {
-  //TOASK - how do I get from LikelihoodNode to its population id?
-  //TOASK - or even, from a leaf LikelihoodNode if it's easier
-
-  printf("calculating tauBounds on node %d in gen %d\n", nodeId, gen);
-
   LikelihoodNode *currentNode = getNode(nodeId, gen);
 
   if (isLeafNode(currentNode)) {
@@ -32,6 +48,44 @@ void calculateLociTauBounds(int nodeId, int gen) {
   calculateLociTauBounds(currentNode->leftSon, gen);
   calculateLociTauBounds(currentNode->rightSon, gen);
 
+  lca_pops[nodeId] = lca(lca_pops[currentNode->leftSon], lca_pops[currentNode->rightSon]);
+
+  updateTauBoundsOfDescendants(lca_pops[nodeId], currentNode->age);
+}
+
+int lca(int pop1, int pop2) {
+  std::unordered_set<int> pop1_ancestors = {}; //TODO - do I need to release this set?
+  int pop1_ancestor = pop1;
+  while (pop1_ancestor != -1) {
+    pop1_ancestors.insert(pop1_ancestor);
+    pop1_ancestor = getPopFather(pop1_ancestor);
+  }
+
+
+  int pop2_ancestor = pop2;
+  while (pop2_ancestor != -1) {
+    if (pop1_ancestors.count(pop2_ancestor)) {
+      return pop2_ancestor;
+    }
+    pop2_ancestor = getPopFather(pop2_ancestor);
+  }
+
+  return -1;
+}
+
+int getPopFather(int popId) {
+  Population *pop = dataSetup.popTree->pops[popId];
+  if (pop && pop->father) return pop->father->id;
+  else return -1;
+}
+
+void updateTauBoundsOfDescendants(int pop, double bound) {
+  if (isLeaf(pop)) return;
+
+  tau_bounds[pop] = fmin(tau_bounds[pop], bound);
+
+  updateTauBoundsOfDescendants(getSon(pop, LEFT), bound);
+  updateTauBoundsOfDescendants(getSon(pop, RIGHT), bound);
 }
 
 LikelihoodNode *getNode(int nodeId, int gen) { // TODO - move to util
@@ -104,6 +158,9 @@ void printTauBounds(int iteration, FILE *file) {
 
 void allocateTauBoundsMem() {
   tau_bounds = (double *) malloc(dataSetup.popTree->numPops * sizeof(double));
+
+
+  lca_pops = (int *) malloc(numNodes() * sizeof(int));
 }
 
 void initializeTauBounds() {
@@ -115,3 +172,5 @@ void initializeTauBounds() {
     }
   }
 }
+
+int numNodes() { return (2 * dataSetup.numSamples) - 1; } // TODO - make MACRO?
