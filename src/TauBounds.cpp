@@ -4,6 +4,7 @@
 #include "patch.h"
 #include "GPhoCS.h"
 #include "McRefCommon.h"
+#include "MemoryMng.h"
 
 double *tau_bounds;
 int *lca_pops;
@@ -30,22 +31,24 @@ void calculateLociTauBounds(int nodeId, int gen) {
 
   lca_pops[nodeId] = lca(lca_pops[currentNode->leftSon], lca_pops[currentNode->rightSon]);
 
-  updateTauBoundsOfDescendants(lca_pops[nodeId], currentNode->age);
+  updateTauBoundsOfDescendants(lca_pops[nodeId], currentNode->age, nodeId, gen);
 }
 
-void updateTauBoundsOfDescendants(int pop, double bound) {
+void updateTauBoundsOfDescendants(int pop, double bound, int nodeId, int gen) { // nocommit horrible signature for debug
   if (isLeaf(pop)) return;
 
   if (bound < dataSetup.popTree->pops[pop]->age) {
     //nocommit
-    printf("error in tau_bounds");
+    printf("\nerror in tau_bounds:\n%.10f is the bound but\n%.10f is population %ss tau\n", bound,
+           dataSetup.popTree->pops[pop]->age, getPopName(pop));
+    printf("just FYI, the bounding node %d lives in pop %s", nodeId, getPopName(nodePops[gen][nodeId]));
     exit(-1);
   }
 
   tau_bounds[pop] = fmin(tau_bounds[pop], bound);
 
-  updateTauBoundsOfDescendants(getSon(pop, LEFT), bound);
-  updateTauBoundsOfDescendants(getSon(pop, RIGHT), bound);
+  updateTauBoundsOfDescendants(getSon(pop, LEFT), bound, nodeId, gen);
+  updateTauBoundsOfDescendants(getSon(pop, RIGHT), bound, nodeId, gen);
 }
 
 void initializeLcaPops(int gen) {

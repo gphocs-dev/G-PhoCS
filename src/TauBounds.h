@@ -10,7 +10,7 @@ void initializeTauBounds();
 
 void initializeLcaPops(int gen);
 
-void updateTauBoundsOfDescendants(int pop, double bound);
+void updateTauBoundsOfDescendants(int pop, double bound, int nodeId, int gen);
 
 void allocateTauBoundsMem();
 
