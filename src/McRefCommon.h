@@ -35,8 +35,6 @@ double relativeDistance(double dbl1, double dbl2);
 
 double requiredRelativePrecision();
 
-
-
 int lca(int pop1, int pop2);
 
 int getPopFather(int popId);
@@ -48,7 +46,6 @@ int getNodePop(int nodeId, int gen);
 LikelihoodNode *getNode(int nodeId, int gen);
 
 int numNodes();
-
 
 
 /*=== Debug functions ===*/

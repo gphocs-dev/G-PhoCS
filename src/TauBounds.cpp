@@ -35,7 +35,18 @@ void assertTausAreSmallerThanBounds() {
 }
 
 void assertBoundsAreMonotonousAscending() {
-
+  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+    for (int ancestor = 0; ancestor < dataSetup.popTree->numPops; ancestor++) {
+      if (isAncestralTo(ancestor, pop)) {
+        if (tau_bounds[pop] > tau_bounds[ancestor]) {
+          printf("\nTau bound of pop %s was larger than of his ancestor %s", getPopName(pop), getPopName(ancestor));
+          printf("\n%.10f is the bound of %s and - ", tau_bounds[pop], getPopName(pop));
+          printf("\n%.10f is the bound of %s.", tau_bounds[ancestor], getPopName(ancestor));
+          exit(-1);
+        }
+      }
+    }
+  }
 }
 
 void calculateLociTauBounds(int nodeId, int gen) {
@@ -90,7 +101,9 @@ void allocateTauBoundsMem() {
 
 void initializeTauBounds() {
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    if (!isLeafPop(pop)) {
+    if (isLeafPop(pop)) {
+      tau_bounds[pop] = 0.0;
+    } else {
       tau_bounds[pop] = 100.0; // TODO - init with proper value (tau of father pop? MAX/INF value?)
     }
   }
