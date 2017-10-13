@@ -90,6 +90,7 @@ int getTargetPop(int mig) {
 char *getPopName(int popId) {
   return dataSetup.popTree->pops[popId]->name;
 }
+
 //char* getMigName(int mig){
 //	char* sourceName = getPopName(getSourcePop(mig));
 //	char* targetName = getPopName(getTargetPop(mig));
