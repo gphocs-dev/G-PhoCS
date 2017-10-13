@@ -7,14 +7,17 @@ except:
 
 TAU_BOUNDS_TSV_FILE = 'out/sample-tau-bounds.tsv'
 
+tau_bounds_file = open(TAU_BOUNDS_TSV_FILE)
+
 
 def test_taus_lower_then_bounds():
-    with open(TAU_BOUNDS_TSV_FILE) as tau_bounds_file:
-        tau_bounds = csv.reader(tau_bounds_file, delimiter='\t')
-        next(tau_bounds)  # skip header
-        for i, row in enumerate(tau_bounds):
-            for j, (bound, tau) in enumerate(chunks(row[1:], 2)):
-                assert bound >= tau, "bad bound in row %d in pair %d" % (i + 2, j)
+    tau_bounds = csv.reader(tau_bounds_file, delimiter='\t')
+    next(tau_bounds)  # skip header
+
+    for i, row in enumerate(tau_bounds):
+        for j, (bound, tau) in enumerate(chunks(row[1:], 2)):
+            assert bound >= tau, "bad bound in row %d in pair %d" % (i + 2, j)
+
 
 
 def chunks(l, n):
