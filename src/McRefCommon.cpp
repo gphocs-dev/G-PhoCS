@@ -19,7 +19,7 @@ double calculateCoalStats(double *elapsed_times, int *num_lineages, int size) {
   return result;
 }
 
-int isLeaf(int pop) {
+int isLeafPop(int pop) {
   Population *population, *left_son, *right_son;
 
   population = dataSetup.popTree->pops[pop];
@@ -35,12 +35,12 @@ int isLeaf(int pop) {
 }
 
 int areChildrenLeaves(int pop) {
-  if (isLeaf(pop)) {
+  if (isLeafPop(pop)) {
     return FALSE;
   }
   int left_son = getSon(pop, LEFT);
   int right_son = getSon(pop, RIGHT);
-  return (isLeaf(left_son) && isLeaf(right_son));
+  return (isLeafPop(left_son) && isLeafPop(right_son));
 }
 
 int isAncestralTo(int father, int son) {
@@ -133,8 +133,8 @@ LikelihoodNode *getNode(int nodeId, int gen) { // TODO - move to util
   return loci->nodeArray[nodeId];
 }
 
-int getLeafNodePop(int nodeId, int gen) {
-  return nodePops[gen][nodeId]; // TODO - implement
+int getNodePop(int nodeId, int gen) {
+  return nodePops[gen][nodeId];
 }
 
 bool isLeafNode(LikelihoodNode *node) {

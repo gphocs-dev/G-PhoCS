@@ -27,23 +27,10 @@ void printOneCombHeader(int comb, FILE *file) {
 
 void printCombPopHeaders(int comb, char *combName, FILE *file) {
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    if (isLeaf(pop) && isAncestralTo(comb, pop)) {
+    if (isLeafPop(pop) && isAncestralTo(comb, pop)) {
       char *leafName = getPopName(pop);
       fprintf(file, "\tC_%s_%s cs\tC_%s_%s nc",
               combName, leafName, combName, leafName);
-    }
-  }
-}
-
-void printCombMigHeaders(int comb, char *combName, FILE *file) {
-  for (int mig = 0; mig < dataSetup.popTree->numMigBands; mig++) {
-    if (isCombLeafMigBand(mig, comb)) {
-      int source = getSourcePop(mig);
-      int target = getTargetPop(mig);
-      char *sourceName = getPopName(source);
-      char *targetName = getPopName(target);
-      fprintf(file, "\tC_%s_%s->%s ms\tC_%s_%s->%s nm",
-              combName, sourceName, targetName, combName, sourceName, targetName);
     }
   }
 }
@@ -71,7 +58,7 @@ void printOneCombStats(int comb, FILE *file) {
 
 void printCombCoalStats(int comb, FILE *file) {
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    if (isLeaf(pop) && isAncestralTo(comb, pop)) {
+    if (isLeafPop(pop) && isAncestralTo(comb, pop)) {
       fprintf(file, "\t%0.35f\t%d",
               comb_stats[comb].leaves[pop].below_comb.coal_stats,
               comb_stats[comb].leaves[pop].below_comb.num_coals);

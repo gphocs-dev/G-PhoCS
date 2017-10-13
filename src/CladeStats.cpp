@@ -38,7 +38,7 @@ void computeCladeNumCoals() {
 void computeCladeNumCoals_rec(int pop) {
   int leftSon, rightSon;
 
-  if (isLeaf(pop)) {
+  if (isLeafPop(pop)) {
     clade_stats[pop].num_coals_total = genetree_stats_total.num_coals[pop];
   } else {
     leftSon = dataSetup.popTree->pops[pop]->sons[LEFT]->id;
@@ -62,7 +62,7 @@ void computeCladeCoalStats() {
 void computeCladeCoalStats_rec(int clade, int gen) {
   int leftSon, rightSon;
 
-  if (isLeaf(clade)) {
+  if (isLeafPop(clade)) {
     fillUpLeafCladeStats(clade, gen);
   } else {
     leftSon = dataSetup.popTree->pops[clade]->sons[LEFT]->id;

@@ -8,11 +8,12 @@
 #define FALSE 0
 
 #define DEBUG_COMB_STATS FALSE
+#define DEBUG_TAU_BOUNDS TRUE
 #define SET_COMB_AGE_TO_ZERO FALSE
 
 double calculateCoalStats(double *elapsed_times, int *num_lineages, int size);
 
-int isLeaf(int pop);
+int isLeafPop(int pop);
 
 int areChildrenLeaves(int pop);
 
@@ -42,7 +43,7 @@ int getPopFather(int popId);
 
 bool isLeafNode(LikelihoodNode *node);
 
-int getLeafNodePop(int nodeId, int gen);
+int getNodePop(int nodeId, int gen);
 
 LikelihoodNode *getNode(int nodeId, int gen);
 
