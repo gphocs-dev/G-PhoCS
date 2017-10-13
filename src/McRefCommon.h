@@ -21,6 +21,8 @@ int isAncestralTo(int father, int son);
 
 int getSon(int pop, int SON);
 
+double getPopAge(int pop);
+
 int getSourcePop(int mig);
 
 int getTargetPop(int mig);

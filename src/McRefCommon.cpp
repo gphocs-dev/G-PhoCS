@@ -74,6 +74,11 @@ int getSon(int pop, int SON) {
   return dataSetup.popTree->pops[pop]->sons[SON]->id;
 }
 
+
+double getPopAge(int pop) {
+  return dataSetup.popTree->pops[pop]->age;
+}
+
 int getSourcePop(int mig) {
   return dataSetup.popTree->migBands[mig].sourcePop;
 }
