@@ -22,4 +22,10 @@ void printTauBoundsHeader(FILE *file);
 
 void printTauBounds(int iteration, FILE *file);
 
+void assertBoundsAreMonotonousAscending();
+
+void assertTausAreSmallerThanBounds();
+
+void runTauBoundsAssertions();
+
 #endif //G_PHOCS_TAUBOUNDS_H
