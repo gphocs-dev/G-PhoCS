@@ -1,3 +1,4 @@
+
 #include <map>
 
 #include "TauBounds.h"
@@ -64,8 +65,6 @@ void printTauBounds(int iteration, FILE *file) {
 
 void allocateTauBoundsMem() {
   tau_bounds = (double *) malloc(dataSetup.popTree->numPops * sizeof(double));
-
-
   lca_pops = (int *) malloc(numNodes() * sizeof(int));
 }
 
