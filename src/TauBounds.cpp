@@ -7,31 +7,44 @@
 #include "McRefCommon.h"
 
 double *tau_bounds; // Temporary array. Reinitialized per iteration. Holds final tau bounds
-int *lca_pops; // Temporary array. Reinitialized per genealogy. Holds lca_pop of nodes of current genealogy
+
+
 
 
 void calculateTauBounds() {
-  initializeTauBounds();
+  initializeBounds();
+
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
-    initializeLcaPops(gen);
     int rootNodeId = dataState.lociData[gen]->root;
     calculateLociTauBounds(rootNodeId, gen);
   }
+
+  propagateBoundsDownPopTree();
+
   if (DEBUG_TAU_BOUNDS) runTauBoundsAssertions();
 }
 
-void calculateLociTauBounds(int nodeId, int gen) {
+int calculateLociTauBounds(int nodeId, int gen) {
   LikelihoodNode *currentNode = getNode(nodeId, gen);
+  int pop = getNodePop(nodeId, gen);
 
-  if (isLeafNode(currentNode))
-    return;
+  if (isLeafPop(pop))
+    return pop;
 
-  calculateLociTauBounds(currentNode->leftSon, gen);
-  calculateLociTauBounds(currentNode->rightSon, gen);
+  int leftLca = calculateLociTauBounds(currentNode->leftSon, gen);
+  int rightLca = calculateLociTauBounds(currentNode->rightSon, gen);
 
-  lca_pops[nodeId] = lca(lca_pops[currentNode->leftSon], lca_pops[currentNode->rightSon]);
+  int lca_pop = lca(leftLca, rightLca);
 
-  updateTauBoundsOfDescendants(lca_pops[nodeId], currentNode->age);
+  tau_bounds[pop] = fmin(tau_bounds[pop], currentNode->age);
+
+  return lca_pop;
+}
+
+void propagateBoundsDownPopTree() {
+  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+    updateTauBoundsOfDescendants(pop, tau_bounds[pop]);
+  }
 }
 
 void updateTauBoundsOfDescendants(int pop, double bound) {
@@ -65,10 +78,9 @@ void printTauBounds(int iteration, FILE *file) {
 
 void allocateTauBoundsMem() {
   tau_bounds = (double *) malloc(dataSetup.popTree->numPops * sizeof(double));
-  lca_pops = (int *) malloc(numNodes() * sizeof(int));
 }
 
-void initializeTauBounds() {
+void initializeBounds() {
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
     if (isLeafPop(pop)) {
       tau_bounds[pop] = 0.0;
@@ -77,16 +89,6 @@ void initializeTauBounds() {
     }
   }
 }
-
-void initializeLcaPops(int gen) {
-  for (int nodeId = 0; nodeId < numNodes(); nodeId++) {
-    LikelihoodNode *currentNode = getNode(nodeId, gen);
-    if (isLeafNode(currentNode)) {
-      lca_pops[nodeId] = getNodePop(nodeId, gen);
-    }
-  }
-}
-
 
 void runTauBoundsAssertions() {
   assertBoundsAreMonotonousAscending();

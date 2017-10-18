@@ -6,17 +6,17 @@
 
 #include "LocusDataLikelihood.h"
 
-void initializeTauBounds();
-
-void initializeLcaPops(int gen);
+void initializeBounds();
 
 void updateTauBoundsOfDescendants(int pop, double bound);
+
+void propagateBoundsDownPopTree();
 
 void allocateTauBoundsMem();
 
 void calculateTauBounds();
 
-void calculateLociTauBounds(int nodeId, int gen);
+int calculateLociTauBounds(int nodeId, int gen);
 
 void printTauBoundsHeader(FILE *file);
 
