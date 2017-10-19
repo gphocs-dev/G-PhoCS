@@ -1,4 +1,3 @@
-#include <unordered_set>
 #include "CombStats.h"
 #include "MCMCcontrol.h"
 #include "McRefCommon.h"
@@ -47,29 +46,6 @@ int isAncestralTo(int father, int son) {
   return dataSetup.popTree->pops[father]->isAncestralTo[son];
 }
 
-const char *getEventTypeName(int eventType) {
-  switch (eventType) {
-    case COAL:
-      return "COAL";
-    case IN_MIG:
-      return "IN_MIG";
-    case OUT_MIG:
-      return "OUT_MIG";
-    case MIG_BAND_START:
-      return "MIG_START";
-    case MIG_BAND_END:
-      return "MIG_END";
-    case SAMPLES_START:
-      return "SAM_START";
-    case END_CHAIN:
-      return "END_CHAIN";
-    case DUMMY:
-      return "DUMMY";
-    default:
-      return "UNDEFINED";
-  }
-}
-
 int getSon(int pop, int SON) {
   return dataSetup.popTree->pops[pop]->sons[SON]->id;
 }
@@ -105,24 +81,41 @@ char *getPopName(int popId) {
 //}
 
 
+//const char *getEventTypeName(int eventType) {
+//  switch (eventType) {
+//    case COAL:
+//      return "COAL";
+//    case IN_MIG:
+//      return "IN_MIG";
+//    case OUT_MIG:
+//      return "OUT_MIG";
+//    case MIG_BAND_START:
+//      return "MIG_START";
+//    case MIG_BAND_END:
+//      return "MIG_END";
+//    case SAMPLES_START:
+//      return "SAM_START";
+//    case END_CHAIN:
+//      return "END_CHAIN";
+//    case DUMMY:
+//      return "DUMMY";
+//    default:
+//      return "UNDEFINED";
+//  }
+//}
+
 
 int lca(int pop1, int pop2) {
-  std::unordered_set<int> pop1_ancestors = {}; //TODO - do I need to release this set?
-  int pop1_ancestor = pop1;
-  while (pop1_ancestor != -1) {
-    pop1_ancestors.insert(pop1_ancestor);
-    pop1_ancestor = getPopFather(pop1_ancestor);
-  }
-
-
-  int pop2_ancestor = pop2;
-  while (pop2_ancestor != -1) {
-    if (pop1_ancestors.count(pop2_ancestor)) {
-      return pop2_ancestor;
+  int ancestor1 = pop1;
+  while (ancestor1 != -1) {
+    int ancestor2 = pop2;
+    while (ancestor2 != -1) {
+      if (ancestor1 == ancestor2)
+        return ancestor1;
+      ancestor2 = getPopFather(ancestor2);
     }
-    pop2_ancestor = getPopFather(pop2_ancestor);
+    ancestor1 = getPopFather(ancestor1);
   }
-
   return -1;
 }
 
@@ -133,7 +126,6 @@ int getPopFather(int popId) {
 }
 
 
-
 LikelihoodNode *getNode(int nodeId, int gen) { // TODO - move to util
   LocusData *loci = dataState.lociData[gen];
   return loci->nodeArray[nodeId];
@@ -142,14 +134,6 @@ LikelihoodNode *getNode(int nodeId, int gen) { // TODO - move to util
 int getNodePop(int nodeId, int gen) {
   return nodePops[gen][nodeId];
 }
-
-bool isLeafNode(LikelihoodNode *node) {
-  return (node->leftSon == -1) || (node->rightSon == -1);  //TOASK - make sure this is correct
-}
-
-int numNodes() { return (2 * dataSetup.numSamples) - 1; } // TODO - make MACRO?
-
-
 
 bool hasNextEvent(EventChain chain, int event) {
   int next = chain.events[event].getNextIdx();

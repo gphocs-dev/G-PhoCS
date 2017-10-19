@@ -74,7 +74,6 @@ void printTauBounds(int iteration, FILE *file) {
   fprintf(file, "\n");
 }
 
-
 void allocateTauBoundsMem() {
   tau_bounds = (double *) malloc(dataSetup.popTree->numPops * sizeof(double));
   lca_pops = (int **) malloc(dataSetup.popTree->numPops * sizeof(int *));

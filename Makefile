@@ -14,7 +14,7 @@ CC=@g++
 #CFLAGS += -g -O0 -fstack-protector-all -Wall -DDEBUG  -fopenmp -ggdb -fpermissive
 
 #Production
-CFLAGS += -std=c++11 -fstack-protector-all -Wall -O3  -fpermissive
+CFLAGS += -fstack-protector-all -Wall -O3  -fpermissive
 
 ifeq ($(TARGETOS), Windows)
   CFLAGS += -DWINDOWS -liberty
