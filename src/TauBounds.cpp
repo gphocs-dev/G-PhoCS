@@ -7,8 +7,7 @@
 #include "McRefCommon.h"
 
 double *tau_bounds; // Temporary array. Reinitialized per iteration. Holds final tau bounds
-
-
+int **lca_pops; // "cache" of the lca of every pair of pops. i.e. - lca_pops[1][2] is the lca of pops 1 & 2
 
 
 void calculateTauBounds() {
@@ -34,9 +33,9 @@ int calculateLociTauBounds(int nodeId, int gen) {
   int leftLca = calculateLociTauBounds(currentNode->leftSon, gen);
   int rightLca = calculateLociTauBounds(currentNode->rightSon, gen);
 
-  int lca_pop = lca(leftLca, rightLca);
+  int lca_pop = lca_pops[leftLca][rightLca];
 
-  tau_bounds[pop] = fmin(tau_bounds[pop], currentNode->age);
+  tau_bounds[lca_pop] = fmin(tau_bounds[lca_pop], currentNode->age);
 
   return lca_pop;
 }
@@ -78,6 +77,19 @@ void printTauBounds(int iteration, FILE *file) {
 
 void allocateTauBoundsMem() {
   tau_bounds = (double *) malloc(dataSetup.popTree->numPops * sizeof(double));
+  lca_pops = (int **) malloc(dataSetup.popTree->numPops * sizeof(int *));
+  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+    lca_pops[pop] = (int *) malloc(dataSetup.popTree->numPops * sizeof(int));
+  }
+  computeLcas();
+}
+
+void computeLcas() {
+  for (int pop1 = 0; pop1 < dataSetup.popTree->numPops; pop1++) {
+    for (int pop2 = 0; pop2 < dataSetup.popTree->numPops; pop2++) {
+      lca_pops[pop1][pop2] = lca(pop1, pop2);
+    }
+  }
 }
 
 void initializeBounds() {

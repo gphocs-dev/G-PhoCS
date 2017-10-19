@@ -41,13 +41,9 @@ int lca(int pop1, int pop2);
 
 int getPopFather(int popId);
 
-bool isLeafNode(LikelihoodNode *node);
-
 int getNodePop(int nodeId, int gen);
 
 LikelihoodNode *getNode(int nodeId, int gen);
-
-int numNodes();
 
 
 /*=== Debug functions ===*/

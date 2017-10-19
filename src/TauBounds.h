@@ -28,4 +28,6 @@ void assertTausAreSmallerThanBounds();
 
 void runTauBoundsAssertions();
 
+void computeLcas();
+
 #endif //G_PHOCS_TAUBOUNDS_H
