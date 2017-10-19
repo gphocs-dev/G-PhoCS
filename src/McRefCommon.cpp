@@ -126,7 +126,7 @@ int getPopFather(int popId) {
 }
 
 
-LikelihoodNode *getNode(int nodeId, int gen) { // TODO - move to util
+LikelihoodNode *getNode(int nodeId, int gen) {
   LocusData *loci = dataState.lociData[gen];
   return loci->nodeArray[nodeId];
 }
