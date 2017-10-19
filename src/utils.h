@@ -24,18 +24,47 @@
 #define min2(a,b)  ((a)<(b)?(a):(b))
 #define max2(a,b)  ((a)>(b)?(a):(b))
 #define swap2(a,b) ({a += b ; b = a-b ; a -= b ;})
-#define rndexp(mean) (-(mean)*log(rndu()))
+#define rndexp(nLocusIdx, mean) (-(mean)*log(rndu(nLocusIdx)))
 
 #define	ROOT_SLACK	0.001		// default length of top-most interval
 
-void test(const char* message);
-
-double rndu (void);
 double reflect(double x, double a, double b);
-void setSeed (unsigned int seed);	
-double rndnormal(void);
-double rnd2normal8(void);
-double rndgamma(double s);
+
+//---- Random Generator related stuff -----------------------------------------
+#define RAND_GENERAL_SLOT (RndCtx.nOfSlots-1)
+typedef struct _RandGeneratorContext
+{
+  int nOfSlots;
+
+  unsigned int* rndu_z;
+  unsigned int* rndu_w;
+  unsigned int* rndu_x;
+  unsigned int* rndu_y;
+
+  double* m2s2_kernel;
+  double* m2N_kernel;
+  double* s2N_kernel;
+
+  double* rndgamma2_b;
+  double* rndgamma2_h;
+  double* rndgamma2_ss;
+
+  double* rndgamma1_a;
+  double* rndgamma1_p;
+  double* rndgamma1_uf;
+  double* rndgamma1_ss;
+  double* rndgamma1_d;
+} RandGeneratorContext;
+
+void initRandomGenerator( int nNumLoci, unsigned int seed );
+double rndnormal( int nLocusIdx );
+double rnd2normal8( int nLocusIdx );
+double rndu( int nLocusIdx );
+double rndgamma( int nLocusIdx, double s );
+double rndgamma1( int nLocusIdx, double s );
+double rndgamma2( int nLocusIdx, double s );
+//-----------------------------------------------------------------------------
+
 double PointChi2 (double prob, double v);
 char* printtime(char timestr[]);
 void starttime(void);
@@ -89,6 +118,8 @@ enum METHOD_NAME
 	T_UpdateAdmixCoeffs,
 	T_MCMCIterations
 } ;
+
+
 void setEndTimeMethod(enum METHOD_NAME method);
 void printMethodTimes();
 void setStartTimeMethod(enum METHOD_NAME method);
