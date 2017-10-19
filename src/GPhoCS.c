@@ -3269,8 +3269,6 @@ int UpdateMigRates(double finetune)
  *****************************************************************************/
 void UpdateTau(double *finetunes, int *accepted)
 {
-  static int c = 0;
-  ++c;
   extern int checkEventChainsLight();
   extern int checkAffectedMigBandsInGen(int, const int*, const int*, int);
 
