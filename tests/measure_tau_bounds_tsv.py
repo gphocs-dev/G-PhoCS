@@ -24,6 +24,7 @@ def measure_average_diff_between_bound_and_tau(tau_bounds_f):
                 sum_diffs[j] += diff
             num_rows += 1
 
+        print("for file '%s':" % tau_bounds_f)
         for k, v in sum_diffs.items():
             print("%.40f is the average diff of cols %s" % (v / num_rows, names[k]))
 
