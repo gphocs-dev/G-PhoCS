@@ -4,7 +4,7 @@
 CC=@gcc
 
 # Multi threading enabling flag
-#ENABLE_OMP_THREADS = 1 
+# ENABLE_OMP_THREADS = 1 
 
 #CC=/usr/bin/i586-mingw32msvc-gcc 
 #AR=/usr/bin/i586-mingw32msvc-ar

@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-  debug = 1;
+  debug = 0;
 
   while (1)
   {
