@@ -97,10 +97,6 @@ void appendPopToClade(int clade, int gen, int startingPoint) {
 //	clade_stats[clade].coal_stats_total += genetree_stats[gen].coal_stats[clade];
   clade_stats[clade].coal_stats_total += calculateCoalStats(clade_stats[clade].elapsed_times + startingPoint, clade_stats[clade].num_lineages + startingPoint,
                                                             clade_stats[clade].num_events - startingPoint);
-
-#ifdef CHECKCLADE
-  test_compareGphocsVsCladePopCoalStats(clade, gen, startingPoint);
-#endif
 }
 
 void fillUpCladeStats(int clade, int gen) {
