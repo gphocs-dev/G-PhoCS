@@ -1252,7 +1252,6 @@ int performMCMC()
 
 
   char timeString[STRING_LENGTH];
-  char fileName[NAME_LENGTH];
 
   ioSetup.traceFile = fopen(ioSetup.traceFileName, "w");
   if (ioSetup.traceFile == NULL)
@@ -1260,50 +1259,6 @@ int performMCMC()
     fprintf(stderr, "Error: Could not open trace file %s.\n",
             ioSetup.traceFileName);
     return (-1);
-  }
-
-  if (recordCoalStats)
-  {
-    sprintf(fileName, "%s.coalStats.txt", ioSetup.nodeStatsFileName);
-    ioSetup.coalStatsFile = fopen(fileName, "w");
-    if (ioSetup.coalStatsFile == NULL)
-    {
-      fprintf(stderr, "Error: Could not open coal stats file %s.\n", fileName);
-      return (-1);
-    }
-    ioSetup.nodeStatsFile = (FILE **) malloc(
-        3 * dataSetup.popTree->numPops * sizeof(FILE *));
-    if (ioSetup.nodeStatsFile == NULL)
-    {
-      fprintf(stderr, "memory allocation for node coal file %s.\n", fileName);
-      return (-1);
-    }
-    for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
-    {
-      sprintf(fileName, "%s.probCoalPop_%s.txt", ioSetup.nodeStatsFileName,
-              dataSetup.popTree->pops[pop]->name);
-      ioSetup.nodeStatsFile[3 * pop] = fopen(fileName, "w");
-      sprintf(fileName, "%s.probFirstCoalPop_%s.txt",
-              ioSetup.nodeStatsFileName,
-              dataSetup.popTree->pops[pop]->name);
-      ioSetup.nodeStatsFile[3 * pop + 1] = fopen(fileName, "w");
-      sprintf(fileName, "%s.coalTimePop_%s.txt",
-              ioSetup.nodeStatsFileName,
-              dataSetup.popTree->pops[pop]->name);
-      ioSetup.nodeStatsFile[3 * pop + 2] = fopen(fileName, "w");
-      if (ioSetup.nodeStatsFile[3 * pop] == NULL
-          || ioSetup.nodeStatsFile[3 * pop + 1] == NULL
-          || ioSetup.nodeStatsFile[3 * pop + 2] == NULL)
-      {
-        sprintf(fileName, "%s.XXXPop_%s.txt", ioSetup.nodeStatsFileName,
-                dataSetup.popTree->pops[pop]->name);
-        fprintf(stderr,
-                "Error: Could not open node coalescence file %s.\n",
-                fileName);
-        return (-1);
-      }
-    }
-    printCoalStats(-1);
   }
 
 
@@ -3401,13 +3356,28 @@ void UpdateTau(double *finetunes, int *accepted)
         if(    dataSetup.popTree->migBands[mig_band].startTime < taub[1]
             && dataSetup.popTree->pops[sourcePop]->age > min2(tauold, taunew) )
         {
-          //									printf("    mig band %d, type 1b.\n",mig_band);
           affected_mig_bands[num_affected_mig_bands] = mig_band;
           //indicate that start time has changed
           start_or_end[num_affected_mig_bands] = 1;
           new_band_ages[num_affected_mig_bands] = taub[1] +
                     (dataSetup.popTree->migBands[mig_band].startTime - taub[1])
                     / taufactor[1];
+          //Added this part for v1.3.2 to eliminate Fatal Error 0016 and 0005.
+          //Difference should only come from floating point rounding issues.
+          if(new_band_ages[num_affected_mig_bands] < tauold) 
+          {
+            if(debug) 
+            {
+              fprintf(stderr, "- new start time for migration band %d is "
+                              "below age of pop %d (%g-%g=%g) when moving"
+                              " time %g-->%g.\n", 
+                      mig_band, ancestralPop, tauold, 
+                      new_band_ages[num_affected_mig_bands], 
+                      tauold-new_band_ages[num_affected_mig_bands], 
+                      tauold,taunew);
+            }
+            new_band_ages[num_affected_mig_bands] = tauold;
+          }
           num_affected_mig_bands++;
         }
       }
@@ -4121,6 +4091,22 @@ void UpdateSampleAge(double *finetunes, int *accepted)
           new_band_ages[num_affected_mig_bands] = taub[age > taunew] +
                                                   (age - taub[age > taunew]) /
                                                   taufactor[age > taunew];
+          //Added this part for v1.3.2 to eliminate Fatal Error 0016 and 0005.
+          //Difference should only come from floating point rounding issues
+          if(new_band_ages[num_affected_mig_bands] < tauold) 
+          {
+            if(debug) 
+            {
+              fprintf(stderr, "- new start time for migration band %d is "
+                              "below age of pop %d (%g-%g=%g) when moving "
+                              "sample age %g-->%g.\n", 
+                      mig_band, pop, tauold, 
+                      new_band_ages[num_affected_mig_bands], 
+                      tauold-new_band_ages[num_affected_mig_bands], 
+                     tauold,taunew);
+            }
+            new_band_ages[num_affected_mig_bands] = tauold;
+          }
           ++num_affected_mig_bands;
         }
       }

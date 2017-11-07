@@ -360,12 +360,13 @@ int checkSettings() {
 
 
 
-/***********************************************************************************
+/******************************************************************************
  *	printPriorSettings
  * 	- prints the prior settings onto standard output
  *	- returns 0
- ***********************************************************************************/
-int printPriorSettings() {
+ *****************************************************************************/
+int printPriorSettings()
+{
 	int pop, migBand;
 	char string[1000];
 	
@@ -378,7 +379,8 @@ int printPriorSettings() {
 	  
 	
 	printf("\nGamma prior: mean +- SE for theta's ,tau's and m's\n");
-	for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
+	for(pop=0; pop<dataSetup.popTree->numPops; pop++)
+  {
 		sprintf(string, "theta_%s: ", dataSetup.popTree->pops[pop]->name);
 		alpha = dataSetup.popTree->pops[pop]->thetaPrior.alpha;
 		beta  = dataSetup.popTree->pops[pop]->thetaPrior.beta;
@@ -386,7 +388,8 @@ int printPriorSettings() {
 	}
 	printf("---------------------------------------------------------------\n");
 	
-	for(pop=dataSetup.popTree->numCurPops; pop<dataSetup.popTree->numPops; pop++) {
+	for(pop=dataSetup.popTree->numCurPops; pop<dataSetup.popTree->numPops; pop++)
+  {
 		sprintf(string, "tau_%s: ", dataSetup.popTree->pops[pop]->name);
 		alpha = dataSetup.popTree->pops[pop]->agePrior.alpha;
 		beta  = dataSetup.popTree->pops[pop]->agePrior.beta;
@@ -394,14 +397,18 @@ int printPriorSettings() {
 	}
 	printf("---------------------------------------------------------------\n");
 	
-	if(dataSetup.popTree->numMigBands > 0) {
-		for(migBand=0; migBand<dataSetup.popTree->numMigBands; migBand++) {
-			sprintf(string, "m_%s->%s: ", 
-						dataSetup.popTree->pops[ dataSetup.popTree->migBands[migBand].sourcePop ]->name, 
-						dataSetup.popTree->pops[ dataSetup.popTree->migBands[migBand].targetPop ]->name);
+	if(dataSetup.popTree->numMigBands > 0)
+  {
+		for(migBand=0; migBand<dataSetup.popTree->numMigBands; migBand++)
+    {
 			alpha = dataSetup.popTree->migBands[migBand].migRatePrior.alpha;
 			beta = dataSetup.popTree->migBands[migBand].migRatePrior.beta;
-			printf("%-15s %9.5f +- %9.5f\n", string, alpha/beta, sqrt(alpha)/beta);
+			printf("m_%s->%s:  %9.5f +- %9.5f\n",
+						 dataSetup.popTree->pops[ \
+						   dataSetup.popTree->migBands[migBand].sourcePop ]->name,
+						 dataSetup.popTree->pops[ \
+						   dataSetup.popTree->migBands[migBand].targetPop ]->name,
+						 alpha/beta, sqrt(alpha)/beta);
 		}
 		printf("---------------------------------------------------------------\n");
 	}

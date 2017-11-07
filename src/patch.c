@@ -832,7 +832,7 @@ double rubberBandRipple(int gen, int do_or_redo) {
       new_event = locus_data[gen].rubberband_migs.new_events[i] = createEvent(gen, pop, locus_data[gen].rubberband_migs.new_ages[i]);
       if( new_event < 0 ) {
 		if(debug) {
-			fprintf(stderr, "Error: problem creating event in rubber band ripple.\n");
+			fprintf(stderr, "Error: problem creating event in rubber band ripple, gen %d, pop %d, orig_event %d.\n", gen, pop, orig_event);
 		} else {
 			fprintf(stderr, "Fatal Error 0005.\n");
 		}
@@ -1028,7 +1028,7 @@ int traceLineage(int gen, int node, int reconnect)
 			
       if(fabs(mig_rate) > 0.00000001 || num_live_mig_bands > 0)
       {
-		    if(debug)
+        if(debug)
         {
           fprintf(stderr, "\nError: traceLineage: while tracing edge "
                   "above node %d in gen %d.\n",node,gen);
@@ -1041,11 +1041,11 @@ int traceLineage(int gen, int node, int reconnect)
                     dataSetup.popTree->migBands[ live_mig_bands[i] ].migRate);
           }
           fprintf(stderr, ".\n");
-		    }
+        }
         else
         {
-			    fprintf(stderr, "Fatal Error 0007.\n");
-		    }
+          fprintf(stderr, "Fatal Error 0007.\n");
+        }
         printGenealogyAndExit(gen,-1);
       }
       mig_rate = 0.0;
