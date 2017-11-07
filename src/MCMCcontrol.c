@@ -367,52 +367,51 @@ int checkSettings() {
  *****************************************************************************/
 int printPriorSettings()
 {
-	int pop, migBand;
-	char string[1000];
+  int pop, migBand;
+  char string[1000];
+  double alpha,beta;
 	
-	double alpha,beta;
-	
-	// print out tree and population parameters
-	printPopulationTree(dataSetup.popTree, stdout, 0);
-	printf("\n");
-	printf("---------------------------------------------------------------\n");
-	  
-	
-	printf("\nGamma prior: mean +- SE for theta's ,tau's and m's\n");
-	for(pop=0; pop<dataSetup.popTree->numPops; pop++)
+  // print out tree and population parameters
+  printPopulationTree(dataSetup.popTree, stdout, 0);
+  printf("\n");
+  printf("---------------------------------------------------------------\n");
+  
+
+  printf("\nGamma prior: mean +- SE for theta's ,tau's and m's\n");
+  for(pop=0; pop<dataSetup.popTree->numPops; pop++)
   {
-		sprintf(string, "theta_%s: ", dataSetup.popTree->pops[pop]->name);
-		alpha = dataSetup.popTree->pops[pop]->thetaPrior.alpha;
-		beta  = dataSetup.popTree->pops[pop]->thetaPrior.beta;
-		printf("%-15s %9.5f +- %9.5f\n", string, alpha/beta, sqrt(alpha)/beta);
-	}
-	printf("---------------------------------------------------------------\n");
-	
-	for(pop=dataSetup.popTree->numCurPops; pop<dataSetup.popTree->numPops; pop++)
+    sprintf(string, "theta_%s: ", dataSetup.popTree->pops[pop]->name);
+    alpha = dataSetup.popTree->pops[pop]->thetaPrior.alpha;
+    beta  = dataSetup.popTree->pops[pop]->thetaPrior.beta;
+    printf("%-15s %9.5f +- %9.5f\n", string, alpha/beta, sqrt(alpha)/beta);
+  }
+  printf("---------------------------------------------------------------\n");
+
+  for(pop=dataSetup.popTree->numCurPops; pop<dataSetup.popTree->numPops; pop++)
   {
-		sprintf(string, "tau_%s: ", dataSetup.popTree->pops[pop]->name);
-		alpha = dataSetup.popTree->pops[pop]->agePrior.alpha;
-		beta  = dataSetup.popTree->pops[pop]->agePrior.beta;
-		printf("%-15s %9.5f +- %9.5f\n", string, alpha/beta, sqrt(alpha)/beta);
-	}
-	printf("---------------------------------------------------------------\n");
+    sprintf(string, "tau_%s: ", dataSetup.popTree->pops[pop]->name);
+    alpha = dataSetup.popTree->pops[pop]->agePrior.alpha;
+    beta  = dataSetup.popTree->pops[pop]->agePrior.beta;
+    printf("%-15s %9.5f +- %9.5f\n", string, alpha/beta, sqrt(alpha)/beta);
+  }
+  printf("---------------------------------------------------------------\n");
 	
-	if(dataSetup.popTree->numMigBands > 0)
+  if(dataSetup.popTree->numMigBands > 0)
   {
-		for(migBand=0; migBand<dataSetup.popTree->numMigBands; migBand++)
+    for(migBand=0; migBand<dataSetup.popTree->numMigBands; migBand++)
     {
-			alpha = dataSetup.popTree->migBands[migBand].migRatePrior.alpha;
-			beta = dataSetup.popTree->migBands[migBand].migRatePrior.beta;
-			printf("m_%s->%s:  %9.5f +- %9.5f\n",
-						 dataSetup.popTree->pops[ \
-						   dataSetup.popTree->migBands[migBand].sourcePop ]->name,
-						 dataSetup.popTree->pops[ \
-						   dataSetup.popTree->migBands[migBand].targetPop ]->name,
-						 alpha/beta, sqrt(alpha)/beta);
-		}
-		printf("---------------------------------------------------------------\n");
-	}
-	return 0;
+      alpha = dataSetup.popTree->migBands[migBand].migRatePrior.alpha;
+      beta = dataSetup.popTree->migBands[migBand].migRatePrior.beta;
+      printf("m_%s->%s:  %9.5f +- %9.5f\n",
+             dataSetup.popTree->pops[ \
+               dataSetup.popTree->migBands[migBand].sourcePop ]->name,
+             dataSetup.popTree->pops[ \
+               dataSetup.popTree->migBands[migBand].targetPop ]->name,
+             alpha/beta, sqrt(alpha)/beta);
+    }
+    printf("---------------------------------------------------------------\n");
+  }
+  return 0;
 }
 /** end of printPriorSettings **/
 
