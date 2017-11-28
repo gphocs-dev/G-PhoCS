@@ -13,6 +13,7 @@
 #include "DataLayerConstants.h"
 #include "GenericTree.h"
 #include "PopulationTree.h"
+#include "EventsDAG.h"
 
 #include "MCMCcontrol.h"
 extern DATA_SETUP dataSetup;
@@ -203,6 +204,12 @@ int
 createEvent (int gen, int pop, double age);
 int
 createEventBefore (int gen, int pop, int event, double elapsed_time);
+int
+createEventBefore( int                   nGenIdx,
+                   int                   nPopIdx,
+                   EventsDAGNode<Event>* pCurrEvent,
+                   double                fElapsedTime );
+
 int
 constructEventChain (int gen);
 int

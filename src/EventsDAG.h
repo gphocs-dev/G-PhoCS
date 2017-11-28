@@ -10,6 +10,10 @@
  ============================================================================*/
 
 #include <vector>
+#include <cassert>
+#include "DataLayer.h"
+
+class Event;
 using namespace std;
 
 /*-----------------------------------------------------------------------------
@@ -35,6 +39,9 @@ public:
 
   T* getContent() const;
   void setContent( T* pContent);
+
+  //@@TODO: rework the next method. Integer is bad here.
+  int getType() const {pContent_->getType();}
 
   EventsDAGNode<T>* getPrevGenEvent() const;
   void setPrevGenEvent(EventsDAGNode<T>* pPrevGenEvent);
@@ -63,10 +70,9 @@ protected:
 
 /*-----------------------------------------------------------------------------
  *
- * EventsDAG declaration
+ * One DAG, vector of entry points - first Event in every population
  *
  *---------------------------------------------------------------------------*/
-class Event;
 
 template<class T>
 class EventsDAG : public vector<EventsDAGNode<T>*>
@@ -74,10 +80,43 @@ class EventsDAG : public vector<EventsDAGNode<T>*>
 public:
   EventsDAG(){}
   virtual ~EventsDAG();
-  EventsDAGNode<T>* getNode(int nGenIdx, int nPopIdx) const;
-  void addEventChainToDag(Event* pEventStart, int nLen);
 
+  EventsDAGNode<T>* getFirstNode(int nPopIdx) const;
+  EventsDAGNode<T>* getLastNode(int nPopIdx) const;
+  EventsDAGNode<T>* getNode(int nPopIdx, int nEventIdx) const;
+
+  bool concatenatePops(int nPrevPopIdx, int nNextPopIdx);
+  bool connectCoalEvents(int nLeftPopIdx, int nLeftSonIdx,
+                         int nRightPopIdx, int nRightSonIdx,
+                         int nParentPopIdx, int nParentIdx);
+  void addEventChainToDag(T* pEventStart, int nLen);
+
+  void initPopulation(int nPopIdx, T* pFirstEvent);
+  void appendEvent(int nPopIdx, T* pFirstEvent);
+  EventsDAGNode<T>* getFirstGenEventInPop(int nPopIdx) const;
 };
+
+/*-----------------------------------------------------------------------------
+ *
+ * Repository of all DAGs
+ *
+ *---------------------------------------------------------------------------*/
+template<class T>
+class DAGsPerLocus : public vector< EventsDAG<T>* >
+{
+public:
+  DAGsPerLocus(){}
+  virtual ~DAGsPerLocus();
+  EventsDAG<T>* getDAG(int nLocusIdx) const;
+};
+
+/*---------------------------------------------------------------------------
+ * DTOR
+ */
+template<class T>
+DAGsPerLocus<T>::~DAGsPerLocus()
+{
+}
 
 /*---------------------------------------------------------------------------
  * DTOR
@@ -85,8 +124,8 @@ public:
 template<class T>
 EventsDAG<T>::~EventsDAG()
 {
-  EventsDAGNode<Event>* pCurrEvent = nullptr;
-  EventsDAGNode<Event>* pVictimEvent = nullptr;
+  EventsDAGNode<T>* pCurrEvent = nullptr;
+  EventsDAGNode<T>* pVictimEvent = nullptr;
   auto iCurr = this->begin();
   auto iEnd = this->end();
   for( ; iCurr != iEnd; ++iCurr )
@@ -105,14 +144,14 @@ EventsDAG<T>::~EventsDAG()
 /*---------------------------------------------------------------------------
  */
 template<class T> EventsDAGNode<T>*
-EventsDAG<T>::getNode(int nGenIdx, int nEventIdx) const
+EventsDAG<T>::getNode(int nPopIdx, int nEventId) const
 {
-  if( nGenIdx >= this->size() || nEventIdx < 0 || nGenIdx < 0 )
+  if( nPopIdx >= this->size() || nEventId < 0 || nPopIdx < 0 )
     return nullptr;
-  EventsDAGNode<T>* pRes = *(this->begin() + nGenIdx);
-  for( int i = 0 ; i < nEventIdx; ++i )
+  EventsDAGNode<T>* pRes = *(this->begin() + nPopIdx);
+  while(nullptr != pRes)
   {
-    if(nullptr == pRes)
+    if( pRes->getContent()->getId() == nEventId )
       break;
     pRes = pRes->getNextGenEvent();
   }
@@ -122,18 +161,71 @@ EventsDAG<T>::getNode(int nGenIdx, int nEventIdx) const
 /*---------------------------------------------------------------------------
  */
 template<class T> void
-EventsDAG<T>::addEventChainToDag(Event* pEventStart, int nLen)
+EventsDAG<T>::addEventChainToDag(T* pEventStart, int nLen)
 {
-  EventsDAGNode<Event>* pStartChain = new EventsDAGNode<Event>(pEventStart);
-  this->push_back(pStartChain);
-  EventsDAGNode<Event>* pPrevEvent = pStartChain;
-  for( int i = 1; i < nLen; ++i )
+  EventsDAGNode<T>* pCurrEvent = nullptr;
+  pCurrEvent = new EventsDAGNode<T>(new T);
+  pCurrEvent->getContent()->setType(POP_START);
+  this->push_back(pCurrEvent);
+
+  EventsDAGNode<T>* pPrevEvent = pCurrEvent;
+  for( int i = 0; i < nLen; ++i )
   {
-    EventsDAGNode<Event>* pCurrEvent = new EventsDAGNode<Event>(&(pEventStart[i]));
+    pCurrEvent = new EventsDAGNode<T>(&(pEventStart[i]));
     pPrevEvent->setNextGenEvent(pCurrEvent);
     pCurrEvent->setPrevGenEvent(pPrevEvent);
     pPrevEvent = pCurrEvent;
   }
+
+  pCurrEvent = new EventsDAGNode<T>(new T);
+  pCurrEvent->getContent()->setType(POP_END);
+  pPrevEvent->setNextGenEvent(pCurrEvent);
+  pCurrEvent->setPrevGenEvent(pPrevEvent);
+}
+
+/*---------------------------------------------------------------------------
+ */
+template<class T> void
+EventsDAG<T>::initPopulation(int nPopIdx, T* pFirstEvent)
+{
+  //Create POP START, POP END events
+  T* pPopStartVirtEvent = new T;
+  EventsDAGNode<T>* pPopStartDAGEvent = new EventsDAGNode<T>(pPopStartVirtEvent);
+  (*this)[nPopIdx] = pPopStartDAGEvent;
+  pPopStartDAGEvent->getContent()->setType (POP_START);
+  T* pPopEndVirtEvent = new T;
+  EventsDAGNode<T>* pPopEndDAGEvent = new EventsDAGNode<T>(pPopEndVirtEvent);
+  pPopEndDAGEvent->getContent()->setType (POP_END);
+  pPopStartDAGEvent->setNextGenEvent(pPopEndDAGEvent);
+  pPopEndDAGEvent->setPrevGenEvent(pPopStartDAGEvent);
+  //Insert the actual event in between
+  this->appendEvent(nPopIdx, pFirstEvent);
+}
+
+/*---------------------------------------------------------------------------
+ */
+template<class T> void
+EventsDAG<T>::appendEvent(int nPopIdx, T* pEvent)
+{
+  EventsDAGNode<T>* pDAGEvent = new EventsDAGNode<T>(pEvent);
+  EventsDAGNode<T>* pCurrDAGEvent = (*this)[nPopIdx];
+  assert(pCurrDAGEvent->getContent()->getType() == POP_START);
+  while( pCurrDAGEvent->getNextGenEvent()->getType() != POP_END )
+    pCurrDAGEvent = pCurrDAGEvent->getNextGenEvent();
+
+  pDAGEvent->setPrevGenEvent(pCurrDAGEvent);
+  pDAGEvent->setNextGenEvent(pCurrDAGEvent->getNextGenEvent());
+  pCurrDAGEvent->setNextGenEvent(pDAGEvent);
+  pDAGEvent->getNextGenEvent()->setPrevGenEvent(pDAGEvent);
+}
+/*---------------------------------------------------------------------------
+ */
+template<class T> EventsDAGNode<T>*
+EventsDAG<T>::getFirstGenEventInPop(int nPopIdx) const
+{
+  EventsDAGNode<T>* pPopStartEvent = (*this)[nPopIdx];
+  assert(pPopStartEvent != nullptr);
+  return pPopStartEvent->getNextGenEvent();
 }
 
 /*-----------------------------------------------------------------------------

@@ -21,9 +21,12 @@
 #endif
 
 #include "MemoryMng.h"
+#include "EventsDAG.h"
 #include "GPhoCS.h"
 #include "GTreeStructVal.h"
 #include <assert.h>
+
+extern DAGsPerLocus<Event> all_dags;
 
 /******************************************************************************************************/
 /******                               FUNCTION IMPLEMENTATION                                    ******/
@@ -119,18 +122,18 @@ int Coalescence1Pop(PopulationTree *popTree, GenericBinaryTree *tree, int gen,
     T = popTree->pops[pop]->sampleAge;
   }
   for (; numLineages > 1; numLineages--, nextAvailableNodeId++) {
-    t = rndexp(popTree->pops[pop]->theta / (numLineages * (numLineages - 1.)));
+    t = rndexp(gen, popTree->pops[pop]->theta / (numLineages * (numLineages - 1.)));
     T += t;
     if (pop != popTree->rootPop && T > popTree->pops[pop]->father->age)
       break;
 
     // choose first living node and remove from list
-    choice = (int) (numLineages * rndu());
+    choice = (int) (numLineages * rndu(gen));
     node1 = livingLineages[choice];
     livingLineages[choice] = livingLineages[numLineages - 1];
 
     // choose second living node and replace with new one
-    choice = (int) ((numLineages - 1) * rndu());
+    choice = (int) ((numLineages - 1) * rndu(gen));
     node2 = livingLineages[choice];
     livingLineages[choice] = nextAvailableNodeId;
 
@@ -1084,55 +1087,69 @@ int removeEvent(int gen, int event) {
    Returns the id of the event.
 */
 
-int createEventBefore(int gen, int pop, int event, double elapsed_time)
+int createEventBefore( int     nGenIdx,
+                       int     nPopIdx,
+                       int     nEventIdx,
+                       double  fElapsedTime )
 {
+  int nEventId = event_chains[nGenIdx].events[nEventIdx].getId();
+  EventsDAGNode<Event>* pCurrEvent = all_dags[nGenIdx]->getNode( nPopIdx,
+                                                                 nEventId );
+  return createEventBefore( nGenIdx, nPopIdx, pCurrEvent, fElapsedTime );
+}
 
-  int prev_event = event_chains[gen].events[event].getPrevIdx();
-  int new_event = event_chains[gen].free_events;
+int createEventBefore( int                   nGenIdx,
+                       int                   nPopIdx,
+                       EventsDAGNode<Event>* pCurrEvent,
+                       double                fElapsedTime)
+{
+  // --- backward compatibility -----------------------------------------------
+  //int prev_event = event_chains[gen].events[event].getPrevIdx();
+  //int new_event = event_chains[gen].free_events;
+  int prev_event = pCurrEvent->getContent()->getPrevIdx();
+  int new_event = event_chains[nGenIdx].free_events;
 
-  event_chains[gen].free_events =
-      event_chains[gen].events[new_event].getNextIdx();
 
-  if (event_chains[gen].free_events < 0) {
+  event_chains[nGenIdx].free_events =
+      event_chains[nGenIdx].events[new_event].getNextIdx();
+
+  if (event_chains[nGenIdx].free_events < 0) {
     if (debug) {
-      fprintf(stderr, "\nError: Empty event pool in gen %d.\n", gen);
+      fprintf(stderr, "\nError: Empty event pool in gen %d.\n", nGenIdx);
     } else {
       fprintf(stderr, "Fatal Error 0015.\n");
     }
-    printGenealogyAndExit(gen, -1);
+    printGenealogyAndExit(nGenIdx, -1);
   }
+  //---------------------------------------------------------------------------
 
   // make changes in elapsed time and pointers
-  EventsDAGNode<Event>* pDAGCurrEvent = events_dag.getNode(gen, event);
-  EventsDAGNode<Event>* pDAGNewEvent = events_dag.getNode(gen, new_event);
-  EventsDAGNode<Event>* pDAGPrevEvent = events_dag.getNode(gen, prev_event);
+  // --- ver 1 ---------------------------------------------------------------
+//  Event* pPrevEvent = &(event_chains[nGenIdx].events[prev_event]);
+//  Event* pNewEvent = &(event_chains[nGenIdx].events[new_event]);
+//
+//  event_chains[nGenIdx].events[new_event].setNextIdx(event);
+//  event_chains[nGenIdx].events[new_event].setPrevIdx(prev_event);
+//
+//  event_chains[nGenIdx].events[new_event].setNumLineages(
+//      event_chains[nGenIdx].events[event].getNumLineages());
+//  event_chains[nGenIdx].events[new_event].setElapsedTime(fElapsedTime);
+//  event_chains[nGenIdx].events[new_event].setType(DUMMY);
+//
+//  event_chains[nGenIdx].events[event].setPrevIdx(new_event);
+//
+//  event_chains[nGenIdx].events[event].addElapsedTime(-fElapsedTime);
+//
+//  if (prev_event < 0)
+//  {
+//    event_chains[nGenIdx].first_event[nPopIdx] = new_event;
+//  }
+//  else
+//  {
+//    event_chains[nGenIdx].events[prev_event].setNextIdx(new_event);
+//  }
+  //---------------------------------------------------------------------------
 
-  pDAGNewEvent->setNextGenEvent(pDAGCurrEvent);
-  if(nullptr != pDAGPrevEvent )
-    pDAGNewEvent->setPrevGenEvent(pDAGPrevEvent);
-  event_chains[gen].events[new_event].setNextIdx(event);
-  event_chains[gen].events[new_event].setPrevIdx(prev_event);
-
-  event_chains[gen].events[new_event].setNumLineages(
-      event_chains[gen].events[event].getNumLineages());
-  event_chains[gen].events[new_event].setElapsedTime(elapsed_time);
-  event_chains[gen].events[new_event].setType(DUMMY);
-
-  event_chains[gen].events[event].setPrevIdx(new_event);
-  pDAGCurrEvent->setPrevGenEvent(pDAGNewEvent);
-
-  event_chains[gen].events[event].addElapsedTime(-elapsed_time);
-
-  if (prev_event < 0)
-  {
-    event_chains[gen].first_event[pop] = new_event;
-    events_dag[gen] = pDAGNewEvent;
-  }
-  else
-  {
-    event_chains[gen].events[prev_event].setNextIdx(new_event);
-    pDAGPrevEvent->setNextGenEvent(pDAGNewEvent);
-  }
 
 #ifdef DEBUG_EVENT_CHAIN
   printf("Added new event %d to gen %d. Next free event %d.\n",
@@ -1151,69 +1168,109 @@ int createEventBefore(int gen, int pop, int event, double elapsed_time)
    Returns the id of the event.
 */
 
-int createEvent(int gen, int pop, double age) {
+int createEvent(int nGenIdx, int nPopIdx, double fAge)
+{
+  double fDeltaTime = fAge - dataSetup.popTree->pops[nPopIdx]->age;
 
-  int event;
-  double delta_time = age - dataSetup.popTree->pops[pop]->age;
-
-  if (delta_time < 0) {
-    if (debug) {
-      fprintf(stderr,
-              "\nError: createEvent: time specified %g is"
-                  " smaller than age of target population %d (%g).\n",
-              age, pop, dataSetup.popTree->pops[pop]->age);
-    } else {
-      fprintf(stderr, "Fatal Error 0016.\n");
+  if( fDeltaTime < 0 )
+  {
+    if( debug )
+    {
+      fprintf( stderr,
+               "\nError: createEvent: time specified %g is"
+               " smaller than age of target population %d (%g).\n",
+               fAge, nPopIdx, dataSetup.popTree->pops[nPopIdx]->age);
+    }
+    else
+    {
+      fprintf( stderr, "Fatal Error 0016.\n" );
     }
     return (-1);
   }
 
-  if (pop != dataSetup.popTree->rootPop
-      && age > dataSetup.popTree->pops[pop]->father->age + 0.000001) {
-    if (debug) {
-      fprintf(stderr,
-              "\nError: createEvent: time specified %g is"
-                  " greater than age of parent population %d (%g).\n",
-              age, dataSetup.popTree->pops[pop]->father->id,
-              dataSetup.popTree->pops[pop]->father->age);
-    } else {
-      fprintf(stderr, "Fatal Error 0017.\n");
+  if(    nPopIdx != dataSetup.popTree->rootPop
+      && fAge > (dataSetup.popTree->pops[nPopIdx]->father->age + 0.000001) )
+  {
+    if( debug )
+    {
+      fprintf( stderr,
+               "\nError: createEvent: time specified %g is"
+               " greater than age of parent population %d (%g).\n",
+               fAge, dataSetup.popTree->pops[nPopIdx]->father->id,
+               dataSetup.popTree->pops[nPopIdx]->father->age);
+    }
+    else
+    {
+      fprintf( stderr, "Fatal Error 0017.\n" );
     }
     return (-1);
   }
 
   // find spot for new event
-  for (event = event_chains[gen].first_event[pop];
-          event_chains[gen].events[event].getType() != END_CHAIN
-       && event_chains[gen].events[event].getElapsedTime() < delta_time;
-       event = event_chains[gen].events[event].getNextIdx())
+  // --- v1 -------------------------------------------------------------------
+//  int event;
+//  for (event = event_chains[gen].first_event[pop];
+//          event_chains[gen].events[event].getType() != END_CHAIN
+//       && event_chains[gen].events[event].getElapsedTime() < delta_time;
+//       event = event_chains[gen].events[event].getNextIdx())
+//  {
+//    delta_time -= event_chains[gen].events[event].getElapsedTime();
+//  }
+//
+//  if (event_chains[gen].events[event].getElapsedTime() < delta_time)
+//  {
+//    if (event_chains[gen].events[event].getElapsedTime()
+//        < (delta_time - 0.000001))
+//    {
+//      if (debug)
+//      {
+//        fprintf(stderr,
+//                "\nError: createEvent: trying to insert new event"
+//                    " in pop %d, gen %d at time %g, %g above END_CHAIN event.\n",
+//                pop, gen, age,
+//                delta_time - event_chains[gen].events[event].getElapsedTime());
+//      }
+//      else
+//      {
+//        fprintf(stderr, "Fatal Error 0018.\n");
+//      }
+//      printGenealogyAndExit(gen, -1);
+//    }
+//    delta_time = event_chains[gen].events[event].getElapsedTime();
+//  }
+  //---------------------------------------------------------------------------
+
+  EventsDAGNode<Event>* pCurrEvent =
+                            all_dags[nGenIdx]->getFirstGenEventInPop(nPopIdx);
+  double fCurrElapsedTime = pCurrEvent->getContent()->getElapsedTime();
+  while( pCurrEvent->getType() != POP_END && fCurrElapsedTime < fDeltaTime )
   {
-    delta_time -= event_chains[gen].events[event].getElapsedTime();
+    fDeltaTime -= fCurrElapsedTime;
+    pCurrEvent = pCurrEvent->getNextGenEvent();
+    fCurrElapsedTime = pCurrEvent->getContent()->getElapsedTime();
   }
 
-  if (event_chains[gen].events[event].getElapsedTime() < delta_time)
+  if( fCurrElapsedTime < fDeltaTime )
   {
-    if (event_chains[gen].events[event].getElapsedTime()
-        < (delta_time - 0.000001))
+    if( fCurrElapsedTime < (fDeltaTime - 0.000001 ) )
     {
-      if (debug)
+      if( debug )
       {
         fprintf(stderr,
                 "\nError: createEvent: trying to insert new event"
-                    " in pop %d, gen %d at time %g, %g above END_CHAIN event.\n",
-                pop, gen, age,
-                delta_time - event_chains[gen].events[event].getElapsedTime());
+                " in pop %d, gen %d at time %g, %g above END_CHAIN event.\n",
+                nPopIdx, nGenIdx, fAge, (fDeltaTime - fCurrElapsedTime) );
       }
       else
       {
         fprintf(stderr, "Fatal Error 0018.\n");
       }
-      printGenealogyAndExit(gen, -1);
+      printGenealogyAndExit(nGenIdx, -1);
     }
-    delta_time = event_chains[gen].events[event].getElapsedTime();
+    fDeltaTime = fCurrElapsedTime;
   }
 
-  return createEventBefore(gen, pop, event, delta_time);
+  return createEventBefore(nGenIdx, nPopIdx, pCurrEvent, fDeltaTime);
 }
 
 
@@ -1401,6 +1458,7 @@ int constructEventChain(int gen)
     event_chains[gen].events[pop].setId(pop);
     // it is important to initialize 0 incoming lineages per population
     event_chains[gen].events[pop].setNumLineages(0);
+
     if (pop == dataSetup.popTree->rootPop) {
       event_chains[gen].events[pop].setElapsedTime(
           OLDAGE - dataSetup.popTree->pops[dataSetup.popTree->rootPop]->age);
@@ -1408,9 +1466,10 @@ int constructEventChain(int gen)
     {
       double elapsedTime = dataSetup.popTree->pops[pop]->father->age
                            - dataSetup.popTree->pops[pop]->age;
+      Event* pCurrEvent = &(event_chains[gen].events[pop]);
+      pCurrEvent->setElapsedTime(elapsedTime);
+      all_dags[gen]->initPopulation(pop, pCurrEvent);
 
-      events_dag.getNode(gen, pop)->getContent()->setElapsedTime(elapsedTime);
-      //event_chains[gen].events[pop].setElapsedTime(elapsedTime);
     }
     event_chains[gen].first_event[pop] = pop;
     // this should stay constant
@@ -1420,13 +1479,8 @@ int constructEventChain(int gen)
 
   // initialize free event chain
   event_chains[gen].free_events = dataSetup.popTree->numPops;
-  //event_chains[gen].events[dataSetup.popTree->numPops].setPrevIdx(-1);
-  events_dag.getNode(gen, dataSetup.popTree->numPops)->getContent()->setPrevIdx(-1);
-  //events_dag.getNode(gen, dataSetup.popTree->numPops)->setPrevGenEvent(nullptr);
-
-  //event_chains[gen].events[event_chains[gen].total_events - 1].setNextIdx(-1);
-  events_dag.getNode(gen, event_chains[gen].total_events - 1)->getContent()->setNextIdx(-1);
-  //events_dag.getNode(gen, event_chains[gen].total_events - 1)->setNextGenEvent(nullptr);
+  event_chains[gen].events[dataSetup.popTree->numPops].setPrevIdx(-1);
+  event_chains[gen].events[event_chains[gen].total_events - 1].setNextIdx(-1);
 
   for (event = dataSetup.popTree->numPops;
        event < event_chains[gen].total_events - 1;
@@ -1434,10 +1488,6 @@ int constructEventChain(int gen)
   {
     event_chains[gen].events[event].setNextIdx(event + 1);
     event_chains[gen].events[event + 1].setPrevIdx(event);
-    //@@ check:
-    Event* pNextOfCurr = events_dag.getNode(gen, event+1)->getContent();
-    Event* pNext = events_dag.getNode(gen, event)->getNextGenEvent()->getContent();
-    assert(pNextOfCurr == pNext);
   }
 
   // migration band events
@@ -2041,846 +2091,846 @@ double gtreeLnLikelihood(int gen) {
    invokes checkGtreeStructure on all loci and checks genetree_stats_total
    also checks data log likelihood
 */
-int checkAll() {
-  int gen, mig_band, pop, heredity_factor, res = 1;
-  double PERCISION = 0.0000001;
-  double lnLd_gen, genLnLd, dataLnLd;
-
-  for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    genetree_stats_total_check.num_coals[pop] = 0;
-    genetree_stats_total_check.coal_stats[pop] = 0.0;
-  }
-  for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
-    genetree_stats_total_check.num_migs[mig_band] = 0;
-    genetree_stats_total_check.mig_stats[mig_band] = 0.0;
-  }
-
-  genLnLd = 0.0;
-  dataLnLd = 0.0;
-
-  for (gen = 0; gen < dataSetup.numLoci; gen++) {
-    if (!checkGtreeStructure(gen)) {
-      fprintf(stderr, "\nError: Checking gene tree structure failed\n");
-      printGenealogyAndExit(gen, 0);
-      return 0;
-    }
-
-
-    if (!checkLocusDataLikelihood(dataState.lociData[gen])) {
-      fprintf(stderr, "\nError: checking recorded likelihood for gen %d!", gen);
-      printGenealogyAndExit(gen, 0);
-      return 0;
-    }
-
-    lnLd_gen = gtreeLnLikelihood(gen);
-
-    if (fabs(locus_data[gen].genLogLikelihood - lnLd_gen) > PERCISION &&
-        fabs(1 - locus_data[gen].genLogLikelihood / lnLd_gen) > PERCISION) {
-      fprintf(stderr,
-              "\nError: in recorded genealogy log likelihood for gen %d: (recorded = %g, actual = %g, diff = %g, 1-ratio = %g).\n",
-              gen, locus_data[gen].genLogLikelihood, lnLd_gen,
-              locus_data[gen].genLogLikelihood - lnLd_gen,
-              1 - locus_data[gen].genLogLikelihood / lnLd_gen);
-      printGenealogyAndExit(gen, 0);
-      return 0;
-    }
-    locus_data[gen].genLogLikelihood = lnLd_gen;
-    dataLnLd += getLocusDataLikelihood(dataState.lociData[gen]);
-    genLnLd += lnLd_gen;
-
-    heredity_factor = 1;
-    for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-      genetree_stats_total_check.num_coals[pop] += genetree_stats[gen].num_coals[pop];
-      genetree_stats_total_check.coal_stats[pop] +=
-          genetree_stats[gen].coal_stats[pop] / heredity_factor;
-    }
-    for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
-      genetree_stats_total_check.num_migs[mig_band] += genetree_stats[gen].num_migs[mig_band];
-      genetree_stats_total_check.mig_stats[mig_band] += genetree_stats[gen].mig_stats[mig_band];
-    }
-
-
-  }
-
-  for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    if (fabs(genetree_stats_total_check.coal_stats[pop] -
-             genetree_stats_total.coal_stats[pop]) > PERCISION && fabs(1 -
-                                                                       genetree_stats_total_check.coal_stats[pop] /
-                                                                       genetree_stats_total.coal_stats[pop]) >
-                                                                  PERCISION) {
-      if (debug) {
-        fprintf(stderr,
-                "\nError: checking total coal stats for pop %d: %f (saved) %f (actual) %g (difference) %g (1-ratio)",
-                pop, genetree_stats_total.coal_stats[pop],
-                genetree_stats_total_check.coal_stats[pop],
-                genetree_stats_total_check.coal_stats[pop] -
-                genetree_stats_total.coal_stats[pop],
-                1 - genetree_stats_total_check.coal_stats[pop] /
-                    genetree_stats_total.coal_stats[pop]);
-      } else {
-        fprintf(stderr, "Fatal Error 0028.\n");
-      }
-      res = 0;
-    }
-    genetree_stats_total.coal_stats[pop] = genetree_stats_total_check.coal_stats[pop];
-    if (genetree_stats_total_check.num_coals[pop] !=
-        genetree_stats_total.num_coals[pop]) {
-      if (debug) {
-        fprintf(stderr,
-                "\nError: checking total num coals for pop %d: %d (saved) %d (actual)",
-                pop, genetree_stats_total.num_coals[pop],
-                genetree_stats_total_check.num_coals[pop]);
-      } else {
-        fprintf(stderr, "Fatal Error 0029.\n");
-      }
-      res = 0;
-    }
-
-    genetree_stats_total.coal_stats[pop] = genetree_stats_total_check.coal_stats[pop];
-  }
-  for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
-    if (fabs(genetree_stats_total_check.mig_stats[mig_band] -
-             genetree_stats_total.mig_stats[mig_band]) > PERCISION && fabs(1 -
-                                                                           genetree_stats_total_check.mig_stats[mig_band] /
-                                                                           genetree_stats_total.mig_stats[mig_band]) >
-                                                                      PERCISION) {
-      if (debug) {
-        fprintf(stderr,
-                "\nError: checking total mig stats for mig band %d: %f (saved) %f (actual), %f (diff) %f (1-ratio)",
-                mig_band, genetree_stats_total.mig_stats[mig_band],
-                locus_data[gen].genetree_stats_check.mig_stats[mig_band],
-                genetree_stats_total_check.mig_stats[mig_band] -
-                genetree_stats_total.mig_stats[mig_band],
-                1 - genetree_stats_total_check.mig_stats[mig_band] /
-                    genetree_stats_total.mig_stats[mig_band]);
-      } else {
-        fprintf(stderr, "Fatal Error 0030.\n");
-      }
-      res = 0;
-    }
-    genetree_stats_total.mig_stats[mig_band] = genetree_stats_total_check.mig_stats[mig_band];
-    if (genetree_stats_total_check.num_migs[mig_band] !=
-        genetree_stats_total.num_migs[mig_band]) {
-      if (debug) {
-        fprintf(stderr,
-                "\nError: checking total num migs for mig band %d: %d (saved) %d (actual)",
-                mig_band, genetree_stats_total.num_migs[mig_band],
-                genetree_stats_total_check.num_migs[mig_band]);
-      } else {
-        fprintf(stderr, "Fatal Error 0031.\n");
-      }
-      res = 0;
-    }
-
-    genetree_stats_total.mig_stats[mig_band] = genetree_stats_total_check.mig_stats[mig_band];
-  }
-  if (fabs(dataState.dataLogLikelihood - dataLnLd) > PERCISION &&
-      fabs(1 - dataState.dataLogLikelihood / dataLnLd) > PERCISION) {
-    if (debug) {
-      fprintf(stderr,
-              "\nError: in recorded data log likelihood: (recorded = %g, actual = %g, diff = %g, 1-ratio = %g).\n",
-              dataState.dataLogLikelihood, dataLnLd,
-              dataState.dataLogLikelihood - dataLnLd,
-              1 - dataState.dataLogLikelihood / dataLnLd);
-    } else {
-      fprintf(stderr, "Fatal Error 0032.\n");
-    }
-    res = 0;
-  }
-  dataState.dataLogLikelihood = dataLnLd;
-  // check recorded total log-likelihood
-  dataLnLd = (genLnLd + dataLnLd) / dataSetup.numLoci;
-  if (fabs(1 - dataState.logLikelihood / dataLnLd) > PERCISION) {
-    if (debug) {
-      fprintf(stderr,
-              "\nError: in recorded total log likelihood: (recorded = %g, actual = %g).\n",
-              dataState.logLikelihood, dataLnLd);
-    } else {
-      fprintf(stderr, "Fatal Error 0033.\n");
-    }
-    res = 0;
-  }
-  dataState.logLikelihood = dataLnLd;
-
-  if (!res) {
-    printf("\n\n");
-    //		exit(-1);
-  }
-
-  return res;
-
-}
+//int checkAll() {
+//  int gen, mig_band, pop, heredity_factor, res = 1;
+//  double PERCISION = 0.0000001;
+//  double lnLd_gen, genLnLd, dataLnLd;
+//
+//  for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+//    genetree_stats_total_check.num_coals[pop] = 0;
+//    genetree_stats_total_check.coal_stats[pop] = 0.0;
+//  }
+//  for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
+//    genetree_stats_total_check.num_migs[mig_band] = 0;
+//    genetree_stats_total_check.mig_stats[mig_band] = 0.0;
+//  }
+//
+//  genLnLd = 0.0;
+//  dataLnLd = 0.0;
+//
+//  for (gen = 0; gen < dataSetup.numLoci; gen++) {
+//    if (!checkGtreeStructure(gen)) {
+//      fprintf(stderr, "\nError: Checking gene tree structure failed\n");
+//      printGenealogyAndExit(gen, 0);
+//      return 0;
+//    }
+//
+//
+//    if (!checkLocusDataLikelihood(dataState.lociData[gen])) {
+//      fprintf(stderr, "\nError: checking recorded likelihood for gen %d!", gen);
+//      printGenealogyAndExit(gen, 0);
+//      return 0;
+//    }
+//
+//    lnLd_gen = gtreeLnLikelihood(gen);
+//
+//    if (fabs(locus_data[gen].genLogLikelihood - lnLd_gen) > PERCISION &&
+//        fabs(1 - locus_data[gen].genLogLikelihood / lnLd_gen) > PERCISION) {
+//      fprintf(stderr,
+//              "\nError: in recorded genealogy log likelihood for gen %d: (recorded = %g, actual = %g, diff = %g, 1-ratio = %g).\n",
+//              gen, locus_data[gen].genLogLikelihood, lnLd_gen,
+//              locus_data[gen].genLogLikelihood - lnLd_gen,
+//              1 - locus_data[gen].genLogLikelihood / lnLd_gen);
+//      printGenealogyAndExit(gen, 0);
+//      return 0;
+//    }
+//    locus_data[gen].genLogLikelihood = lnLd_gen;
+//    dataLnLd += getLocusDataLikelihood(dataState.lociData[gen]);
+//    genLnLd += lnLd_gen;
+//
+//    heredity_factor = 1;
+//    for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+//      genetree_stats_total_check.num_coals[pop] += genetree_stats[gen].num_coals[pop];
+//      genetree_stats_total_check.coal_stats[pop] +=
+//          genetree_stats[gen].coal_stats[pop] / heredity_factor;
+//    }
+//    for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
+//      genetree_stats_total_check.num_migs[mig_band] += genetree_stats[gen].num_migs[mig_band];
+//      genetree_stats_total_check.mig_stats[mig_band] += genetree_stats[gen].mig_stats[mig_band];
+//    }
+//
+//
+//  }
+//
+//  for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+//    if (fabs(genetree_stats_total_check.coal_stats[pop] -
+//             genetree_stats_total.coal_stats[pop]) > PERCISION && fabs(1 -
+//                                                                       genetree_stats_total_check.coal_stats[pop] /
+//                                                                       genetree_stats_total.coal_stats[pop]) >
+//                                                                  PERCISION) {
+//      if (debug) {
+//        fprintf(stderr,
+//                "\nError: checking total coal stats for pop %d: %f (saved) %f (actual) %g (difference) %g (1-ratio)",
+//                pop, genetree_stats_total.coal_stats[pop],
+//                genetree_stats_total_check.coal_stats[pop],
+//                genetree_stats_total_check.coal_stats[pop] -
+//                genetree_stats_total.coal_stats[pop],
+//                1 - genetree_stats_total_check.coal_stats[pop] /
+//                    genetree_stats_total.coal_stats[pop]);
+//      } else {
+//        fprintf(stderr, "Fatal Error 0028.\n");
+//      }
+//      res = 0;
+//    }
+//    genetree_stats_total.coal_stats[pop] = genetree_stats_total_check.coal_stats[pop];
+//    if (genetree_stats_total_check.num_coals[pop] !=
+//        genetree_stats_total.num_coals[pop]) {
+//      if (debug) {
+//        fprintf(stderr,
+//                "\nError: checking total num coals for pop %d: %d (saved) %d (actual)",
+//                pop, genetree_stats_total.num_coals[pop],
+//                genetree_stats_total_check.num_coals[pop]);
+//      } else {
+//        fprintf(stderr, "Fatal Error 0029.\n");
+//      }
+//      res = 0;
+//    }
+//
+//    genetree_stats_total.coal_stats[pop] = genetree_stats_total_check.coal_stats[pop];
+//  }
+//  for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
+//    if (fabs(genetree_stats_total_check.mig_stats[mig_band] -
+//             genetree_stats_total.mig_stats[mig_band]) > PERCISION && fabs(1 -
+//                                                                           genetree_stats_total_check.mig_stats[mig_band] /
+//                                                                           genetree_stats_total.mig_stats[mig_band]) >
+//                                                                      PERCISION) {
+//      if (debug) {
+//        fprintf(stderr,
+//                "\nError: checking total mig stats for mig band %d: %f (saved) %f (actual), %f (diff) %f (1-ratio)",
+//                mig_band, genetree_stats_total.mig_stats[mig_band],
+//                locus_data[gen].genetree_stats_check.mig_stats[mig_band],
+//                genetree_stats_total_check.mig_stats[mig_band] -
+//                genetree_stats_total.mig_stats[mig_band],
+//                1 - genetree_stats_total_check.mig_stats[mig_band] /
+//                    genetree_stats_total.mig_stats[mig_band]);
+//      } else {
+//        fprintf(stderr, "Fatal Error 0030.\n");
+//      }
+//      res = 0;
+//    }
+//    genetree_stats_total.mig_stats[mig_band] = genetree_stats_total_check.mig_stats[mig_band];
+//    if (genetree_stats_total_check.num_migs[mig_band] !=
+//        genetree_stats_total.num_migs[mig_band]) {
+//      if (debug) {
+//        fprintf(stderr,
+//                "\nError: checking total num migs for mig band %d: %d (saved) %d (actual)",
+//                mig_band, genetree_stats_total.num_migs[mig_band],
+//                genetree_stats_total_check.num_migs[mig_band]);
+//      } else {
+//        fprintf(stderr, "Fatal Error 0031.\n");
+//      }
+//      res = 0;
+//    }
+//
+//    genetree_stats_total.mig_stats[mig_band] = genetree_stats_total_check.mig_stats[mig_band];
+//  }
+//  if (fabs(dataState.dataLogLikelihood - dataLnLd) > PERCISION &&
+//      fabs(1 - dataState.dataLogLikelihood / dataLnLd) > PERCISION) {
+//    if (debug) {
+//      fprintf(stderr,
+//              "\nError: in recorded data log likelihood: (recorded = %g, actual = %g, diff = %g, 1-ratio = %g).\n",
+//              dataState.dataLogLikelihood, dataLnLd,
+//              dataState.dataLogLikelihood - dataLnLd,
+//              1 - dataState.dataLogLikelihood / dataLnLd);
+//    } else {
+//      fprintf(stderr, "Fatal Error 0032.\n");
+//    }
+//    res = 0;
+//  }
+//  dataState.dataLogLikelihood = dataLnLd;
+//  // check recorded total log-likelihood
+//  dataLnLd = (genLnLd + dataLnLd) / dataSetup.numLoci;
+//  if (fabs(1 - dataState.logLikelihood / dataLnLd) > PERCISION) {
+//    if (debug) {
+//      fprintf(stderr,
+//              "\nError: in recorded total log likelihood: (recorded = %g, actual = %g).\n",
+//              dataState.logLikelihood, dataLnLd);
+//    } else {
+//      fprintf(stderr, "Fatal Error 0033.\n");
+//    }
+//    res = 0;
+//  }
+//  dataState.logLikelihood = dataLnLd;
+//
+//  if (!res) {
+//    printf("\n\n");
+//    //		exit(-1);
+//  }
+//
+//  return res;
+//
+//}
 
 
 /* checkGtreeStructure
    Checks consistency of genetree data - nodes, mignodes, events and stats
 */
 
-int checkGtreeStructure(int gen) {
-
-  int i, n, pop, mig_band, event, id, node, mig, num_migs;
-  int num_living_mig_bands, living_mig_bands[MAX_MIG_BANDS], pop_queue[
-      2 * NSPECIES - 1];
-  int pop_lins_in[2 * NSPECIES - 1];
-  int father;
-  int res = 1;
-
-  double age, delta_t, PERCISION = 0.0000000001;
-
-
-  // essentially follow the same path as procedure computeGenetreeStats,
-  // but validates with genetree nodes
-
-  // initialize number of in-lineages for leaf pops and order pops
-  for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    pop_lins_in[pop] = 0;
-  }
-  // MARK CHANGHES
-
-  // for(node=0; node<2*dataSetup.numSamples-1; node++) {
-  //  if(node < dataSetup.numSamples)
-  //     pop_lins_in[ nodePops[gen][node] ]++;
-  // }
-  populationPostOrder(dataSetup.popTree->rootPop, pop_queue);
-
-  for (i = 0; i < dataSetup.popTree->numPops; i++) {
-    pop = pop_queue[i];
-    locus_data[gen].genetree_stats_check.coal_stats[pop] = 0.0;
-    locus_data[gen].genetree_stats_check.num_coals[pop] = 0;
-    event = event_chains[gen].first_event[pop];
-    n = pop_lins_in[pop];
-    age = dataSetup.popTree->pops[pop]->age;
-    num_living_mig_bands = 0;
-
-
-    // follow event chain and check all saved data
-    for (; event >= 0; event = event_chains[gen].events[event].getNextIdx()) {
-
-
-      if (event_chains[gen].events[event].getNumLineages() != n) {
-        if (debug) {
-          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-          fprintf(stderr,
-                  "number of lineages of event %d doesn't match: %d, %d.\n",
-                  event, event_chains[gen].events[event].getNumLineages(), n);
-        } else {
-          fprintf(stderr, "Fatal Error 0034.\n");
-        }
-        res = 0;
-      }
-
-      if (event_chains[gen].events[event].getNextIdx() >= 0 && event !=
-                                                               event_chains[gen].events[event_chains[gen].events[event].getNextIdx()].getPrevIdx()) {
-        if (debug) {
-          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-          fprintf(stderr,
-                  "prev event of next event %d doesn't match: %d, %d.\n",
-                  event_chains[gen].events[event].getNextIdx(), event,
-                  event_chains[gen].events[event_chains[gen].events[event].getNextIdx()].getPrevIdx());
-        } else {
-          fprintf(stderr, "Fatal Error 0035.\n");
-        }
-        res = 0;
-      }
-      id = event_chains[gen].events[event].getId();
-      delta_t = event_chains[gen].events[event].getElapsedTime();
-      age += delta_t;
-      //			if(delta_t <= PERCISION) {
-      //				printf("\nError checking genetree for gen %d: ",gen);
-      //				printf("Too small time interval for event %d: %g.", event, delta_t);
-      //				res = 0;
-      //			}
-
-      locus_data[gen].genetree_stats_check.coal_stats[pop] +=
-          n * (n - 1) * delta_t;
-
-      for (mig_band = 0; mig_band < num_living_mig_bands; mig_band++) {
-        locus_data[gen].genetree_stats_check.mig_stats[living_mig_bands[mig_band]] +=
-            n * delta_t;
-      }
-
-      switch (event_chains[gen].events[event].getType()) {
-        case (SAMPLES_START):
-          n += dataSetup.numSamplesPerPop[pop];
-          if (fabs(dataSetup.popTree->pops[pop]->sampleAge - age) > PERCISION) {
-            //					if(fabs(gnodes[gen][id].age - age) > PERCISION) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "sample age of pop %d (event %d) doesn't match: %f, %f.\n",
-                      pop, event, age, dataSetup.popTree->pops[pop]->sampleAge);
-            } else {
-              fprintf(stderr, "Fatal Error 0036.\n");
-            }
-            res = 0;
-          }
-          break;
-        case (COAL):
-          locus_data[gen].genetree_stats_check.num_coals[pop]++;
-          n--;
-          if (fabs(getNodeAge(dataState.lociData[gen], id) - age) > PERCISION) {
-            //					if(fabs(gnodes[gen][id].age - age) > PERCISION) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "age of node %d (event %d) doesn't match: %g, %g.\n", id,
-                      event, age, getNodeAge(dataState.lociData[gen], id));
-            } else {
-              fprintf(stderr, "Fatal Error 0036.\n");
-            }
-            res = 0;
-          }
-
-          if (nodePops[gen][id] != pop) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "population of node %d (event %d) doesn't match: %d, %d.",
-                      id, event, pop, nodePops[gen][id]);
-            } else {
-              fprintf(stderr, "Fatal Error 0037.\n");
-            }
-            res = 0;
-          }
-          if (nodeEvents[gen][id] != event) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr, "event of node %d doesn't match: %d, %d.", id,
-                      event, nodeEvents[gen][id]);
-            } else {
-              fprintf(stderr, "Fatal Error 0038.\n");
-            }
-            res = 0;
-          }
-
-          break;
-        case (IN_MIG):
-          // figure out migration band and update its statistics
-          mig_band = genetree_migs[gen].mignodes[id].migration_band;
-          if (mig_band < 0 || mig_band > dataSetup.popTree->numMigBands) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr, "mig band %d invalid for mig node %d .", mig_band,
-                      id);
-            } else {
-              fprintf(stderr, "Fatal Error 0039a.\n");
-            }
-            res = 0;
-          }
-          locus_data[gen].genetree_stats_check.num_migs[mig_band]++;
-          n--;
-          if (fabs(genetree_migs[gen].mignodes[id].age - age) > PERCISION) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "age of mignode %d (target event %d) doesn't match: %g, %g.",
-                      id, event, age, genetree_migs[gen].mignodes[id].age);
-            } else {
-              fprintf(stderr, "Fatal Error 0039.\n");
-            }
-            res = 0;
-          }
-          if (dataSetup.popTree->migBands[mig_band].targetPop != pop) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "target population of migration band %d of mignode %d (target event %d) doesn't match: %d, %d.",
-                      mig_band, id, event, pop,
-                      dataSetup.popTree->migBands[mig_band].targetPop);
-            } else {
-              fprintf(stderr, "Fatal Error 0040.\n");
-            }
-            res = 0;
-          }
-          break;
-        case (OUT_MIG):
-          n++;
-          mig_band = genetree_migs[gen].mignodes[id].migration_band;
-          if (fabs(genetree_migs[gen].mignodes[id].age - age) > PERCISION) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "age of mignode %d (source event %d) doesn't match: %g, %g.",
-                      id, event, age, genetree_migs[gen].mignodes[id].age);
-            } else {
-              fprintf(stderr, "Fatal Error 0041.\n");
-            }
-            res = 0;
-          }
-          if (dataSetup.popTree->migBands[mig_band].sourcePop != pop) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "source population of migration band %d of mignode %d (source event %d) doesn't match: %d, %d.",
-                      mig_band, id, event, pop,
-                      dataSetup.popTree->migBands[mig_band].sourcePop);
-            } else {
-              fprintf(stderr, "Fatal Error 0042.\n");
-            }
-            res = 0;
-          }
-          if (genetree_migs[gen].mignodes[id].source_event != event) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr, "source event of node %d doesn't match: %d, %d.",
-                      id, event, genetree_migs[gen].mignodes[id].source_event);
-            } else {
-              fprintf(stderr, "Fatal Error 0043.\n");
-            }
-            res = 0;
-          }
-          break;
-        case (MIG_BAND_START):
-          living_mig_bands[num_living_mig_bands] = id;
-          num_living_mig_bands++;
-          // initialize statistics for this new migration band
-          locus_data[gen].genetree_stats_check.num_migs[id] = 0;
-          locus_data[gen].genetree_stats_check.mig_stats[id] = 0.0;
-          if (fabs(dataSetup.popTree->migBands[id].startTime - age) >
-              PERCISION) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "start time of migration band %d (start event %d) doesn't match: %g, %g.",
-                      id, event, age,
-                      dataSetup.popTree->migBands[id].startTime);
-            } else {
-              fprintf(stderr, "Fatal Error 0044.\n");
-            }
-            res = 0;
-          }
-          if (dataSetup.popTree->migBands[id].targetPop != pop) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "target population of migration band %d (start event %d) doesn't match: %d, %d.",
-                      id, event, pop,
-                      dataSetup.popTree->migBands[id].targetPop);
-            } else {
-              fprintf(stderr, "Fatal Error 0045.\n");
-            }
-            res = 0;
-          }
-          if (fabs(age - max2(dataSetup.popTree->pops[pop]->age,
-                              dataSetup.popTree->pops[dataSetup.popTree->migBands[id].sourcePop]->age)) >
-              PERCISION) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "start time of migration band %d (start event %d) doesn't match max of start times for populations %d,%d: %g, max(%g,%g).",
-                      id, event, pop, dataSetup.popTree->migBands[id].sourcePop,
-                      age, dataSetup.popTree->pops[pop]->age,
-                      dataSetup.popTree->pops[dataSetup.popTree->migBands[id].sourcePop]->age);
-            } else {
-              fprintf(stderr, "Fatal Error 0046.\n");
-            }
-            res = 0;
-          }
-          break;
-        case (MIG_BAND_END):
-          for (mig_band = 0; mig_band < num_living_mig_bands; mig_band++) {
-            if (living_mig_bands[mig_band] == id)
-              break;
-          }
-          if (mig_band == num_living_mig_bands) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "migration band %d (start event %d) ended without starting.",
-                      id, event);
-            } else {
-              fprintf(stderr, "Fatal Error 0047.\n");
-            }
-            res = 0;
-          } else {
-            living_mig_bands[mig_band] = living_mig_bands[--num_living_mig_bands];
-          }
-          if (fabs(dataSetup.popTree->migBands[id].endTime - age) > PERCISION) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "end time of migration band %d (end event %d) doesn't match: %g, %g.",
-                      id, event, age, dataSetup.popTree->migBands[id].endTime);
-            } else {
-              fprintf(stderr, "Fatal Error 0048.\n");
-            }
-            res = 0;
-          }
-          if (dataSetup.popTree->migBands[id].targetPop != pop) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "target population of migration band %d (end event %d) doesn't match: %d, %d.",
-                      id, event, pop,
-                      dataSetup.popTree->migBands[id].targetPop);
-            } else {
-              fprintf(stderr, "Fatal Error 0049.\n");
-            }
-            res = 0;
-          }
-          if (fabs(age - min2(dataSetup.popTree->pops[pop]->father->age,
-                              dataSetup.popTree->pops[dataSetup.popTree->migBands[id].sourcePop]->father->age)) >
-              PERCISION) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "end time of migration band %d (end event %d) doesn't match min of start times for parent populations %d,%d: %g, min(%g,%g).",
-                      id, event, dataSetup.popTree->pops[pop]->father->id,
-                      dataSetup.popTree->pops[dataSetup.popTree->migBands[id].sourcePop]->father->id,
-                      age, dataSetup.popTree->pops[pop]->father->age,
-                      dataSetup.popTree->pops[dataSetup.popTree->migBands[id].sourcePop]->father->age);
-            } else {
-              fprintf(stderr, "Fatal Error 0050.\n");
-            }
-            res = 0;
-          }
-
-          break;
-        case (END_CHAIN):
-          if (id != pop) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "id of end event %d for population %d doesn't match: %d.",
-                      event, pop, id);
-            } else {
-              fprintf(stderr, "Fatal Error 0051.\n");
-            }
-            res = 0;
-          }
-          if (num_living_mig_bands != 0) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "there are %d living migration bands remaining in population %d:",
-                      num_living_mig_bands, pop);
-              for (i = 0; i < num_living_mig_bands; i++) {
-                fprintf(stderr, " %d", living_mig_bands[i]);
-              }
-            } else {
-              fprintf(stderr, "Fatal Error 0052.\n");
-            }
-            res = 0;
-          }
-          if (event_chains[gen].events[event].getNextIdx() >= 0) {
-            if (debug) {
-              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-              fprintf(stderr,
-                      "remaining event %d after end event %d for pop %d.",
-                      event_chains[gen].events[event].getNextIdx(), event, pop);
-            } else {
-              fprintf(stderr, "Fatal Error 0053.\n");
-            }
-            res = 0;
-          }
-
-          //					if(pop == dataSetup.popTree->rootPop) {
-          //						if(fabs(OLDAGE - age) > PERCISION) {
-          //							printf("\nError checking genetree for gen %d: ",gen);
-          //							printf("end time of population %d (end event %d) doesn't match OLDAGE: %f, %f.", pop, event, age, OLDAGE);
-          //							res = 0;
-          //						}
-          //					}
-          if (pop != dataSetup.popTree->rootPop) {
-            // add to incoming lineages of parent population
-            pop_lins_in[dataSetup.popTree->pops[pop]->father->id] += n;
-            if (fabs(dataSetup.popTree->pops[pop]->father->age - age) >
-                PERCISION) {
-              if (debug) {
-                fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-                fprintf(stderr,
-                        "end time of population %d (end event %d) doesn't match start of father pop %d: %f, %f.",
-                        pop, event, dataSetup.popTree->pops[pop]->father->id,
-                        age, dataSetup.popTree->pops[pop]->father->age);
-              } else {
-                fprintf(stderr, "Fatal Error 0054.\n");
-              }
-              res = 0;
-            }
-          }
-          break;
-        default:
-          if (debug) {
-            fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-            fprintf(stderr, "Event %d of illegal type: %d.", event,
-                    event_chains[gen].events[event].getType());
-          } else {
-            fprintf(stderr, "Fatal Error 0055.\n");
-          }
-          res = 0;
-          break;
-      }// end of switch
-
-    }// end of for(event)
-
-    if (num_living_mig_bands != 0) {
-      if (debug) {
-        fprintf(stderr,
-                "\nError: checking genetree for gen %d: number of live mig bands %d at end of population %d.\n",
-                gen, num_living_mig_bands, pop);
-      } else {
-        fprintf(stderr, "Fatal Error 0056.\n");
-      }
-      printGenealogyAndExit(gen, -1);
-    }
-
-  }// end of for(pop)
-
-
-  // check computed stats
-  for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    if (fabs(locus_data[gen].genetree_stats_check.coal_stats[pop] -
-             genetree_stats[gen].coal_stats[pop]) > PERCISION) {
-      if (debug) {
-        fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-        fprintf(stderr, "coal stats for pop %d don't match: %g, %g (diff = %g)",
-                pop, genetree_stats[gen].coal_stats[pop],
-                locus_data[gen].genetree_stats_check.coal_stats[pop],
-                genetree_stats[gen].coal_stats[pop] -
-                locus_data[gen].genetree_stats_check.coal_stats[pop]);
-      } else {
-        fprintf(stderr, "Fatal Error 0057.\n");
-      }
-      res = 0;
-    }
-    genetree_stats[gen].coal_stats[pop] = locus_data[gen].genetree_stats_check.coal_stats[pop];
-    if (locus_data[gen].genetree_stats_check.num_coals[pop] !=
-        genetree_stats[gen].num_coals[pop]) {
-      if (debug) {
-        fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-        fprintf(stderr, "num coals for pop %d don't match: %d, %d.", pop,
-                genetree_stats[gen].num_coals[pop],
-                locus_data[gen].genetree_stats_check.num_coals[pop]);
-      } else {
-        fprintf(stderr, "Fatal Error 0058.\n");
-      }
-      res = 0;
-    }
-  }
-  for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
-    if (fabs(locus_data[gen].genetree_stats_check.mig_stats[mig_band] -
-             genetree_stats[gen].mig_stats[mig_band]) > PERCISION) {
-      if (debug) {
-        fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-        fprintf(stderr, "mig stats for migration band %d don't match: %f, %f.",
-                mig_band, genetree_stats[gen].mig_stats[mig_band],
-                locus_data[gen].genetree_stats_check.mig_stats[mig_band]);
-      } else {
-        fprintf(stderr, "Fatal Error 0059.\n");
-      }
-      res = 0;
-    }
-    genetree_stats[gen].mig_stats[mig_band] = locus_data[gen].genetree_stats_check.mig_stats[mig_band];
-    if (locus_data[gen].genetree_stats_check.num_migs[mig_band] !=
-        genetree_stats[gen].num_migs[mig_band]) {
-      if (debug) {
-        fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-        fprintf(stderr, "num migs for migration band %d don't match: %d, %d.",
-                mig_band, genetree_stats[gen].num_migs[mig_band],
-                locus_data[gen].genetree_stats_check.num_migs[mig_band]);
-      } else {
-        fprintf(stderr, "Fatal Error 0060.\n");
-      }
-      res = 0;
-    }
-  }
-
-  // check tree structure
-  num_migs = 0;
-  for (node = 0; node < 2 * dataSetup.numSamples - 1; node++) {
-
-    pop = nodePops[gen][node];
-    mig = findFirstMig(gen, node, -1);
-    age = getNodeAge(dataState.lociData[gen], node);
-    //age = gnodes[gen][node].age;
-    while (mig >= 0) {
-      num_migs++;
-      if (genetree_migs[gen].mignodes[mig].gtree_branch != node) {
-        if (debug) {
-          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-          fprintf(stderr,
-                  "migration node %d for node %d points to wrong edge: %d.",
-                  mig, node, genetree_migs[gen].mignodes[mig].gtree_branch);
-        } else {
-          fprintf(stderr, "Fatal Error 0061.\n");
-        }
-        res = 0;
-      }
-      if (genetree_migs[gen].mignodes[mig].age <= age) {
-        if (debug) {
-          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-          fprintf(stderr,
-                  "migration node %d for node %d has conflicting age: %f, %f.",
-                  mig, node, genetree_migs[gen].mignodes[mig].age, age);
-        } else {
-          fprintf(stderr, "Fatal Error 0062.\n");
-        }
-        res = 0;
-      }
-      for (i = 0; i < genetree_migs[gen].num_migs; i++) {
-        if (genetree_migs[gen].living_mignodes[i] == mig) break;
-      }
-      if (i >= genetree_migs[gen].num_migs) {
-        if (debug) {
-          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-          fprintf(stderr,
-                  "mignode %d doesn't appear in list of living mignodes.", mig);
-        } else {
-          fprintf(stderr, "Fatal Error 0063.\n");
-        }
-        res = 0;
-      }
-      age = genetree_migs[gen].mignodes[mig].age;
-      mig_band = genetree_migs[gen].mignodes[mig].migration_band;
-
-      if (dataSetup.popTree->migBands[mig_band].sourcePop !=
-          genetree_migs[gen].mignodes[mig].source_pop) {
-        if (debug) {
-          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-          fprintf(stderr,
-                  "source population of mignode %d doesn't match mig band %d: %d, %d.",
-                  mig, mig_band, genetree_migs[gen].mignodes[mig].source_pop,
-                  dataSetup.popTree->migBands[mig_band].sourcePop);
-        } else {
-          fprintf(stderr, "Fatal Error 0064.\n");
-        }
-        res = 0;
-      }
-      if (dataSetup.popTree->migBands[mig_band].targetPop !=
-          genetree_migs[gen].mignodes[mig].target_pop) {
-        if (debug) {
-          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-          fprintf(stderr,
-                  "target population of mignode %d doesn't match mig band %d: %d, %d.",
-                  mig, mig_band, genetree_migs[gen].mignodes[mig].target_pop,
-                  dataSetup.popTree->migBands[mig_band].targetPop);
-        } else {
-          fprintf(stderr, "Fatal Error 0065.\n");
-        }
-        res = 0;
-      }
-      if (age <= dataSetup.popTree->migBands[mig_band].startTime ||
-          age >= dataSetup.popTree->migBands[mig_band].endTime) {
-        if (debug) {
-          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-          fprintf(stderr,
-                  "age of mignode %d conflicts with times of migration band %d: %f, [%f,%f].",
-                  mig, mig_band, age,
-                  dataSetup.popTree->migBands[mig_band].startTime,
-                  dataSetup.popTree->migBands[mig_band].endTime);
-        } else {
-          fprintf(stderr, "Fatal Error 0066.\n");
-        }
-        res = 0;
-      }
-      if (!dataSetup.popTree->pops[genetree_migs[gen].mignodes[mig].target_pop]->isAncestralTo[pop]) {
-        if (debug) {
-          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-          fprintf(stderr,
-                  "target pop %d of mignode %d is not ancestral to previous pop %d.",
-                  genetree_migs[gen].mignodes[mig].target_pop, mig, pop);
-        } else {
-          fprintf(stderr, "Fatal Error 0067.\n");
-        }
-        res = 0;
-      }
-
-      pop = genetree_migs[gen].mignodes[mig].source_pop;
-      mig = findFirstMig(gen, node, age);
-    }// end of while(mig>=0)
-
-    father = getNodeFather(dataState.lociData[gen], node);
-    if (father >= 0) {
-      //		if(gnodes[gen][node].father >= 0) {
-      /*			if(gnodes[gen][gnodes[gen][node].father].nson != 2) {
-                    printf("\nError checking genetree for gen %d: ",gen);
-                    printf("father %d of node %d has number of sons: %d.", gnodes[gen][node].father, node, gnodes[gen][gnodes[gen][node].father].nson);
-                    res = 0;
-                    } else
-      */
-      if (getNodeSon(dataState.lociData[gen], father, 0) != node &&
-          getNodeSon(dataState.lociData[gen], father, 1) != node) {
-        //			if(gnodes[gen][gnodes[gen][node].father].sons[0] != node  && gnodes[gen][gnodes[gen][node].father].sons[1] != node) {
-        if (debug) {
-          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-          fprintf(stderr, "father %d of node %d has no matching son: %d, %d.",
-                  father, node,
-                  getNodeSon(dataState.lociData[gen], father, 0),
-                  getNodeSon(dataState.lociData[gen], father, 1));
-        } else {
-          fprintf(stderr, "Fatal Error 0068.\n");
-        }
-        res = 0;
-      }
-      if (getNodeAge(dataState.lociData[gen], father) <= age) {
-        //			if(gnodes[gen][gnodes[gen][node].father].age <= age) {
-        if (debug) {
-          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-          fprintf(stderr,
-                  "age of father %d is smaller than previous: %g, %g (diff %g).",
-                  father, getNodeAge(dataState.lociData[gen], father), age,
-                  getNodeAge(dataState.lociData[gen], father) - age);
-        } else {
-          fprintf(stderr, "Fatal Error 0069.\n");
-        }
-        res = 0;
-      }
-      if (!dataSetup.popTree->pops[nodePops[gen][father]]->isAncestralTo[pop]) {
-        //			if(!dataSetup.popTree->pops[ gnodes[gen][gnodes[gen][node].father].ipop ]->isAncestralTo[pop]) {
-        if (debug) {
-          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-          fprintf(stderr,
-                  "pop %d of father %d is not ancestral to previous pop %d.",
-                  nodePops[gen][father], father, pop);
-        } else {
-          fprintf(stderr, "Fatal Error 0070.\n");
-        }
-        res = 0;
-      }
-    } else if (node != getLocusRoot(dataState.lociData[gen])) {
-      if (debug) {
-        fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-        fprintf(stderr, "node %d has no father but is not root %d.", node,
-                getLocusRoot(dataState.lociData[gen]));
-      } else {
-        fprintf(stderr, "Fatal Error 0071.\n");
-      }
-      res = 0;
-    }
-
-
-  }// end of for(node)
-
-  if (num_migs != genetree_migs[gen].num_migs) {
-    if (debug) {
-      fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
-      fprintf(stderr,
-              "number of recorded migration nodes doesn't match: %d, %d.",
-              genetree_migs[gen].num_migs, num_migs);
-    } else {
-      fprintf(stderr, "Fatal Error 0072.\n");
-    }
-    res = 0;
-  }
-  for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
-    num_migs -= genetree_stats[gen].num_migs[mig_band];
-  }
-  if (num_migs != 0) {
-    if (debug) {
-      fprintf(stderr, "\nError checking genetree for gen %d: ", gen);
-      fprintf(stderr,
-              "number of recorded migration nodes doesn't match sum of recorded per mig band: %d, %d.",
-              genetree_migs[gen].num_migs,
-              genetree_migs[gen].num_migs - num_migs);
-    } else {
-      fprintf(stderr, "Fatal Error 0073.\n");
-    }
-    res = 0;
-  }
-
-
-  return res;
-}
+//int checkGtreeStructure(int gen) {
+//
+//  int i, n, pop, mig_band, event, id, node, mig, num_migs;
+//  int num_living_mig_bands, living_mig_bands[MAX_MIG_BANDS], pop_queue[
+//      2 * NSPECIES - 1];
+//  int pop_lins_in[2 * NSPECIES - 1];
+//  int father;
+//  int res = 1;
+//
+//  double age, delta_t, PERCISION = 0.0000000001;
+//
+//
+//  // essentially follow the same path as procedure computeGenetreeStats,
+//  // but validates with genetree nodes
+//
+//  // initialize number of in-lineages for leaf pops and order pops
+//  for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+//    pop_lins_in[pop] = 0;
+//  }
+//  // MARK CHANGHES
+//
+//  // for(node=0; node<2*dataSetup.numSamples-1; node++) {
+//  //  if(node < dataSetup.numSamples)
+//  //     pop_lins_in[ nodePops[gen][node] ]++;
+//  // }
+//  populationPostOrder(dataSetup.popTree->rootPop, pop_queue);
+//
+//  for (i = 0; i < dataSetup.popTree->numPops; i++) {
+//    pop = pop_queue[i];
+//    locus_data[gen].genetree_stats_check.coal_stats[pop] = 0.0;
+//    locus_data[gen].genetree_stats_check.num_coals[pop] = 0;
+//    event = event_chains[gen].first_event[pop];
+//    n = pop_lins_in[pop];
+//    age = dataSetup.popTree->pops[pop]->age;
+//    num_living_mig_bands = 0;
+//
+//
+//    // follow event chain and check all saved data
+//    for (; event >= 0; event = event_chains[gen].events[event].getNextIdx()) {
+//
+//
+//      if (event_chains[gen].events[event].getNumLineages() != n) {
+//        if (debug) {
+//          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//          fprintf(stderr,
+//                  "number of lineages of event %d doesn't match: %d, %d.\n",
+//                  event, event_chains[gen].events[event].getNumLineages(), n);
+//        } else {
+//          fprintf(stderr, "Fatal Error 0034.\n");
+//        }
+//        res = 0;
+//      }
+//
+//      if (event_chains[gen].events[event].getNextIdx() >= 0 && event !=
+//                                                               event_chains[gen].events[event_chains[gen].events[event].getNextIdx()].getPrevIdx()) {
+//        if (debug) {
+//          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//          fprintf(stderr,
+//                  "prev event of next event %d doesn't match: %d, %d.\n",
+//                  event_chains[gen].events[event].getNextIdx(), event,
+//                  event_chains[gen].events[event_chains[gen].events[event].getNextIdx()].getPrevIdx());
+//        } else {
+//          fprintf(stderr, "Fatal Error 0035.\n");
+//        }
+//        res = 0;
+//      }
+//      id = event_chains[gen].events[event].getId();
+//      delta_t = event_chains[gen].events[event].getElapsedTime();
+//      age += delta_t;
+//      //			if(delta_t <= PERCISION) {
+//      //				printf("\nError checking genetree for gen %d: ",gen);
+//      //				printf("Too small time interval for event %d: %g.", event, delta_t);
+//      //				res = 0;
+//      //			}
+//
+//      locus_data[gen].genetree_stats_check.coal_stats[pop] +=
+//          n * (n - 1) * delta_t;
+//
+//      for (mig_band = 0; mig_band < num_living_mig_bands; mig_band++) {
+//        locus_data[gen].genetree_stats_check.mig_stats[living_mig_bands[mig_band]] +=
+//            n * delta_t;
+//      }
+//
+//      switch (event_chains[gen].events[event].getType()) {
+//        case (SAMPLES_START):
+//          n += dataSetup.numSamplesPerPop[pop];
+//          if (fabs(dataSetup.popTree->pops[pop]->sampleAge - age) > PERCISION) {
+//            //					if(fabs(gnodes[gen][id].age - age) > PERCISION) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "sample age of pop %d (event %d) doesn't match: %f, %f.\n",
+//                      pop, event, age, dataSetup.popTree->pops[pop]->sampleAge);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0036.\n");
+//            }
+//            res = 0;
+//          }
+//          break;
+//        case (COAL):
+//          locus_data[gen].genetree_stats_check.num_coals[pop]++;
+//          n--;
+//          if (fabs(getNodeAge(dataState.lociData[gen], id) - age) > PERCISION) {
+//            //					if(fabs(gnodes[gen][id].age - age) > PERCISION) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "age of node %d (event %d) doesn't match: %g, %g.\n", id,
+//                      event, age, getNodeAge(dataState.lociData[gen], id));
+//            } else {
+//              fprintf(stderr, "Fatal Error 0036.\n");
+//            }
+//            res = 0;
+//          }
+//
+//          if (nodePops[gen][id] != pop) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "population of node %d (event %d) doesn't match: %d, %d.",
+//                      id, event, pop, nodePops[gen][id]);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0037.\n");
+//            }
+//            res = 0;
+//          }
+//          if (nodeEvents[gen][id] != event) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr, "event of node %d doesn't match: %d, %d.", id,
+//                      event, nodeEvents[gen][id]);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0038.\n");
+//            }
+//            res = 0;
+//          }
+//
+//          break;
+//        case (IN_MIG):
+//          // figure out migration band and update its statistics
+//          mig_band = genetree_migs[gen].mignodes[id].migration_band;
+//          if (mig_band < 0 || mig_band > dataSetup.popTree->numMigBands) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr, "mig band %d invalid for mig node %d .", mig_band,
+//                      id);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0039a.\n");
+//            }
+//            res = 0;
+//          }
+//          locus_data[gen].genetree_stats_check.num_migs[mig_band]++;
+//          n--;
+//          if (fabs(genetree_migs[gen].mignodes[id].age - age) > PERCISION) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "age of mignode %d (target event %d) doesn't match: %g, %g.",
+//                      id, event, age, genetree_migs[gen].mignodes[id].age);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0039.\n");
+//            }
+//            res = 0;
+//          }
+//          if (dataSetup.popTree->migBands[mig_band].targetPop != pop) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "target population of migration band %d of mignode %d (target event %d) doesn't match: %d, %d.",
+//                      mig_band, id, event, pop,
+//                      dataSetup.popTree->migBands[mig_band].targetPop);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0040.\n");
+//            }
+//            res = 0;
+//          }
+//          break;
+//        case (OUT_MIG):
+//          n++;
+//          mig_band = genetree_migs[gen].mignodes[id].migration_band;
+//          if (fabs(genetree_migs[gen].mignodes[id].age - age) > PERCISION) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "age of mignode %d (source event %d) doesn't match: %g, %g.",
+//                      id, event, age, genetree_migs[gen].mignodes[id].age);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0041.\n");
+//            }
+//            res = 0;
+//          }
+//          if (dataSetup.popTree->migBands[mig_band].sourcePop != pop) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "source population of migration band %d of mignode %d (source event %d) doesn't match: %d, %d.",
+//                      mig_band, id, event, pop,
+//                      dataSetup.popTree->migBands[mig_band].sourcePop);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0042.\n");
+//            }
+//            res = 0;
+//          }
+//          if (genetree_migs[gen].mignodes[id].source_event != event) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr, "source event of node %d doesn't match: %d, %d.",
+//                      id, event, genetree_migs[gen].mignodes[id].source_event);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0043.\n");
+//            }
+//            res = 0;
+//          }
+//          break;
+//        case (MIG_BAND_START):
+//          living_mig_bands[num_living_mig_bands] = id;
+//          num_living_mig_bands++;
+//          // initialize statistics for this new migration band
+//          locus_data[gen].genetree_stats_check.num_migs[id] = 0;
+//          locus_data[gen].genetree_stats_check.mig_stats[id] = 0.0;
+//          if (fabs(dataSetup.popTree->migBands[id].startTime - age) >
+//              PERCISION) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "start time of migration band %d (start event %d) doesn't match: %g, %g.",
+//                      id, event, age,
+//                      dataSetup.popTree->migBands[id].startTime);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0044.\n");
+//            }
+//            res = 0;
+//          }
+//          if (dataSetup.popTree->migBands[id].targetPop != pop) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "target population of migration band %d (start event %d) doesn't match: %d, %d.",
+//                      id, event, pop,
+//                      dataSetup.popTree->migBands[id].targetPop);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0045.\n");
+//            }
+//            res = 0;
+//          }
+//          if (fabs(age - max2(dataSetup.popTree->pops[pop]->age,
+//                              dataSetup.popTree->pops[dataSetup.popTree->migBands[id].sourcePop]->age)) >
+//              PERCISION) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "start time of migration band %d (start event %d) doesn't match max of start times for populations %d,%d: %g, max(%g,%g).",
+//                      id, event, pop, dataSetup.popTree->migBands[id].sourcePop,
+//                      age, dataSetup.popTree->pops[pop]->age,
+//                      dataSetup.popTree->pops[dataSetup.popTree->migBands[id].sourcePop]->age);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0046.\n");
+//            }
+//            res = 0;
+//          }
+//          break;
+//        case (MIG_BAND_END):
+//          for (mig_band = 0; mig_band < num_living_mig_bands; mig_band++) {
+//            if (living_mig_bands[mig_band] == id)
+//              break;
+//          }
+//          if (mig_band == num_living_mig_bands) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "migration band %d (start event %d) ended without starting.",
+//                      id, event);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0047.\n");
+//            }
+//            res = 0;
+//          } else {
+//            living_mig_bands[mig_band] = living_mig_bands[--num_living_mig_bands];
+//          }
+//          if (fabs(dataSetup.popTree->migBands[id].endTime - age) > PERCISION) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "end time of migration band %d (end event %d) doesn't match: %g, %g.",
+//                      id, event, age, dataSetup.popTree->migBands[id].endTime);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0048.\n");
+//            }
+//            res = 0;
+//          }
+//          if (dataSetup.popTree->migBands[id].targetPop != pop) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "target population of migration band %d (end event %d) doesn't match: %d, %d.",
+//                      id, event, pop,
+//                      dataSetup.popTree->migBands[id].targetPop);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0049.\n");
+//            }
+//            res = 0;
+//          }
+//          if (fabs(age - min2(dataSetup.popTree->pops[pop]->father->age,
+//                              dataSetup.popTree->pops[dataSetup.popTree->migBands[id].sourcePop]->father->age)) >
+//              PERCISION) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "end time of migration band %d (end event %d) doesn't match min of start times for parent populations %d,%d: %g, min(%g,%g).",
+//                      id, event, dataSetup.popTree->pops[pop]->father->id,
+//                      dataSetup.popTree->pops[dataSetup.popTree->migBands[id].sourcePop]->father->id,
+//                      age, dataSetup.popTree->pops[pop]->father->age,
+//                      dataSetup.popTree->pops[dataSetup.popTree->migBands[id].sourcePop]->father->age);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0050.\n");
+//            }
+//            res = 0;
+//          }
+//
+//          break;
+//        case (END_CHAIN):
+//          if (id != pop) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "id of end event %d for population %d doesn't match: %d.",
+//                      event, pop, id);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0051.\n");
+//            }
+//            res = 0;
+//          }
+//          if (num_living_mig_bands != 0) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "there are %d living migration bands remaining in population %d:",
+//                      num_living_mig_bands, pop);
+//              for (i = 0; i < num_living_mig_bands; i++) {
+//                fprintf(stderr, " %d", living_mig_bands[i]);
+//              }
+//            } else {
+//              fprintf(stderr, "Fatal Error 0052.\n");
+//            }
+//            res = 0;
+//          }
+//          if (event_chains[gen].events[event].getNextIdx() >= 0) {
+//            if (debug) {
+//              fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//              fprintf(stderr,
+//                      "remaining event %d after end event %d for pop %d.",
+//                      event_chains[gen].events[event].getNextIdx(), event, pop);
+//            } else {
+//              fprintf(stderr, "Fatal Error 0053.\n");
+//            }
+//            res = 0;
+//          }
+//
+//          //					if(pop == dataSetup.popTree->rootPop) {
+//          //						if(fabs(OLDAGE - age) > PERCISION) {
+//          //							printf("\nError checking genetree for gen %d: ",gen);
+//          //							printf("end time of population %d (end event %d) doesn't match OLDAGE: %f, %f.", pop, event, age, OLDAGE);
+//          //							res = 0;
+//          //						}
+//          //					}
+//          if (pop != dataSetup.popTree->rootPop) {
+//            // add to incoming lineages of parent population
+//            pop_lins_in[dataSetup.popTree->pops[pop]->father->id] += n;
+//            if (fabs(dataSetup.popTree->pops[pop]->father->age - age) >
+//                PERCISION) {
+//              if (debug) {
+//                fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//                fprintf(stderr,
+//                        "end time of population %d (end event %d) doesn't match start of father pop %d: %f, %f.",
+//                        pop, event, dataSetup.popTree->pops[pop]->father->id,
+//                        age, dataSetup.popTree->pops[pop]->father->age);
+//              } else {
+//                fprintf(stderr, "Fatal Error 0054.\n");
+//              }
+//              res = 0;
+//            }
+//          }
+//          break;
+//        default:
+//          if (debug) {
+//            fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//            fprintf(stderr, "Event %d of illegal type: %d.", event,
+//                    event_chains[gen].events[event].getType());
+//          } else {
+//            fprintf(stderr, "Fatal Error 0055.\n");
+//          }
+//          res = 0;
+//          break;
+//      }// end of switch
+//
+//    }// end of for(event)
+//
+//    if (num_living_mig_bands != 0) {
+//      if (debug) {
+//        fprintf(stderr,
+//                "\nError: checking genetree for gen %d: number of live mig bands %d at end of population %d.\n",
+//                gen, num_living_mig_bands, pop);
+//      } else {
+//        fprintf(stderr, "Fatal Error 0056.\n");
+//      }
+//      printGenealogyAndExit(gen, -1);
+//    }
+//
+//  }// end of for(pop)
+//
+//
+//  // check computed stats
+//  for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+//    if (fabs(locus_data[gen].genetree_stats_check.coal_stats[pop] -
+//             genetree_stats[gen].coal_stats[pop]) > PERCISION) {
+//      if (debug) {
+//        fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//        fprintf(stderr, "coal stats for pop %d don't match: %g, %g (diff = %g)",
+//                pop, genetree_stats[gen].coal_stats[pop],
+//                locus_data[gen].genetree_stats_check.coal_stats[pop],
+//                genetree_stats[gen].coal_stats[pop] -
+//                locus_data[gen].genetree_stats_check.coal_stats[pop]);
+//      } else {
+//        fprintf(stderr, "Fatal Error 0057.\n");
+//      }
+//      res = 0;
+//    }
+//    genetree_stats[gen].coal_stats[pop] = locus_data[gen].genetree_stats_check.coal_stats[pop];
+//    if (locus_data[gen].genetree_stats_check.num_coals[pop] !=
+//        genetree_stats[gen].num_coals[pop]) {
+//      if (debug) {
+//        fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//        fprintf(stderr, "num coals for pop %d don't match: %d, %d.", pop,
+//                genetree_stats[gen].num_coals[pop],
+//                locus_data[gen].genetree_stats_check.num_coals[pop]);
+//      } else {
+//        fprintf(stderr, "Fatal Error 0058.\n");
+//      }
+//      res = 0;
+//    }
+//  }
+//  for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
+//    if (fabs(locus_data[gen].genetree_stats_check.mig_stats[mig_band] -
+//             genetree_stats[gen].mig_stats[mig_band]) > PERCISION) {
+//      if (debug) {
+//        fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//        fprintf(stderr, "mig stats for migration band %d don't match: %f, %f.",
+//                mig_band, genetree_stats[gen].mig_stats[mig_band],
+//                locus_data[gen].genetree_stats_check.mig_stats[mig_band]);
+//      } else {
+//        fprintf(stderr, "Fatal Error 0059.\n");
+//      }
+//      res = 0;
+//    }
+//    genetree_stats[gen].mig_stats[mig_band] = locus_data[gen].genetree_stats_check.mig_stats[mig_band];
+//    if (locus_data[gen].genetree_stats_check.num_migs[mig_band] !=
+//        genetree_stats[gen].num_migs[mig_band]) {
+//      if (debug) {
+//        fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//        fprintf(stderr, "num migs for migration band %d don't match: %d, %d.",
+//                mig_band, genetree_stats[gen].num_migs[mig_band],
+//                locus_data[gen].genetree_stats_check.num_migs[mig_band]);
+//      } else {
+//        fprintf(stderr, "Fatal Error 0060.\n");
+//      }
+//      res = 0;
+//    }
+//  }
+//
+//  // check tree structure
+//  num_migs = 0;
+//  for (node = 0; node < 2 * dataSetup.numSamples - 1; node++) {
+//
+//    pop = nodePops[gen][node];
+//    mig = findFirstMig(gen, node, -1);
+//    age = getNodeAge(dataState.lociData[gen], node);
+//    //age = gnodes[gen][node].age;
+//    while (mig >= 0) {
+//      num_migs++;
+//      if (genetree_migs[gen].mignodes[mig].gtree_branch != node) {
+//        if (debug) {
+//          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//          fprintf(stderr,
+//                  "migration node %d for node %d points to wrong edge: %d.",
+//                  mig, node, genetree_migs[gen].mignodes[mig].gtree_branch);
+//        } else {
+//          fprintf(stderr, "Fatal Error 0061.\n");
+//        }
+//        res = 0;
+//      }
+//      if (genetree_migs[gen].mignodes[mig].age <= age) {
+//        if (debug) {
+//          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//          fprintf(stderr,
+//                  "migration node %d for node %d has conflicting age: %f, %f.",
+//                  mig, node, genetree_migs[gen].mignodes[mig].age, age);
+//        } else {
+//          fprintf(stderr, "Fatal Error 0062.\n");
+//        }
+//        res = 0;
+//      }
+//      for (i = 0; i < genetree_migs[gen].num_migs; i++) {
+//        if (genetree_migs[gen].living_mignodes[i] == mig) break;
+//      }
+//      if (i >= genetree_migs[gen].num_migs) {
+//        if (debug) {
+//          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//          fprintf(stderr,
+//                  "mignode %d doesn't appear in list of living mignodes.", mig);
+//        } else {
+//          fprintf(stderr, "Fatal Error 0063.\n");
+//        }
+//        res = 0;
+//      }
+//      age = genetree_migs[gen].mignodes[mig].age;
+//      mig_band = genetree_migs[gen].mignodes[mig].migration_band;
+//
+//      if (dataSetup.popTree->migBands[mig_band].sourcePop !=
+//          genetree_migs[gen].mignodes[mig].source_pop) {
+//        if (debug) {
+//          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//          fprintf(stderr,
+//                  "source population of mignode %d doesn't match mig band %d: %d, %d.",
+//                  mig, mig_band, genetree_migs[gen].mignodes[mig].source_pop,
+//                  dataSetup.popTree->migBands[mig_band].sourcePop);
+//        } else {
+//          fprintf(stderr, "Fatal Error 0064.\n");
+//        }
+//        res = 0;
+//      }
+//      if (dataSetup.popTree->migBands[mig_band].targetPop !=
+//          genetree_migs[gen].mignodes[mig].target_pop) {
+//        if (debug) {
+//          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//          fprintf(stderr,
+//                  "target population of mignode %d doesn't match mig band %d: %d, %d.",
+//                  mig, mig_band, genetree_migs[gen].mignodes[mig].target_pop,
+//                  dataSetup.popTree->migBands[mig_band].targetPop);
+//        } else {
+//          fprintf(stderr, "Fatal Error 0065.\n");
+//        }
+//        res = 0;
+//      }
+//      if (age <= dataSetup.popTree->migBands[mig_band].startTime ||
+//          age >= dataSetup.popTree->migBands[mig_band].endTime) {
+//        if (debug) {
+//          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//          fprintf(stderr,
+//                  "age of mignode %d conflicts with times of migration band %d: %f, [%f,%f].",
+//                  mig, mig_band, age,
+//                  dataSetup.popTree->migBands[mig_band].startTime,
+//                  dataSetup.popTree->migBands[mig_band].endTime);
+//        } else {
+//          fprintf(stderr, "Fatal Error 0066.\n");
+//        }
+//        res = 0;
+//      }
+//      if (!dataSetup.popTree->pops[genetree_migs[gen].mignodes[mig].target_pop]->isAncestralTo[pop]) {
+//        if (debug) {
+//          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//          fprintf(stderr,
+//                  "target pop %d of mignode %d is not ancestral to previous pop %d.",
+//                  genetree_migs[gen].mignodes[mig].target_pop, mig, pop);
+//        } else {
+//          fprintf(stderr, "Fatal Error 0067.\n");
+//        }
+//        res = 0;
+//      }
+//
+//      pop = genetree_migs[gen].mignodes[mig].source_pop;
+//      mig = findFirstMig(gen, node, age);
+//    }// end of while(mig>=0)
+//
+//    father = getNodeFather(dataState.lociData[gen], node);
+//    if (father >= 0) {
+//      //		if(gnodes[gen][node].father >= 0) {
+//      /*			if(gnodes[gen][gnodes[gen][node].father].nson != 2) {
+//                    printf("\nError checking genetree for gen %d: ",gen);
+//                    printf("father %d of node %d has number of sons: %d.", gnodes[gen][node].father, node, gnodes[gen][gnodes[gen][node].father].nson);
+//                    res = 0;
+//                    } else
+//      */
+//      if (getNodeSon(dataState.lociData[gen], father, 0) != node &&
+//          getNodeSon(dataState.lociData[gen], father, 1) != node) {
+//        //			if(gnodes[gen][gnodes[gen][node].father].sons[0] != node  && gnodes[gen][gnodes[gen][node].father].sons[1] != node) {
+//        if (debug) {
+//          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//          fprintf(stderr, "father %d of node %d has no matching son: %d, %d.",
+//                  father, node,
+//                  getNodeSon(dataState.lociData[gen], father, 0),
+//                  getNodeSon(dataState.lociData[gen], father, 1));
+//        } else {
+//          fprintf(stderr, "Fatal Error 0068.\n");
+//        }
+//        res = 0;
+//      }
+//      if (getNodeAge(dataState.lociData[gen], father) <= age) {
+//        //			if(gnodes[gen][gnodes[gen][node].father].age <= age) {
+//        if (debug) {
+//          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//          fprintf(stderr,
+//                  "age of father %d is smaller than previous: %g, %g (diff %g).",
+//                  father, getNodeAge(dataState.lociData[gen], father), age,
+//                  getNodeAge(dataState.lociData[gen], father) - age);
+//        } else {
+//          fprintf(stderr, "Fatal Error 0069.\n");
+//        }
+//        res = 0;
+//      }
+//      if (!dataSetup.popTree->pops[nodePops[gen][father]]->isAncestralTo[pop]) {
+//        //			if(!dataSetup.popTree->pops[ gnodes[gen][gnodes[gen][node].father].ipop ]->isAncestralTo[pop]) {
+//        if (debug) {
+//          fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//          fprintf(stderr,
+//                  "pop %d of father %d is not ancestral to previous pop %d.",
+//                  nodePops[gen][father], father, pop);
+//        } else {
+//          fprintf(stderr, "Fatal Error 0070.\n");
+//        }
+//        res = 0;
+//      }
+//    } else if (node != getLocusRoot(dataState.lociData[gen])) {
+//      if (debug) {
+//        fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//        fprintf(stderr, "node %d has no father but is not root %d.", node,
+//                getLocusRoot(dataState.lociData[gen]));
+//      } else {
+//        fprintf(stderr, "Fatal Error 0071.\n");
+//      }
+//      res = 0;
+//    }
+//
+//
+//  }// end of for(node)
+//
+//  if (num_migs != genetree_migs[gen].num_migs) {
+//    if (debug) {
+//      fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);
+//      fprintf(stderr,
+//              "number of recorded migration nodes doesn't match: %d, %d.",
+//              genetree_migs[gen].num_migs, num_migs);
+//    } else {
+//      fprintf(stderr, "Fatal Error 0072.\n");
+//    }
+//    res = 0;
+//  }
+//  for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
+//    num_migs -= genetree_stats[gen].num_migs[mig_band];
+//  }
+//  if (num_migs != 0) {
+//    if (debug) {
+//      fprintf(stderr, "\nError checking genetree for gen %d: ", gen);
+//      fprintf(stderr,
+//              "number of recorded migration nodes doesn't match sum of recorded per mig band: %d, %d.",
+//              genetree_migs[gen].num_migs,
+//              genetree_migs[gen].num_migs - num_migs);
+//    } else {
+//      fprintf(stderr, "Fatal Error 0073.\n");
+//    }
+//    res = 0;
+//  }
+//
+//
+//  return res;
+//}
 
 /* synchronizeEvents
    Synchronizes times recorded by event chains to ones recorded by elemenets (gene tree nodes, migration nodes, population divergences, etc.)

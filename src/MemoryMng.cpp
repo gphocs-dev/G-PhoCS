@@ -34,6 +34,7 @@ GENETREE_NODE_STATS  genetree_node_stats;
 int**                nodePops;
 int**                nodeEvents;
 Locus_SuperStruct*   locus_data;
+extern DAGsPerLocus<Event> all_dags;
 
 
 /*-----------------------------------------------------------------------------
@@ -97,9 +98,14 @@ int GetMem( void )
     fprintf(stderr, "\nError: Out Of Memory genetree stats.\n");
     exit(-1);
   }
+  genetree_stats_total_partitioned=(GENETREE_STATS*)malloc(dataSetup.numPopPartitions*sizeof(GENETREE_STATS));
+  if(genetree_stats_total_partitioned == NULL) {
+    fprintf(stderr, "\nError: Out Of Memory genetree stats total partitioned.\n");
+    exit(-1);
+  }
 
   event_chains.reserve( dataSetup.numLoci );
-  events_dag.reserve( dataSetup.numLoci );
+  all_dags.reserve( dataSetup.numLoci );
 
   genetree_stats_flat.sortedAgesArray = (double*)
                                         malloc( maxNodes * sizeof(double) );
@@ -132,17 +138,12 @@ int GetMem( void )
     exit(-1);
   }
 
-  events_dag.addEventChainToDag( event_chains[0].events,
-                                 event_chains[0].total_events );
-
   for( gen = 0; gen < dataSetup.numLoci; ++gen )
   {
     if( gen > 0 )
     {
       event_chains[gen].events =   event_chains[gen-1].events
                                  + event_chains[gen-1].total_events;
-      events_dag.addEventChainToDag( event_chains[gen].events,
-                                     event_chains[gen-1].total_events );
     }
     genetree_migs[gen].num_migs = 0;
     //initialize mignodes

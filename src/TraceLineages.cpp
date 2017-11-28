@@ -319,7 +319,7 @@ traceLineage_sample_event_in_interval(TraceLineageAutoVars* p_stack)
   if (p_stack->rate <= 0)
     p_stack->t = curr_elapsed_time;
   else
-    p_stack->t = rndexp (1.0 / p_stack->rate);
+    p_stack->t = rndexp (gen, 1.0 / p_stack->rate);
 
   if (curr_elapsed_time <= p_stack->t)
   {
@@ -331,7 +331,7 @@ traceLineage_sample_event_in_interval(TraceLineageAutoVars* p_stack)
   {
     // sample event in this interval
     p_stack->age += p_stack->t;
-    p_stack->event_sample = p_stack->rate * rndu();
+    p_stack->event_sample = p_stack->rate * rndu(gen);
 
     if(p_stack->event_sample < p_stack->mig_rate)
     {

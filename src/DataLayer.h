@@ -9,7 +9,6 @@
  ============================================================================*/
 #include <vector>
 #include "DataLayerConstants.h"
-#include "EventsDAG.h"
 
 using namespace std;
 
@@ -31,6 +30,8 @@ enum EventType{COAL           = 0x01,
                MIG_BAND_END   = 0x0F,
                SAMPLES_START  = 0x10,
                END_CHAIN      = 0x20,
+               POP_START      = 0x40,
+               POP_END        = 0x80,
                DUMMY          = 0x00};
 
 //-----------------------------------------------------------------------------
@@ -97,9 +98,10 @@ public:
     { return &((*this)[gen].events[event]); }
 };
 
+template<class T> class DAGsPerLocus;
 
 extern EventChains event_chains;
-extern EventsDAG<Event> events_dag;
+//extern DAGsPerLocus<Event> all_dags;
 
 
 /*-----------------------------------------------------------------------------

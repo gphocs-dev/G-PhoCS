@@ -24,8 +24,8 @@
 #define MAX_FINETUNE                 10
 #define ACCEPTANCE_FUDGE             2
 
-#define GPHOCS_VERSION_NUM          "1.4"
-#define GPHOCS_VERSION_DATE         "Apr. 2017"
+#define GPHOCS_VERSION_NUM          "1.4.1 (1.3.2)"
+#define GPHOCS_VERSION_DATE         "Nov. 2017"
 
 extern int typeCount[NUM_TYPES];
 
@@ -119,6 +119,7 @@ int mixing(double finetune);
 
 void allocateAllMemory() ; // TODO - tidy header file
 int isCombStatsActivated();
+int isCladeStatsActivated();
 double getLogPrior() ;
 
 

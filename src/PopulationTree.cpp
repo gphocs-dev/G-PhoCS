@@ -18,6 +18,7 @@
 
 #define PERCISION	0.0000001
 
+extern RandGeneratorContext RndCtx;
 
 
 /***************************************************************************************************************/
@@ -330,19 +331,21 @@ int getPopIdByName(PopulationTree* popTree, const char* name){
 
 
 
-/***********************************************************************************
+/******************************************************************************
  *	samplePopParameters
- *	- samples population parameters according to prior average (only thetas and taus)
+ *	- samples population parameters according to prior average
+ *	  (only thetas and taus)
  * 	- each parameter is sampled uniformly in the interval [0.9,1.1]*mean
  * 		(where mean is the prior mean for that parameter)
  * 	- makes sure a population's age does not exceed its father's
  *	- initializes all migration rates to 0.
  * 	- returns 0
- ***********************************************************************************/
+ *****************************************************************************/
 /* MARK: CHECK SAMPLE AGE OF SON POPULATION IF NOT ZERO AND CORRECT !!
          DONE, NEED TO CHECK !!
 */
-int samplePopParameters(PopulationTree* popTree)	{
+int samplePopParameters(PopulationTree* popTree)
+{
   int head, tail, migBand;
   double mean;
   Population* pop;
@@ -350,8 +353,10 @@ int samplePopParameters(PopulationTree* popTree)	{
 	
 	
   popQueue = (Population**) malloc(popTree->numPops * sizeof(Population*));
-  if(popQueue == NULL) {
-    fprintf(stderr, "\nError: Out Of Memory popQueue in samplePopParameters.\n");
+  if( NULL == popQueue )
+  {
+    fprintf(stderr,
+            "\nError: Out Of Memory popQueue in samplePopParameters.\n");
     exit(-1);
   }
 	
@@ -362,26 +367,31 @@ int samplePopParameters(PopulationTree* popTree)	{
   // traverse population pre-order (from root down)
   // sample parameters for each population.
   // make corrections for population age, if greater than father's age	
-  while(head<tail) {
+  while( head < tail )
+  {
     pop = popQueue[head++];
     //		printf("Pop %d\n", pop->id);
     // sample theta
     //		mean =  pop->thetaPrior.alpha / pop->thetaPrior.beta;
     mean =  pop->thetaPrior.sampleStart;
-    pop->theta = mean * (0.9 + 0.2*rndu());
-    //		printf("-Theta = %f\n", pop->theta);
-    if(pop->sons[0] != NULL) {
+    pop->theta = mean * ( 0.9 + 0.2*rndu( RAND_GENERAL_SLOT ) );
+    if( NULL != pop->sons[0] )
+    {
       // sample age for ancestral population
       //			mean =  pop->agePrior.alpha / pop->agePrior.beta;
       mean =  pop->agePrior.sampleStart;
-      pop->age = mean * (0.9 + 0.2*rndu());
+      pop->age = mean * ( 0.9 + 0.2*rndu( RAND_GENERAL_SLOT ) );
       //			printf("-Tau = %f\n", pop->age);
       // if inconsistent with father's age, resample within 93% and 97% of father's age
-      if(pop->father != NULL && pop->father->age < pop->age) {
-		// first drop age to max age of sons. should be zero unless sons associated with ancient samples
-        pop->age = max2(pop->sons[0]->sampleAge , pop->sons[1]->sampleAge);
-		pop->age += (pop->father->age - pop->age) * (0.93 + 0.004*rndu());
-        //				printf("-Tau (recomputed) = %f\n", pop->age);
+      if(    pop->father != NULL
+          && pop->father->age < pop->age)
+      {
+        // first drop age to max age of sons. 
+        // should be zero unless sons associated with ancient samples
+        pop->age = max2( pop->sons[0]->sampleAge,
+                         pop->sons[1]->sampleAge );
+		    pop->age +=   (pop->father->age - pop->age)
+                    * (0.93 + 0.004*rndu( RAND_GENERAL_SLOT ) );
       }
       // add sons to end of queue
       popQueue[tail++] = pop->sons[0];
@@ -393,7 +403,8 @@ int samplePopParameters(PopulationTree* popTree)	{
   free(popQueue);
 	
   // initialize migration rates to 0!
-  for(migBand=0; migBand<popTree->numMigBands; migBand++) {
+  for( migBand = 0; migBand < popTree->numMigBands; ++migBand )
+  {
     popTree->migBands[migBand].migRate = 0.0;
   }
 	
@@ -405,22 +416,26 @@ int samplePopParameters(PopulationTree* popTree)	{
 
 
 
-/***********************************************************************************
+/******************************************************************************
  *	sampleMigRates
  *	- samples migration rates for all mig bands
  * 	- each rate is sampled uniformly in the interval [0.9,1.1]*mean
  * 		(where mean is the prior mean for that parameter)
  * 	- returns 0
- ***********************************************************************************/
-int sampleMigRates(PopulationTree* popTree)	{
+ *****************************************************************************/
+int sampleMigRates(PopulationTree* popTree)
+{
   int migBand;
   double mean;
 	
   // sample migration rates
-  for(migBand=0; migBand<popTree->numMigBands; migBand++) {
-    mean = popTree->migBands[migBand].migRatePrior.alpha / popTree->migBands[migBand].migRatePrior.beta;
-    //		mean = 200;	// arbitrary mean - consider starting elsewhere?
-    popTree->migBands[migBand].migRate = mean * (0.9 + 0.2*rndu());
+  for( migBand = 0; migBand<popTree->numMigBands; ++migBand )
+  {
+    mean =   popTree->migBands[migBand].migRatePrior.alpha
+           / popTree->migBands[migBand].migRatePrior.beta;
+    popTree->migBands[migBand].migRate = mean *
+                                         (0.9 +
+                                          0.2 * rndu( RAND_GENERAL_SLOT ) );
     //		printf("Mig band %d, rate %f\n",migBand, popTree->migBands[migBand].migRate);
   }
 	

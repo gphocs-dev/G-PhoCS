@@ -26,6 +26,7 @@ int FreeMem();
  *---------------------------------------------------------------------------*/
 extern GENETREE_NODE_STATS genetree_node_stats;
 extern GENETREE_STATS*     genetree_stats;
+extern GENETREE_STATS*     genetree_stats_total_partitioned;
 extern GENETREE_STATS      genetree_stats_total;
 extern GENETREE_STATS      genetree_stats_total_check;
 extern ADMIXTURE_STATUS    admixture_status;
