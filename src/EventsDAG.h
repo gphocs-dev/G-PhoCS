@@ -11,12 +11,13 @@
 
 #include <vector>
 #include <cassert>
+#include <algorithm>
 #include "DataLayer.h"
 
 class Event;
 using namespace std;
 
-/*-----------------------------------------------------------------------------
+/*=============================================================================
  *
  * Single Event DAG node declaration
  *
@@ -34,7 +35,7 @@ public:
       pCoalParent_(nullptr),
       pContent_(nullptr){}
 
-  EventsDAGNode(T* pContent):
+  explicit EventsDAGNode(T* pContent):
       EventsDAGNode(){pContent_ = pContent;}
 
   T* getContent() const;
@@ -68,7 +69,7 @@ protected:
   T*                pContent_;
 };
 
-/*-----------------------------------------------------------------------------
+/*=============================================================================
  *
  * One DAG, vector of entry points - first Event in every population
  *
@@ -78,8 +79,9 @@ template<class T>
 class EventsDAG : public vector<EventsDAGNode<T>*>
 {
 public:
-  EventsDAG(){}
+  EventsDAG() = default;
   virtual ~EventsDAG();
+  void initDAG( int nNumOfPops );
 
   EventsDAGNode<T>* getFirstNode(int nPopIdx) const;
   EventsDAGNode<T>* getLastNode(int nPopIdx) const;
@@ -95,28 +97,6 @@ public:
   void appendEvent(int nPopIdx, T* pFirstEvent);
   EventsDAGNode<T>* getFirstGenEventInPop(int nPopIdx) const;
 };
-
-/*-----------------------------------------------------------------------------
- *
- * Repository of all DAGs
- *
- *---------------------------------------------------------------------------*/
-template<class T>
-class DAGsPerLocus : public vector< EventsDAG<T>* >
-{
-public:
-  DAGsPerLocus(){}
-  virtual ~DAGsPerLocus();
-  EventsDAG<T>* getDAG(int nLocusIdx) const;
-};
-
-/*---------------------------------------------------------------------------
- * DTOR
- */
-template<class T>
-DAGsPerLocus<T>::~DAGsPerLocus()
-{
-}
 
 /*---------------------------------------------------------------------------
  * DTOR
@@ -139,6 +119,15 @@ EventsDAG<T>::~EventsDAG()
     }
   }
   this->clear();
+}
+/*---------------------------------------------------------------------------
+ */
+template<class T> void
+EventsDAG<T>::initDAG(int nNumOfPops)
+{
+  this->reserve(nNumOfPops);
+  for( int i = 0; i < nNumOfPops; ++i )
+    (*this)[i] = nullptr;
 }
 
 /*---------------------------------------------------------------------------
@@ -189,12 +178,12 @@ template<class T> void
 EventsDAG<T>::initPopulation(int nPopIdx, T* pFirstEvent)
 {
   //Create POP START, POP END events
-  T* pPopStartVirtEvent = new T;
-  EventsDAGNode<T>* pPopStartDAGEvent = new EventsDAGNode<T>(pPopStartVirtEvent);
+  auto* pPopStartVirtEvent = new T;
+  auto* pPopStartDAGEvent = new EventsDAGNode<T>(pPopStartVirtEvent);
   (*this)[nPopIdx] = pPopStartDAGEvent;
   pPopStartDAGEvent->getContent()->setType (POP_START);
-  T* pPopEndVirtEvent = new T;
-  EventsDAGNode<T>* pPopEndDAGEvent = new EventsDAGNode<T>(pPopEndVirtEvent);
+  auto* pPopEndVirtEvent = new T;
+  auto* pPopEndDAGEvent = new EventsDAGNode<T>(pPopEndVirtEvent);
   pPopEndDAGEvent->getContent()->setType (POP_END);
   pPopStartDAGEvent->setNextGenEvent(pPopEndDAGEvent);
   pPopEndDAGEvent->setPrevGenEvent(pPopStartDAGEvent);
@@ -207,7 +196,7 @@ EventsDAG<T>::initPopulation(int nPopIdx, T* pFirstEvent)
 template<class T> void
 EventsDAG<T>::appendEvent(int nPopIdx, T* pEvent)
 {
-  EventsDAGNode<T>* pDAGEvent = new EventsDAGNode<T>(pEvent);
+  auto* pDAGEvent = new EventsDAGNode<T>(pEvent);
   EventsDAGNode<T>* pCurrDAGEvent = (*this)[nPopIdx];
   assert(pCurrDAGEvent->getContent()->getType() == POP_START);
   while( pCurrDAGEvent->getNextGenEvent()->getType() != POP_END )
@@ -228,7 +217,58 @@ EventsDAG<T>::getFirstGenEventInPop(int nPopIdx) const
   return pPopStartEvent->getNextGenEvent();
 }
 
-/*-----------------------------------------------------------------------------
+/*=============================================================================
+ *
+ * Repository of all DAGs
+ *
+ *---------------------------------------------------------------------------*/
+template<class T>
+class DAGsPerLocus : public vector< EventsDAG<T>* >
+{
+public:
+  DAGsPerLocus( int nNumOfLoci, int nNumOfPops );
+  virtual ~DAGsPerLocus();
+  EventsDAG<T>* getDAG(int nLocusIdx) const;
+
+protected:
+  void initDAGs( int nNumOfPops );
+};
+
+/*---------------------------------------------------------------------------
+ * CTOR
+ */
+template<class T>
+DAGsPerLocus<T>::DAGsPerLocus(int nOfLoci, int nNumOfPops)
+{
+  this->reserve(nOfLoci);
+  for( int i = 0; i < nOfLoci; ++i )
+    this->push_back(new EventsDAG<T>);
+  initDAGs(nNumOfPops);
+}
+
+/*---------------------------------------------------------------------------
+ * DTOR
+ */
+template<class T>
+DAGsPerLocus<T>::~DAGsPerLocus()
+{
+  for_each( this->begin(),
+            this->end(),
+            [](EventsDAG<T>* v){ delete v; } );
+}
+
+/*---------------------------------------------------------------------------
+ * Initializer.
+ */
+template<class T>
+void DAGsPerLocus<T>::initDAGs(int nNumOfPops)
+{
+  for_each( this->begin(),
+            this->end(),
+            [nNumOfPops](EventsDAG<T>* v){ v->initDAG( nNumOfPops ); } );
+}
+
+/*=============================================================================
  *
  * Single Events DAG node definition. Getters/Setters.
  *

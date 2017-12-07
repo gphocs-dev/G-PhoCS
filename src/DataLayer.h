@@ -101,7 +101,7 @@ public:
 template<class T> class DAGsPerLocus;
 
 extern EventChains event_chains;
-//extern DAGsPerLocus<Event> all_dags;
+//extern DAGsPerLocus<Event>* pAllDAGs;
 
 
 /*-----------------------------------------------------------------------------

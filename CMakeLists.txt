@@ -19,6 +19,9 @@ set(SOURCE_FILES
         src/DataLayer.h
         src/DataLayerConstants.h
         src/DbgErrMsg.h
+		src/DbgErrMsgGTreeStruct.h
+		src/DbgErrMsgTraceLineages.h
+		src/EventsDAG.h
         src/GenericTree.cpp
         src/GenericTree.h
         src/GPhoCS.cpp
@@ -42,7 +45,11 @@ set(SOURCE_FILES
         src/TraceLineages.cpp
         src/TraceLineages.h
         src/utils.cpp
-        src/utils.h src/CombAssertions.cpp src/CombAssertions.h src/HypothesisPrinter.cpp src/HypothesisPrinter.h)
+        src/utils.h
+        src/CombAssertions.cpp
+        src/CombAssertions.h
+        src/HypothesisPrinter.cpp
+        src/HypothesisPrinter.h)
 
 add_executable(G_PhoCS ${SOURCE_FILES})
 

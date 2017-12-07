@@ -11,7 +11,7 @@
 #include "DataLayer.h"
 
 EventChains  event_chains;
-DAGsPerLocus<Event> all_dags;
+DAGsPerLocus<Event>* pAllDAGs;
 //=============================================================================
 /*-----------------------------------------------------------------------------
  * CTOR

@@ -34,7 +34,7 @@ GENETREE_NODE_STATS  genetree_node_stats;
 int**                nodePops;
 int**                nodeEvents;
 Locus_SuperStruct*   locus_data;
-extern DAGsPerLocus<Event> all_dags;
+extern DAGsPerLocus<Event>* pAllDAGs;
 
 
 /*-----------------------------------------------------------------------------
@@ -105,7 +105,7 @@ int GetMem( void )
   }
 
   event_chains.reserve( dataSetup.numLoci );
-  all_dags.reserve( dataSetup.numLoci );
+  pAllDAGs = new DAGsPerLocus<Event>( dataSetup.numLoci, dataSetup.popTree->numPops);
 
   genetree_stats_flat.sortedAgesArray = (double*)
                                         malloc( maxNodes * sizeof(double) );
@@ -285,7 +285,7 @@ int FreeMem (void)
   free(genetree_node_stats.intPtrArray);
 
   free(locus_data);
-
+  delete pAllDAGs;
   return 0;
 }
 
