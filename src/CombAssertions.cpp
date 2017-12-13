@@ -289,6 +289,6 @@ void assertFirstEventIsSampleStart(EventChain chain, int firstEvent) {
 }
 
 void printErrorAndExit(string errorMessage) {
-  fprintf(stderr, errorMessage.c_str());
+  fprintf(stderr, "%s", errorMessage.c_str());
   exit(-1);
 }

@@ -18,9 +18,6 @@
 #include <time.h>
 
 
-double rndgamma1 (double s);
-double rndgamma2 (double s);
-
 int debug;
 int verbose;
 char parseFileDelims[] = " \t\n";
@@ -195,13 +192,6 @@ double mergeSort(double array[], int numEntries, double tmpArray[]) {
   return sum;
 }
 
-
-void test(const char* message){
-  printf("test %s\n",message);
-  return;
-}
-
-
 void resetBooleanArray1(unsigned short* booleanArray, int arrayLength){
   int i;
   for(i=0; i<arrayLength; i++) {
@@ -335,215 +325,297 @@ char* printtime (char timestr[])
   return(timestr);
 }
 
-double reflect(double x, double a, double b)
-{
-  /* This returns a variable in the range (a,b) by reflecting x back into the range
-   */
 
-  static double slack = 0.000000001;		// safety margins for upper and lower bounds
+/*-----------------------------------------------------------------------------
+ * This returns a variable in the range (a,b) by reflecting
+ * x back into the range
+ */
+double reflect(double x, double a, double b )
+{
+
+  // safety margins for upper and lower bounds
+  static double slack = 0.000000001;
   double xnew, double_interval;
-	
+
   a += slack;
   b -= slack;
-	
-  // if interval is empty (due to slackness), return middle of interval
-  if(b<=a) {
-//		fprintf(stderr, "very small interval in reflect(%g,%g,%g) [slackness = %g].\n",x,a-slack,b+slack,slack);
-    return (a+b)/2;
+
+  // if interval is empty (due to slackness),
+  // return middle of interval
+  if( b <= a )
+  {
+    //fprintf(stderr, "very small interval in reflect(%g,%g,%g)"
+    //        " [slackness = %g].\n",x,a-slack,b+slack,slack);
+    return (a+b)/2.;
   }
-	
-  if(x<b && x>a)
+
+  if( x < b && x > a )
     return x;
-	
+
   // reflect upwards, if necessary
   xnew = x;
-  if(xnew<=a)
-    xnew = 2*a - xnew;
-		
+  if( xnew <= a )
+    xnew = 2. * a - xnew;
+
   // "fold twice" as many time as needed
-  double_interval = 2*(b-a);
+  double_interval = 2. * ( b - a );
   xnew = xnew - double_interval*floor( (xnew-a) / double_interval );
-	
-  // reflect downwards one last time, if necessary 
-  if(xnew>=b)
-    xnew = 2*b - xnew;
-	
-  // value should be within interval at this stage, but numerical percision might put it slightly outside
-  while(xnew <=a || xnew >= b) {
-	if(xnew>=b) {
-		if(debug) {
-			fprintf(stderr, "reflect percision in reflect(%g,%g,%g): obtaining reflection at %g (%g greater than upper bound)\n",x,a-slack,b+slack,xnew, xnew-b);
-		}
-    	xnew = 2*b - xnew;
-	} else {
-		if(debug) {
-			fprintf(stderr, "reflect percision in reflect(%g,%g,%g): obtaining reflection at %g (%g smaller than lower bound)\n",x,a-slack,b+slack,xnew, a-xnew);
-		}
-    	xnew = 2*a - xnew;
-	}
+
+  // reflect downwards one last time, if necessary
+  if( xnew >= b )
+    xnew = 2. * b - xnew;
+
+  // value should be within interval at this stage, but numerical
+  // precision might put it slightly outside
+  while( xnew <= a || xnew >= b )
+  {
+    if( xnew >= b )
+    {
+      if( debug )
+      {
+        fprintf(stderr, "reflect percision in reflect(%g,%g,%g): "
+            "obtaining reflection at %g (%g greater than upper "
+            "bound)\n", x,
+                        a - slack,
+                        b + slack,
+                        xnew, xnew-b);
+      }
+      xnew = 2. * b - xnew;
+    }
+    else
+    {
+      if( debug )
+      {
+        fprintf(stderr, "reflect percision in reflect(%g,%g,%g): obtaining "
+                        "reflection at %g (%g smaller than lower bound)\n",
+                        x, a - slack,
+                        b + slack, xnew, a-xnew);
+      }
+      xnew = 2*a - xnew;
+    }
   }
-		
-	  
   return xnew;
-	
 }
 
+//================= Random Generator related functions ========================
+RandGeneratorContext RndCtx;
 
-// random sampling functions
-// The difference vs. Ver. 1.2.3. We don't preserve seed per thread.
-// There are not-atomic access to the following global variables.
-static unsigned int z_rndu=137;
-static unsigned int w_rndu=123456757;
-static double m2s2_kernel=8, m2N_kernel, s2N_kernel;;
+//-----------------------------------------------------------------------------
+#define MALLOC_AND_ASSIGN(ptr, t, sz, val) \
+  ptr = (t*) malloc(sz); \
+  if (NULL == ptr ) \
+    printf("Error on Random context allocation"); \
+  for(i=0; i < RndCtx.nOfSlots; ++i) \
+    ptr[i] = val;
 
-void setSeed (unsigned int seed) {
-  if(sizeof(int) != 4) 
-    puts("oh-oh, we are in trouble.  int not 32-bit?");
-  z_rndu=170*(seed%178)+137;
-  w_rndu = seed*127773;
+void initRandomGenerator( int nNumLoci, unsigned int unSeed )
+{
+  if( 4 != sizeof(int) )
+    puts("oh-oh, we are in trouble. int is not 32-bit?");
+
+  //The last extra slot is for general purpose computations
+  RndCtx.nOfSlots = nNumLoci + 1;
+
+  int bs = sizeof(int) * RndCtx.nOfSlots;
+  int i = 0;
+  unsigned int v = 170 * (unSeed % 178) + 137;
+  MALLOC_AND_ASSIGN( RndCtx.rndu_z, unsigned int, bs, v ) //137
+  v = unSeed*127773;
+  MALLOC_AND_ASSIGN( RndCtx.rndu_w, unsigned int, bs, v ) //123456757
+  MALLOC_AND_ASSIGN( RndCtx.rndu_x, unsigned int, bs, 11 )
+  MALLOC_AND_ASSIGN( RndCtx.rndu_y, unsigned int, bs, 23 )
+  bs = sizeof(double) * RndCtx.nOfSlots;
+  MALLOC_AND_ASSIGN( RndCtx.m2s2_kernel, double, bs, 8. )
+  double dv = sqrt(RndCtx.m2s2_kernel[0]/(RndCtx.m2s2_kernel[0] + 1.));
+  MALLOC_AND_ASSIGN( RndCtx.m2N_kernel, double, bs, dv )
+  dv = sqrt(1./(RndCtx.m2s2_kernel[0] + 1.));
+  MALLOC_AND_ASSIGN( RndCtx.s2N_kernel, double, bs, dv )
+
+  MALLOC_AND_ASSIGN( RndCtx.rndgamma2_b, double, bs,  0.0 )
+  MALLOC_AND_ASSIGN( RndCtx.rndgamma2_h, double, bs,  0.0 )
+  MALLOC_AND_ASSIGN( RndCtx.rndgamma2_ss, double, bs, 0.0 ) //0.0
+
+  MALLOC_AND_ASSIGN( RndCtx.rndgamma1_a, double, bs,  0.0 )
+  MALLOC_AND_ASSIGN( RndCtx.rndgamma1_p, double, bs,  0.0 )
+  MALLOC_AND_ASSIGN( RndCtx.rndgamma1_uf, double, bs, 0.0 )
+  MALLOC_AND_ASSIGN( RndCtx.rndgamma1_ss, double, bs, 10.0 ) //10.0
+  MALLOC_AND_ASSIGN( RndCtx.rndgamma1_d, double, bs,  0.0 )
+/*
+  rndu_z=170*(seed%178)+137;
+  rndu_w = seed*127773;
 
   m2N_kernel = sqrt(m2s2_kernel/(m2s2_kernel+1));  
   s2N_kernel = sqrt(1/(m2s2_kernel+1));
+*/
 }
 
-double rndnormal (void)
+/*-----------------------------------------------------------------------------
+  standard normal variate, using the Box-Muller method (1958), improved by
+  Marsaglia and Bray (1964).  The method generates a pair of random
+  variates, and only one used.
+  See N. L. Johnson et al. (1994), Continuous univariate distributions,
+  vol 1. p.153.
+*/
+double rndnormal( int nLocusIdx )
 {
-  /* standard normal variate, using the Box-Muller method (1958), improved by 
-     Marsaglia and Bray (1964).  The method generates a pair of random
-     variates, and only one used.
-     See N. L. Johnson et al. (1994), Continuous univariate distributions, 
-     vol 1. p.153.
-  */
   double u, v, s;
-
-  for (; ;) {
-    u = 2*rndu() - 1;
-    v = 2*rndu() - 1;
-    s = u*u + v*v;
-    if (s>0 && s<1) break;
+  while( 1 )
+  {
+    u = 2*rndu( nLocusIdx ) - 1;
+    v = 2*rndu( nLocusIdx ) - 1;
+    s = u * u + v * v;
+    if( s > 0 && s < 1 )
+      break;
   }
-  s = sqrt(-2*log(s)/s);
-  return (u*s);
+  s = sqrt( -2. * log( s ) / s );
+  return u * s;
 }
 
+/*-----------------------------------------------------------------------------
+   This returns a variate from the mixture of two normals
+   N(-m, s2) and N(m, s2), with mean 0 and variance m^2 + s2 = 1
+   and m^2/s^2 = 8.
 
-double rnd2normal8 (void)
+   Let this standard variate be z.  Then mean + z * sigma will be a variate
+   with mean mean and SD sigma.  This is useful for generating MCMC proposals
+*/
+double rnd2normal8( int nLocusIdx )
 {
-  /* This returns a variate from the mixture of two normals
-     N(-m, s2) and N(m, s2), with mean 0 and variance m^2 + s2 = 1 and m^2/s^2 = 8.
-
-     Let this standard variate be z.  Then mean + z * sigma will be a variate 
-     with mean mean and SD sigma.  This is useful for generating MCMC proposals
-  */
-  double z = m2N_kernel + rndnormal()*s2N_kernel;
-  ;
-  z = (rndu()<0.5 ? z : -z);
-  return (z);
+  double z =   RndCtx.m2N_kernel[nLocusIdx]
+             + rndnormal( nLocusIdx ) * RndCtx.s2N_kernel[nLocusIdx];
+  z = rndu( nLocusIdx ) < 0.5 ? z : -z;
+  return z;
 }
 
+/*-----------------------------------------------------------------------------
+   U(0,1): AS 183: Appl. Stat. 31:188-190
+   Wichmann BA & Hill ID.  1982.  An efficient and portable
+   pseudo-random number generator.  Appl. Stat. 31:188-190
 
-double rndu (void)
+   x, y, z are any numbers in the range 1-30000.  Integer operation up
+   to 30323 required.
+*/
+double rndu( int nLocusIdx )
 {
-  /* U(0,1): AS 183: Appl. Stat. 31:188-190 
-     Wichmann BA & Hill ID.  1982.  An efficient and portable
-     pseudo-random number generator.  Appl. Stat. 31:188-190
-
-     x, y, z are any numbers in the range 1-30000.  Integer operation up
-     to 30323 required.
-  */
-  static unsigned int x_rndu=11, y_rndu=23;
   double r;
 
-  x_rndu = 171*(x_rndu%177) -  2*(x_rndu/177);
-  y_rndu = 172*(y_rndu%176) - 35*(y_rndu/176);
-  z_rndu = 170*(z_rndu%178) - 63*(z_rndu/178);
-  /*
-    if (x_rndu<0) x_rndu+=30269;
-    if (y_rndu<0) y_rndu+=30307;
-    if (z_rndu<0) z_rndu+=30323;
-  */
-  r = x_rndu/30269.0 + y_rndu/30307.0 + z_rndu/30323.0;
-  return (r-(int)r);
+  RndCtx.rndu_x[nLocusIdx] =    171 * ( RndCtx.rndu_x[nLocusIdx] % 177 )
+                             -  2 * ( RndCtx.rndu_x[nLocusIdx] / 177 );
+  RndCtx.rndu_y[nLocusIdx] =    172 * ( RndCtx.rndu_y[nLocusIdx] % 176 )
+                             -  35 * ( RndCtx.rndu_y[nLocusIdx] / 176 );
+  RndCtx.rndu_z[nLocusIdx] =    170 * ( RndCtx.rndu_z[nLocusIdx] % 178 )
+                             -  63 * ( RndCtx.rndu_z[nLocusIdx] / 178 );
+  r =   RndCtx.rndu_x[nLocusIdx] / 30269.0
+      + RndCtx.rndu_y[nLocusIdx] / 30307.0
+      + RndCtx.rndu_z[nLocusIdx] / 30323.0;
+  r = ( r - (int)r );
+  return r;
 }
 
-
-
-double rndgamma (double s)
+/*-----------------------------------------------------------------------------
+   random standard gamma (Mean=Var=s,  with shape parameter=s, scale para=1)
+   r^(s-1)*exp(-r)
+   J. Dagpunar (1988) Principles of random variate generation,
+   Clarendon Press, Oxford
+   calling rndgamma1() if s<1 or
+   rndgamma2() if s>1 or
+   exponential if s=1
+   @@TODO: (still actual?)
+   This is unsafe, and is found to return 0 when s is very small.
+*/
+double rndgamma( int nLocusIdx, double s )
 {
-  /* random standard gamma (Mean=Var=s,  with shape parameter=s, scale para=1)
-     r^(s-1)*exp(-r)
-     J. Dagpunar (1988) Principles of random variate generation,
-     Clarendon Press, Oxford
-     calling rndgamma1() if s<1 or
-     rndgamma2() if s>1 or
-     exponential if s=1
-
-     This is unsafe, and is found to return 0 when s is very small.
-  */
   double r=0;
-
-  if (s<=0)      puts ("jgl gamma..");
-  else if (s<1)  r=rndgamma1 (s);
-  else if (s>1)  r=rndgamma2 (s);
-  else           r=-log(rndu());
-  return (r);
+  if ( s <= 0 )
+    puts ("jgl gamma..");
+  else if( s < 1)
+    r = rndgamma1( nLocusIdx, s );
+  else if( s > 1 )
+    r = rndgamma2( nLocusIdx, s );
+  else
+    r = -log( rndu( nLocusIdx ) );
+  return r;
 }
 
-
-double rndgamma1 (double s)
+//-----------------------------------------------------------------------------
+double rndgamma1( int nLocusIdx, double s )
 {
   /* random standard gamma for s<1
      switching method
   */
   double r, x=0,small=1e-37,w;
-  static double a,p,uf,ss=10,d;
-
-  if (s!=ss) {
-    a=1-s;
-    p=a/(a+s*exp(-a));
-    uf=p*pow(small/a,s);
-    d=a*log(a);
-    ss=s;
+  if( s != RndCtx.rndgamma1_ss[nLocusIdx] )
+  {
+    RndCtx.rndgamma1_a[nLocusIdx] = 1 - s;
+    RndCtx.rndgamma1_p[nLocusIdx] =
+                   RndCtx.rndgamma1_a[nLocusIdx]/(RndCtx.rndgamma1_a[nLocusIdx]
+                   + s * exp(-RndCtx.rndgamma1_a[nLocusIdx]));
+    RndCtx.rndgamma1_uf[nLocusIdx] =   RndCtx.rndgamma1_p[nLocusIdx]
+                                     * pow( small/RndCtx.rndgamma1_a[nLocusIdx],
+                                            s );
+    RndCtx.rndgamma1_d[nLocusIdx] =   RndCtx.rndgamma1_a[nLocusIdx]
+                                    * log(RndCtx.rndgamma1_a[nLocusIdx]);
+    RndCtx.rndgamma1_ss[nLocusIdx] = s;
   }
-  for (;;) {
-    r=rndu();
-    if (r>p)        x=a-log((1-r)/(1-p)), w=a*log(x)-d;
-    else if (r>uf)  x=a*pow(r/p,1/s), w=x;
-    else            return (0);
-    r=rndu ();
-    if (1-r<=w && r>0)
-      if (r*(w+1)>=1 || -log(r)<=w)  continue;
+  while( 1 )
+  {
+    r = rndu( nLocusIdx );
+    if( r > RndCtx.rndgamma1_p[nLocusIdx] )
+    {
+      x =   RndCtx.rndgamma1_a[nLocusIdx]
+          - log((1 - r) / (1 - RndCtx.rndgamma1_p[nLocusIdx]));
+      w =   RndCtx.rndgamma1_a[nLocusIdx] * log(x)
+          - RndCtx.rndgamma1_d[nLocusIdx];
+    }
+    else if( r > RndCtx.rndgamma1_uf[nLocusIdx] )
+    {
+      x =   RndCtx.rndgamma1_a[nLocusIdx]
+          * pow(r / RndCtx.rndgamma1_p[nLocusIdx], 1 / s);
+      w = x;
+    }
+    else
+      return (0);
+
+    r = rndu( nLocusIdx );
+    if( (1. - r) <= w && r > 0. )
+      if( r * ( w + 1 ) >= 1 || -log( r ) <= w )
+        continue;
     break;
   }
-  return (x);
+  return x;
 }
 
-double rndgamma2 (double s)
+//-----------------------------------------------------------------------------
+// random standard gamma for s>1
+//   Best's (1978) t distribution method
+
+double rndgamma2( int nLocusIdx, double s )
 {
-  /* random standard gamma for s>1
-     Best's (1978) t distribution method
-  */
   double r,d,f,g,x;
-  static double b,h,ss=0;
-  if (s!=ss) {
-    b=s-1;
-    h=sqrt(3*s-0.75);
-    ss=s;
+  if( s != RndCtx.rndgamma2_ss[nLocusIdx])
+  {
+    RndCtx.rndgamma2_b[nLocusIdx]  = s-1;
+    RndCtx.rndgamma2_h[nLocusIdx]  = sqrt(3*s-0.75);
+    RndCtx.rndgamma2_ss[nLocusIdx] = s;
   }
-  for (;;) {
-    r=rndu ();
-    g=r-r*r;
-    f=(r-0.5)*h/sqrt(g);
-    x=b+f;
-    if (x <= 0) continue;
-    r=rndu();
-    d=64*r*r*g*g*g;
-    if (d*x < x-2*f*f || log(d) < 2*(b*log(x/b)-f))  break;
+  while( 1 )
+  {
+    r = rndu( nLocusIdx );
+    g = r - r * r;
+    f = (r -0.5) * RndCtx.rndgamma2_h[nLocusIdx]/sqrt(g);
+    x = RndCtx.rndgamma2_b[nLocusIdx] + f;
+    if (x <= 0)
+      continue;
+    r=rndu( nLocusIdx );
+    d = 64 * r * r * g * g * g;
+    if(    d * x < x - 2 * f * f
+        || log(d) < 2 * ( RndCtx.rndgamma2_b[nLocusIdx]
+                          * log ( x / RndCtx.rndgamma2_b[nLocusIdx]) - f ) )
+      break;
   }
-  return (x);
+  return x;
 }
-
-
+//-----------------------------------------------------------------------------
 
 /*
   double PointChi2 (double prob, double v)
@@ -605,8 +677,9 @@ double rndgamma2 (double s)
 */
 
 
-
-void flushLine(FILE* readFile) {
+//-----------------------------------------------------------------------------
+void flushLine(FILE* readFile)
+{
   static char restOfLine[16000] = {'\0'};
   char* p_res = fgets(restOfLine, 16000, readFile);
   if(NULL == p_res)
@@ -614,16 +687,19 @@ void flushLine(FILE* readFile) {
     return;
 }
 
+/*-----------------------------------------------------------------------------
+ * Comment Aware version of strtok
+ * If string retrieved starts with '#' it is a comment
+ * and this function returns NULL
+ ----------------------------------------------------------------------------*/
+char *strtokCS( char * str, const char * delimiters)
+{
+  char * result;
+  result = strtok(str, delimiters);
+  if (result == NULL || result[0] == '#')
+    return NULL;
+  else
+    return result;
+}
 
-  /***********************************************************************************
-   *    Comment Aware version of strtok
-   *    -If string retrieved starts with '#' it is a comment and this function returns NULL
-   ***********************************************************************************/
-  char *strtokCS( char * str, const char * delimiters) {
-    char * result;
-    result = strtok(str, delimiters);
-    if (result == NULL || result[0] == '#')
-      return NULL;
-    else
-      return result;
-  }
+//============================= END OF FILE ===================================

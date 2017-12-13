@@ -1,5 +1,5 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
+//#pragma clang diagnostic push
+//#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 #ifndef SRC_MCREFCOMMON_H_
 #define SRC_MCREFCOMMON_H_
 
@@ -45,4 +45,4 @@ char *concat(const char *s1, const char *s2); // NOTE - this should not be used 
 
 #endif
 
-#pragma clang diagnostic pop
+//#pragma clang diagnostic pop
