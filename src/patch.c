@@ -1000,27 +1000,27 @@ int traceLineage(int gen, int node, int reconnect)
         // if detaching subtree, you can reach top only if detaching the root edge
         // this has to be considered in migration scenarios
         //				if(node != getLocusRoot(dataState.lociData[gen]) {
-		    if(debug)
+        if(debug)
         {
-	        fprintf(stderr, "\nError: traceLineage: while tracing edge above node %d in gen %d.\n",node,gen);
-        	fprintf(stderr, "  Reached top event at age %f (reconnect == %d).\n",age,reconnect);
-        	fprintf(stderr, "  Events visited:");
-			    for( i = 0;
+          fprintf(stderr, "\nError: traceLineage: while tracing edge above node %d in gen %d.\n",node,gen);
+          fprintf(stderr, "  Reached top event at age %f (reconnect == %d).\n",age,reconnect);
+          fprintf(stderr, "  Events visited:");
+          for( i = 0;
                i < locus_data[gen].genetree_stats_delta[reconnect]\
-                                  .num_changed_events; i++)
+                                  .num_changed_events; 
+               i++ )
           {
             fprintf(stderr, " %d",
                     locus_data[gen].genetree_stats_delta[reconnect]\
                     .changed_events[i]);
-        	}
-        	fprintf(stderr, ".\n");
-		    }
+          }
+          fprintf(stderr, ".\n");
+        }
         else
         {
-			    fprintf(stderr, "Fatal Error 0006.\n");
-		    }
+          fprintf(stderr, "Fatal Error 0006.\n");
+        }
         printGenealogyAndExit(gen,-1);
-        //				}
       }
       pop = dataSetup.popTree->pops[pop]->father->id;
       theta = dataSetup.popTree->pops[pop]->theta*heredity_factor;
@@ -1030,7 +1030,7 @@ int traceLineage(int gen, int node, int reconnect)
       {
         if(debug)
         {
-          fprintf(stderr, "\nError: traceLineage: while tracing edge "
+          fprintf(stderr, "\nWarning: traceLineage: while tracing edge "
                   "above node %d in gen %d.\n",node,gen);
           fprintf(stderr, "  %d living migration bands when moving to "
                   "population %d (with total rate %f):\n",
@@ -1044,33 +1044,33 @@ int traceLineage(int gen, int node, int reconnect)
         }
         else
         {
-          fprintf(stderr, "Fatal Error 0007.\n");
+          fprintf(stderr, "Warning 0007.\n");
         }
-        printGenealogyAndExit(gen,-1);
+        //printGenealogyAndExit(gen,-1);
       }
       mig_rate = 0.0;
 	  
       if(fabs(age/dataSetup.popTree->pops[pop]->age-1) > 0.01)
       {
-		    if(debug)
+        if(debug)
         {
-			    fprintf(stderr, "\nError traceLineage: while tracing edge above "
+          fprintf(stderr, "\nError traceLineage: while tracing edge above "
                   "node %d in gen %d.\n",node,gen);
-    	    fprintf(stderr, "  age recorded at start of pop %d is %g, while "
+          fprintf(stderr, "  age recorded at start of pop %d is %g, while "
                   "age of pop is %g (diff = %g).\n",pop, age,
                   dataSetup.popTree->pops[pop]->age,
                   age-dataSetup.popTree->pops[pop]->age);
-        	for(i=0;i<num_live_mig_bands; i++)
+          for(i=0;i<num_live_mig_bands; i++)
           {
             fprintf(stderr, " %d (rate %f)",live_mig_bands[i],
                     dataSetup.popTree->migBands[ live_mig_bands[i] ].migRate);
-        	}
-        	fprintf(stderr, ".\n");
+          }
+          fprintf(stderr, ".\n");
         }
         else
         {
-			    fprintf(stderr, "Fatal Error 0008.\n");
-		    }
+          fprintf(stderr, "Fatal Error 0008.\n");
+        }
         printGenealogyAndExit(gen,-1);
       }
       age = dataSetup.popTree->pops[pop]->age;

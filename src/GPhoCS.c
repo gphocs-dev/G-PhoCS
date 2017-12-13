@@ -23,7 +23,6 @@
 #include "GPhoCS.h"
 
 /** patch for intermediate G-PhoCS version **/
-//#include "patch.c"
 #include "patch.h"
 
 static struct option long_options[] = {{"help",     no_argument, 0, 'h'},
