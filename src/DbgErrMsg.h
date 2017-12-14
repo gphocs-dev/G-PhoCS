@@ -72,7 +72,7 @@ if(debug) \
 else\
 {\
   fprintf(stderr, "Warning 0007.\n");\
-}\
+}
 
 //----------------------------------------------------------------------------
 #define TRACE_LINEAGE_FATAL_0008 \
