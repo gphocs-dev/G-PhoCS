@@ -1082,31 +1082,34 @@ int removeEvent(int gen, int event) {
   return 0;
 }
 
-/* createEventBefore
+
+/*-----------------------------------------------------------------------------
+   createEventBefore
    Creates a new event before specified event.
    Returns the id of the event.
 */
-
 int createEventBefore( int     nGenIdx,
                        int     nPopIdx,
                        int     nEventIdx,
                        double  fElapsedTime )
 {
-  int nEventId = event_chains[nGenIdx].events[nEventIdx].getId();
-  EventsDAGNode<Event>* pCurrEvent = (*pAllDAGs)[nGenIdx]->getNode( nPopIdx,
-                                                                    nEventId );
-  return createEventBefore( nGenIdx, nPopIdx, pCurrEvent, fElapsedTime );
+  Event* pEvent = &(event_chains[nGenIdx].events[nEventIdx]);
+  EventsDAGNode<Event>* pCurrEventNode = (*pAllDAGs)[nGenIdx]->getNode( nPopIdx,
+                                                                       pEvent );
+  return createEventBefore( nGenIdx, nPopIdx, pCurrEventNode, fElapsedTime );
 }
 
+//-----------------------------------------------------------------------------
 int createEventBefore( int                   nGenIdx,
                        int                   nPopIdx,
-                       EventsDAGNode<Event>* pCurrEvent,
+                       EventsDAGNode<Event>* pCurrEventNode,
                        double                fElapsedTime)
 {
-  // --- backward compatibility -----------------------------------------------
-  //int prev_event = event_chains[gen].events[event].getPrevIdx();
-  //int new_event = event_chains[gen].free_events;
-  int prev_event = pCurrEvent->getContent()->getPrevIdx();
+
+  int nPrevIdx = pCurrEventNode->getContent()->getPrevIdx();
+  int nCurrIdx = 0;
+  if(-1 != nPrevIdx)
+    pCurrEventNode->getPrevGenEvent()->getContent()->getNextIdx();
   int new_event = event_chains[nGenIdx].free_events;
 
 
@@ -1121,34 +1124,30 @@ int createEventBefore( int                   nGenIdx,
     }
     printGenealogyAndExit(nGenIdx, -1);
   }
-  //---------------------------------------------------------------------------
 
   // make changes in elapsed time and pointers
-  // --- ver 1 ---------------------------------------------------------------
-//  Event* pPrevEvent = &(event_chains[nGenIdx].events[prev_event]);
-//  Event* pNewEvent = &(event_chains[nGenIdx].events[new_event]);
-//
-//  event_chains[nGenIdx].events[new_event].setNextIdx(event);
-//  event_chains[nGenIdx].events[new_event].setPrevIdx(prev_event);
-//
-//  event_chains[nGenIdx].events[new_event].setNumLineages(
-//      event_chains[nGenIdx].events[event].getNumLineages());
-//  event_chains[nGenIdx].events[new_event].setElapsedTime(fElapsedTime);
-//  event_chains[nGenIdx].events[new_event].setType(DUMMY);
-//
-//  event_chains[nGenIdx].events[event].setPrevIdx(new_event);
-//
-//  event_chains[nGenIdx].events[event].addElapsedTime(-fElapsedTime);
-//
-//  if (prev_event < 0)
-//  {
-//    event_chains[nGenIdx].first_event[nPopIdx] = new_event;
-//  }
-//  else
-//  {
-//    event_chains[nGenIdx].events[prev_event].setNextIdx(new_event);
-//  }
+  Event* pNewEvent = &(event_chains[nGenIdx].events[new_event]);
+  pNewEvent->setNextIdx(nCurrIdx);
+  pNewEvent->setPrevIdx( nPrevIdx );
+  pNewEvent->setNumLineages( pCurrEventNode->getContent()->getNumLineages() );
+  pNewEvent->setElapsedTime(fElapsedTime);
+  pNewEvent->setType(DUMMY);
+
+  pCurrEventNode->getContent()->addElapsedTime(-fElapsedTime);
+
+  if( nPrevIdx < 0 )
+  {
+    event_chains[nGenIdx].first_event[nPopIdx] = new_event;
+  }
+  else
+  {
+    event_chains[nGenIdx].events[nPrevIdx].setNextIdx(new_event);
+  }
   //---------------------------------------------------------------------------
+
+  (*pAllDAGs)[nGenIdx]->createEventBefore( nPopIdx,
+                                           pNewEvent,
+                                           pCurrEventNode);
 
 
 #ifdef DEBUG_EVENT_CHAIN
@@ -1242,8 +1241,13 @@ int createEvent(int nGenIdx, int nPopIdx, double fAge)
 
   EventsDAGNode<Event>* pCurrEvent =
                           (*pAllDAGs)[nGenIdx]->getFirstGenEventInPop(nPopIdx);
+  //@@TODO: take care of an empty population
+  if(nullptr == pCurrEvent)
+    return -1;
+
   double fCurrElapsedTime = pCurrEvent->getContent()->getElapsedTime();
-  while( pCurrEvent->getType() != POP_END && fCurrElapsedTime < fDeltaTime )
+  while(    nullptr != pCurrEvent->getNextGenEvent()
+         && fCurrElapsedTime < fDeltaTime )
   {
     fDeltaTime -= fCurrElapsedTime;
     pCurrEvent = pCurrEvent->getNextGenEvent();

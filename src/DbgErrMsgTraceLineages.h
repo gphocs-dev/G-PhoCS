@@ -56,7 +56,7 @@ printGenealogyAndExit(p_stack->gen,-1);
 #define TRACE_LINEAGE_FATAL_0007 \
 if(debug) \
 {\
-  fprintf(stderr, "\nError: traceLineage: while tracing"\
+  fprintf(stderr, "\Warning: traceLineage: while tracing"\
 					        " edge above node %d in gen %d.\n", \
                   p_stack->node, p_stack->gen);\
 	fprintf(stderr, "  %d living migration bands when moving to population %d"\
@@ -72,10 +72,8 @@ if(debug) \
 }\
 else\
 {\
-  fprintf(stderr, "Fatal Error 0007.\n");\
-}\
-printGenealogyAndExit(p_stack->gen,-1);
-
+  fprintf(stderr, "Warning 0007.\n");\
+}
 //----------------------------------------------------------------------------
 #define TRACE_LINEAGE_FATAL_0008 \
 if(debug)\
