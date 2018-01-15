@@ -1088,67 +1088,36 @@ int removeEvent(int gen, int event) {
    Creates a new event before specified event.
    Returns the id of the event.
 */
-int createEventBefore( int     nGenIdx,
-                       int     nPopIdx,
-                       int     nEventIdx,
-                       double  fElapsedTime )
-{
-  Event* pEvent = &(event_chains[nGenIdx].events[nEventIdx]);
-  EventsDAGNode<Event>* pCurrEventNode = (*pAllDAGs)[nGenIdx]->getNode( nPopIdx,
-                                                                       pEvent );
-  return createEventBefore( nGenIdx, nPopIdx, pCurrEventNode, fElapsedTime );
-}
 
-//-----------------------------------------------------------------------------
-int createEventBefore( int                   nGenIdx,
-                       int                   nPopIdx,
-                       EventsDAGNode<Event>* pCurrEventNode,
-                       double                fElapsedTime)
-{
+int createEventBefore(int gen, int pop, int event, double elapsed_time) {
 
-  int nPrevIdx = pCurrEventNode->getContent()->getPrevIdx();
-  int nCurrIdx = 0;
-  if(-1 != nPrevIdx)
-    pCurrEventNode->getPrevGenEvent()->getContent()->getNextIdx();
-  int new_event = event_chains[nGenIdx].free_events;
+  int prev_event = event_chains[gen].events[event].getPrevIdx(),
+    new_event = event_chains[gen].free_events;
 
+  event_chains[gen].free_events = event_chains[gen].events[new_event].getNextIdx();
 
-  event_chains[nGenIdx].free_events =
-      event_chains[nGenIdx].events[new_event].getNextIdx();
-
-  if (event_chains[nGenIdx].free_events < 0) {
+  if(event_chains[gen].free_events < 0) {
     if (debug) {
-      fprintf(stderr, "\nError: Empty event pool in gen %d.\n", nGenIdx);
+    	fprintf(stderr, "\nError: Empty event pool in gen %d.\n", gen);
     } else {
       fprintf(stderr, "Fatal Error 0015.\n");
     }
-    printGenealogyAndExit(nGenIdx, -1);
+    printGenealogyAndExit(gen,-1);
   }
 
   // make changes in elapsed time and pointers
-  Event* pNewEvent = &(event_chains[nGenIdx].events[new_event]);
-  pNewEvent->setNextIdx(nCurrIdx);
-  pNewEvent->setPrevIdx( nPrevIdx );
-  pNewEvent->setNumLineages( pCurrEventNode->getContent()->getNumLineages() );
-  pNewEvent->setElapsedTime(fElapsedTime);
-  pNewEvent->setType(DUMMY);
-
-  pCurrEventNode->getContent()->addElapsedTime(-fElapsedTime);
-
-  if( nPrevIdx < 0 )
-  {
-    event_chains[nGenIdx].first_event[nPopIdx] = new_event;
+  event_chains[gen].events[new_event].setNextIdx(event);
+  event_chains[gen].events[new_event].setPrevIdx(prev_event);
+  event_chains[gen].events[new_event].setNumLineages(event_chains[gen].events[event].getNumLineages());
+  event_chains[gen].events[new_event].setElapsedTime(elapsed_time);
+  event_chains[gen].events[new_event].setType(DUMMY);
+  event_chains[gen].events[event].setPrevIdx(new_event);
+  event_chains[gen].events[event].addElapsedTime(-elapsed_time);
+  if(prev_event < 0) {
+    event_chains[gen].first_event[pop] = new_event;
+  } else {
+    event_chains[gen].events[prev_event].setNextIdx(new_event);
   }
-  else
-  {
-    event_chains[nGenIdx].events[nPrevIdx].setNextIdx(new_event);
-  }
-  //---------------------------------------------------------------------------
-
-  (*pAllDAGs)[nGenIdx]->createEventBefore( nPopIdx,
-                                           pNewEvent,
-                                           pCurrEventNode);
-
 
 #ifdef DEBUG_EVENT_CHAIN
   printf("Added new event %d to gen %d. Next free event %d.\n",
@@ -1167,114 +1136,57 @@ int createEventBefore( int                   nGenIdx,
    Returns the id of the event.
 */
 
-int createEvent(int nGenIdx, int nPopIdx, double fAge)
-{
-  double fDeltaTime = fAge - dataSetup.popTree->pops[nPopIdx]->age;
+int createEvent(int gen, int pop, double age) {
 
-  if( fDeltaTime < 0 )
-  {
-    if( debug )
-    {
-      fprintf( stderr,
-               "\nError: createEvent: time specified %g is"
-               " smaller than age of target population %d (%g).\n",
-               fAge, nPopIdx, dataSetup.popTree->pops[nPopIdx]->age);
-    }
-    else
-    {
+  int event;
+  double delta_time = age - dataSetup.popTree->pops[pop]->age;
+
+  if(delta_time < 0) {
+	if(debug) {
+		fprintf(stderr, "\nError: createEvent: time specified %g is smaller than age of target population %d (%g).\n",
+			age, pop, dataSetup.popTree->pops[pop]->age);
+	} else {
       fprintf( stderr, "Fatal Error 0016.\n" );
     }
     return (-1);
   }
 
-  if(    nPopIdx != dataSetup.popTree->rootPop
-      && fAge > (dataSetup.popTree->pops[nPopIdx]->father->age + 0.000001) )
-  {
-    if( debug )
-    {
-      fprintf( stderr,
-               "\nError: createEvent: time specified %g is"
-               " greater than age of parent population %d (%g).\n",
-               fAge, dataSetup.popTree->pops[nPopIdx]->father->id,
-               dataSetup.popTree->pops[nPopIdx]->father->age);
-    }
-    else
-    {
+  if(pop != dataSetup.popTree->rootPop && age > dataSetup.popTree->pops[pop]->father->age + 0.000001) {
+	if(debug) {
+	    fprintf(stderr, "\nError: createEvent: time specified %g is greater than age of parent population %d (%g).\n",
+    	       age, dataSetup.popTree->pops[pop]->father->id, dataSetup.popTree->pops[pop]->father->age);
+	} else {
       fprintf( stderr, "Fatal Error 0017.\n" );
     }
     return (-1);
   }
 
   // find spot for new event
-  // --- v1 -------------------------------------------------------------------
-//  int event;
-//  for (event = event_chains[gen].first_event[pop];
-//          event_chains[gen].events[event].getType() != END_CHAIN
-//       && event_chains[gen].events[event].getElapsedTime() < delta_time;
-//       event = event_chains[gen].events[event].getNextIdx())
-//  {
-//    delta_time -= event_chains[gen].events[event].getElapsedTime();
-//  }
-//
-//  if (event_chains[gen].events[event].getElapsedTime() < delta_time)
-//  {
-//    if (event_chains[gen].events[event].getElapsedTime()
-//        < (delta_time - 0.000001))
-//    {
-//      if (debug)
-//      {
-//        fprintf(stderr,
-//                "\nError: createEvent: trying to insert new event"
-//                    " in pop %d, gen %d at time %g, %g above END_CHAIN event.\n",
-//                pop, gen, age,
-//                delta_time - event_chains[gen].events[event].getElapsedTime());
-//      }
-//      else
-//      {
-//        fprintf(stderr, "Fatal Error 0018.\n");
-//      }
-//      printGenealogyAndExit(gen, -1);
-//    }
-//    delta_time = event_chains[gen].events[event].getElapsedTime();
-//  }
-  //---------------------------------------------------------------------------
+  for(event = event_chains[gen].first_event[pop];
+           event_chains[gen].events[event].getType() != END_CHAIN
+        && event_chains[gen].events[event].getElapsedTime() < delta_time;
+        //			(event>=0 && event_chains[gen].events[event].elapsed_time < delta_time);
+        event = event_chains[gen].events[event].getNextIdx()) {
 
-  EventsDAGNode<Event>* pCurrEvent =
-                          (*pAllDAGs)[nGenIdx]->getFirstGenEventInPop(nPopIdx);
-  //@@TODO: take care of an empty population
-  if(nullptr == pCurrEvent)
-    return -1;
+    delta_time -= event_chains[gen].events[event].getElapsedTime();
 
-  double fCurrElapsedTime = pCurrEvent->getContent()->getElapsedTime();
-  while(    nullptr != pCurrEvent->getNextGenEvent()
-         && fCurrElapsedTime < fDeltaTime )
-  {
-    fDeltaTime -= fCurrElapsedTime;
-    pCurrEvent = pCurrEvent->getNextGenEvent();
-    fCurrElapsedTime = pCurrEvent->getContent()->getElapsedTime();
-  }
-
-  if( fCurrElapsedTime < fDeltaTime )
-  {
-    if( fCurrElapsedTime < (fDeltaTime - 0.000001 ) )
-    {
-      if( debug )
-      {
-        fprintf(stderr,
-                "\nError: createEvent: trying to insert new event"
-                " in pop %d, gen %d at time %g, %g above END_CHAIN event.\n",
-                nPopIdx, nGenIdx, fAge, (fDeltaTime - fCurrElapsedTime) );
       }
-      else
-      {
+
+  if(event_chains[gen].events[event].getElapsedTime()< delta_time) {
+    if(event_chains[gen].events[event].getElapsedTime() < (delta_time - 0.000001)) {
+		if(debug) {
+	      fprintf(stderr, "\nError: createEvent: trying to insert new event in pop %d, gen %d at time %g, %g above END_CHAIN event.\n",
+     	        pop, gen, age, delta_time - event_chains[gen].events[event].getElapsedTime());
+		} else {
         fprintf(stderr, "Fatal Error 0018.\n");
       }
-      printGenealogyAndExit(nGenIdx, -1);
+      printGenealogyAndExit(gen,-1);
     }
-    fDeltaTime = fCurrElapsedTime;
+    delta_time = event_chains[gen].events[event].getElapsedTime();
   }
 
-  return createEventBefore(nGenIdx, nPopIdx, pCurrEvent, fDeltaTime);
+  return createEventBefore(gen,pop,event,delta_time);
+
 }
 
 
@@ -1464,16 +1376,10 @@ int constructEventChain(int gen)
     event_chains[gen].events[pop].setNumLineages(0);
 
     if (pop == dataSetup.popTree->rootPop) {
-      event_chains[gen].events[pop].setElapsedTime(
-          OLDAGE - dataSetup.popTree->pops[dataSetup.popTree->rootPop]->age);
-    } else
-    {
-      double elapsedTime = dataSetup.popTree->pops[pop]->father->age
-                           - dataSetup.popTree->pops[pop]->age;
-      Event* pCurrEvent = &(event_chains[gen].events[pop]);
-      pCurrEvent->setElapsedTime(elapsedTime);
-      (*pAllDAGs)[gen]->initPopulation(pop, pCurrEvent);
-
+      event_chains[gen].events[pop].setElapsedTime(OLDAGE - dataSetup.popTree->pops[dataSetup.popTree->rootPop]->age);
+    }
+    else {
+      event_chains[gen].events[pop].setElapsedTime(dataSetup.popTree->pops[pop]->father->age - dataSetup.popTree->pops[pop]->age);
     }
     event_chains[gen].first_event[pop] = pop;
     // this should stay constant

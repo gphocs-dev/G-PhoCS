@@ -15,6 +15,9 @@
 #include "DataLayer.h"
 
 class Event;
+class EventChains;
+struct _POPULATION_TREE;
+typedef _POPULATION_TREE PopulationTree;
 using namespace std;
 
 /*=============================================================================
@@ -94,10 +97,11 @@ public:
   bool connectCoalEvents(int nLeftPopIdx, int nLeftSonIdx,
                          int nRightPopIdx, int nRightSonIdx,
                          int nParentPopIdx, int nParentIdx);
-  void addEventChainToDag(T* pEventStart, int nLen);
 
-  void initPopulation(int nPopIdx, T* pFirstEvent);
   void appendEvent(int nPopIdx, T* pFirstEvent);
+  void importEventChains(int nGenIdx,
+                         const EventChains* pEventChains,
+                         const PopulationTree* pPopTree);
   EventsDAGNode<T>* getFirstGenEventInPop(int nPopIdx) const;
 };
 
@@ -181,40 +185,29 @@ EventsDAG<T>::getNode( int nPopIdx, const T* pEvent ) const
 }
 
 /*---------------------------------------------------------------------------
- * @@TODO: more arguments shall be given
- * 1. Pop index of this chain
- * 2. Optional: Indeces of prev/next population this chain is connected with
  */
 template<class T> void
-EventsDAG<T>::addEventChainToDag(T* pEventStart, int nLen)
+EventsDAG<T>::importEventChains(int nGenIdx,
+                                const EventChains* pEventChains,
+                                const PopulationTree* pPopTree)
 {
+  int nPopIdx = -1;
+  int nEventIdx = -1;
+  for(nPopIdx = 0; nPopIdx < pPopTree->numPops; ++nPopIdx)
+  {
+    for (nEventIdx = event_chains[nGenIdx].first_event[nPopIdx];
+         nEventIdx >= 0;
+         nEventIdx = event_chains[nGenIdx].events[nEventIdx].getNextIdx())
+    {
+      T &CurrEvent = event_chains[nGenIdx].events[nEventIdx];
+      if(    CurrEvent.getType() != MIG_BAND_START
+          && CurrEvent.getType() != MIG_BAND_END )
+      {
+        appendEvent(nPopIdx, &CurrEvent);
+      }
+    }
+  }
 
-//  EventsDAGNode<T>* pCurrEvent = nullptr;
-//  pCurrEvent = new EventsDAGNode<T>(new T);
-//  pCurrEvent->getContent()->setType(POP_START);
-//  this->push_back(pCurrEvent);
-//
-//  EventsDAGNode<T>* pPrevEvent = pCurrEvent;
-//  for( int i = 0; i < nLen; ++i )
-//  {
-//    pCurrEvent = new EventsDAGNode<T>(&(pEventStart[i]));
-//    pPrevEvent->setNextGenEvent(pCurrEvent);
-//    pCurrEvent->setPrevGenEvent(pPrevEvent);
-//    pPrevEvent = pCurrEvent;
-//  }
-//
-//  pCurrEvent = new EventsDAGNode<T>(new T);
-//  pCurrEvent->getContent()->setType(POP_END);
-//  pPrevEvent->setNextGenEvent(pCurrEvent);
-//  pCurrEvent->setPrevGenEvent(pPrevEvent);
-}
-
-/*---------------------------------------------------------------------------
- */
-template<class T> void
-EventsDAG<T>::initPopulation(int nPopIdx, T* pFirstEvent)
-{
-  this->appendEvent( nPopIdx, pFirstEvent );
 }
 
 /*---------------------------------------------------------------------------
@@ -222,17 +215,18 @@ EventsDAG<T>::initPopulation(int nPopIdx, T* pFirstEvent)
 template<class T> void
 EventsDAG<T>::appendEvent(int nPopIdx, T* pEvent)
 {
-  auto* pDAGNode = new EventsDAGNode<T>(pEvent);
+  auto* pNewDAGNode = new EventsDAGNode<T>(pEvent);
   EventsDAGNode<T>* pCurrDAGNode = (*this)[nPopIdx];
   assert( nullptr != pCurrDAGNode );
-  while(   nullptr != pCurrDAGNode->getNextGenEvent()
-        && POP_END != pCurrDAGNode->getNextGenEvent()->getType() )
+  while(    nullptr != pCurrDAGNode->getNextGenEvent()
+         && (    POP_END   != pCurrDAGNode->getNextGenEvent()->getType()
+              && END_CHAIN != pCurrDAGNode->getNextGenEvent()->getType() ) )
     pCurrDAGNode = pCurrDAGNode->getNextGenEvent();
 
-  pDAGNode->setPrevGenEvent(pCurrDAGNode);
-  pDAGNode->setNextGenEvent(pCurrDAGNode->getNextGenEvent());
-  pCurrDAGNode->setNextGenEvent(pDAGNode);
-  pDAGNode->getNextGenEvent()->setPrevGenEvent(pDAGNode);
+  pNewDAGNode->setPrevGenEvent(pCurrDAGNode);
+  pNewDAGNode->setNextGenEvent(pCurrDAGNode->getNextGenEvent());
+  pCurrDAGNode->setNextGenEvent(pNewDAGNode);
+  pNewDAGNode->getNextGenEvent()->setPrevGenEvent(pNewDAGNode);
 }
 /*---------------------------------------------------------------------------
  */
@@ -257,7 +251,9 @@ public:
   DAGsPerLocus( int nNumOfLoci, int nNumOfPops );
   virtual ~DAGsPerLocus();
   EventsDAG<T>* getDAG(int nLocusIdx) const;
-
+  void importEventChains(int nGenIdx,
+                         const EventChains* pEventChains,
+                         const PopulationTree* pPopTree);
 protected:
   void initDAGs( int nNumOfPops );
 };
@@ -271,7 +267,7 @@ DAGsPerLocus<T>::DAGsPerLocus(int nOfLoci, int nNumOfPops)
   this->reserve(nOfLoci);
   for( int i = 0; i < nOfLoci; ++i )
     this->push_back(new EventsDAG<T>);
-  initDAGs(nNumOfPops);
+  this->initDAGs(nNumOfPops);
 }
 
 /*---------------------------------------------------------------------------
@@ -294,6 +290,17 @@ void DAGsPerLocus<T>::initDAGs(int nNumOfPops)
   for_each( this->begin(),
             this->end(),
             [nNumOfPops](EventsDAG<T>* v){ v->initDAG( nNumOfPops ); } );
+}
+
+/*---------------------------------------------------------------------------
+ * Data importer
+ */
+template<class T> void
+DAGsPerLocus<T>::importEventChains(int nGenIdx,
+                                   const EventChains* pEventChains,
+                                   const PopulationTree* pPopTree)
+{
+  (*this)[nGenIdx]->importEventChains(nGenIdx, pEventChains,pPopTree);
 }
 
 /*=============================================================================

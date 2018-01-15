@@ -7,8 +7,8 @@
  26-Mar-2017  evgenyidc      Created. Adding Event, EVENT_CHAIN.
  ============================================================================*/
 
-#include "EventsDAG.h"
 #include "DataLayer.h"
+#include "EventsDAG.h"
 
 EventChains  event_chains;
 DAGsPerLocus<Event>* pAllDAGs;
