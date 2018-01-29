@@ -17,7 +17,7 @@
 
 #include "GenericTree.h"
 
-#define OPT1	
+#define OPT1
 #define OPT2_not
 
 /***************************************************************************************************************/
@@ -27,12 +27,80 @@
 
 
 /***********************************************************************************
+ *	LikelihoodNode
+ *	- Data type which holds data for computing conditional probability
+ *		of all base assignments to a certain genealogy (coalescent) node.
+ ***********************************************************************************/
+typedef struct LIKELIHOOD_NODE {
+    int father;              // father of node in genealogy (-1 for root)
+    int leftSon, rightSon;        // sons of node in genealogy
+    double age;              // age of node
+    double *conditionalProbs;      // array conditional probabilities for base assignment at node (array of length CODE_SIZE * numPatterns)
+} LikelihoodNode;
+
+
+/***********************************************************************************
+ *	PreviousVersion
+ *	- Data type which saves the unmodified version of the genealogy
+ *		in case a certain genealogy change is rejected by sampler.
+ ***********************************************************************************/
+typedef struct PREVIOUS_VERSION {
+    double dataLogLikelihood;      // original log-likelihood of data given genealogy
+    int root;              // old root (if root was changed by SPR)
+    unsigned short copyAll;      // this flag is turned on when all nodes are copied to saved
+    unsigned short *recalcConditionals;  // array of booleans indicating for which nodes we need to recalc conditionals
+    int numChangedNodes;        // number of nodes affected by proposed change
+    int *changedNodeIds;        // array of ids (or indices) of nodes changed
+    int numChangedConditionals;      // number of nodes whose conditional probabilities were changed
+    int *changedCondIds;        // array ids (or indices) of nodes whose conditionals were changed
+    LikelihoodNode **savedNodes;    // an array of pointers to previous versions.
+} PreviousVersion;
+
+
+/***********************************************************************************
+ *	LocusSeqData
+ *	- Data type which holds a summary of the sequence data for a given locus
+ ***********************************************************************************/
+typedef struct LOCUS_SEQ_DATA {
+    int numPatterns;      // number of column patterns in alignment
+    int numLivePatterns;    // number of patterns relevant for likelihood computation
+    int *patternCount;      // array (of length numPatterns) of counts for each pattern
+    int *numPhases;        // number of phases per pattern
+    int *patternList;      // list of relevant patterns for likelihood computations (established when computing likelihood)
+} LocusSeqData;
+
+
+/***********************************************************************************
+ *	LocusData
+ *	- Data structure which holds likelihood of a locus and also saves
+ *		the relevant information for quick recomputation of this likelihood
+ *		given changes in the locus genealogy.
+ * 	- typedef is done in LocusDataLikelihood.h
+ ***********************************************************************************/
+struct LOCUS_LIKELIHOOD {
+    unsigned short hetMode;      // mode for computing likelihood of het alignment columns (0, 1, or 2)
+    int numLeaves;          // number of leaves in genealogy
+    double dataLogLikelihood;    // log-likelihood of data, given genealogy
+    double mutationRate;      // relative locus-specific mutation rate
+    int root;            // index of root in nodeArray[]
+    LikelihoodNode **nodeArray;    // array of pointers to nodes
+    LocusSeqData seqData;      // holds sequence data for locus
+    PreviousVersion savedVersion;  // notes on changes proposed to genealogy
+
+    // pointers for allocated memory
+    double *doubleArray_m;
+    int *intArray_m;
+    LikelihoodNode *nodeArray_m;
+};
+
+/***********************************************************************************
 *	LocusData
 *	- Data structure which holds likelihood of a locus and also saves
 *		the relevant information for quick re-computation of this likelihood
 *		given changes in the locus genealogy.
 ***********************************************************************************/
 typedef struct LOCUS_LIKELIHOOD LocusData;
+
 
 
 /***************************************************************************************************************/
@@ -51,10 +119,9 @@ typedef struct LOCUS_LIKELIHOOD LocusData;
 *		2 indicates using phasing with maximum likelihood for each heterozygote
 * 	- returns a pointer to the structure.
 ***********************************************************************************/
-LocusData* createLocusData (int numLeaves, unsigned short hetMode);
+LocusData *createLocusData(int numLeaves, unsigned short hetMode);
 
-	
-	
+
 /***********************************************************************************
 *	initializeLocusData
 * 	- initializes all data structures for locus data
@@ -62,8 +129,7 @@ LocusData* createLocusData (int numLeaves, unsigned short hetMode);
 * 	- if patternCounts != NULL, sets all pattern counts (otherwise, set them to 0).
 *	- returns 0 if all OK, and -1 otherwise
 ***********************************************************************************/
-int initializeLocusData(LocusData* locusData, char** patternArray, int numPatterns, int* numPhases, int* patternCounts);
-
+int initializeLocusData(LocusData *locusData, char **patternArray, int numPatterns, int *numPhases, int *patternCounts);
 
 
 /***********************************************************************************
@@ -71,8 +137,7 @@ int initializeLocusData(LocusData* locusData, char** patternArray, int numPatter
 *	- frees all allocated memory for LocusData
 * 	- returns 0
 ***********************************************************************************/
-int	freeLocusData (LocusData* locusData);
-
+int freeLocusData(LocusData *locusData);
 
 
 /***********************************************************************************
@@ -84,23 +149,21 @@ int	freeLocusData (LocusData* locusData);
 * 	- id of attachment node is set to numLeaves-1 more than id of attached leaf
 * 	- returns the id of the attachment node
 ***********************************************************************************/
-int attachLeaf_UNUSED (LocusData* locusData, int leafId, int target, double age);
-
+int attachLeaf_UNUSED(LocusData *locusData, int leafId, int target, double age);
 
 
 /***********************************************************************************
 *	setLocusMutationRate
 *	- sets the mutation rate for locus to given value
 ***********************************************************************************/
-void setLocusMutationRate (LocusData* locusData, double newRate);
-
+void setLocusMutationRate(LocusData *locusData, double newRate);
 
 
 /***********************************************************************************
 *	getLocusMutationRate
 *	- returns the mutation rate for locus
 ***********************************************************************************/
-double getLocusMutationRate (LocusData* locusData);
+double getLocusMutationRate(LocusData *locusData);
 
 
 /***********************************************************************************
@@ -111,8 +174,7 @@ double getLocusMutationRate (LocusData* locusData);
 *	- also initializes all pattern counts to zero
 *	- returns 0 
 ***********************************************************************************/
-int computeAllConditionals (LocusData* locusData);
-
+int computeAllConditionals(LocusData *locusData);
 
 
 /***********************************************************************************
@@ -124,8 +186,7 @@ int computeAllConditionals (LocusData* locusData);
 *	- otherwise, recomputes everything from scratch
 *	- returns the log-likelihood
 ***********************************************************************************/
-double computeLocusDataLikelihood (LocusData* locusData, unsigned short useOldConditionals);
-
+double computeLocusDataLikelihood(LocusData *locusData, unsigned short useOldConditionals);
 
 
 /***********************************************************************************
@@ -134,14 +195,13 @@ double computeLocusDataLikelihood (LocusData* locusData, unsigned short useOldCo
 *	- uses pre-computed conditionals and doesn't modify anything in the data structure.
 *	- returns the log likelihood
 ***********************************************************************************/
-double computePatternLogLikelihood (LocusData* locusData, int numPatterns, int* patternIds, int* patternCounts);
-
+double computePatternLogLikelihood(LocusData *locusData, int numPatterns, int *patternIds, int *patternCounts);
 
 
 /***********************************************************************************
 *	!!!!! FOR DEBUGGING !!!!!
 ***********************************************************************************/
-double computeLocusDataLikelihood_deb (LocusData* locusData, unsigned short useOldConditionals);
+double computeLocusDataLikelihood_deb(LocusData *locusData, unsigned short useOldConditionals);
 
 
 /***********************************************************************************
@@ -152,8 +212,8 @@ double computeLocusDataLikelihood_deb (LocusData* locusData, unsigned short useO
 *		and new likelihood is the saved one.
 *	- returns delta in log likelihood of this step
 ***********************************************************************************/
-double addSitePatterns (LocusData* locusData, int numPatterns, int* patternIds, int* patternCounts, unsigned short revertToSaved);
-
+double addSitePatterns(LocusData *locusData, int numPatterns, int *patternIds, int *patternCounts,
+                       unsigned short revertToSaved);
 
 
 /***********************************************************************************
@@ -163,8 +223,8 @@ double addSitePatterns (LocusData* locusData, int numPatterns, int* patternIds, 
 *	- if revertToSaved == 1, uses saved likelihood to compute new likelihood
 *	- returns delta in log likelihood of this step
 ***********************************************************************************/
-double reduceSitePatterns (LocusData* locusData, int numPatterns, int* patternIds, int* patternCounts, unsigned short revertToSaved);
-
+double reduceSitePatterns(LocusData *locusData, int numPatterns, int *patternIds, int *patternCounts,
+                          unsigned short revertToSaved);
 
 
 /***********************************************************************************
@@ -174,8 +234,7 @@ double reduceSitePatterns (LocusData* locusData, int numPatterns, int* patternId
 *		all recorded conditional probabilities
 *	- returns 1 if all is OK, and 0 if inconsistencies were found
 ***********************************************************************************/
-int checkLocusDataLikelihood (LocusData* locusData);
-
+int checkLocusDataLikelihood(LocusData *locusData);
 
 
 /***********************************************************************************
@@ -183,8 +242,7 @@ int checkLocusDataLikelihood (LocusData* locusData);
 *	- reverts locus data structure (genealogy and conditional likelihoods) to saved version
 *	- returns 0
 ***********************************************************************************/
-int revertToSaved(LocusData* locusData);
-
+int revertToSaved(LocusData *locusData);
 
 
 /***********************************************************************************
@@ -192,8 +250,7 @@ int revertToSaved(LocusData* locusData);
 *	- resets saved data and maintains updates
 *	- returns 0
 ***********************************************************************************/
-int resetSaved(LocusData* locusData);
-
+int resetSaved(LocusData *locusData);
 
 
 /***********************************************************************************
@@ -202,8 +259,7 @@ int resetSaved(LocusData* locusData);
 *	- nodeId is id of node and age is new age
 *	- returns 0
 ***********************************************************************************/
-int	adjustGenNodeAge(LocusData* locusData, int nodeId, double age);
-
+int adjustGenNodeAge(LocusData *locusData, int nodeId, double age);
 
 
 /***********************************************************************************
@@ -212,8 +268,7 @@ int	adjustGenNodeAge(LocusData* locusData, int nodeId, double age);
 *	- returns the delta in log-likelihood of suggested step
 *	- saves all original ages and conditionals
 ***********************************************************************************/
-double	scaleAllNodeAges(LocusData* locusData, double factor);
-
+double scaleAllNodeAges(LocusData *locusData, double factor);
 
 
 /***********************************************************************************
@@ -225,9 +280,7 @@ double	scaleAllNodeAges(LocusData* locusData, double factor);
 *	- otherwise, returns 1 if subtree is a child of the root AFTER regrafting
 *	- otherwise, returns 2 if subtree was a child of the root BEFORE regrafting
 ***********************************************************************************/
-int	executeGenSPR(LocusData* locusData, int subtreeRoot, int targetBranch, double age);
-
-
+int executeGenSPR(LocusData *locusData, int subtreeRoot, int targetBranch, double age);
 
 
 /***********************************************************************************
@@ -236,9 +289,7 @@ int	executeGenSPR(LocusData* locusData, int subtreeRoot, int targetBranch, doubl
 *	- assumes label1 holds age of node
 *	- returns 0
 ***********************************************************************************/
-int copyGenericTreeToLocus(LocusData* locusData, GenericBinaryTree* genericTree);
-
-
+int copyGenericTreeToLocus(LocusData *locusData, GenericBinaryTree *genericTree);
 
 
 /***********************************************************************************
@@ -247,9 +298,7 @@ int copyGenericTreeToLocus(LocusData* locusData, GenericBinaryTree* genericTree)
 *	- prints each node in a separate line, according to id order
 *	- if there are nodes which are considered for changes, print out their id's
 ***********************************************************************************/
-void printLocusGenTree(LocusData* locusData, FILE* stream, int* nodePops, int* nodeEvents);
-
-
+void printLocusGenTree(LocusData *locusData, FILE *stream, int *nodePops, int *nodeEvents);
 
 
 /***********************************************************************************
@@ -261,8 +310,7 @@ void printLocusGenTree(LocusData* locusData, FILE* stream, int* nodePops, int* n
 *		and the number of columns corresponding to it in the alignment
 *	- maxLogPhases is an upper bound on the number of phased hets per pattern
 ***********************************************************************************/
-void printLocusDataStats(LocusData* locusData, int maxLogPhases);
-
+void printLocusDataStats(LocusData *locusData, int maxLogPhases);
 
 
 /***********************************************************************************
@@ -273,8 +321,7 @@ void printLocusDataStats(LocusData* locusData, int maxLogPhases);
 *	- het patterns are represented by all phasings 
 *		(mult is written below first phasing)
 ***********************************************************************************/
-void printLocusDataPatterns(LocusData* locusData, FILE* outFile);
-
+void printLocusDataPatterns(LocusData *locusData, FILE *outFile);
 
 
 /***********************************************************************************
@@ -283,8 +330,7 @@ void printLocusDataPatterns(LocusData* locusData, FILE* outFile);
  *    common ancestors) of all pairs of leaves
  *  - returns 1 if successful, 0 otherwise
  ***********************************************************************************/
-int computePairwiseLCAs (LocusData* locusData, int** lcaMatrix, int* leafArray_aux);
-
+int computePairwiseLCAs(LocusData *locusData, int **lcaMatrix, int *leafArray_aux);
 
 
 /***********************************************************************************
@@ -294,7 +340,7 @@ int computePairwiseLCAs (LocusData* locusData, int** lcaMatrix, int* leafArray_a
  *  - calls recursive procedure getSortedAges_rec on root
  *  - returns 1 if successful, 0 otherwise
  ***********************************************************************************/
-int getSortedAges (LocusData* locusData, double* ageArray);
+int getSortedAges(LocusData *locusData, double *ageArray);
 
 
 
@@ -306,39 +352,35 @@ int getSortedAges (LocusData* locusData, double* ageArray);
 *	getLocusDataLikelihood
 *	- returns the log likelihood of the locus as last recorded (no new computations)
 ***********************************************************************************/
-double getLocusDataLikelihood (LocusData* locusData);
-
+double getLocusDataLikelihood(LocusData *locusData);
 
 
 /***********************************************************************************
 *	getLocusRoot
 *	- returns the root node id
 ***********************************************************************************/
-int getLocusRoot (LocusData* locusData);
-
+int getLocusRoot(LocusData *locusData);
 
 
 /***********************************************************************************
 *	getNodeAge
 *	- returns the age of a node
 ***********************************************************************************/
-double getNodeAge (LocusData* locusData, int nodeId);
-
+double getNodeAge(LocusData *locusData, int nodeId);
 
 
 /***********************************************************************************
 *	getNodeFather
 *	- returns the id of the father of a node
 ***********************************************************************************/
-int getNodeFather (LocusData* locusData, int nodeId);
-
+int getNodeFather(LocusData *locusData, int nodeId);
 
 
 /***********************************************************************************
 *	getNodeSon
 *	- returns the id of a son of a node (son = 0 -> left, son = 1 -> right)
 ***********************************************************************************/
-int getNodeSon (LocusData* locusData, int nodeId, unsigned short son);
+int getNodeSon(LocusData *locusData, int nodeId, unsigned short son);
 
 
 

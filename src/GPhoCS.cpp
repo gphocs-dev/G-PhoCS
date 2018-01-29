@@ -29,6 +29,7 @@
 #include "CladeStats.h"
 #include "CladePrinter.h"
 #include "HypothesisPrinter.h"
+#include "TauBounds.h"
 
 
 static struct option long_options[] = {{"help",     no_argument, 0, 'h'},
@@ -509,6 +510,9 @@ void allocateAllMemory() {
   }
   if (isCladeStatsActivated()) {
     allocateCladeMem();
+  }
+  if (isTauBoundsActivated()) {
+    allocateTauBoundsMem();
   }
 }
 
@@ -1063,9 +1067,11 @@ int initializeMCMC() {
 int isCombStatsActivated() {
   return (0 != strcmp(ioSetup.combStatsFileName, "NONE"));
 }
-
 int isCladeStatsActivated() {
   return (0 != strcmp(ioSetup.cladeStatsFileName, "NONE"));
+}
+int isTauBoundsActivated() {
+  return (0 != strcmp(ioSetup.tauBoundsFileName, "NONE"));
 }
 
 /***********************************************************************************
@@ -1136,37 +1142,7 @@ int performMCMC() {
     printCoalStats(-1);
   }
 
-  if (isCombStatsActivated()) {
-    ioSetup.combStatsFile = fopen(ioSetup.combStatsFileName, "w");
-//		  ioSetup.combDebugStatsFile = fopen("out/combDebugStats.tsv", "w"); // TODO - remove debug stats
-
-    if (ioSetup.combStatsFile == NULL) {
-      fprintf(stderr, "Error: Could not open comb stats file %s.\n",
-              ioSetup.combStatsFileName);
-      return (-1);
-    }
-    printCombStatsHeader(ioSetup.combStatsFile);
-  }
-  if (isCladeStatsActivated()) {
-    ioSetup.cladeStatsFile = fopen(ioSetup.cladeStatsFileName, "w");
-
-    if (ioSetup.cladeStatsFile == NULL) {
-      fprintf(stderr, "Error: Could not open clade stats file %s.\n",
-              ioSetup.cladeStatsFileName);
-      return (-1);
-    }
-    printCladeStatsHeader(ioSetup.cladeStatsFile);
-  }
-  if (isCladeStatsActivated() || isCombStatsActivated()) {
-    ioSetup.hypStatsFile = fopen(ioSetup.hypStatsFileName, "w");
-
-    if (ioSetup.cladeStatsFile == NULL) {
-      fprintf(stderr, "Error: Could not open clade stats file %s.\n",
-              ioSetup.cladeStatsFileName);
-      return (-1);
-    }
-    printHypStatsHeader(ioSetup.hypStatsFile);
-  }
+  setupMcRefFiles();
 #ifdef LOG_STEPS
   ioSetup.debugFile = fopen("G-PhoCS-debug.txt","w");
 #endif
@@ -1596,15 +1572,15 @@ int performMCMC() {
       fflush(ioSetup.traceFile);
 
       if (recordCoalStats && 0) {
-//								@@eug: never enter here
+//			@@eug: never enter here
         computeFlatStats();
         computeNodeStats();
         computeGenetreeStats_partitioned();
         printCoalStats(iteration);
       }
 
-//					@@ronv: please enter here :)
       if (isCombStatsActivated()) {
+//		  @@ronv: please enter here :)
         calculateCombStats();
         printCombStats(iteration, ioSetup.combStatsFile);
       }
@@ -1614,6 +1590,10 @@ int performMCMC() {
       }
       if (isCladeStatsActivated() || isCombStatsActivated()) {
         printHypStats(iteration, ioSetup.hypStatsFile);
+      }
+      if (isTauBoundsActivated()){
+        calculateTauBounds();
+        printTauBounds(iteration, ioSetup.tauBoundsFile);
       }
 
       if (admixed_samples.number > 0 && iteration % 1000 == 0) {
@@ -1928,6 +1908,49 @@ int performMCMC() {
 
   printMethodTimes();
   return 0;
+}
+
+void setupMcRefFiles() {
+  if (isCombStatsActivated()) { // TODO - refactor all these to a single function which takes pointers
+    ioSetup.combStatsFile = fopen(ioSetup.combStatsFileName, "w");
+
+    if (ioSetup.combStatsFile == NULL) {
+      fprintf(stderr, "Error: Could not open comb stats file %s.\n",
+              ioSetup.combStatsFileName);
+      exit(0);
+    }
+    printCombStatsHeader(ioSetup.combStatsFile);
+  }
+  if (isCladeStatsActivated()) {
+    ioSetup.cladeStatsFile = fopen(ioSetup.cladeStatsFileName, "w");
+
+    if (ioSetup.cladeStatsFile == NULL) {
+      fprintf(stderr, "Error: Could not open clade stats file %s.\n",
+              ioSetup.cladeStatsFileName);
+      exit(0);
+    }
+    printCladeStatsHeader(ioSetup.cladeStatsFile);
+  }
+  if (isCladeStatsActivated() || isCombStatsActivated()) {
+    ioSetup.hypStatsFile = fopen(ioSetup.hypStatsFileName, "w");
+
+    if (ioSetup.hypStatsFile == NULL) {
+      fprintf(stderr, "Error: Could not open hypothesis stats file %s.\n",
+              ioSetup.cladeStatsFileName);
+      exit(0);
+    }
+    printHypStatsHeader(ioSetup.hypStatsFile);
+  }
+  if (isTauBoundsActivated()) {
+    ioSetup.tauBoundsFile = fopen(ioSetup.tauBoundsFileName, "w");
+
+    if (ioSetup.tauBoundsFile == NULL) {
+      fprintf(stderr, "Error: Could not open tau bounds file %s.\n",
+              ioSetup.tauBoundsFileName);
+      exit(0);
+    }
+    printTauBoundsHeader(ioSetup.tauBoundsFile);
+  }
 }
 
 /** end of performMCMC **/
