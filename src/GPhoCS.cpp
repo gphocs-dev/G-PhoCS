@@ -786,42 +786,43 @@ printParamVals(double *paramVals, int startParam, int endParam, FILE *out)
 /** end of printParamVals **/
 
 
-
-/******************************************************************************
- *	recordAdmixtureCounts
- *	- records admixture coefficients
- *	- returns 0
- *****************************************************************************/
-int recordAdmixtureCounts()
-{
-  int sample, locus;
-  for (sample = 0; sample < admixed_samples.number; sample++)
-  {
-    admixture_status.admixtureCounts[sample] = 0.0;
-    for (locus = 0; locus < dataSetup.numLoci; locus++)
-    {
-      if (nodePops[locus][admixed_samples.samples[sample]]
-          == admixed_samples.popPairs[sample][1])
-      {
-        admixture_status.admixtureCounts[sample] += 1.0;
-      }
-    }
-    for (locus = 0; locus < admixture_status.numSampledLoci; locus++)
-    {
-      if( nodePops[admixture_status.sampledLoci[locus]]\
-                  [admixed_samples.samples[sample]]
-          == admixed_samples.popPairs[sample][1])
-      {
-        admixture_status.sampleLocusAdmixRate[sample][locus] += 1.0;
-      }
-    }
-//			admixture_status.admixtureCoefficients[sample] /= dataSetup.numLoci;
-  }
-
-  return 0;
-
-}
-/** end of recordAdmixtureCounts **/
+//@@TODO: dead code starts here -------------------------------------------------
+///******************************************************************************
+// *	recordAdmixtureCounts
+// *	- records admixture coefficients
+// *	- returns 0
+// *****************************************************************************/
+//int recordAdmixtureCounts()
+//{
+//  int sample, locus;
+//  for (sample = 0; sample < admixed_samples.number; sample++)
+//  {
+//    admixture_status.admixtureCounts[sample] = 0.0;
+//    for (locus = 0; locus < dataSetup.numLoci; locus++)
+//    {
+//      if (nodePops[locus][admixed_samples.samples[sample]]
+//          == admixed_samples.popPairs[sample][1])
+//      {
+//        admixture_status.admixtureCounts[sample] += 1.0;
+//      }
+//    }
+//    for (locus = 0; locus < admixture_status.numSampledLoci; locus++)
+//    {
+//      if( nodePops[admixture_status.sampledLoci[locus]]\
+//                  [admixed_samples.samples[sample]]
+//          == admixed_samples.popPairs[sample][1])
+//      {
+//        admixture_status.sampleLocusAdmixRate[sample][locus] += 1.0;
+//      }
+//    }
+////			admixture_status.admixtureCoefficients[sample] /= dataSetup.numLoci;
+//  }
+//
+//  return 0;
+//
+//}
+///** end of recordAdmixtureCounts **/
+//@@TODO: dead code ends here -------------------------------------------------
 
 
 /******************************************************************************
@@ -861,11 +862,13 @@ int recordParamVals(double *paramVals)
     }
   }
 
-  //  recordAdmixtureCounts();
-  for (sample = 0; sample < admixed_samples.number; sample++)
-  {
-    paramVals[ind++] = admixture_status.admixtureCoefficients[sample];
-  }
+//@@TODO: dead code starts here -------------------------------------------------
+//  //  recordAdmixtureCounts();
+//  for (sample = 0; sample < admixed_samples.number; sample++)
+//  {
+//    paramVals[ind++] = admixture_status.admixtureCoefficients[sample];
+//  }
+//@@TODO: dead code ends here -------------------------------------------------
 
   // if variable mutation rates, record the relative rate of first gen
   // if variable mutation rates, record the variance in locus-specific
@@ -1071,77 +1074,79 @@ int printCoalStats(int iteration)
 /** end of printCoalStats **/
 
 
-/******************************************************************************
- *	initializeAdmixtureStructures
- *	- initializes data structure for tracing admixture
- * - returns 0
- *****************************************************************************/
-int initializeAdmixtureStructures()
-{
-  int sample, locus;
-
-  admixture_status.numSampledLoci = dataSetup.numLoci;
-
-
-  admixed_samples.index = (int *) malloc(admixed_samples.number * sizeof(int));
-
-  for (sample = 0; sample < dataSetup.numSamples; sample++)
-  {
-    admixed_samples.index[sample] = -1;
-  }
-  for (sample = 0; sample < admixed_samples.number; sample++)
-  {
-    admixed_samples.index[admixed_samples.samples[sample]] = sample;
-//			printf(" %d\n", admixed_samples.samples[sample]+1);
-  }
-//	printf("\n");
-
-  admixture_status.sampledLoci = (int *) malloc(
-      admixture_status.numSampledLoci * sizeof(int));
-  admixture_status.admixtureCoefficients = (double *) malloc(
-      admixed_samples.number * sizeof(double));
-  admixture_status.sampleLocusAdmixRate = (double **) malloc(
-      admixed_samples.number * sizeof(double *));
-  admixture_status.sampleLocusAdmixRate[0] = (double *) malloc(
-      admixture_status.numSampledLoci * admixed_samples.number
-      * sizeof(double));
-  admixture_status.admixtureCounts = (int *) malloc(
-      admixed_samples.number * sizeof(int));
-
-  mcmcSetup.numParameters += admixed_samples.number;
-  //printf("Reallocating mcmcSetup.printFactors from %d parameters to %d.\n",
-  //       mcmcSetup.numParameters-admixed_samples.number,
-  //       mcmcSetup.numParameters);
-  mcmcSetup.printFactors = (double *) realloc(mcmcSetup.printFactors,
-                                              mcmcSetup.numParameters *
-                                              sizeof(double));
-  for (sample = mcmcSetup.numParameters - admixed_samples.number;
-       sample < mcmcSetup.numParameters; sample++)
-  {
-    mcmcSetup.printFactors[sample] = 1.0;
-  }
-  for (sample = 0; sample < admixed_samples.number; sample++)
-  {
-    admixture_status.admixtureCoefficients[sample] = 0.5;
-    admixture_status.sampleLocusAdmixRate[sample] =
-        admixture_status.sampleLocusAdmixRate[0]
-        + sample * admixture_status.numSampledLoci;
-    for (locus = 0; locus < admixture_status.numSampledLoci; locus++)
-    {
-      admixture_status.sampleLocusAdmixRate[sample][locus] = 0.0;
-    }
-  }
-
-
-  for (locus = 0; locus < admixture_status.numSampledLoci; locus++)
-  {
-    admixture_status.sampledLoci[locus] = locus;
-    //admixture_status.sampledLoci[locus] = (int)(rndu()*dataSetup.numLoci);
-  }
-  return 0;
-
-}
-/** end of initializeAdmixtureStructures **/
+//@@TODO: dead code starts here -------------------------------------------------
+///******************************************************************************
+// *	initializeAdmixtureStructures
+// *	- initializes data structure for tracing admixture
+// * - returns 0
+// *****************************************************************************/
+//int initializeAdmixtureStructures()
+//{
+//  int sample, locus;
+//
+//  admixture_status.numSampledLoci = dataSetup.numLoci;
+//
+//
+//  admixed_samples.index = (int *) malloc(admixed_samples.number * sizeof(int));
+//
+//  for (sample = 0; sample < dataSetup.numSamples; sample++)
+//  {
+//    admixed_samples.index[sample] = -1;
+//  }
+//  for (sample = 0; sample < admixed_samples.number; sample++)
+//  {
+//    admixed_samples.index[admixed_samples.samples[sample]] = sample;
+////			printf(" %d\n", admixed_samples.samples[sample]+1);
+//  }
+////	printf("\n");
+//
+//  admixture_status.sampledLoci = (int *) malloc(
+//      admixture_status.numSampledLoci * sizeof(int));
+//  admixture_status.admixtureCoefficients = (double *) malloc(
+//      admixed_samples.number * sizeof(double));
+//  admixture_status.sampleLocusAdmixRate = (double **) malloc(
+//      admixed_samples.number * sizeof(double *));
+//  admixture_status.sampleLocusAdmixRate[0] = (double *) malloc(
+//      admixture_status.numSampledLoci * admixed_samples.number
+//      * sizeof(double));
+//  admixture_status.admixtureCounts = (int *) malloc(
+//      admixed_samples.number * sizeof(int));
+//
+//  mcmcSetup.numParameters += admixed_samples.number;
+//  //printf("Reallocating mcmcSetup.printFactors from %d parameters to %d.\n",
+//  //       mcmcSetup.numParameters-admixed_samples.number,
+//  //       mcmcSetup.numParameters);
+//  mcmcSetup.printFactors = (double *) realloc(mcmcSetup.printFactors,
+//                                              mcmcSetup.numParameters *
+//                                              sizeof(double));
+//  for (sample = mcmcSetup.numParameters - admixed_samples.number;
+//       sample < mcmcSetup.numParameters; sample++)
+//  {
+//    mcmcSetup.printFactors[sample] = 1.0;
+//  }
+//  for (sample = 0; sample < admixed_samples.number; sample++)
+//  {
+//    admixture_status.admixtureCoefficients[sample] = 0.5;
+//    admixture_status.sampleLocusAdmixRate[sample] =
+//        admixture_status.sampleLocusAdmixRate[0]
+//        + sample * admixture_status.numSampledLoci;
+//    for (locus = 0; locus < admixture_status.numSampledLoci; locus++)
+//    {
+//      admixture_status.sampleLocusAdmixRate[sample][locus] = 0.0;
+//    }
+//  }
+//
+//
+//  for (locus = 0; locus < admixture_status.numSampledLoci; locus++)
+//  {
+//    admixture_status.sampledLoci[locus] = locus;
+//    //admixture_status.sampledLoci[locus] = (int)(rndu()*dataSetup.numLoci);
+//  }
+//  return 0;
+//
+//}
+///** end of initializeAdmixtureStructures **/
+//@@TODO: dead code ends here -------------------------------------------------
 
 
 
@@ -1335,12 +1340,15 @@ int performMCMC()
 #ifdef LOG_STEPS
   ioSetup.debugFile = fopen("G-PhoCS-debug.txt","w");
 #endif
-  if (admixed_samples.number > 0)
-  {
-    initializeAdmixtureStructures();
-    strncpy(ioSetup.admixFileName, "admixture-trace.out", NAME_LENGTH);
-//	ioSetup.debugFile = fopen(ioSetup.debugFileName,"w");
-  }
+//@@TODO: dead code starts here -----------------------------------------------
+//  if (admixed_samples.number > 0)
+//  {
+//    initializeAdmixtureStructures();
+//    strncpy(ioSetup.admixFileName, "admixture-trace.out", NAME_LENGTH);
+////	ioSetup.debugFile = fopen(ioSetup.debugFileName,"w");
+//  }
+//@@TODO: dead code ends here -------------------------------------------------
+
   fprintf(ioSetup.traceFile, "Sample");
   for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
@@ -1371,12 +1379,13 @@ int performMCMC()
               dataSetup.popTree->pops[pop]->name);
     }
   }
-
-  for (sample = 0; sample < admixed_samples.number; sample++)
-  {
-    fprintf(ioSetup.traceFile, "\tA%d[%s]", admixed_samples.samples[sample],
-            dataSetup.popTree->pops[admixed_samples.popPairs[sample][1]]->name);
-  }
+//@@TODO: dead code starts here -----------------------------------------------
+//  for (sample = 0; sample < admixed_samples.number; sample++)
+//  {
+//    fprintf(ioSetup.traceFile, "\tA%d[%s]", admixed_samples.samples[sample],
+//            dataSetup.popTree->pops[admixed_samples.popPairs[sample][1]]->name);
+//  }
+//@@TODO: dead code ends here -------------------------------------------------
 
 
   if (mcmcSetup.mutRateMode == 1)
@@ -1426,10 +1435,13 @@ int performMCMC()
   }
   // title for log
   printf("Samples   CoalTimes MigTimes  SPRs      Thetas    MigRates ");
-  if (admixed_samples.number > 0)
-  {
-    printf("    AdmxCoefs ");
-  }
+//@@TODO: dead code starts here -----------------------------------------------
+//  if (admixed_samples.number > 0)
+//  {
+//    printf("    AdmxCoefs ");
+//  }
+//@@TODO: dead code ends here -------------------------------------------------
+
   for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
     if (pop >= dataSetup.popTree->numCurPops ||
@@ -1729,15 +1741,17 @@ int performMCMC()
 		}
 #endif
 
-    // update admixture coefficients
-#ifdef RECORD_METHOD_TIMES
-    setStartTimeMethod(T_UpdateAdmixCoeffs);
-#endif
-    acceptCount = UpdateAdmixCoeffs(mcmcSetup.finetunes.admix);
-#ifdef RECORD_METHOD_TIMES
-    setEndTimeMethod(T_UpdateAdmixCoeffs);
-#endif
-    acceptanceCounts.admix += acceptCount;
+//@@TODO: dead code starts here -----------------------------------------------
+//    // update admixture coefficients
+//#ifdef RECORD_METHOD_TIMES
+//    setStartTimeMethod(T_UpdateAdmixCoeffs);
+//#endif
+//    acceptCount = UpdateAdmixCoeffs(mcmcSetup.finetunes.admix);
+//#ifdef RECORD_METHOD_TIMES
+//    setEndTimeMethod(T_UpdateAdmixCoeffs);
+//#endif
+//    acceptanceCounts.admix += acceptCount;
+//@@TODO: dead code ends here -------------------------------------------------
 
 #ifdef CHECKALL
     if (!checkAll())
@@ -1859,31 +1873,34 @@ int performMCMC()
         printHypStats(iteration, ioSetup.hypStatsFile);
       }
 
-      if (admixed_samples.number > 0 && iteration % 1000 == 0)
-      {
-        ioSetup.admixFile = fopen(ioSetup.admixFileName, "w");
-        if (ioSetup.admixFile == NULL)
-        {
-          fprintf(stderr,
-                  "Error: Could not open admixture trace file %s.\n",
-                  ioSetup.admixFileName);
-          return (-1);
-        }
-        fprintf(ioSetup.admixFile, "%d", iteration);
-        for (sample = 0; sample < admixed_samples.number; sample++)
-        {
-          for (gen = 0; gen < admixture_status.numSampledLoci; gen++)
-          {
-            fprintf(ioSetup.admixFile, "\t%lf",
-                    admixture_status.sampleLocusAdmixRate[sample]\
-                                     [admixture_status.sampledLoci[gen]]
-                    / (iteration + 1));
-          }
-        }
-        fprintf(ioSetup.admixFile, "\n");
-        fclose(ioSetup.admixFile);
-        ioSetup.admixFile = NULL;
-      }
+//@@TODO: dead code starts here -----------------------------------------------
+//      if (admixed_samples.number > 0 && iteration % 1000 == 0)
+//      {
+//        ioSetup.admixFile = fopen(ioSetup.admixFileName, "w");
+//        if (ioSetup.admixFile == NULL)
+//        {
+//          fprintf(stderr,
+//                  "Error: Could not open admixture trace file %s.\n",
+//                  ioSetup.admixFileName);
+//          return (-1);
+//        }
+//        fprintf(ioSetup.admixFile, "%d", iteration);
+//        for (sample = 0; sample < admixed_samples.number; sample++)
+//        {
+//          for (gen = 0; gen < admixture_status.numSampledLoci; gen++)
+//          {
+//            fprintf(ioSetup.admixFile, "\t%lf",
+//                    admixture_status.sampleLocusAdmixRate[sample]\
+//                                     [admixture_status.sampledLoci[gen]]
+//                    / (iteration + 1));
+//          }
+//        }
+//        fprintf(ioSetup.admixFile, "\n");
+//        fclose(ioSetup.admixFile);
+//        ioSetup.admixFile = NULL;
+//      }
+//@@TODO: dead code ends here -------------------------------------------------
+
     }
 
     logCount++;
@@ -1892,14 +1909,15 @@ int performMCMC()
     if ((iteration + 1) % numSamplesPerLog == 0)
     {
       // print the 8 acceptance ratios
-      if (!checkAll())
-      {
-        fprintf(stderr,
-                "\nError:  --  Aborting when logging after MCMC iteration %d, "
-                    "due to data structure inconsistency.\n\n",
-                iteration);
-        exit(-1);
-      }
+//@@DEBUG: restore the next block
+//      if (!checkAll())
+//      {
+//        fprintf(stderr,
+//                "\nError:  --  Aborting when logging after MCMC iteration %d, "
+//                    "due to data structure inconsistency.\n\n",
+//                iteration);
+//        exit(-1);
+//      }
 
       acceptancePercents.coalTime = acceptanceCounts.coalTime * 100.0 /
                                     (((double) logCount) * totalCoals *
@@ -1925,26 +1943,29 @@ int performMCMC()
                                       (dataSetup.numLoci - 1) *
                                       mcmcSetup.genetreeSamples);
       acceptancePercents.mixing = acceptanceCounts.mixing * 100.0 / logCount;
-      if (admixed_samples.number > 0)
-      {
-        acceptancePercents.admix = acceptanceCounts.admix * 100.0 /
-                                   (((double) logCount) *
-                                    admixed_samples.number);
-      }
-      else
-      {
-        acceptancePercents.admix = 0.0;
-      }
+//@@TODO: dead code starts here -----------------------------------------------
+//      if (admixed_samples.number > 0)
+//      {
+//        acceptancePercents.admix = acceptanceCounts.admix * 100.0 /
+//                                   (((double) logCount) *
+//                                    admixed_samples.number);
+//      }
+//      else
+//@@TODO: dead code ends here -------------------------------------------------
+      acceptancePercents.admix = 0.0;
 
       printf(
           "\r%7d   %5.1f%%    %5.1f%%    %5.1f%%    %5.1f%%    %5.1f%%    ",
           (iteration + 1), acceptancePercents.coalTime,
           acceptancePercents.migTime, acceptancePercents.SPR,
           acceptancePercents.theta, acceptancePercents.migRate);
-      if (admixed_samples.number > 0)
-      {
-        printf("%5.1f%%    ", acceptancePercents.admix);
-      }
+
+//@@TODO: dead code starts here -----------------------------------------------
+//      if (admixed_samples.number > 0)
+//      {
+//        printf("%5.1f%%    ", acceptancePercents.admix);
+//      }
+//@@TODO: dead code ends here -------------------------------------------------
 
       for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
       {
@@ -2702,9 +2723,12 @@ int UpdateGB_MigSPR()
     //genetree_lnLd = gtreeLnLikelihood(gen);
 
     int res, father, father_pop_old, sibling;
-    unsigned short altPop, admixSwitch;  // flag for admixed samples
+//@@TODO: dead code starts here. Admix related variables ----------------------
+//    unsigned short altPop, admixSwitch;  // flag for admixed samples
+//    int admixIndex = -1, oldPop = -1, newPop = -1;
+//@@TODO: dead code ends here -------------------------------------------------
+
     int node;
-    int admixIndex = -1, oldPop = -1, newPop = -1;
     int mig_band, i, mig, event, target;
     int pop;
 
@@ -2746,31 +2770,34 @@ int UpdateGB_MigSPR()
       // in genetree_stats_delta[1].
       // if res < 0, then could not reconnect (due to too many migrations)
 
-      // if node corresponds to admixed sample, resample population assignment
-      altPop = 0;
-      admixSwitch = 0;
-      if (node < dataSetup.numSamples && admixed_samples.number > 0 &&
-          admixed_samples.index[node] >= 0)
-      {
-        admixIndex = admixed_samples.index[node];
-        oldPop = nodePops[gen][node];
-        // consider alternative population w.p.
-        // admixture_status.admixtureCoefficients[node]
-        if(   rndu(gen)
-            < admixture_status.admixtureCoefficients[admixIndex])
-        {
-          altPop = 1;
-        }
-        newPop = admixed_samples.popPairs[admixIndex][altPop];
-        admixSwitch = (oldPop != newPop);
-        nodePops[gen][node] = newPop;
-//        if (admixSwitch)
+//@@TODO: dead code starts here -----------------------------------------------
+//      // if node corresponds to admixed sample, resample population assignment
+//
+//      altPop = 0;
+//      admixSwitch = 0;
+//      if (node < dataSetup.numSamples && admixed_samples.number > 0 &&
+//          admixed_samples.index[node] >= 0)
+//      {
+//        admixIndex = admixed_samples.index[node];
+//        oldPop = nodePops[gen][node];
+//        // consider alternative population w.p.
+//        // admixture_status.admixtureCoefficients[node]
+//        if(   rndu(gen)
+//            < admixture_status.admixtureCoefficients[admixIndex])
 //        {
-//					fprintf(ioSetup.debugFile, "Proposing to switch pop of "
-//                  "sample %d in gen %d, from pop %d to pop %d.",
-//                  node+1, gen+1, oldPop, newPop);
+//          altPop = 1;
 //        }
-      }
+//        newPop = admixed_samples.popPairs[admixIndex][altPop];
+//        admixSwitch = (oldPop != newPop);
+//        nodePops[gen][node] = newPop;
+////        if (admixSwitch)
+////        {
+////					fprintf(ioSetup.debugFile, "Proposing to switch pop of "
+////                  "sample %d in gen %d, from pop %d to pop %d.",
+////                  node+1, gen+1, oldPop, newPop);
+////        }
+//      }
+//@@TODO: dead code ends here -------------------------------------------------
 
       res = traceLineage(gen, node, 1);
 
@@ -2819,21 +2846,23 @@ int UpdateGB_MigSPR()
               locus_data[gen].mig_spr_stats.genetree_delta_lnLd[1])
              / dataSetup.numLoci;
 
-        if (admixSwitch)
-        {
-          // fprintf(ioSetup.debugFile,
-          //         " Accepting with delta log likelihood %lf.\n",
-          //         lnacceptance);
-          locus_data[gen].genLogLikelihood +=
-              log(1 / admixture_status.admixtureCoefficients[admixIndex] - 1) *
-              (1 - 2 * altPop);
-#ifdef ENABLE_OMP_THREADS
-#pragma omp atomic
-#endif
-          dataState.logLikelihood +=
-              log(1 / admixture_status.admixtureCoefficients[admixIndex] - 1) *
-              (1 - 2 * altPop) / dataSetup.numLoci;
-        }
+//@@TODO: dead code starts here -----------------------------------------------
+//        if (admixSwitch)
+//        {
+//          // fprintf(ioSetup.debugFile,
+//          //         " Accepting with delta log likelihood %lf.\n",
+//          //         lnacceptance);
+//          locus_data[gen].genLogLikelihood +=
+//              log(1 / admixture_status.admixtureCoefficients[admixIndex] - 1) *
+//              (1 - 2 * altPop);
+//#ifdef ENABLE_OMP_THREADS
+//#pragma omp atomic
+//#endif
+//          dataState.logLikelihood +=
+//              log(1 / admixture_status.admixtureCoefficients[admixIndex] - 1) *
+//              (1 - 2 * altPop) / dataSetup.numLoci;
+//        }
+//@@TODO: dead code ends here -------------------------------------------------
 
         // change pointers of migration nodes to genetree edges
         // note that id of father might have changed (because of root)
@@ -2987,16 +3016,19 @@ int UpdateGB_MigSPR()
           event = locus_data[gen].genetree_stats_delta[0].changed_events[i];
           event_chains[gen].events[event].incrementLineages();
         }
-        // change back population assignment (due to admixture)
-        if (admixSwitch)
-        {
-          nodePops[gen][node] = oldPop;
-//					fprintf(ioSetup.debugFile,
-//                  " Rejecting with delta log likelihood %lf.\n",
-//                  lnacceptance);
-        }
+//@@TODO: dead code starts here -----------------------------------------------
+//        // change back population assignment (due to admixture)
+//        if (admixSwitch)
+//        {
+//          nodePops[gen][node] = oldPop;
+////					fprintf(ioSetup.debugFile,
+////                  " Rejecting with delta log likelihood %lf.\n",
+////                  lnacceptance);
+//        }
+//@@TODO: dead code ends here -------------------------------------------------
         revertToSaved(dataState.lociData[gen]);
       }
+
 //      if(!checkLocusDataLikelihood(dataState.lociData[gen]))
 //      {
 //        printf("\nError checking recorded likelihood for gen %d!", gen);
@@ -3029,85 +3061,86 @@ int UpdateGB_MigSPR()
 /** end of UpdateGB_MigSPR **/
 
 
-
-/******************************************************************************
- *	UpdateAdmixCoeffs
- *	- perturbs admixture coefficients for all samples
- *	- this step does not affect data likelihood
- *	- this step doe not affect any other recorded statistic as well
- *****************************************************************************/
-int UpdateAdmixCoeffs(double finetune)
-{
-  int sample, node, gen, accepted = 0;
-  double coeffOld, coeffNew, logCoeffRatio, logCompCoeffRatio, lnacceptance;
-
-  double deltaLogLikelihood;
-
-  if (finetune <= 0.0)
-  {
-    return 0;
-  }
-
-  // first record the admixture counts for likelihood computation
-  recordAdmixtureCounts();
-
-  for (sample = 0; sample < admixed_samples.number; sample++)
-  {
-    // record previous coefficient
-    coeffOld = admixture_status.admixtureCoefficients[sample];
-    // perform MULTIPLICATIVE UPDATE
-    coeffNew = coeffOld + finetune * rnd2normal8(RAND_GENERAL_SLOT);
-    coeffNew = reflect(coeffNew, 0, 1);
-
-    logCoeffRatio = log(coeffNew / coeffOld);
-    logCompCoeffRatio = log((1 - coeffNew) / (1 - coeffOld));
-
-    deltaLogLikelihood = admixture_status.admixtureCounts[sample]
-                         * logCoeffRatio
-                         + (dataSetup.numLoci -
-                            admixture_status.admixtureCounts[sample])
-                           * logCompCoeffRatio;
-
-    // acceptance ratio according to delta log likelihood
-    lnacceptance = deltaLogLikelihood;
-
-#ifdef LOG_STEPS
-    fprintf(ioSetup.debugFile, "lnacceptance = %g, ",lnacceptance);
-#endif
-    if(    lnacceptance >= 0
-        || rndu(RAND_GENERAL_SLOT) < exp(lnacceptance) )
-    {
-#ifdef LOG_STEPS
-      fprintf(ioSetup.debugFile, "accepting.\n");
-#endif
-      accepted++;
-      node = admixed_samples.samples[sample];
-      for (gen = 0; gen < dataSetup.numLoci; gen++)
-      {
-        if (nodePops[gen][node] == admixed_samples.popPairs[sample][0])
-        {
-          locus_data[gen].genLogLikelihood += logCompCoeffRatio;
-        }
-        else
-        {
-          locus_data[gen].genLogLikelihood += logCoeffRatio;
-        }
-      }
-      dataState.logLikelihood += deltaLogLikelihood / dataSetup.numLoci;
-      admixture_status.admixtureCoefficients[sample] = coeffNew;
-    }
-    else
-    {
-#ifdef LOG_STEPS
-      fprintf(ioSetup.debugFile, "rejecting.\n");
-#endif
-    }
-
-  } // end of for(pop)
-
-  return (accepted);
-}
-/** end of UpdateAdmixCoeffs **/
+//@@TODO: dead code starts here -----------------------------------------------
+///******************************************************************************
+// *	UpdateAdmixCoeffs
+// *	- perturbs admixture coefficients for all samples
+// *	- this step does not affect data likelihood
+// *	- this step doe not affect any other recorded statistic as well
+// *****************************************************************************/
+//int UpdateAdmixCoeffs(double finetune)
+//{
+//  int sample, node, gen, accepted = 0;
+//  double coeffOld, coeffNew, logCoeffRatio, logCompCoeffRatio, lnacceptance;
+//
+//  double deltaLogLikelihood;
+//
+//  if (finetune <= 0.0)
+//  {
+//    return 0;
+//  }
+//
+//  // first record the admixture counts for likelihood computation
+//  recordAdmixtureCounts();
+//
+//  for (sample = 0; sample < admixed_samples.number; sample++)
+//  {
+//    // record previous coefficient
+//    coeffOld = admixture_status.admixtureCoefficients[sample];
+//    // perform MULTIPLICATIVE UPDATE
+//    coeffNew = coeffOld + finetune * rnd2normal8(RAND_GENERAL_SLOT);
+//    coeffNew = reflect(coeffNew, 0, 1);
+//
+//    logCoeffRatio = log(coeffNew / coeffOld);
+//    logCompCoeffRatio = log((1 - coeffNew) / (1 - coeffOld));
+//
+//    deltaLogLikelihood = admixture_status.admixtureCounts[sample]
+//                         * logCoeffRatio
+//                         + (dataSetup.numLoci -
+//                            admixture_status.admixtureCounts[sample])
+//                           * logCompCoeffRatio;
+//
+//    // acceptance ratio according to delta log likelihood
+//    lnacceptance = deltaLogLikelihood;
+//
+//#ifdef LOG_STEPS
+//    fprintf(ioSetup.debugFile, "lnacceptance = %g, ",lnacceptance);
+//#endif
+//    if(    lnacceptance >= 0
+//        || rndu(RAND_GENERAL_SLOT) < exp(lnacceptance) )
+//    {
+//#ifdef LOG_STEPS
+//      fprintf(ioSetup.debugFile, "accepting.\n");
+//#endif
+//      accepted++;
+//      node = admixed_samples.samples[sample];
+//      for (gen = 0; gen < dataSetup.numLoci; gen++)
+//      {
+//        if (nodePops[gen][node] == admixed_samples.popPairs[sample][0])
+//        {
+//          locus_data[gen].genLogLikelihood += logCompCoeffRatio;
+//        }
+//        else
+//        {
+//          locus_data[gen].genLogLikelihood += logCoeffRatio;
+//        }
+//      }
+//      dataState.logLikelihood += deltaLogLikelihood / dataSetup.numLoci;
+//      admixture_status.admixtureCoefficients[sample] = coeffNew;
+//    }
+//    else
+//    {
+//#ifdef LOG_STEPS
+//      fprintf(ioSetup.debugFile, "rejecting.\n");
+//#endif
+//    }
+//
+//  } // end of for(pop)
+//
+//  return (accepted);
+//}
+///** end of UpdateAdmixCoeffs **/
+//@@TODO: dead code ends here -------------------------------------------------
 
 /******************************************************************************
  *	UpdateTheta

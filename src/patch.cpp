@@ -620,30 +620,42 @@ double rubberBand(int gen, int pop, double static_point, double moving_point,
 
 */
 
-double rubberBandRipple(int gen, int do_or_redo) {
-  int i, pop, new_event, orig_event, affected_pops[2 * NSPECIES - 1];
+double rubberBandRipple(int gen, int do_or_redo)
+{
+  int i;
+  int pop;
+  int new_event;
+  int orig_event;
+  int affected_pops[2 * NSPECIES - 1];
   double delta_lnLd = 0.0;
 
-  if (locus_data[gen].rubberband_migs.num_moved_events == 0) return 0.0;
+  if( locus_data[gen].rubberband_migs.num_moved_events == 0 )
+    return 0.0;
 
-  //	printf("\nRipple");
-
-  for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+  for( pop = 0; pop < dataSetup.popTree->numPops; ++pop )
+  {
     affected_pops[pop] = 0;
   }
 
-  for (i = 0; i < locus_data[gen].rubberband_migs.num_moved_events; i++) {
+  for( i = 0; i < locus_data[gen].rubberband_migs.num_moved_events; ++i )
+  {
     pop = locus_data[gen].rubberband_migs.pops[i];
     orig_event = locus_data[gen].rubberband_migs.orig_events[i];
     affected_pops[pop] = 1;
-    if (do_or_redo) {
-      new_event = locus_data[gen].rubberband_migs.new_events[i] = createEvent(
-          gen, pop, locus_data[gen].rubberband_migs.new_ages[i]);
-      if (new_event < 0) {
-        if (debug) {
+    if( do_or_redo )
+    {
+      new_event =
+        locus_data[gen].rubberband_migs.new_events[i] = createEvent( gen, pop,
+                                  locus_data[gen].rubberband_migs.new_ages[i]);
+      if( new_event < 0 )
+      {
+        if( debug )
+        {
           fprintf(stderr,
                   "Error: problem creating event in rubber band ripple.\n");
-        } else {
+        }
+        else
+        {
           fprintf(stderr, "Fatal Error 0005.\n");
         }
         printGenealogyAndExit(gen, -1);
@@ -653,35 +665,37 @@ double rubberBandRipple(int gen, int do_or_redo) {
       event_chains[gen].events[new_event].setId(
           event_chains[gen].events[orig_event].getId());
       event_chains[gen].events[orig_event].setType(DUMMY);
-    } else {
+    }
+    else
+    {
       new_event = locus_data[gen].rubberband_migs.new_events[i];
       event_chains[gen].events[orig_event].setType(
           event_chains[gen].events[new_event].getType());
       // if removing first event in pop, update incoming number of lineages
-      if (event_chains[gen].first_event[pop] == new_event) {
-        event_chains[gen].events[event_chains[gen].events[new_event].getNextIdx()].setNumLineages(
-            event_chains[gen].events[new_event].getNumLineages());
+      if( event_chains[gen].first_event[pop] == new_event )
+      {
+        event_chains[gen].events[
+            event_chains[gen].events[new_event].getNextIdx()].setNumLineages(
+                event_chains[gen].events[new_event].getNumLineages());
       }
       removeEvent(gen, new_event);
     }
   }
 
-  for (pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-
-    if (affected_pops[pop]) {
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
+  {
+    if( affected_pops[pop] )
+    {
       delta_lnLd += recalcStats(gen, pop);
     }
   }
 
-  if (!do_or_redo) {
+  if (!do_or_redo)
+  {
     locus_data[gen].rubberband_migs.num_moved_events = 0;
   }
-
   return delta_lnLd;
-
 }
-
-
 
 //============================================================================
 /* replaceMigNodes
@@ -1981,15 +1995,17 @@ double gtreeLnLikelihood(int gen) {
     }
   }
 
-  // considering admixture
-  for (sample = 0; sample < admixed_samples.number; sample++) {
-    node = admixed_samples.samples[sample];
-    if (nodePops[gen][node] == admixed_samples.popPairs[sample][0]) {
-      lnLd += log(1 - admixture_status.admixtureCoefficients[sample]);
-    } else {
-      lnLd += log(admixture_status.admixtureCoefficients[sample]);
-    }
-  }// end of for(sample)
+//@@TODO: dead code starts here -----------------------------------------------
+//  // considering admixture
+//  for (sample = 0; sample < admixed_samples.number; sample++) {
+//    node = admixed_samples.samples[sample];
+//    if (nodePops[gen][node] == admixed_samples.popPairs[sample][0]) {
+//      lnLd += log(1 - admixture_status.admixtureCoefficients[sample]);
+//    } else {
+//      lnLd += log(admixture_status.admixtureCoefficients[sample]);
+//    }
+//  }// end of for(sample)
+//@@TODO: dead code ends here -------------------------------------------------
 
 
   return lnLd;

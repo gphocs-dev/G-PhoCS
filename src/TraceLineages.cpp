@@ -475,7 +475,7 @@ traceLineage_epilogue_record_stat_changes(TraceLineageAutoVars* p_stack)
   in genetree_stats_delta[0].
   If reconnect == 1, then re-coalesces lineage with rest of genetree according
   to coalescence with migration process determined by model parameters.
-  records stat changes in genetree_stats_delta[0].
+  records stat changes in genetree_stats_delta[0 ??1, maybe?? ].
 
   In both cases, sets the appropriate entries in mig_spr_stats.
 
@@ -484,6 +484,8 @@ traceLineage_epilogue_record_stat_changes(TraceLineageAutoVars* p_stack)
 
 int traceLineage (int gen, int node, int reconnect)
 {
+  static int cntr = 0;
+  ++cntr;
   TraceLineageAutoVars stack_vars;
   stack_vars.gen = gen;
   stack_vars.node = node;

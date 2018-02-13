@@ -32,7 +32,10 @@ typedef struct _GLOBAL_SETUP
 
 struct IO_SETUP ioSetup;
 struct MCMC_SETUP mcmcSetup;
-struct ADMIXED_SAMPLES admixed_samples;
+
+//@@TODO: dead code starts here -------------------------------------------------
+//struct ADMIXED_SAMPLES admixed_samples;
+//@@TODO: dead code ends here -------------------------------------------------
 
 DATA_SETUP  dataSetup;
 GLOBAL_SETUP globalSetup;
@@ -444,7 +447,9 @@ int finalizeNumParameters() {
 		2*dataSetup.popTree->numPops - dataSetup.popTree->numCurPops + 
 		dataSetup.popTree->numMigBands + 
 		numAncientPops +
-		admixed_samples.number + 
+//@@TODO: dead code starts here -----------------------------------------------
+//		admixed_samples.number +
+//@@TODO: dead code ends here -------------------------------------------------
 		(mcmcSetup.mutRateMode == 1);
 		
 	
@@ -1383,27 +1388,29 @@ int parseSampleNames() {
 	int pop, sample, sample1, sampleMatch, skip, numOccur;
 	int numErrors = 0;
 	int* samples2pops = NULL;
-	
-	admixed_samples.number = 0;
-	// allocate memory in admixed_samples data structures
-	if(mcmcSetup.allowAdmixture) {
-		samples2pops = (int*)malloc(dataSetup.numSamples*sizeof(int));
-		admixed_samples.popPairs = (int**)malloc(dataSetup.numSamples*sizeof(int*));
-		admixed_samples.samples = (int*)malloc(dataSetup.numSamples*sizeof(int));
-		admixed_samples.popPairs[0] = (int*)malloc(2*dataSetup.numSamples*sizeof(int));
-		admixed_samples.index = (int*)malloc(dataSetup.numSamples*sizeof(int));
 
-		// initialize samples2pops array
-		sample1 = 0;
-		sample = 0;
-		for(pop=0; pop<dataSetup.popTree->numCurPops; pop++) {
-			sample1+= dataSetup.numSamplesPerPop[pop];
-			for( ; sample<sample1; sample++) {
-				samples2pops[sample] = pop;
-			}// end of for(sample)
-		}// end of for(pop)
-	}
-	
+//@@TODO: dead code starts here -----------------------------------------------
+//	admixed_samples.number = 0;
+//	// allocate memory in admixed_samples data structures
+//	if(mcmcSetup.allowAdmixture) {
+//		samples2pops = (int*)malloc(dataSetup.numSamples*sizeof(int));
+//		admixed_samples.popPairs = (int**)malloc(dataSetup.numSamples*sizeof(int*));
+//		admixed_samples.samples = (int*)malloc(dataSetup.numSamples*sizeof(int));
+//		admixed_samples.popPairs[0] = (int*)malloc(2*dataSetup.numSamples*sizeof(int));
+//		admixed_samples.index = (int*)malloc(dataSetup.numSamples*sizeof(int));
+//
+//		// initialize samples2pops array
+//		sample1 = 0;
+//		sample = 0;
+//		for(pop=0; pop<dataSetup.popTree->numCurPops; pop++) {
+//			sample1+= dataSetup.numSamplesPerPop[pop];
+//			for( ; sample<sample1; sample++) {
+//				samples2pops[sample] = pop;
+//			}// end of for(sample)
+//		}// end of for(pop)
+//	}
+//@@TODO: dead code ends here -------------------------------------------------
+
 	
 	
 	for(sample=0; sample<dataSetup.numSamples; sample++) {
@@ -1438,23 +1445,27 @@ int parseSampleNames() {
 		
 		if(sampleMatch >= 0) {
 			skip = 1;
-			admixed_samples.samples [admixed_samples.number] = sample;
-			admixed_samples.popPairs[admixed_samples.number][0] = samples2pops[sample];
-			admixed_samples.popPairs[admixed_samples.number][1] = samples2pops[sampleMatch];
-			admixed_samples.number++;
-			if(admixed_samples.number < dataSetup.numSamples) {
-				admixed_samples.popPairs[admixed_samples.number] = admixed_samples.popPairs[admixed_samples.number-1] + 2;
-			}
+//@@TODO: dead code starts here -----------------------------------------------
+//			admixed_samples.samples [admixed_samples.number] = sample;
+//			admixed_samples.popPairs[admixed_samples.number][0] = samples2pops[sample];
+//			admixed_samples.popPairs[admixed_samples.number][1] = samples2pops[sampleMatch];
+//			admixed_samples.number++;
+//			if(admixed_samples.number < dataSetup.numSamples) {
+//				admixed_samples.popPairs[admixed_samples.number] = admixed_samples.popPairs[admixed_samples.number-1] + 2;
+//			}
+//@@TODO: dead code ends here -------------------------------------------------
 			// for diploid sample, define both haploids as admixed
 			if(dataSetup.sampleNames[sample+1][0] == '\0') {
 				skip++;
-				admixed_samples.samples [admixed_samples.number] = sample+1;
-				admixed_samples.popPairs[admixed_samples.number][0] = samples2pops[sample];
-				admixed_samples.popPairs[admixed_samples.number][1] = samples2pops[sampleMatch];
-				admixed_samples.number++;
-				if(admixed_samples.number < dataSetup.numSamples) {
-					admixed_samples.popPairs[admixed_samples.number] = admixed_samples.popPairs[admixed_samples.number-1] + 2;
-				}
+//@@TODO: dead code starts here -----------------------------------------------
+//				admixed_samples.samples [admixed_samples.number] = sample+1;
+//				admixed_samples.popPairs[admixed_samples.number][0] = samples2pops[sample];
+//				admixed_samples.popPairs[admixed_samples.number][1] = samples2pops[sampleMatch];
+//				admixed_samples.number++;
+//				if(admixed_samples.number < dataSetup.numSamples) {
+//					admixed_samples.popPairs[admixed_samples.number] = admixed_samples.popPairs[admixed_samples.number-1] + 2;
+//				}
+//@@TODO: dead code ends here -------------------------------------------------
 				if(sampleMatch>=dataSetup.numSamples || dataSetup.sampleNames[sampleMatch+1][0] != '\0') {
 					fprintf(stderr, "Error: sample %s is admixed, but first copy is defined as diploid, and second as haploid.\n", dataSetup.sampleNames[sample]);
 					numErrors++;

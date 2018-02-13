@@ -126,17 +126,19 @@ typedef struct _DATA_SETUP
 //extern DATA_SETUP dataSetup;
 
 
-/*********
- * admixed samples - for admixture
- *********/
-struct ADMIXED_SAMPLES {
-	int number;		// number of admixed samples
-	int* samples;	// list of admixed samples
-	int** popPairs;	// list of population pairs (one per sample)
-	int* index;		// index for each admixed sample (-1 for non-admixed)
-};
-
-extern struct ADMIXED_SAMPLES admixed_samples;
+//@@TODO: dead code starts here -----------------------------------------------
+///*********
+// * admixed samples - for admixture
+// *********/
+//struct ADMIXED_SAMPLES {
+//	int number;		// number of admixed samples
+//	int* samples;	// list of admixed samples
+//	int** popPairs;	// list of population pairs (one per sample)
+//	int* index;		// index for each admixed sample (-1 for non-admixed)
+//};
+//
+//extern struct ADMIXED_SAMPLES admixed_samples;
+//@@TODO: dead code ends here -------------------------------------------------
 
 /***************************************************************************************************************/
 /******                               EXTERNAL FUNCTION DECLARATION                                       ******/
