@@ -15,7 +15,8 @@ extern Locus_SuperStruct*   locus_data;
 extern DATA_STATE dataState;
 //-----------------------------------------------------------------------------
 int checkGtreeStructure_dispatch_check_event_chain(
-                                         CheckGtreeStructureAutoVars* p_stack)
+                                         CheckGtreeStructureAutoVars* p_stack,
+                                         EventType e_event_type)
 {
   int& gen                  = p_stack->gen;
   int& num_lineages         = p_stack->num_lineages;
@@ -25,13 +26,12 @@ int checkGtreeStructure_dispatch_check_event_chain(
   int& event_id             = p_stack->event_id;
   int& num_living_mig_bands = p_stack->num_living_mig_bands;
   int& res                  = p_stack->res;
-  Event* pCurrEvent         = p_stack->pCurrEvent;
   double& age               = p_stack->age;
-  double PRECISION          = p_stack->PRECISION;
+  double& PRECISION         = p_stack->PRECISION;
 
   int i = 0;
   double curr_nodeAge = -1.;
-  switch(pCurrEvent->getType())
+  switch(e_event_type)
   {
     case(SAMPLES_START):
       num_lineages += dataSetup.numSamplesPerPop[pop];
@@ -392,8 +392,7 @@ int checkGtreeStructure(int gen)
   double& age               = stack_vars.age;
   double& delta_t           = stack_vars.delta_t;
   double PRECISION          = stack_vars.PRECISION;
-  Event* pCurrEvent         = stack_vars.pCurrEvent;
-
+  Event* pCurrEvent         = NULL;
   // essentially follow the same path as procedure computeGenetreeStats,
   // but validates with genetree nodes
 
@@ -417,30 +416,31 @@ int checkGtreeStructure(int gen)
     pop = stack_vars.pop_queue[i];
     locus_data[gen].genetree_stats_check.coal_stats[pop] = 0.0;
     locus_data[gen].genetree_stats_check.num_coals[pop]  = 0;
-    event_idx            = event_chains[gen].first_event[pop];
-    pCurrEvent           = event_chains.getEvent(gen, stack_vars.event_idx);
-    num_lineages         = stack_vars.pop_lins_in[pop];
-    age                  = dataSetup.popTree->pops[pop]->age;
-    num_living_mig_bands = 0;
+    event_idx             = event_chains[gen].first_event[pop];
+    num_lineages          = stack_vars.pop_lins_in[pop];
+    age                   = dataSetup.popTree->pops[pop]->age;
+    num_living_mig_bands  = 0;
 
 
     // follow event_idx chain and check all saved data
-    for( ; stack_vars.event_idx >=0;
-         stack_vars.event_idx = stack_vars.pCurrEvent->getNextIdx() )
+    for( ; event_idx >=0;
+         event_idx = event_chains.getEvent(gen, event_idx)->getNextIdx() )
     {
-      stack_vars.pCurrEvent = event_chains.getEvent(gen, stack_vars.event_idx);
-      if( stack_vars.pCurrEvent->getNumLineages() != num_lineages )
+      pCurrEvent = event_chains.getEvent(gen, event_idx);
+      if( pCurrEvent->getNumLineages() != num_lineages )
       {
         CHECK_GTREE_STRUCT_FATAL_0034
       }
 
-      int event_next_idx = stack_vars.pCurrEvent->getNextIdx();
+      int event_next_idx = pCurrEvent->getNextIdx();
       if( event_next_idx >=0 )
       {
         int event_next_prev_idx =
                 event_chains.getEvent(gen, event_next_idx)->getPrevIdx();
-        if(stack_vars.event_idx != event_next_prev_idx)
+        if(event_idx != event_next_prev_idx)
+        {
           CHECK_GTREE_STRUCT_FATAL_0035
+        }
       }
       event_id  = pCurrEvent->getId();
       delta_t   = pCurrEvent->getElapsedTime();
@@ -455,7 +455,8 @@ int checkGtreeStructure(int gen)
           mig_stats[stack_vars.living_mig_bands[mig_band]] +=
                                                         num_lineages * delta_t;
       }
-      checkGtreeStructure_dispatch_check_event_chain(&stack_vars);
+      checkGtreeStructure_dispatch_check_event_chain(&stack_vars,
+                                                     pCurrEvent->getType());
     }// end of for(event_idx)
         
     if(stack_vars.num_living_mig_bands != 0)

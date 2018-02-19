@@ -1909,15 +1909,14 @@ int performMCMC()
     if ((iteration + 1) % numSamplesPerLog == 0)
     {
       // print the 8 acceptance ratios
-//@@DEBUG: restore the next block
-//      if (!checkAll())
-//      {
-//        fprintf(stderr,
-//                "\nError:  --  Aborting when logging after MCMC iteration %d, "
-//                    "due to data structure inconsistency.\n\n",
-//                iteration);
-//        exit(-1);
-//      }
+      if (!checkAll())
+      {
+        fprintf(stderr,
+                "\nError:  --  Aborting when logging after MCMC iteration %d, "
+                    "due to data structure inconsistency.\n\n",
+                iteration);
+        exit(-1);
+      }
 
       acceptancePercents.coalTime = acceptanceCounts.coalTime * 100.0 /
                                     (((double) logCount) * totalCoals *

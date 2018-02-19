@@ -5,7 +5,6 @@
 int checkGtreeStructure(int gen);
 int checkAll();
 
-class Event;
 //-----------------------------------------------------------------------------
 typedef struct _CheckGtreeStructureAutoVars
 {
@@ -21,9 +20,6 @@ typedef struct _CheckGtreeStructureAutoVars
   int num_living_mig_bands;
   int father;
   int res = 1;
-
-  Event* pCurrEvent;
-
   double age;
   double delta_t;
   double PRECISION = 0.0000000001;

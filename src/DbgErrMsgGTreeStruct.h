@@ -16,7 +16,7 @@ if(debug)\
   fprintf(stderr, "\nError: checking genetree for gen %d: ", gen);\
   fprintf(stderr, "number of lineages of event_idx %d doesn't "\
                   "match: %d, %d.\n", stack_vars.event_idx,\
-                                      stack_vars.pCurrEvent->getNumLineages(),\
+                                      pCurrEvent->getNumLineages(),\
                                       num_lineages);\
 }\
 else\
