@@ -2713,19 +2713,10 @@ int UpdateGB_MigSPR()
   {
     double heredity_factor = 1.0, t_new;
     double lnLd;
-    double lnacceptance;
+    //double lnacceptance;
     int local_accepted = 0;
-    //printLocusGenTree(dataState.lociData[gen],
-    //                  nodePops[gen], nodeEvents[gen]);
-    //printEventChains(gen);
-
-    //genetree_lnLd = gtreeLnLikelihood(gen);
 
     int res, father, father_pop_old, sibling;
-//@@TODO: dead code starts here. Admix related variables ----------------------
-//    unsigned short altPop, admixSwitch;  // flag for admixed samples
-//    int admixIndex = -1, oldPop = -1, newPop = -1;
-//@@TODO: dead code ends here -------------------------------------------------
 
     int node;
     int mig_band, i, mig, event, target;
@@ -2769,63 +2760,24 @@ int UpdateGB_MigSPR()
       // in genetree_stats_delta[1].
       // if res < 0, then could not reconnect (due to too many migrations)
 
-//@@TODO: dead code starts here -----------------------------------------------
-//      // if node corresponds to admixed sample, resample population assignment
-//
-//      altPop = 0;
-//      admixSwitch = 0;
-//      if (node < dataSetup.numSamples && admixed_samples.number > 0 &&
-//          admixed_samples.index[node] >= 0)
-//      {
-//        admixIndex = admixed_samples.index[node];
-//        oldPop = nodePops[gen][node];
-//        // consider alternative population w.p.
-//        // admixture_status.admixtureCoefficients[node]
-//        if(   rndu(gen)
-//            < admixture_status.admixtureCoefficients[admixIndex])
-//        {
-//          altPop = 1;
-//        }
-//        newPop = admixed_samples.popPairs[admixIndex][altPop];
-//        admixSwitch = (oldPop != newPop);
-//        nodePops[gen][node] = newPop;
-////        if (admixSwitch)
-////        {
-////					fprintf(ioSetup.debugFile, "Proposing to switch pop of "
-////                  "sample %d in gen %d, from pop %d to pop %d.",
-////                  node+1, gen+1, oldPop, newPop);
-////        }
-//      }
-//@@TODO: dead code ends here -------------------------------------------------
-
       res = traceLineage(gen, node, 1);
 
-//#ifdef LOG_STEPS
-//      fprintf(ioSetup.debugFile, "proposing reattachment at edge "
-//              "above node %d, pop %d, age %g. ",
-//			locus_data[gen].mig_spr_stats.target,
-//			locus_data[gen].mig_spr_stats.father_pop_new,
-//			getNodeAge(dataState.lociData[gen], father));
-//#endif
       lnLd = -getLocusDataLikelihood(dataState.lociData[gen]);
       lnLd += computeLocusDataLikelihood(
-          dataState.lociData[gen], /*reuse old conidtionals*/ 1);
-      lnacceptance = lnLd;
+          dataState.lociData[gen], /*reuse old conditionals*/ 1);
+      //lnacceptance = lnLd;
 
 #ifdef LOG_STEPS
       fprintf(ioSetup.debugFile, "lnacceptance = %g, ",lnacceptance);
 #endif
 
-      if(    res >= 0
-          && (    lnacceptance >= 0
-               || rndu(gen) < exp(lnacceptance)
-             ) )
+      //if( res >= 0 && (lnacceptance >= 0 || rndu(gen) < exp(lnacceptance) ) )
+      if( res >= 0 && (lnLd >= 0 || rndu(gen) < exp(lnLd) ) )
       {
 #ifdef LOG_STEPS
         fprintf(ioSetup.debugFile, "accepting.\n");
 #endif
         local_accepted++;
-        // UNUSED didAccept = 1;
         locus_data[gen].genLogLikelihood +=
             (locus_data[gen].mig_spr_stats.genetree_delta_lnLd[1]
              - locus_data[gen].mig_spr_stats.genetree_delta_lnLd[0]);
@@ -2845,24 +2797,6 @@ int UpdateGB_MigSPR()
               locus_data[gen].mig_spr_stats.genetree_delta_lnLd[1])
              / dataSetup.numLoci;
 
-//@@TODO: dead code starts here -----------------------------------------------
-//        if (admixSwitch)
-//        {
-//          // fprintf(ioSetup.debugFile,
-//          //         " Accepting with delta log likelihood %lf.\n",
-//          //         lnacceptance);
-//          locus_data[gen].genLogLikelihood +=
-//              log(1 / admixture_status.admixtureCoefficients[admixIndex] - 1) *
-//              (1 - 2 * altPop);
-//#ifdef ENABLE_OMP_THREADS
-//#pragma omp atomic
-//#endif
-//          dataState.logLikelihood +=
-//              log(1 / admixture_status.admixtureCoefficients[admixIndex] - 1) *
-//              (1 - 2 * altPop) / dataSetup.numLoci;
-//        }
-//@@TODO: dead code ends here -------------------------------------------------
-
         // change pointers of migration nodes to genetree edges
         // note that id of father might have changed (because of root)
         target = locus_data[gen].mig_spr_stats.target;
@@ -2873,40 +2807,17 @@ int UpdateGB_MigSPR()
           if (genetree_migs[gen].mignodes[mig].gtree_branch == father)
           {
             genetree_migs[gen].mignodes[mig].gtree_branch = sibling;
-//            printf( "\nSwitching node id's for mignode %d in gen %d "
-//                    "from %d to %d due to MIG_SPR on node %d.\n",
-//                    mig, gen, father_old, sib, node);
-//            printf("\nAttaching node %d to target edge %d at time %g.\n",
-//                   node, target, t_new);
-//            printGtree(1);
           }
           // this is to transfer "sibling" migrations into "father"
           // in case where target == father.
-          if (target == father) target = sibling;
+          if (target == father)
+            target = sibling;
           if (genetree_migs[gen].mignodes[mig].gtree_branch == target &&
               genetree_migs[gen].mignodes[mig].age >= t_new)
           {
             genetree_migs[gen].mignodes[mig].gtree_branch = father;
-//            printf("\nSwitching node id's for mignode %d in gen %d"
-//                   " from %d to %d due to MIG_SPR on node %d.\n",
-//                   mig,gen,target,nodes[node].father, node);
-//            printf("\nAttaching node %d to target edge %d at time %g.\n",
-//                   node, target, t_new);
-//            printGtree(1);
           }
         }
-
-        // DO WE NEED TO DO ANYTHING IN CASE OF ROOT SWAP ??? !!
-//        event = nodes[tree.root].event_id;
-//        i = event_chains[gen].events[event].node_id;
-//        if(i != tree.root)
-//        {
-//          //printf("\n\n Root Swap.\n");
-//          event_chains[gen].events[event].node_id = tree.root;
-//          event = nodes[i].event_id;
-//          event_chains[gen].events[event].node_id = i;
-//          misc_stats.root_swaps++;
-//        }
         // remove old coalescent event and configure new one
         removeEvent(gen, locus_data[gen].mig_spr_stats.father_event_old);
         event_chains[gen].events[\
@@ -2942,7 +2853,7 @@ int UpdateGB_MigSPR()
 
         // add lineage to all events in new path to new father
         for( i = 0;
-             i < locus_data[gen].genetree_stats_delta[1].num_changed_events;
+             i < locus_data[gen].genetree_stats_delta[1].num_changed_events();
              ++i )
         {
           event = locus_data[gen].genetree_stats_delta[1].changed_events[i];
@@ -2984,16 +2895,9 @@ int UpdateGB_MigSPR()
         }
 
         resetSaved(dataState.lociData[gen]);
-//        genetree_lnLd_new = gtreeLnLikelihood(gen);
-//        misc_stats.spr_lnld_disc = max2(misc_stats.spr_lnld_disc ,
-//        fabs( (genetree_lnLd_new - genetree_lnLd) -
-//              (locus_data[gen].mig_spr_stats.genetree_delta_lnLd[1] -
-//               locus_data[gen].mig_spr_stats.genetree_delta_lnLd[0])));
-//        genetree_lnLd = genetree_lnLd_new;
       }
       else
       {
-// UNUSED        didAccept = 0;
 #ifdef LOG_STEPS
         fprintf(ioSetup.debugFile, "rejecting.\n");
 #endif
@@ -3009,45 +2913,14 @@ int UpdateGB_MigSPR()
         }
         // return reduced lineage to all events of original edge
         for( i = 0;
-             i < locus_data[gen].genetree_stats_delta[0].num_changed_events;
+             i < locus_data[gen].genetree_stats_delta[0].num_changed_events();
              ++i )
         {
           event = locus_data[gen].genetree_stats_delta[0].changed_events[i];
           event_chains[gen].events[event].incrementLineages();
         }
-//@@TODO: dead code starts here -----------------------------------------------
-//        // change back population assignment (due to admixture)
-//        if (admixSwitch)
-//        {
-//          nodePops[gen][node] = oldPop;
-////					fprintf(ioSetup.debugFile,
-////                  " Rejecting with delta log likelihood %lf.\n",
-////                  lnacceptance);
-//        }
-//@@TODO: dead code ends here -------------------------------------------------
         revertToSaved(dataState.lociData[gen]);
       }
-
-//      if(!checkLocusDataLikelihood(dataState.lociData[gen]))
-//      {
-//        printf("\nError checking recorded likelihood for gen %d!", gen);
-//        printf("\n  --  Aborting after UpdateGB_MigSPR(%d,%d).\n",gen,node);
-//        printf("\nProposing SPR of subtree rooted at node %d, father %d "
-//               "(age %f-->%f), sibling %d --> target %dn and %s.\n",
-//               node, father, t_old, t_new, sibling, target,
-//               (didAccept)?("accepting"):("rejecting"));
-//        exit(-1);
-//        res = 0;
-//      }
-//
-//      if (!checkAll())
-//      {
-//        printf("\n  --  Aborting after UpdateGB_MigSPR(%d,%d).\n",gen,node);
-//        printf("\nProposing SPR of subtree rooted at node %d, father %d "
-//               "(age %f-->%f), sibling %d --> target %d.\n",
-//        node, father, t_old, t_new, sibling, target);
-//        exit(-1);
-//      }
     } // end for(node)
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic

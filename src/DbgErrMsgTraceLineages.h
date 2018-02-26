@@ -37,7 +37,7 @@ if(debug) \
 	fprintf(stderr, "  Events visited:");\
 	for(i=0; \
 	    i < locus_data[p_stack->gen].\
-			    genetree_stats_delta[p_stack->reconnect].num_changed_events;\
+			    genetree_stats_delta[p_stack->reconnect].num_changed_events();\
 	    i++)\
 	{\
 		fprintf(stderr, " %d",\

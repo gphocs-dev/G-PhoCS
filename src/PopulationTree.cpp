@@ -78,7 +78,9 @@ PopulationTree* createPopTree(int numCurPops)
     fprintf(stderr, "\nError: Out Of Memory boolean 2D array for isAncestrals in population tree.\n");
     exit(-1);
   }
-  resetBooleanArray(popTree->isAncestralArray,numPops*numPops);
+
+  explicit_bzero( popTree->isAncestralArray,
+                  sizeof(unsigned short) * numPops * numPops );
 
   // allocate initial memory for migration bands
   popTree->migBands = (MigrationBand*)malloc(numPops*(numPops-1)*sizeof(MigrationBand));

@@ -194,16 +194,19 @@ public:
   void init();
 
 public:
+  int num_changed_events() const {return this->changed_events.size();}
+  void clear_changed_events() {this->changed_events.clear();}
+  void push_changed_event(int e) {this->changed_events.push_back(e);}
+
+public:
   // id of event describing original placing of node
   int original_event;
   // id of event describing updated (new) placing of node
   int updated_event;
   // the difference in lineage number for all events affected (typically +/- 1)
   int num_lin_delta;
-  // number of events affected by change
-  int num_changed_events;
-  // an array of ids of events affected by change
-  int changed_events[MAX_EVENTS];
+  // events affected by change
+  vector<int> changed_events;
   // number of population affected by change
   int num_pops_changed;
   // an array of populations affected by change
@@ -224,10 +227,10 @@ GENETREE_STATS_DELTA::init()
 {
   this->num_pops_changed      =  0;
   this->num_mig_bands_changed =  0;
-  this->num_changed_events    =  0;
   this->num_lin_delta         =  0;
   this->original_event        = -1;
   this->updated_event         = -1;
+  changed_events.reserve(MAX_EVENTS);
 }
 /*-----------------------------------------------------------------------------
  * GENETREE_STATS

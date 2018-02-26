@@ -192,25 +192,6 @@ double mergeSort(double array[], int numEntries, double tmpArray[]) {
   return sum;
 }
 
-void resetBooleanArray1(unsigned short* booleanArray, int arrayLength){
-  int i;
-  for(i=0; i<arrayLength; i++) {
-    booleanArray[i] = 0;
-  }
-  return;
-}
-
-void resetBooleanArray(unsigned short* booleanArray, int arrayLength){
-  static unsigned short zeros[200] = {0};
-
-  if(arrayLength > 200) {
-    resetBooleanArray1(booleanArray,arrayLength);
-  } else {
-    memcpy(booleanArray, zeros, arrayLength*sizeof(unsigned short));
-  }
-  return;
-}
-
 void turnOnBooleanArray(unsigned short* booleanArray, int arrayLength) {
   for( arrayLength--; arrayLength>=0; arrayLength--) {
     booleanArray[arrayLength] = 1;

@@ -423,7 +423,8 @@ int computeAllConditionals (LocusData* locusData)  {
  *	- otherwise, recomputes everything from scratch
  *	- returns the log-likelihood
  ***********************************************************************************/
-double computeLocusDataLikelihood (LocusData* locusData, unsigned short useOldConditionals)  {
+double computeLocusDataLikelihood( LocusData* locusData,
+                                   unsigned short useOldConditionals)  {
   int res, node;
   int  patt, pattId, phase, numLivePatterns, conditional, numConditionals;
   double prob;
@@ -793,7 +794,9 @@ int revertToSaved(LocusData* locusData) {
   }
 		
   //	printf("Reverting to saved version of locus (2)\n");
-  if(locusData->savedVersion.numChangedConditionals == 0 && locusData->savedVersion.numChangedNodes == 0) {
+  if(   locusData->savedVersion.numChangedConditionals == 0
+     && locusData->savedVersion.numChangedNodes == 0)
+  {
     //		printf("\nNo changed conditionals");
     return 0;
   }
@@ -814,19 +817,22 @@ int revertToSaved(LocusData* locusData) {
     } else {
       // if conditionals were not updated, copy back pointer to conditional array
       conditionalPointer = locusData->nodeArray[nodeId]->conditionalProbs;
-      locusData->nodeArray[nodeId]->conditionalProbs = locusData->savedVersion.savedNodes[nodeId]->conditionalProbs;
+      locusData->nodeArray[nodeId]->conditionalProbs =
+          locusData->savedVersion.savedNodes[nodeId]->conditionalProbs;
       locusData->savedVersion.savedNodes[nodeId]->conditionalProbs = conditionalPointer;
     }
   }
 	
-  // for nodes which have not been changed, but whose conditional probabilities have been recomputed
+  // for nodes which have not been changed, but whose conditional probabilities
+  // have been recomputed
   // switch pointers to conditional array
   for(i=0; i<locusData->savedVersion.numChangedConditionals; i++) {
     nodeId = locusData->savedVersion.changedCondIds[i];
     if(locusData->savedVersion.recalcConditionals[nodeId]) {
       // if conditionals were not already copied in previous loop, copy them now
       conditionalPointer = locusData->nodeArray[nodeId]->conditionalProbs;
-      locusData->nodeArray[nodeId]->conditionalProbs = locusData->savedVersion.savedNodes[nodeId]->conditionalProbs;
+      locusData->nodeArray[nodeId]->conditionalProbs =
+          locusData->savedVersion.savedNodes[nodeId]->conditionalProbs;
       locusData->savedVersion.savedNodes[nodeId]->conditionalProbs = conditionalPointer;
       locusData->savedVersion.recalcConditionals[nodeId] = 0;
     }			
@@ -858,8 +864,8 @@ int resetSaved(LocusData* locusData) {
   locusData->savedVersion.dataLogLikelihood = locusData->dataLogLikelihood;
 	
   // copy zeros into recalcConditionals[] array for internal nodes
-  resetBooleanArray(locusData->savedVersion.recalcConditionals, 2*locusData->numLeaves-1);
-	
+	explicit_bzero( locusData->savedVersion.recalcConditionals,
+                  sizeof(unsigned short)* (2 * locusData->numLeaves - 1) );
   return 0;
 }
 /** end of resetSaved **/

@@ -966,7 +966,7 @@ int acceptEventChainChanges(int gen, int instance) {
 
   // change number of lineages in affected interval
 
-  i = locus_data[gen].genetree_stats_delta[instance].num_changed_events - 1;
+  i = locus_data[gen].genetree_stats_delta[instance].num_changed_events() - 1;
 
   // if original event is in this list (meaning that it must be last), skip it.
   if (locus_data[gen].genetree_stats_delta[instance].changed_events[i] ==
@@ -974,8 +974,9 @@ int acceptEventChainChanges(int gen, int instance) {
     i--;
 
   for (; i >= 0; i--) {
-    event_chains[gen].events[locus_data[gen].genetree_stats_delta[instance].changed_events[i]].addLineages(
-        locus_data[gen].genetree_stats_delta[instance].num_lin_delta);
+    int event_idx = locus_data[gen].genetree_stats_delta[instance].changed_events[i];
+    int n_lin_delta = locus_data[gen].genetree_stats_delta[instance].num_lin_delta;
+    event_chains[gen].events[event_idx].addLineages( n_lin_delta );
   }
 
   if (locus_data[gen].genetree_stats_delta[instance].updated_event >= 0) {
@@ -1293,7 +1294,7 @@ computeCoalStatsDelta(int instance, int gen, int bottom_event, int bottom_pop,
   locus_data[gen].genetree_stats_delta[instance].pops_changed[0] = pop;
   locus_data[gen].genetree_stats_delta[instance].coal_stats_delta[0] = 0;
 
-  locus_data[gen].genetree_stats_delta[instance].num_changed_events = 0;
+  locus_data[gen].genetree_stats_delta[instance].clear_changed_events();
 
 
   while (event >= 0) {
@@ -1307,8 +1308,9 @@ computeCoalStatsDelta(int instance, int gen, int bottom_event, int bottom_pop,
                           2 * event_chains[gen].events[event].getNumLineages())
         * event_chains[gen].events[event].getElapsedTime();
 
-    locus_data[gen].genetree_stats_delta[instance].changed_events[locus_data[gen].genetree_stats_delta[instance].num_changed_events] = event;
-    locus_data[gen].genetree_stats_delta[instance].num_changed_events++;
+    locus_data[gen].genetree_stats_delta[instance].push_changed_event(event);
+    //changed_events[locus_data[gen].genetree_stats_delta[instance].num_changed_events] = event;
+    //locus_data[gen].genetree_stats_delta[instance].num_changed_events++;
 
     // halting condition for loop
     if (event == top_event)

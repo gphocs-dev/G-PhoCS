@@ -80,7 +80,7 @@ void traceLineage_init(TraceLineageAutoVars* p_stack)
   }
 
 
-  locus_data[gen].genetree_stats_delta[reconnect].num_changed_events = 0;
+  locus_data[gen].genetree_stats_delta[reconnect].clear_changed_events();
   // assume all migration bands and populations are affected
   locus_data[gen].genetree_stats_delta[reconnect].num_pops_changed =
                                                    dataSetup.popTree->numPops;
@@ -436,9 +436,8 @@ traceLineage_epilogue_record_stat_changes(TraceLineageAutoVars* p_stack)
     locus_data[gen].genetree_stats_delta[reconnect].\
       mig_stats_delta[p_stack->live_mig_bands[i]] += p_stack->t;
   }
-  locus_data[gen].genetree_stats_delta[reconnect].\
-     changed_events[locus_data[gen].\
-        genetree_stats_delta[reconnect].num_changed_events++] = p_stack->event;
+  locus_data[gen].genetree_stats_delta[reconnect]\
+    .push_changed_event(p_stack->event);
 
   // add log-likelihood of no events during interval
   locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] -=
@@ -484,8 +483,6 @@ traceLineage_epilogue_record_stat_changes(TraceLineageAutoVars* p_stack)
 
 int traceLineage (int gen, int node, int reconnect)
 {
-  static int cntr = 0;
-  ++cntr;
   TraceLineageAutoVars stack_vars;
   stack_vars.gen = gen;
   stack_vars.node = node;
