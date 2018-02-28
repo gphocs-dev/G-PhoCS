@@ -40,7 +40,7 @@ if(debug) \
 			    genetree_stats_delta[p_stack->reconnect].num_changed_events();\
 	    i++)\
 	{\
-		fprintf(stderr, " %d",\
+		fprintf(stderr, " %p",\
            locus_data[p_stack->gen].\
 					 genetree_stats_delta[p_stack->reconnect].changed_events[i]);\
 	}\
@@ -56,7 +56,7 @@ printGenealogyAndExit(p_stack->gen,-1);
 #define TRACE_LINEAGE_FATAL_0007 \
 if(debug) \
 {\
-  fprintf(stderr, "\Warning: traceLineage: while tracing"\
+  fprintf(stderr, "Warning: traceLineage: while tracing"\
 					        " edge above node %d in gen %d.\n", \
                   p_stack->node, p_stack->gen);\
 	fprintf(stderr, "  %d living migration bands when moving to population %d"\

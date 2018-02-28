@@ -966,18 +966,26 @@ int acceptEventChainChanges(int gen, int instance) {
 
   // change number of lineages in affected interval
 
-  i = locus_data[gen].genetree_stats_delta[instance].num_changed_events() - 1;
-
-  // if original event is in this list (meaning that it must be last), skip it.
-  if (locus_data[gen].genetree_stats_delta[instance].changed_events[i] ==
-      locus_data[gen].genetree_stats_delta[instance].original_event)
-    i--;
-
-  for (; i >= 0; i--) {
-    int event_idx = locus_data[gen].genetree_stats_delta[instance].changed_events[i];
-    int n_lin_delta = locus_data[gen].genetree_stats_delta[instance].num_lin_delta;
-    event_chains[gen].events[event_idx].addLineages( n_lin_delta );
-  }
+//  i = locus_data[gen].genetree_stats_delta[instance].num_changed_events() - 1;
+//
+//  // if original event is in this list (meaning that it must be last), skip it.
+//  if (locus_data[gen].genetree_stats_delta[instance].changed_events[i] ==
+//      (locus_data[gen].genetree_stats_delta[instance].original_event)
+//    i--;
+//
+//  for (; i >= 0; i--) {
+//    int event_idx = locus_data[gen].genetree_stats_delta[instance].changed_events[i];
+//    int n_lin_delta = locus_data[gen].genetree_stats_delta[instance].num_lin_delta;
+//    event_chains[gen].events[event_idx].addLineages( n_lin_delta );
+//  }
+  auto iChangedEvent = locus_data[gen].genetree_stats_delta[instance].changed_events.rbegin();
+  auto iChangedEventEnd = locus_data[gen].genetree_stats_delta[instance].changed_events.rend();
+  int n_lin_delta = locus_data[gen].genetree_stats_delta[instance].num_lin_delta;
+  int n_orig_event_idx = locus_data[gen].genetree_stats_delta[instance].original_event;
+  Event* pOrigEvent = &(event_chains[gen].events[n_orig_event_idx]);
+  for( ; iChangedEvent !=  iChangedEventEnd; ++iChangedEvent )
+    if((*iChangedEvent) != pOrigEvent)
+      (*iChangedEvent)->addLineages(n_lin_delta);
 
   if (locus_data[gen].genetree_stats_delta[instance].updated_event >= 0) {
 
@@ -1308,7 +1316,8 @@ computeCoalStatsDelta(int instance, int gen, int bottom_event, int bottom_pop,
                           2 * event_chains[gen].events[event].getNumLineages())
         * event_chains[gen].events[event].getElapsedTime();
 
-    locus_data[gen].genetree_stats_delta[instance].push_changed_event(event);
+    Event* pChangedEvent =  &(event_chains[gen].events[event]);
+    locus_data[gen].genetree_stats_delta[instance].push_changed_event(pChangedEvent);
     //changed_events[locus_data[gen].genetree_stats_delta[instance].num_changed_events] = event;
     //locus_data[gen].genetree_stats_delta[instance].num_changed_events++;
 

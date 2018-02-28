@@ -436,8 +436,9 @@ traceLineage_epilogue_record_stat_changes(TraceLineageAutoVars* p_stack)
     locus_data[gen].genetree_stats_delta[reconnect].\
       mig_stats_delta[p_stack->live_mig_bands[i]] += p_stack->t;
   }
+  Event* pChangedEvent =  &(event_chains[gen].events[p_stack->event]);
   locus_data[gen].genetree_stats_delta[reconnect]\
-    .push_changed_event(p_stack->event);
+    .push_changed_event(pChangedEvent);
 
   // add log-likelihood of no events during interval
   locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] -=

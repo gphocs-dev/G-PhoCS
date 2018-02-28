@@ -196,7 +196,7 @@ public:
 public:
   int num_changed_events() const {return this->changed_events.size();}
   void clear_changed_events() {this->changed_events.clear();}
-  void push_changed_event(int e) {this->changed_events.push_back(e);}
+  void push_changed_event(Event* e) {this->changed_events.push_back(e);}
 
 public:
   // id of event describing original placing of node
@@ -206,7 +206,7 @@ public:
   // the difference in lineage number for all events affected (typically +/- 1)
   int num_lin_delta;
   // events affected by change
-  vector<int> changed_events;
+  vector<Event*> changed_events;
   // number of population affected by change
   int num_pops_changed;
   // an array of populations affected by change
