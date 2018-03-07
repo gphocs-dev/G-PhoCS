@@ -79,8 +79,8 @@ PopulationTree* createPopTree(int numCurPops)
     exit(-1);
   }
 
-  explicit_bzero( popTree->isAncestralArray,
-                  sizeof(unsigned short) * numPops * numPops );
+  bzero( popTree->isAncestralArray,
+         sizeof(unsigned short) * numPops * numPops );
 
   // allocate initial memory for migration bands
   popTree->migBands = (MigrationBand*)malloc(numPops*(numPops-1)*sizeof(MigrationBand));

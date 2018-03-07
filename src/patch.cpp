@@ -1114,8 +1114,8 @@ int removeEvent(int gen, int event) {
 
 int createEventBefore(int gen, int pop, int event, double elapsed_time) {
 
-  int prev_event = event_chains[gen].events[event].getPrevIdx(),
-    new_event = event_chains[gen].free_events;
+  int prev_event = event_chains[gen].events[event].getPrevIdx();
+  int new_event = event_chains[gen].free_events;
 
   event_chains[gen].free_events = event_chains[gen].events[new_event].getNextIdx();
 
@@ -1148,6 +1148,17 @@ int createEventBefore(int gen, int pop, int event, double elapsed_time) {
 #endif
 
   return new_event;
+}
+
+int createEventBefore(int gen, int pop, Event* pCurrEvent, double elapsed_time)
+{
+  int prev_event_idx = pCurrEvent->getPrevIdx();
+  int curr_event_idx = -1;
+  if( prev_event_idx < 0 )
+    curr_event_idx = event_chains[gen].first_event[pop];
+  else
+    curr_event_idx = event_chains[gen].events[prev_event_idx].getNextIdx();
+  return createEventBefore(gen, pop, curr_event_idx, elapsed_time);
 }
 
 

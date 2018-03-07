@@ -864,8 +864,8 @@ int resetSaved(LocusData* locusData) {
   locusData->savedVersion.dataLogLikelihood = locusData->dataLogLikelihood;
 	
   // copy zeros into recalcConditionals[] array for internal nodes
-	explicit_bzero( locusData->savedVersion.recalcConditionals,
-                  sizeof(unsigned short)* (2 * locusData->numLeaves - 1) );
+	bzero( locusData->savedVersion.recalcConditionals,
+         sizeof(unsigned short)* (2 * locusData->numLeaves - 1) );
   return 0;
 }
 /** end of resetSaved **/

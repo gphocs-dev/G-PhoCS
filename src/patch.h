@@ -205,6 +205,11 @@ createEvent (int gen, int pop, double age);
 int
 createEventBefore (int gen, int pop, int event, double elapsed_time);
 int
+createEventBefore( int    gen,
+                   int    pop,
+                   Event* pCurrEvent,
+                   double elapsed_time);
+int
 createEventBefore( int                   nGenIdx,
                    int                   nPopIdx,
                    EventsDAGNode<Event>* pCurrEvent,

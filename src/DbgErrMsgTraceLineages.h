@@ -205,12 +205,12 @@ printGenealogyAndExit(p_stack->gen,-1);
 #define TRACE_LINEAGE_FATAL_0011 \
 if(debug) {\
 fprintf(stderr, "\nError: in traceLineage: %d targets and %d lineages "\
-        "(at gen %d, node %d, pop %d, , event %d, age %g)\n",\
+        "(at gen %d, node %d, pop %d, event %p, age %g)\n",\
 			  p_stack->num_targets, \
-			  event_chains[p_stack->gen].events[p_stack->event].getNumLineages(), \
-			  p_stack->gen, p_stack->node, p_stack->pop, p_stack->event,\
+			  p_stack->pEvent->getNumLineages(), \
+			  p_stack->gen, p_stack->node, p_stack->pop, p_stack->pEvent,\
 			 ( p_stack->age - p_stack->t ) \
-			   + event_chains[p_stack->gen].events[p_stack->event].getElapsedTime() \
+			   + p_stack->pEvent->getElapsedTime() \
        / 2.0);\
 } else {\
 fprintf(stderr, "Fatal Error 0011.\n");\

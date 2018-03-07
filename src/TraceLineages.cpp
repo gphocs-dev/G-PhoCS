@@ -22,7 +22,19 @@ extern int debug;
 
 
 //======================== Trace Lineages Code ===============================
+Event* get_first_event_in_pop(int gen, int pop)
+{
+  return &(event_chains[gen].events[event_chains[gen].first_event[pop]]);
+}
 
+Event* get_next_event(int gen, Event* pCurrEvent)
+{
+  int next_idx = pCurrEvent->getNextIdx();
+  if( -1 != next_idx)
+    return &(event_chains[gen].events[next_idx]);
+  else
+    return nullptr;
+}
 
 //----------------------------------------------------------------------------
 void traceLineage_init(TraceLineageAutoVars* p_stack)
@@ -32,6 +44,7 @@ void traceLineage_init(TraceLineageAutoVars* p_stack)
   int& gen                 = p_stack->gen;
   int& node                = p_stack->node;
   int& reconnect           = p_stack->reconnect;
+  int& pop                 = p_stack->pop;
   p_stack->age             = -1.0;
   p_stack->heredity_factor = 1.0;
 
@@ -40,22 +53,21 @@ void traceLineage_init(TraceLineageAutoVars* p_stack)
 
   if(node < dataSetup.numSamples)
   {
-    p_stack->event = event_chains[gen].first_event[p_stack->pop];
-    while( !event_chains[gen].events[p_stack->event].\
-            isOfType(SAMPLES_START|END_CHAIN ))
+    p_stack->pEvent = get_first_event_in_pop(gen, pop);
+    while( !p_stack->pEvent->isOfType(SAMPLES_START|END_CHAIN ) )
     {
-      p_stack->event = event_chains[gen].events[p_stack->event].getNextIdx();
+      p_stack->pEvent = get_next_event(gen, p_stack->pEvent);
     }
-    if(event_chains[gen].events[p_stack->event].getType() == END_CHAIN)
+    if( p_stack->pEvent->getType() == END_CHAIN )
     {
       TRACE_LINEAGE_INIT_FATAL_0101
     }
-    p_stack->event = event_chains[gen].events[p_stack->event].getNextIdx();
+    p_stack->pEvent = get_next_event(gen, p_stack->pEvent);
   }
   else
   {
-    p_stack->event =
-                 event_chains[gen].events[nodeEvents[gen][node]].getNextIdx();
+    p_stack->pEvent = get_next_event(gen,
+                        &(event_chains[gen].events[nodeEvents[gen][node]]));
   }
   p_stack->theta =   dataSetup.popTree->pops[p_stack->pop]->theta
                    * p_stack->heredity_factor;
@@ -133,8 +145,8 @@ traceLineage_move_to_next_pop (TraceLineageAutoVars* p_stack)
   }
   p_stack->pop = dataSetup.popTree->pops[p_stack->pop]->father->id;
   p_stack->theta = dataSetup.popTree->pops[p_stack->pop]->theta
-          * p_stack->heredity_factor;
-  p_stack->event = event_chains[p_stack->gen].first_event[p_stack->pop];
+                   * p_stack->heredity_factor;
+  p_stack->pEvent = get_first_event_in_pop(p_stack->gen, p_stack->pop);
 
   if (fabs (p_stack->mig_rate) > 0.00000001 || p_stack->num_live_mig_bands > 0)
   {
@@ -156,16 +168,18 @@ void
 traceLineage_reduce_lineages_along_pruned_edge (TraceLineageAutoVars* p_stack)
 {
   // if(!reconnect) then reduce the number of lineages along pruned edge by 1
-  event_chains[p_stack->gen].events[p_stack->event].decrementLineages ();
-  p_stack->t =
-          event_chains[p_stack->gen].events[p_stack->event].getElapsedTime ();
+  p_stack->pEvent->decrementLineages ();
+  p_stack->t = p_stack->pEvent->getElapsedTime ();
   p_stack->age += p_stack->t;
-  p_stack->proceed = (p_stack->event
-                  != locus_data[p_stack->gen].mig_spr_stats.father_event_old);
+  //@@TODO: ugly
+  p_stack->proceed = (p_stack->pEvent !=
+                      &(event_chains[p_stack->gen]\
+                         .events[ locus_data[p_stack->gen]\
+                            .mig_spr_stats.father_event_old]));
 
   // if event is an in-migration event of edge above node,
   // record it and follow it to source population
-  if (event_chains[p_stack->gen].events[p_stack->event].getType () == IN_MIG)
+  if( p_stack->pEvent->getType () == IN_MIG )
   {
     if (genetree_migs[p_stack->gen].mignodes[p_stack->node_id].gtree_branch
             == p_stack->node)
@@ -226,13 +240,16 @@ traceLineage_sample_migration_event_in_interval(TraceLineageAutoVars* p_stack)
 
   locus_data[gen].mig_spr_stats.\
     new_migs_ages[locus_data[gen].mig_spr_stats.num_new_migs] = p_stack->age;
-  p_stack->event =
-    locus_data[gen].mig_spr_stats.\
-                   new_migs_in[locus_data[gen].mig_spr_stats.num_new_migs]
-      = createEventBefore( gen,
-                           p_stack->pop,
-                           p_stack->event,
-                           p_stack->t);
+
+  int mig_event_idx = createEventBefore( gen,
+                                         p_stack->pop,
+                                         p_stack->pEvent,
+                                         p_stack->t);
+  locus_data[gen]\
+    .mig_spr_stats\
+      .new_migs_in[locus_data[gen].mig_spr_stats.num_new_migs] = mig_event_idx;
+  p_stack->pEvent = &(event_chains[gen].events[mig_event_idx]);
+
   // mark source event for migration
   p_stack->mig_source =
     locus_data[gen].mig_spr_stats.\
@@ -260,11 +277,11 @@ traceLineage_sample_coalescence_event_in_interval(TraceLineageAutoVars* p_stack)
   // coalescence event - figure out with whom to coalesce
   //getLineagesAtInterval(gen,event,pop,node,targets);  <-- UNUSED
   double tm =   (p_stack->age - p_stack->t)
-           + event_chains[gen].events[p_stack->event].getElapsedTime() / 2.0;
+           + p_stack->pEvent->getElapsedTime() / 2.0;
   p_stack->num_targets = getEdgesForTimePop( gen, tm, p_stack->pop,
                                              node, p_stack->targets);
   if(     p_stack->num_targets
-      !=  event_chains[gen].events[p_stack->event].getNumLineages())
+      !=  p_stack->pEvent->getNumLineages())
   {
     TRACE_LINEAGE_FATAL_0011
   }
@@ -292,9 +309,13 @@ traceLineage_sample_coalescence_event_in_interval(TraceLineageAutoVars* p_stack)
   //printf("\nOriginal data log-likelihood was %g and after "
   //       "re-grafting it is %g.",data.lnpDi[gen], lnpD_gen(gen));
   locus_data[gen].mig_spr_stats.target = p_stack->target;
-  locus_data[gen].mig_spr_stats.father_event_new =
-    p_stack->event =
-      createEventBefore( gen, p_stack->pop, p_stack->event, p_stack->t);
+  int new_event_idx = createEventBefore( gen,
+                                         p_stack->pop,
+                                         p_stack->pEvent,
+                                         p_stack->t);
+  locus_data[gen].mig_spr_stats.father_event_new = new_event_idx;
+  p_stack->pEvent = &(event_chains[gen].events[new_event_idx]);
+
   // signal to terminate
   p_stack->proceed = 0;
 
@@ -310,12 +331,10 @@ int
 traceLineage_sample_event_in_interval(TraceLineageAutoVars* p_stack)
 {
   int& gen = p_stack->gen;
-  int num_lngs =
-      event_chains[gen].events[p_stack->event].getNumLineages ();
+  int num_lngs = p_stack->pEvent->getNumLineages ();
   p_stack->rate = p_stack->mig_rate + 2.0 * num_lngs / p_stack->theta;
   // rate can be zero, if no lineages and no incoming migration bands
-  double curr_elapsed_time =
-      event_chains[gen].events[p_stack->event].getElapsedTime ();
+  double curr_elapsed_time = p_stack->pEvent->getElapsedTime ();
   if (p_stack->rate <= 0)
     p_stack->t = curr_elapsed_time;
   else
@@ -359,7 +378,7 @@ traceLineage_epilogue_recalc_mig_bands(TraceLineageAutoVars* p_stack)
   // add log-likelihood of migration event
   locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] +=
                  log(dataSetup.popTree->migBands[p_stack->mig_band].migRate);
-  p_stack->event = p_stack->mig_source;
+  p_stack->pEvent = &(event_chains[gen].events[p_stack->mig_source]);
   p_stack->pop = dataSetup.popTree->migBands[p_stack->mig_band].sourcePop;
   p_stack->theta =   dataSetup.popTree->pops[p_stack->pop]->theta
                    * p_stack->heredity_factor;
@@ -428,23 +447,22 @@ traceLineage_epilogue_record_stat_changes(TraceLineageAutoVars* p_stack)
 
   locus_data[gen].genetree_stats_delta[reconnect].\
     coal_stats_delta[p_stack->pop] +=   2.0
-                                      * event_chains[gen].\
-                                        events[p_stack->event].getNumLineages()
+                                      * p_stack->pEvent->getNumLineages()
                                       * p_stack->t;
   for( i = 0; i < p_stack->num_live_mig_bands; i++)
   {
     locus_data[gen].genetree_stats_delta[reconnect].\
       mig_stats_delta[p_stack->live_mig_bands[i]] += p_stack->t;
   }
-  Event* pChangedEvent =  &(event_chains[gen].events[p_stack->event]);
-  locus_data[gen].genetree_stats_delta[reconnect]\
-    .push_changed_event(pChangedEvent);
+  locus_data[gen]\
+    .genetree_stats_delta[reconnect]\
+      .push_changed_event(p_stack->pEvent);
 
   // add log-likelihood of no events during interval
   locus_data[gen].mig_spr_stats.genetree_delta_lnLd[reconnect] -=
     (   p_stack->mig_rate
       +    2.0
-         * event_chains[gen].events[p_stack->event].getNumLineages()
+         * p_stack->pEvent->getNumLineages()
          / p_stack->theta)
     * p_stack->t;
 
@@ -455,13 +473,13 @@ traceLineage_epilogue_record_stat_changes(TraceLineageAutoVars* p_stack)
   {
     traceLineage_epilogue_recalc_mig_bands(p_stack);
   }
-  else if(event_chains[gen].events[p_stack->event].getType()== MIG_BAND_START)
+  else if(p_stack->pEvent->getType()== MIG_BAND_START)
   {
     p_stack->mig_rate += dataSetup.popTree->migBands[p_stack->node_id].migRate;
     p_stack->live_mig_bands[p_stack->num_live_mig_bands] = p_stack->node_id;
     p_stack->num_live_mig_bands++;
   }
-  else if(event_chains[gen].events[p_stack->event].getType() == MIG_BAND_END)
+  else if(p_stack->pEvent->getType() == MIG_BAND_END)
   {
     traceLineage_epilogue_record_mig_band_end(p_stack);
   }
@@ -496,12 +514,11 @@ int traceLineage (int gen, int node, int reconnect)
   while (stack_vars.proceed)
   {
     // if last event in population, move to next pop
-    if (stack_vars.event < 0)
+    if( nullptr == stack_vars.pEvent )//|| stack_vars.pEvent->isOfType(END_CHAIN) )
       if (0 != traceLineage_move_to_next_pop (&stack_vars))
         return -1;
 
-    stack_vars.node_id = event_chains[gen].\
-      events[stack_vars.event].getId ();
+    stack_vars.node_id = stack_vars.pEvent->getId ();
 
     if (!stack_vars.reconnect)
     {
@@ -516,7 +533,7 @@ int traceLineage (int gen, int node, int reconnect)
     // record stat changes
     traceLineage_epilogue_record_stat_changes(&stack_vars);
 
-    stack_vars.event = event_chains[gen].events[stack_vars.event].getNextIdx();
+    stack_vars.pEvent = get_next_event( gen, stack_vars.pEvent );
   }      // end of while
 
   // add log-likelihood of father coalescent

@@ -7,6 +7,7 @@
  26-Mar-2017  evgenyidc      Created. Adding Event, EVENT_CHAIN.
  ============================================================================*/
 
+#include "PopulationTree.h"
 #include "DataLayer.h"
 #include "EventsDAG.h"
 
