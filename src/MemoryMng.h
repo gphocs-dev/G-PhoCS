@@ -29,7 +29,6 @@ extern GENETREE_STATS*     genetree_stats;
 extern GENETREE_STATS*     genetree_stats_total_partitioned;
 extern GENETREE_STATS      genetree_stats_total;
 extern GENETREE_STATS      genetree_stats_total_check;
-extern ADMIXTURE_STATUS    admixture_status;
 extern GENETREE_MIGS*      genetree_migs;
 extern GENETREE_STATS_FLAT genetree_stats_flat;
 extern Locus_SuperStruct*  locus_data;

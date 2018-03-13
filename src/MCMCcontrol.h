@@ -30,7 +30,6 @@ typedef struct UPDATE_STATS{
   double migRate;
   double *taus;
   double locusRate;
-  double admix;
   double mixing;
 } UpdateStats;
 
@@ -49,7 +48,6 @@ struct IO_SETUP {
 	char seedFileName[NAME_LENGTH];			// name of random seed file
 	char seqFileName[NAME_LENGTH];			// name of sequence file
 	// char debugFileName[NAME_LENGTH];		// name of debug trace file
-	char admixFileName[NAME_LENGTH];		// name of admixture trace file
 	char rateFileName[NAME_LENGTH];			// name of locus-rate file
 	char traceFileName[NAME_LENGTH];		// name of trace file (for MCMC trace output)
 	char nodeStatsFileName[NAME_LENGTH];	// name of coalescent stats file (for MCMC model evaluation)
@@ -61,7 +59,6 @@ struct IO_SETUP {
 	
 	FILE*	traceFile;						// trace file
 	FILE*	debugFile;						// debugging file
-	FILE*	admixFile;						// admixture stats file
 	FILE*	coalStatsFile;					// coalescent stats file
 	FILE**	nodeStatsFile;					// coalescent stats files for nodes (one per pop)
 	FILE*	combStatsFile;					// comb stats (coalescent & migration) file for all possible combs
@@ -88,7 +85,6 @@ struct MCMC_SETUP {
 	int startMig;						// number of generations to skip before starting to sample migrations
 	int genetreeSamples;				// number of gene tree updates per each population parameter update
 	
-	unsigned short allowAdmixture;	// flag which is turned on when allowing admixed samples in model
 	unsigned short mutRateMode;	// flag which is turned on when constant mutation rates are assumed across loci
 	double varRatesAlpha;			// alpha for a Dirichlet distribution of variable rates across loci
 	int genRateRef;					// reference genealogy for updates in rate
@@ -124,21 +120,6 @@ typedef struct _DATA_SETUP
 }DATA_SETUP;
 
 //extern DATA_SETUP dataSetup;
-
-
-//@@TODO: dead code starts here -----------------------------------------------
-///*********
-// * admixed samples - for admixture
-// *********/
-//struct ADMIXED_SAMPLES {
-//	int number;		// number of admixed samples
-//	int* samples;	// list of admixed samples
-//	int** popPairs;	// list of population pairs (one per sample)
-//	int* index;		// index for each admixed sample (-1 for non-admixed)
-//};
-//
-//extern struct ADMIXED_SAMPLES admixed_samples;
-//@@TODO: dead code ends here -------------------------------------------------
 
 /***************************************************************************************************************/
 /******                               EXTERNAL FUNCTION DECLARATION                                       ******/

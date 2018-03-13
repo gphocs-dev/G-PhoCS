@@ -33,10 +33,6 @@ typedef struct _GLOBAL_SETUP
 struct IO_SETUP ioSetup;
 struct MCMC_SETUP mcmcSetup;
 
-//@@TODO: dead code starts here -------------------------------------------------
-//struct ADMIXED_SAMPLES admixed_samples;
-//@@TODO: dead code ends here -------------------------------------------------
-
 DATA_SETUP  dataSetup;
 GLOBAL_SETUP globalSetup;
 
@@ -96,7 +92,6 @@ int initGeneralInfo() {
 	mcmcSetup.useData  = 0;
 	mcmcSetup.startMig = 0;
 	mcmcSetup.mutRateMode = 0;
-	mcmcSetup.allowAdmixture = 0;
 	mcmcSetup.numSamples = 10000;
 	mcmcSetup.doMixing   = 1;
 	mcmcSetup.burnin     = 0;
@@ -112,8 +107,6 @@ int initGeneralInfo() {
 	mcmcSetup.finetunes.taus = NULL;
 	mcmcSetup.finetunes.locusRate =  -1.0;
 	mcmcSetup.finetunes.mixing = -1.0;
-
-	mcmcSetup.finetunes.admix = -1.0;
 
 	dataSetup.numLoci = -1;
 	dataSetup.numPopPartitions = 0;
@@ -245,7 +238,6 @@ int checkSettings() {
 	if(!mcmcSetup.findFinetunes) {	
 		// check that all finetunes were specified
 		// do not check for taus (those might be specified individually
-		// do not check for admixture - might need only if there are admixed individuals
 		if(mcmcSetup.finetunes.coalTime < 0.0) {
 			fprintf(stderr, "Error: positive finetune for coal-time should be specified.\n");
 			numErrors++;
@@ -447,9 +439,6 @@ int finalizeNumParameters() {
 		2*dataSetup.popTree->numPops - dataSetup.popTree->numCurPops + 
 		dataSetup.popTree->numMigBands + 
 		numAncientPops +
-//@@TODO: dead code starts here -----------------------------------------------
-//		admixed_samples.number +
-//@@TODO: dead code ends here -------------------------------------------------
 		(mcmcSetup.mutRateMode == 1);
 		
 	
@@ -707,16 +696,7 @@ int readGeneralInfo(FILE* fctl) {
 				fprintf(stderr,"Error: value for mig-rate-beta should be floating point number, got %s.\n", token2);
 				numErrors++;
 			}
-/*	    } else if(0 == strcmp("admixture",token)) {
-			if(0 == strcmp("TRUE",token2)) {
-				mcmcSetup.allowAdmixture = 1;
-			} else if(0 == strcmp("FALSE",token2)) {
-				mcmcSetup.allowAdmixture = 0;
-			} else {
-				fprintf(stderr, "Error: value of admixture should be TRUE or FALSE, got %s.\n",token2);
-				numErrors++;
-			}		
-*/	    } else if(0 == strcmp("locus-mut-rate",token)) {
+    } else if(0 == strcmp("locus-mut-rate",token)) {
 			if(0 == strcmp("CONST",token2)) {
 				mcmcSetup.mutRateMode = 0;
 			} else if(0 == strcmp("FIXED",token2)) {
@@ -774,12 +754,7 @@ int readGeneralInfo(FILE* fctl) {
 				fprintf(stderr,"Error: value for finetune-mixing should be floating point number, got %s.\n", token2);
 				numErrors++;
 			}
-/*		} else if(0 == strcmp("finetune-admix",token)) {
-			if (sscanf(token2, "%lf", &mcmcSetup.finetunes.admix) != 1) {
-				fprintf(stderr,"Error: value for finetune-admix should be floating point number, got %s.\n", token2);
-				numErrors++;
-			}
-*/		} else if (0 == strcmp("find-finetunes",token)) {
+    } else if (0 == strcmp("find-finetunes",token)) {
 			if (0 == strcmp(token2, "TRUE")) {
 				mcmcSetup.findFinetunes = 1;
 			} else if(0 != strcmp(token2, "FALSE")) {
@@ -1374,129 +1349,6 @@ int readSampleLine(char* sampleLine, int pop) {
 	return numErrors;
 }
 /** end of readSampleLine **/
-
-
-
-/***********************************************************************************
- *	parseSampleNames
- *	- looks for samples that appear in several populations
- *	- if admixture modeling is enabled, then allows two appearances. Otherwise, only one.
- *	- also setsp up admixture data structures if needed
- *	- returns number of errors found
- ***********************************************************************************/
-int parseSampleNames() {
-	int pop, sample, sample1, sampleMatch, skip, numOccur;
-	int numErrors = 0;
-	int* samples2pops = NULL;
-
-//@@TODO: dead code starts here -----------------------------------------------
-//	admixed_samples.number = 0;
-//	// allocate memory in admixed_samples data structures
-//	if(mcmcSetup.allowAdmixture) {
-//		samples2pops = (int*)malloc(dataSetup.numSamples*sizeof(int));
-//		admixed_samples.popPairs = (int**)malloc(dataSetup.numSamples*sizeof(int*));
-//		admixed_samples.samples = (int*)malloc(dataSetup.numSamples*sizeof(int));
-//		admixed_samples.popPairs[0] = (int*)malloc(2*dataSetup.numSamples*sizeof(int));
-//		admixed_samples.index = (int*)malloc(dataSetup.numSamples*sizeof(int));
-//
-//		// initialize samples2pops array
-//		sample1 = 0;
-//		sample = 0;
-//		for(pop=0; pop<dataSetup.popTree->numCurPops; pop++) {
-//			sample1+= dataSetup.numSamplesPerPop[pop];
-//			for( ; sample<sample1; sample++) {
-//				samples2pops[sample] = pop;
-//			}// end of for(sample)
-//		}// end of for(pop)
-//	}
-//@@TODO: dead code ends here -------------------------------------------------
-
-	
-	
-	for(sample=0; sample<dataSetup.numSamples; sample++) {
-		if(dataSetup.sampleNames[sample][0] == '\0') {
-			continue;
-		}
-		numOccur = 1;
-		sampleMatch = -1;
-		for(sample1=sample+1; sample1<dataSetup.numSamples; sample1++) {
-			if(0 == strcmp(dataSetup.sampleNames[sample] , dataSetup.sampleNames[sample1])) {
-				if(numOccur == 1) {
-					sampleMatch = sample1;
-				}
-				numOccur++;
-				break;
-			}
-		}// end of for(sample1)
-		
-		if(numOccur > 2) {
-			fprintf(stderr, "Error: sample %s appears more than twice in control file.\n", dataSetup.sampleNames[sample]);
-			numErrors++;
-			continue;
-		}
-		if(!mcmcSetup.allowAdmixture) {
-			if(numOccur > 1) {
-				fprintf(stderr, "Error: admixture is not allowed, so sample %s cannot appear more than once in control file.\n",dataSetup.sampleNames[sample]);
-				numErrors++;
-			}
-			continue;
-		}
-		
-		
-		if(sampleMatch >= 0) {
-			skip = 1;
-//@@TODO: dead code starts here -----------------------------------------------
-//			admixed_samples.samples [admixed_samples.number] = sample;
-//			admixed_samples.popPairs[admixed_samples.number][0] = samples2pops[sample];
-//			admixed_samples.popPairs[admixed_samples.number][1] = samples2pops[sampleMatch];
-//			admixed_samples.number++;
-//			if(admixed_samples.number < dataSetup.numSamples) {
-//				admixed_samples.popPairs[admixed_samples.number] = admixed_samples.popPairs[admixed_samples.number-1] + 2;
-//			}
-//@@TODO: dead code ends here -------------------------------------------------
-			// for diploid sample, define both haploids as admixed
-			if(dataSetup.sampleNames[sample+1][0] == '\0') {
-				skip++;
-//@@TODO: dead code starts here -----------------------------------------------
-//				admixed_samples.samples [admixed_samples.number] = sample+1;
-//				admixed_samples.popPairs[admixed_samples.number][0] = samples2pops[sample];
-//				admixed_samples.popPairs[admixed_samples.number][1] = samples2pops[sampleMatch];
-//				admixed_samples.number++;
-//				if(admixed_samples.number < dataSetup.numSamples) {
-//					admixed_samples.popPairs[admixed_samples.number] = admixed_samples.popPairs[admixed_samples.number-1] + 2;
-//				}
-//@@TODO: dead code ends here -------------------------------------------------
-				if(sampleMatch>=dataSetup.numSamples || dataSetup.sampleNames[sampleMatch+1][0] != '\0') {
-					fprintf(stderr, "Error: sample %s is admixed, but first copy is defined as diploid, and second as haploid.\n", dataSetup.sampleNames[sample]);
-					numErrors++;
-					continue;
-				}
-			} else {
-				if(sampleMatch<dataSetup.numSamples && dataSetup.sampleNames[sampleMatch+1][0] == '\0') {
-					fprintf(stderr, "Error: sample %s is admixed, but first copy is defined as haploid, and second as diploid.\n", dataSetup.sampleNames[sample]);
-					numErrors++;
-					continue;
-				}
-			}
-			// erase later mention of sample and move back all samples in list
-			dataSetup.numSamplesPerPop[ samples2pops[sample] ] -= skip;
-			dataSetup.numSamples -= skip;
-			for(sample1=sampleMatch; sample1<dataSetup.numSamples; sample1++) {
-				samples2pops[sample1] = samples2pops[sample1+skip];
-				strcpy(dataSetup.sampleNames[sample1],dataSetup.sampleNames[sample1+skip]); 
-			}// end of for(sample1)
-		}// end of if(sampleMatch >= 0)
-	}// end of for(sample)
-
-	if(mcmcSetup.allowAdmixture) {
-		free(samples2pops);
-	}
-
-	return numErrors;
-}
-/** end of parseSampleNames **/
-
-
 
 /***************************************************************************************************************/
 /******                                        END OF FILE                                                ******/

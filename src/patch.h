@@ -45,29 +45,6 @@ typedef struct _UpdateGB_InternalNode_ReturnData
 
 
 /*-----------------------------------------------------------------------------
- * ADMIXTURE_STATUS
- *---------------------------------------------------------------------------*/
-typedef struct _ADMIXTURE_STATUS
-{
-  // number of loci for which to show the admixture status
-  int numSampledLoci;
-
-  // array of sampled loci
-  int* sampledLoci;
-
-  // array of admixture rates (up to the curent point of sampling)
-  // for each locus and each admixed sample
-  double** sampleLocusAdmixRate;
-
-  // number of loci in which sample is in alternative population
-  int* admixtureCounts;
-
-  // estimated coefficients for all samples
-  double* admixtureCoefficients;
-
-} ADMIXTURE_STATUS;
-
-/*-----------------------------------------------------------------------------
  * GENETREE_MIGS
  * A struct which contains information about
  * migration events in a specific genealogy.

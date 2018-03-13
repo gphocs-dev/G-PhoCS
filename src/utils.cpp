@@ -227,7 +227,6 @@ void setStartTimeMethod(enum METHOD_NAME method)
 		case T_UpdateTheta: runTimes.UpdateTheta.start = tic;break;
 		case T_UpdateSampleAge: runTimes.UpdateSampleAge.start = tic;break;
 		case T_UpdateLocusRate: runTimes.UpdateLocusRate.start = tic;break;
-		case T_UpdateAdmixCoeffs: runTimes.UpdateAdmixCoeffs.start = tic;break;
 		case T_MCMCIterations: runTimes.MCMCIterations.start = tic;break;
 	}
 }
@@ -246,7 +245,6 @@ void setEndTimeMethod(enum METHOD_NAME method)
 		case T_UpdateTheta: runTimes.UpdateTheta.accumulated += (toc - runTimes.UpdateTheta.start); break;
 		case T_UpdateSampleAge: runTimes.UpdateSampleAge.accumulated += (toc - runTimes.UpdateSampleAge.start); break;
 		case T_UpdateLocusRate: runTimes.UpdateLocusRate.accumulated += (toc - runTimes.UpdateLocusRate.start); break;
-		case T_UpdateAdmixCoeffs: runTimes.UpdateAdmixCoeffs.accumulated += (toc - runTimes.UpdateAdmixCoeffs.start); break;
 		case T_MCMCIterations:  runTimes.MCMCIterations.accumulated += (toc - runTimes.MCMCIterations.start); break;
 
 	}
@@ -266,7 +264,6 @@ void printMethodTimes()
 	printf("UpdateTheta (sec):                      %s\n", printtime_i(runTimes.UpdateTheta.accumulated, timeString));
 	printf("UpdateSampleAge (sec):                  %s\n", printtime_i(runTimes.UpdateSampleAge.accumulated, timeString));
 	printf("UpdateLocusRate NO MT(sec):             %s\n", printtime_i(runTimes.UpdateLocusRate.accumulated, timeString));
-	printf("UpdateAdmixCoeffs NO MT(sec):           %s\n", printtime_i(runTimes.UpdateAdmixCoeffs.accumulated, timeString));
 	time_t total = 0;
 	total += runTimes.UpdateGB_InternalNode.accumulated;
 	total += runTimes.UpdateGB_MigrationNode.accumulated;
@@ -278,7 +275,6 @@ void printMethodTimes()
 	total += runTimes.UpdateSampleAge.accumulated;
 	printf("===== Total in MT Methods:              %s\n" , printtime_i(total, timeString));
 	total += runTimes.UpdateLocusRate.accumulated;
-	total += runTimes.UpdateAdmixCoeffs.accumulated;
 	printf("===== Total in All MCMCM Methods        %s\n" , printtime_i(total, timeString));
 	printf("===== Total in MCMCM Iterations:        %s\n" , printtime_i(runTimes.MCMCIterations.accumulated, timeString));
 #endif

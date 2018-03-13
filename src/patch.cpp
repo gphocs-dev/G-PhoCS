@@ -2017,19 +2017,6 @@ double gtreeLnLikelihood(int gen) {
     }
   }
 
-//@@TODO: dead code starts here -----------------------------------------------
-//  // considering admixture
-//  for (sample = 0; sample < admixed_samples.number; sample++) {
-//    node = admixed_samples.samples[sample];
-//    if (nodePops[gen][node] == admixed_samples.popPairs[sample][0]) {
-//      lnLd += log(1 - admixture_status.admixtureCoefficients[sample]);
-//    } else {
-//      lnLd += log(admixture_status.admixtureCoefficients[sample]);
-//    }
-//  }// end of for(sample)
-//@@TODO: dead code ends here -------------------------------------------------
-
-
   return lnLd;
 
 }

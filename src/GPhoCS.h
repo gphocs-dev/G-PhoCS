@@ -114,7 +114,6 @@ void UpdateSampleAge(double *finetunes,      // similar to update Tau.
                      int *accepted);         // Modifies the time
 
 int UpdateLocusRate(double finetune);
-int UpdateAdmixCoeffs(double finetune);      // Shall be skipped ("ledaleg")
 int mixing(double finetune);
 
 void allocateAllMemory() ; // TODO - tidy header file

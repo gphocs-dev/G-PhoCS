@@ -23,7 +23,6 @@
  *
  *---------------------------------------------------------------------------*/
 
-ADMIXTURE_STATUS     admixture_status;
 GENETREE_MIGS*       genetree_migs;
 GENETREE_STATS*      genetree_stats;
 GENETREE_STATS*      genetree_stats_total_partitioned;
@@ -268,18 +267,6 @@ int FreeMem (void)
   //free(rubberband_migs);
   free(event_chains[0].events);
   //free(event_chains); //done by STL
-//@@TODO: dead code starts here -----------------------------------------------
-//  free(admixed_samples.samples);
-//  free(admixed_samples.index);
-//  free(admixed_samples.popPairs[0]);
-//  free(admixed_samples.popPairs);
-//@@TODO: dead code ends here -------------------------------------------------
-
-  free(admixture_status.sampledLoci);
-  free(admixture_status.admixtureCounts);
-  free(admixture_status.sampleLocusAdmixRate[0]);
-  free(admixture_status.sampleLocusAdmixRate);
-  free(admixture_status.admixtureCoefficients);
   free(genetree_stats_flat.sortedAgesArray);
   free(genetree_node_stats.doubleArray);
   free(genetree_node_stats.doublePtrArray);

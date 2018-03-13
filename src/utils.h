@@ -100,7 +100,6 @@ typedef struct {
 	TIMER_METHOD UpdateTheta;
 	TIMER_METHOD UpdateSampleAge;
 	TIMER_METHOD UpdateLocusRate;
-	TIMER_METHOD UpdateAdmixCoeffs;
 	TIMER_METHOD MCMCIterations;
 } TIMERS;
 
@@ -115,7 +114,6 @@ enum METHOD_NAME
 	T_UpdateTheta,
 	T_UpdateSampleAge,
 	T_UpdateLocusRate,
-	T_UpdateAdmixCoeffs,
 	T_MCMCIterations
 } ;
 
