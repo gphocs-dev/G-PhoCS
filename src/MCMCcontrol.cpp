@@ -53,7 +53,6 @@ int readAncestralPops(FILE* fctl);
 int readMigrationBands(FILE* fctl);
 
 int readSampleLine(char* sampleLine, int pop);
-int parseSampleNames();
 
 
 
@@ -141,8 +140,6 @@ int readControlFile(char* controlFileName) {
 	
 
 	numErrors += readCurrentPops(fctl);
-	
-	numErrors += parseSampleNames();
 	
 	if(numErrors > 0) {
 		fprintf(stderr, "Found %d errors when parsing CURRENT-POPS in control file %s.\n", numErrors, controlFileName);
