@@ -5,10 +5,10 @@
 #include "MCMCcontrol.h"
 #include "patch.h"
 #include "DataLayer.h"
-#include "MemoryMng.h"
 #include "CombStats.h"
 #include "McRefCommon.h"
 #include "CombAssertions.h"
+#include "MemoryMng.h"
 
 COMB_STATS *comb_stats;
 
@@ -35,7 +35,7 @@ void coalescence(int comb, int gene) {
 }
 
 void coalescence_rec(int comb, int currentPop, int gene) {
-  if (isLeaf(currentPop)) {
+  if (isLeafPop(currentPop)) {
     handleLeafCoals(comb, currentPop, gene);
   } else {
     coalescence_rec(comb, getSon(currentPop, LEFT), gene);
@@ -60,7 +60,7 @@ void handleLeafCoals(int comb, int leaf, int gene) {
   while (eventId >= 0) {
     event = chain.events[eventId];
     previousAge = eventAge;
-    eventAge += event.getElapsedTime();
+    eventAge += event.getElapsedTime();  //TODO - replace with getNodeAge(dataState.lociData[nLociIdx], currentEventID);
 
     if (isEventCompletelyBelowComb(eventAge, combAge)) {
       countCoalEventTowardsBelowComb(event, belowCombLeafStats);
@@ -315,7 +315,7 @@ void countMigEventTowardsAboveComb(Event event, MigStats *leafMigStats) {
 }
 
 Stats *getCombPopStats(int comb, int pop) {
-  if (isLeaf(pop)) {
+  if (isLeafPop(pop)) {
     return &comb_stats[comb].leaves[pop].above_comb;
   } else {
     return &comb_stats[comb].combs[pop];
@@ -329,11 +329,11 @@ void initCombStats() {
 
 void initPopStats() {
   for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
-    if (!isLeaf(comb)) {
+    if (!isLeafPop(comb)) {
       initStats(&comb_stats[comb].total);
       comb_stats[comb].age = getCombAge(comb);
       for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-        if (isLeaf(pop)) {
+        if (isLeafPop(pop)) {
           initStats(&comb_stats[comb].leaves[pop].above_comb);
           initStats(&comb_stats[comb].leaves[pop].below_comb);
         } else {
@@ -378,7 +378,7 @@ void allocatePopsMem() {
     comb_stats[comb].leaves = (LeafStats *) malloc(dataSetup.popTree->numPops * sizeof(LeafStats));
     comb_stats[comb].combs = (Stats *) malloc(dataSetup.popTree->numPops * sizeof(Stats));
     for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-      if (isLeaf(pop)) {
+      if (isLeafPop(pop)) {
         allocateStats(&comb_stats[comb].leaves[pop].below_comb);
         allocateStats(&comb_stats[comb].leaves[pop].above_comb);
       } else {
@@ -412,7 +412,7 @@ void allocateMigBandsMem() {
 }
 
 int isFeasibleComb(int pop) {
-  return !isLeaf(pop);
+  return !isLeafPop(pop);
 }
 
 int isMigOfComb(int mig, int comb) { // if migrations flow into the comb
@@ -430,18 +430,18 @@ int isMigBandInternal(int mig, int comb) {
   int source = getSourcePop(mig);
   int target = getTargetPop(mig);
 
-  return isAncestralTo(comb, source) && isAncestralTo(comb, target) && (!isLeaf(source) || !isLeaf(target));
+  return isAncestralTo(comb, source) && isAncestralTo(comb, target) && (!isLeafPop(source) || !isLeafPop(target));
 }
 
 int isCombLeafMigBand(int mig, int comb) {
   int target = getTargetPop(mig);
   int source = getSourcePop(mig);
-  return isLeaf(target) && isLeaf(source) && isAncestralTo(comb, target) && isAncestralTo(comb, source);
+  return isLeafPop(target) && isLeafPop(source) && isAncestralTo(comb, target) && isAncestralTo(comb, source);
 }
 
 double getCombAge(int comb) {
   if (SET_COMB_AGE_TO_ZERO) return 0.0;
-  if (isLeaf(comb)) {
+  if (isLeafPop(comb)) {
     return DBL_MAX;
   } else if (areChildrenLeaves(comb)) {
     return dataSetup.popTree->pops[comb]->age;
