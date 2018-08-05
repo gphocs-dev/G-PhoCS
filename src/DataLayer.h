@@ -6,8 +6,10 @@
 
  Version history:
  26-Mar-2017  evgenyidc      Created. Adding Event, EVENT_CHAIN.
+ 14-Dec-2017  evgenyidc      EventType values updated. Adding getTypeStr.
  ============================================================================*/
 #include <vector>
+#include <ostream>
 #include "DataLayerConstants.h"
 
 using namespace std;
@@ -27,9 +29,9 @@ enum EventType{COAL           = 0x01,
                IN_MIG         = 0x02,
                OUT_MIG        = 0x04,
                MIG_BAND_START = 0x08,
-               MIG_BAND_END   = 0x0F,
-               SAMPLES_START  = 0x10,
-               END_CHAIN      = 0x20,
+               MIG_BAND_END   = 0x10,
+               SAMPLES_START  = 0x20,
+               END_CHAIN      = 0x40,
                DUMMY          = 0x00};
 
 //-----------------------------------------------------------------------------
@@ -42,6 +44,7 @@ public:
   int       getId()                   const;
   void      setId(int id);
   EventType getType()                 const;
+  string    getTypeStr()              const;
   void      setType(EventType t);
   int       getNextIdx()              const;
   void      setNextIdx(int i);
@@ -67,7 +70,12 @@ protected:
   int        prev_;
   double     elapsed_time_;	// time from last event
   int        num_lineages_;	// number of lineages before the event
+
+private:
+  friend ostream& operator<<(ostream& os, const Event& obj);
 };
+
+
 
 //-----------------------------------------------------------------------------
 class EventChain
@@ -111,6 +119,24 @@ inline EventType
 Event::getType() const
 {
   return this->type_;
+}
+
+inline string
+Event::getTypeStr() const
+{
+  string strRes = "";
+  switch(this->type_)
+  {
+    case COAL: strRes           = "COAL      "; break;
+    case IN_MIG: strRes         = "IN_MIG    "; break;
+    case OUT_MIG: strRes        = "OUT_MIG   "; break;
+    case MIG_BAND_START: strRes = "MIGB_START"; break;
+    case MIG_BAND_END: strRes   = "MIGB_END  "; break;
+    case SAMPLES_START: strRes  = "SMPL_START"; break;
+    case END_CHAIN: strRes      = "END_CHAIN "; break;
+    default: strRes             = "DUMMY     "; break;
+  }
+  return strRes;
 }
 
 inline void
