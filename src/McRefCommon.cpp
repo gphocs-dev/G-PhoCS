@@ -2,6 +2,8 @@
 #include "MCMCcontrol.h"
 #include "McRefCommon.h"
 #include "patch.h"
+#include "GPhoCS.h"
+#include "MemoryMng.h"
 
 
 double calculateCoalStats(double *elapsed_times, int *num_lineages, int size) {
@@ -16,7 +18,7 @@ double calculateCoalStats(double *elapsed_times, int *num_lineages, int size) {
   return result;
 }
 
-int isLeaf(int pop) {
+int isLeafPop(int pop) {
   Population *population, *left_son, *right_son;
 
   population = dataSetup.popTree->pops[pop];
@@ -32,43 +34,25 @@ int isLeaf(int pop) {
 }
 
 int areChildrenLeaves(int pop) {
-  if (isLeaf(pop)) {
+  if (isLeafPop(pop)) {
     return FALSE;
   }
   int left_son = getSon(pop, LEFT);
   int right_son = getSon(pop, RIGHT);
-  return (isLeaf(left_son) && isLeaf(right_son));
+  return (isLeafPop(left_son) && isLeafPop(right_son));
 }
 
 int isAncestralTo(int father, int son) {
   return dataSetup.popTree->pops[father]->isAncestralTo[son];
 }
 
-const char *getEventTypeName(int eventType) {
-  switch (eventType) {
-    case COAL:
-      return "COAL";
-    case IN_MIG:
-      return "IN_MIG";
-    case OUT_MIG:
-      return "OUT_MIG";
-    case MIG_BAND_START:
-      return "MIG_START";
-    case MIG_BAND_END:
-      return "MIG_END";
-    case SAMPLES_START:
-      return "SAM_START";
-    case END_CHAIN:
-      return "END_CHAIN";
-    case DUMMY:
-      return "DUMMY";
-    default:
-      return "UNDEFINED";
-  }
-}
-
 int getSon(int pop, int SON) {
   return dataSetup.popTree->pops[pop]->sons[SON]->id;
+}
+
+
+double getPopAge(int pop) {
+  return dataSetup.popTree->pops[pop]->age;
 }
 
 int getSourcePop(int mig) {
@@ -79,9 +63,10 @@ int getTargetPop(int mig) {
   return dataSetup.popTree->migBands[mig].targetPop;
 }
 
-char *getPopName(int pop) {
-  return dataSetup.popTree->pops[pop]->name;
+char *getPopName(int popId) {
+  return dataSetup.popTree->pops[popId]->name;
 }
+
 //char* getMigName(int mig){
 //	char* sourceName = getPopName(getSourcePop(mig));
 //	char* targetName = getPopName(getTargetPop(mig));
@@ -95,6 +80,60 @@ char *getPopName(int pop) {
 //    return result;
 //}
 
+
+//const char *getEventTypeName(int eventType) {
+//  switch (eventType) {
+//    case COAL:
+//      return "COAL";
+//    case IN_MIG:
+//      return "IN_MIG";
+//    case OUT_MIG:
+//      return "OUT_MIG";
+//    case MIG_BAND_START:
+//      return "MIG_START";
+//    case MIG_BAND_END:
+//      return "MIG_END";
+//    case SAMPLES_START:
+//      return "SAM_START";
+//    case END_CHAIN:
+//      return "END_CHAIN";
+//    case DUMMY:
+//      return "DUMMY";
+//    default:
+//      return "UNDEFINED";
+//  }
+//}
+
+
+int lca(int pop1, int pop2) {
+  int ancestor1 = pop1;
+  while (ancestor1 != -1) {
+    int ancestor2 = pop2;
+    while (ancestor2 != -1) {
+      if (ancestor1 == ancestor2)
+        return ancestor1;
+      ancestor2 = getPopFather(ancestor2);
+    }
+    ancestor1 = getPopFather(ancestor1);
+  }
+  return -1;
+}
+
+int getPopFather(int popId) {
+  Population *pop = dataSetup.popTree->pops[popId];
+  if (pop && pop->father) return pop->father->id;
+  else return -1;
+}
+
+
+LikelihoodNode *getNode(int nodeId, int gen) {
+  LocusData *loci = dataState.lociData[gen];
+  return loci->nodeArray[nodeId];
+}
+
+int getNodePop(int nodeId, int gen) {
+  return nodePops[gen][nodeId];
+}
 
 bool hasNextEvent(EventChain chain, int event) {
   int next = chain.events[event].getNextIdx();

@@ -26,7 +26,7 @@ void assertRootNumCoals() { // this test only works when combAge is set to zero
 
   int actualCoals = comb_stats[root].total.num_coals;
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    if (isLeaf(pop)) {
+    if (isLeafPop(pop)) {
       actualCoals += comb_stats[root].leaves[pop].below_comb.num_coals;
     }
   }
@@ -97,7 +97,7 @@ void assertCombLeaves() {
   for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
     if (isFeasibleComb(comb)) {
       for (int leaf = 0; leaf < dataSetup.popTree->numPops; leaf++) {
-        if (isLeaf(leaf) && isAncestralTo(comb, leaf)) {
+        if (isLeafPop(leaf) && isAncestralTo(comb, leaf)) {
           assertCombLeafNumCoals(comb, leaf);
           assertCombLeafCoalStats(comb, leaf);
         }
@@ -205,7 +205,7 @@ void assertLeafMigNumMigs(int migband, int comb) {
 void assertCombLeavesEventChains() {
   for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
     for (int leaf = 0; leaf < dataSetup.popTree->numPops; leaf++) {
-      if (isFeasibleComb(comb) && isLeaf(leaf) && isAncestralTo(comb, leaf)) {
+      if (isFeasibleComb(comb) && isLeafPop(leaf) && isAncestralTo(comb, leaf)) {
         for (int gene = 0; gene < dataSetup.numLoci; gene++) {
           assertCombLeafEventChain(comb, leaf, gene);
         }

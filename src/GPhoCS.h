@@ -120,6 +120,8 @@ int mixing(double finetune);
 void allocateAllMemory() ; // TODO - tidy header file
 int isCombStatsActivated();
 int isCladeStatsActivated();
+int isTauBoundsActivated();
+void setupMcRefFiles();
 double getLogPrior() ;
 
 

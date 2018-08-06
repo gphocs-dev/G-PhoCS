@@ -51,6 +51,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/CombAssertions.o \
                    obj/CombPrinter.o \
                    obj/CladeStats.o \
+                   obj/TauBounds.o \
                    obj/CladePrinter.o \
                    obj/omp_stub.o \
                    obj/DataLayer.o \
@@ -71,6 +72,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                     obj/CombPrinter.o \
 	                obj/CladeStats.o \
                     obj/CladePrinter.o \
+                    obj/TauBounds.o \
                     obj/omp_stub.o \
                     obj/DataLayer.o \
                     obj/MemoryMng.o \
@@ -103,6 +105,7 @@ obj/GPhoCS.o: src/GPhoCS.cpp \
               src/CombPrinter.h \
               src/CladeStats.h \
               src/CladePrinter.h \
+              src/TauBounds.h \
               src/MultiCoreUtils.h
 	$(CC) $(CFLAGS) -c src/GPhoCS.cpp -o obj/GPhoCS.o
 
@@ -179,6 +182,10 @@ obj/CladePrinter.o:  src/CladePrinter.cpp \
 obj/CladeStats.o:	 src/CladeStats.cpp \
 					 src/CladeStats.h
 	$(CC) $(CFLAGS) -c src/CladeStats.cpp -o obj/CladeStats.o
+
+obj/TauBounds.o:	 src/TauBounds.cpp \
+					 src/TauBounds.h
+	$(CC) $(CFLAGS) -c src/TauBounds.cpp -o obj/TauBounds.o
 
 obj/DataLayer.o: 	 src/DataLayer.cpp \
                      src/DataLayer.h

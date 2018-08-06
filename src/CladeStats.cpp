@@ -38,7 +38,7 @@ void computeCladeNumCoals() {
 void computeCladeNumCoals_rec(int pop) {
   int leftSon, rightSon;
 
-  if (isLeaf(pop)) {
+  if (isLeafPop(pop)) {
     clade_stats[pop].num_coals_total = genetree_stats_total.num_coals[pop];
   } else {
     leftSon = dataSetup.popTree->pops[pop]->sons[LEFT]->id;
@@ -62,7 +62,7 @@ void computeCladeCoalStats() {
 void computeCladeCoalStats_rec(int clade, int gen) {
   int leftSon, rightSon;
 
-  if (isLeaf(clade)) {
+  if (isLeafPop(clade)) {
     fillUpLeafCladeStats(clade, gen);
   } else {
     leftSon = dataSetup.popTree->pops[clade]->sons[LEFT]->id;
@@ -87,7 +87,7 @@ void appendPopToClade(int clade, int gen, int startingPoint) {
   double eventAge = cladeStartTime;
 
   for (; event >= 0; i++, event = event_chains[gen].events[event].getNextIdx()) {
-    eventAge += event_chains[gen].events[event].getElapsedTime();
+    eventAge += event_chains[gen].events[event].getElapsedTime();  // TODO - replace with getNodeAge(dataState.lociData[nLociIdx], currentEventID);
     clade_stats[clade].sorted_ages[i] = eventAge;
     clade_stats[clade].elapsed_times[i] = event_chains[gen].events[event].getElapsedTime();
     clade_stats[clade].num_lineages[i] = event_chains[gen].events[event].getNumLineages();
@@ -97,10 +97,6 @@ void appendPopToClade(int clade, int gen, int startingPoint) {
 //	clade_stats[clade].coal_stats_total += genetree_stats[gen].coal_stats[clade];
   clade_stats[clade].coal_stats_total += calculateCoalStats(clade_stats[clade].elapsed_times + startingPoint, clade_stats[clade].num_lineages + startingPoint,
                                                             clade_stats[clade].num_events - startingPoint);
-
-#ifdef CHECKCLADE
-  test_compareGphocsVsCladePopCoalStats(clade, gen, startingPoint);
-#endif
 }
 
 void fillUpCladeStats(int clade, int gen) {
