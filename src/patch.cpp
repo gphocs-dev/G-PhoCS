@@ -111,18 +111,18 @@ int Coalescence1Pop (PopulationTree* popTree, GenericBinaryTree* tree, int gen, 
     T = popTree->pops[pop]->sampleAge;
   }
   for( ; numLineages>1; numLineages--, nextAvailableNodeId++) {
-    t = rndexp(popTree->pops[pop]->theta/(numLineages*(numLineages-1.)));
+    t = rndexp(gen, popTree->pops[pop]->theta/(numLineages*(numLineages-1.)));
     T += t;
     if(pop != popTree->rootPop && T > popTree->pops[pop]->father->age)
       break;
 		
     // choose first living node and remove from list
-    choice = (int)(numLineages*rndu());
+    choice = (int)(numLineages*rndu(gen));
     node1 = livingLineages[choice];
     livingLineages[choice] = livingLineages[numLineages-1];
 
     // choose second living node and replace with new one
-    choice = (int)((numLineages-1)*rndu());
+    choice = (int)((numLineages-1)*rndu(gen));
     node2 = livingLineages[choice];
     livingLineages[choice] = nextAvailableNodeId;
 		
