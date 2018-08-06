@@ -1,7 +1,7 @@
 #pragma once
 
 
-#define MAX_MIG_BANDS	40			// max migration bands in the population tree
+#define MAX_MIG_BANDS	100			// max migration bands in the population tree
 #define MAX_MIGS		10			// max migration events per genealogy
 #define NSPECIES		20			// max # of species
 #define NS				200			// max # of sequences
