@@ -16,7 +16,7 @@ void allocateTauBoundsMem();
 
 void calculateTauBounds();
 
-int calculateLociTauBounds(int nodeId, int gen);
+int calculateLocusTauBounds(int nodeId, int gen);
 
 void printTauBoundsHeader(FILE *file);
 

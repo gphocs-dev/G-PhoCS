@@ -6,7 +6,8 @@
 #include "GPhoCS.h"
 #include "McRefCommon.h"
 
-double *tau_bounds; // Temporary array. Reinitialized per iteration. Holds final tau bounds
+double *tau_ubounds; // Temporary array. Reinitialized per iteration. Holds final tau bounds
+double *tau_lbounds; // Temporary array. Reinitialized per iteration. Holds final tau bounds
 int **lca_pops; // "cache" of the lca of every pair of pops. i.e. - lca_pops[1][2] is the lca of pops 1 & 2
 
 
@@ -15,7 +16,7 @@ void calculateTauBounds() {
 
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
     int rootNodeId = dataState.lociData[gen]->root;
-    calculateLociTauBounds(rootNodeId, gen);
+    calculateLocusTauBounds(rootNodeId, gen);
   }
 
   propagateBoundsDownPopTree();
@@ -23,33 +24,33 @@ void calculateTauBounds() {
   if (DEBUG_TAU_BOUNDS) runTauBoundsAssertions();
 }
 
-int calculateLociTauBounds(int nodeId, int gen) {
+int calculateLocusTauBounds(int nodeId, int gen) {
   LikelihoodNode *currentNode = getNode(nodeId, gen);
   int pop = getNodePop(nodeId, gen);
 
   if (isLeafPop(pop))
     return pop;
 
-  int leftLca = calculateLociTauBounds(currentNode->leftSon, gen);
-  int rightLca = calculateLociTauBounds(currentNode->rightSon, gen);
+  int leftLca = calculateLocusTauBounds(currentNode->leftSon, gen);
+  int rightLca = calculateLocusTauBounds(currentNode->rightSon, gen);
 
   int lca_pop = lca_pops[leftLca][rightLca];
 
-  tau_bounds[lca_pop] = fmin(tau_bounds[lca_pop], currentNode->age);
+  tau_ubounds[lca_pop] = fmin(tau_ubounds[lca_pop], currentNode->age);
 
   return lca_pop;
 }
 
 void propagateBoundsDownPopTree() {
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    updateTauBoundsOfDescendants(pop, tau_bounds[pop]);
+    updateTauBoundsOfDescendants(pop, tau_ubounds[pop]);
   }
 }
 
 void updateTauBoundsOfDescendants(int pop, double bound) {
   if (isLeafPop(pop)) return;
 
-  tau_bounds[pop] = fmin(tau_bounds[pop], bound);
+  tau_ubounds[pop] = fmin(tau_ubounds[pop], bound);
 
   updateTauBoundsOfDescendants(getSon(pop, LEFT), bound);
   updateTauBoundsOfDescendants(getSon(pop, RIGHT), bound);
@@ -60,7 +61,7 @@ void printTauBoundsHeader(FILE *file) {
   fprintf(file, "iteration");
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
     if (isLeafPop(pop)) continue;
-    fprintf(file, "\t%s_bound\t%s_tau", getPopName(pop), getPopName(pop));
+    fprintf(file, "\t%s_ubound\t%s_lbound\t%s_tau", getPopName(pop), getPopName(pop), getPopName(pop));
   }
   fprintf(file, "\n");
 }
@@ -69,13 +70,14 @@ void printTauBounds(int iteration, FILE *file) {
   fprintf(file, "%d", iteration);
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
     if (isLeafPop(pop)) continue;
-    fprintf(file, "\t%.40f\t%.40f", tau_bounds[pop], dataSetup.popTree->pops[pop]->age);
+    fprintf(file, "\t%.40f\t%.40f", tau_ubounds[pop], dataSetup.popTree->pops[pop]->age);
   }
   fprintf(file, "\n");
 }
 
 void allocateTauBoundsMem() {
-  tau_bounds = (double *) malloc(dataSetup.popTree->numPops * sizeof(double));
+  tau_ubounds = (double *) malloc(dataSetup.popTree->numPops * sizeof(double));
+  tau_lbounds = (double *) malloc(dataSetup.popTree->numPops * sizeof(double));
   lca_pops = (int **) malloc(dataSetup.popTree->numPops * sizeof(int *));
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
     lca_pops[pop] = (int *) malloc(dataSetup.popTree->numPops * sizeof(int));
@@ -93,10 +95,11 @@ void computeLcas() {
 
 void initializeBounds() {
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+    tau_lbounds[pop] = 0.0;
     if (isLeafPop(pop)) {
-      tau_bounds[pop] = 0.0;
+      tau_ubounds[pop] = 0.0;
     } else {
-      tau_bounds[pop] = 100.0; // TODO - init with proper value (tau of father pop? MAX/INF value?)
+      tau_ubounds[pop] = 100.0; // TODO - init with proper value (tau of father pop? MAX/INF value?)
     }
   }
 }
@@ -108,9 +111,9 @@ void runTauBoundsAssertions() {
 
 void assertTausAreSmallerThanBounds() {
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    if (getPopAge(pop) > tau_bounds[pop]) {
+    if (getPopAge(pop) > tau_ubounds[pop]) {
       printf("age of %s is over its tau bound.\n", getPopName(pop));
-      printf("%.10f is the age and-\n %.10f is the bound", getPopAge(pop), tau_bounds[pop]);
+      printf("%.10f is the age and-\n %.10f is the bound", getPopAge(pop), tau_ubounds[pop]);
       exit(-1);
     }
   }
@@ -120,10 +123,10 @@ void assertBoundsAreMonotonousAscending() {
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
     for (int ancestor = 0; ancestor < dataSetup.popTree->numPops; ancestor++) {
       if (isAncestralTo(ancestor, pop)) {
-        if (tau_bounds[pop] > tau_bounds[ancestor]) {
+        if (tau_ubounds[pop] > tau_ubounds[ancestor]) {
           printf("\nTau bound of pop %s was larger than of his ancestor %s", getPopName(pop), getPopName(ancestor));
-          printf("\n%.10f is the bound of %s and - ", tau_bounds[pop], getPopName(pop));
-          printf("\n%.10f is the bound of %s.", tau_bounds[ancestor], getPopName(ancestor));
+          printf("\n%.10f is the bound of %s and - ", tau_ubounds[pop], getPopName(pop));
+          printf("\n%.10f is the bound of %s.", tau_ubounds[ancestor], getPopName(ancestor));
           exit(-1);
         }
       }
