@@ -7,21 +7,27 @@
 #include "McRefCommon.h"
 
 double *tau_ubounds; // Temporary array. Reinitialized per iteration. Holds final tau bounds
-double *tau_lbounds; // Temporary array. Reinitialized per iteration. Holds final tau bounds
-int **lca_pops; // "cache" of the lca of every pair of pops. i.e. - lca_pops[1][2] is the lca of pops 1 & 2
+double *tau_lbounds; // Ditto
+int **lca_pops; // "cache" of the lca of every pair of pops. e.g. - lca_pops[1][2] is the lca of pops 1 & 2
 
 
 void calculateTauBounds() {
   initializeBounds();
+  calculateTauUpperBounds();
+  calculateTauLowerBounds();
+  if (DEBUG_TAU_BOUNDS) runTauBoundsAssertions();
+}
 
+void calculateTauLowerBounds() {
+
+}
+
+void calculateTauUpperBounds() {
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
     int rootNodeId = dataState.lociData[gen]->root;
     calculateLocusTauBounds(rootNodeId, gen);
   }
-
   propagateBoundsDownPopTree();
-
-  if (DEBUG_TAU_BOUNDS) runTauBoundsAssertions();
 }
 
 int calculateLocusTauBounds(int nodeId, int gen) {
@@ -70,9 +76,10 @@ void printTauBounds(int iteration, FILE *file) {
   fprintf(file, "%d", iteration);
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
     if (isLeafPop(pop)) continue;
-    fprintf(file, "\t%.40f\t%.40f", tau_ubounds[pop], dataSetup.popTree->pops[pop]->age);
+    fprintf(file, "\t%.40f\t%.40f\t%.40f", tau_ubounds[pop], tau_lbounds[pop], dataSetup.popTree->pops[pop]->age);
   }
   fprintf(file, "\n");
+  fflush(file);
 }
 
 void allocateTauBoundsMem() {
