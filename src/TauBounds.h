@@ -20,6 +20,8 @@ void calculateTauUpperBounds();
 
 void calculateTauLowerBounds();
 
+void propagateLowerBound(int target, double bound);
+
 int calculateLocusTauBounds(int nodeId, int gen);
 
 void printTauBoundsHeader(FILE *file);

@@ -1,14 +1,17 @@
 
 #include <map>
 
+#include "DataLayer.h"
 #include "TauBounds.h"
 #include "patch.h"
 #include "GPhoCS.h"
 #include "McRefCommon.h"
+#include "MemoryMng.h"
 
 double *tau_ubounds; // Temporary array. Reinitialized per iteration. Holds final tau bounds
 double *tau_lbounds; // Ditto
 int **lca_pops; // "cache" of the lca of every pair of pops. e.g. - lca_pops[1][2] is the lca of pops 1 & 2
+
 
 
 void calculateTauBounds() {
@@ -19,8 +22,29 @@ void calculateTauBounds() {
 }
 
 void calculateTauLowerBounds() {
+  int mig, target, source;
+  double age;
 
+  for (int gen = 0; gen < dataSetup.numLoci; gen++) {
+    for (int i = 0; i < genetree_migs[gen].num_migs; i++) {
+      mig = genetree_migs[gen].living_mignodes[i];
+      target = genetree_migs[gen].mignodes[mig].target_pop;
+      source = genetree_migs[gen].mignodes[mig].source_pop;
+      age = genetree_migs[gen].mignodes[mig].age;
+      propagateLowerBound(target, age);
+      propagateLowerBound(source, age);
+    }
+  }
 }
+
+void propagateLowerBound(int pop, double bound) {
+  for (int anc = 0; anc < dataSetup.popTree->numPops; anc++) {
+    if (isAncestralTo(anc, pop)) {
+      tau_lbounds[anc] = fmax(tau_lbounds[anc], bound);
+    }
+  }
+}
+
 
 void calculateTauUpperBounds() {
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
@@ -61,7 +85,6 @@ void updateTauBoundsOfDescendants(int pop, double bound) {
   updateTauBoundsOfDescendants(getSon(pop, LEFT), bound);
   updateTauBoundsOfDescendants(getSon(pop, RIGHT), bound);
 }
-
 
 void printTauBoundsHeader(FILE *file) {
   fprintf(file, "iteration");
