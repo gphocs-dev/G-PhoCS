@@ -1,7 +1,6 @@
 
 #include <map>
 
-#include "DataLayer.h"
 #include "TauBounds.h"
 #include "patch.h"
 #include "GPhoCS.h"
@@ -16,7 +15,8 @@ int **lca_pops; // "cache" of the lca of every pair of pops. e.g. - lca_pops[1][
 
 void calculateTauBounds() {
   initializeBounds();
-  calculateTauUpperBounds();
+  calculateTauUpperBounds1();
+  calculateTauUpperBounds2();
   calculateTauLowerBounds();
   if (DEBUG_TAU_BOUNDS) runTauBoundsAssertions();
 }
@@ -31,13 +31,13 @@ void calculateTauLowerBounds() {
       target = genetree_migs[gen].mignodes[mig].target_pop;
       source = genetree_migs[gen].mignodes[mig].source_pop;
       age = genetree_migs[gen].mignodes[mig].age;
-      propagateLowerBound(target, age);
-      propagateLowerBound(source, age);
+      propagateLowerBoundUpwards(target, age);
+      propagateLowerBoundUpwards(source, age);
     }
   }
 }
 
-void propagateLowerBound(int pop, double bound) {
+void propagateLowerBoundUpwards(int pop, double bound) {
   for (int anc = 0; anc < dataSetup.popTree->numPops; anc++) {
     if (isAncestralTo(anc, pop)) {
       tau_lbounds[anc] = fmax(tau_lbounds[anc], bound);
@@ -46,12 +46,36 @@ void propagateLowerBound(int pop, double bound) {
 }
 
 
-void calculateTauUpperBounds() {
+void calculateTauUpperBounds1() {
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
     int rootNodeId = dataState.lociData[gen]->root;
     calculateLocusTauBounds(rootNodeId, gen);
   }
   propagateBoundsDownPopTree();
+}
+
+void calculateTauUpperBounds2() {
+  int mig, target, source;
+  double age;
+  for (int gen = 0; gen < dataSetup.numLoci; gen++) {
+    for (int i = 0; i < genetree_migs[gen].num_migs; i++) {
+      mig = genetree_migs[gen].living_mignodes[i];
+      target = genetree_migs[gen].mignodes[mig].target_pop;
+      source = genetree_migs[gen].mignodes[mig].source_pop;
+      age = genetree_migs[gen].mignodes[mig].age;
+      propagateUpperBoundDownwards(target, age);
+      propagateUpperBoundDownwards(source, age);
+    }
+  }
+}
+
+void propagateUpperBoundDownwards(int pop, double bound) {
+  tau_ubounds[pop] = fmin(tau_ubounds[pop], bound);
+  for (int dec = 0; dec < dataSetup.popTree->numPops; dec++) {
+    if (isAncestralTo(pop, dec)) {
+      tau_ubounds[dec] = fmin(tau_ubounds[dec], bound);
+    }
+  }
 }
 
 int calculateLocusTauBounds(int nodeId, int gen) {

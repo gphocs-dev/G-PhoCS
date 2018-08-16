@@ -16,11 +16,13 @@ void allocateTauBoundsMem();
 
 void calculateTauBounds();
 
-void calculateTauUpperBounds();
+void calculateTauUpperBounds1();
+void calculateTauUpperBounds2();
 
 void calculateTauLowerBounds();
 
-void propagateLowerBound(int target, double bound);
+void propagateLowerBoundUpwards(int pop, double bound);
+void propagateUpperBoundDownwards(int pop, double bound);
 
 int calculateLocusTauBounds(int nodeId, int gen);
 
