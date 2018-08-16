@@ -25,6 +25,7 @@ void propagateLowerBoundUpwards(int pop, double bound);
 void propagateUpperBoundDownwards(int pop, double bound);
 
 int calculateLocusTauBounds(int nodeId, int gen);
+int migLcaPop(int nodeId, int gen, int defaultLcaPop);
 
 void printTauBoundsHeader(FILE *file);
 

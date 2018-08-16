@@ -12,7 +12,6 @@ double *tau_lbounds; // Ditto
 int **lca_pops; // "cache" of the lca of every pair of pops. e.g. - lca_pops[1][2] is the lca of pops 1 & 2
 
 
-
 void calculateTauBounds() {
   initializeBounds();
   calculateTauUpperBounds1();
@@ -78,21 +77,33 @@ void propagateUpperBoundDownwards(int pop, double bound) {
   }
 }
 
+
 int calculateLocusTauBounds(int nodeId, int gen) {
   LikelihoodNode *currentNode = getNode(nodeId, gen);
   int pop = getNodePop(nodeId, gen);
 
   if (isLeafPop(pop))
-    return pop;
+    return migLcaPop(nodeId, gen, pop);
 
   int leftLca = calculateLocusTauBounds(currentNode->leftSon, gen);
   int rightLca = calculateLocusTauBounds(currentNode->rightSon, gen);
 
   int lca_pop = lca_pops[leftLca][rightLca];
-
   tau_ubounds[lca_pop] = fmin(tau_ubounds[lca_pop], currentNode->age);
+  return migLcaPop(nodeId, gen, lca_pop);
+}
 
-  return lca_pop;
+/**
+ *  if nodeId is right below a migration event, returns the source population of the migration event.
+ *  Otherwise, returns defaultPop
+ */
+int migLcaPop(int nodeId, int gen, int defaultLcaPop) {
+  for (int i = 0; i < genetree_migs[gen].num_migs; i++) {
+    int mig = genetree_migs[gen].living_mignodes[i];
+    if (genetree_migs[gen].mignodes[mig].gtree_branch == nodeId)
+      return genetree_migs[gen].mignodes[mig].source_pop;
+  }
+  return defaultLcaPop;
 }
 
 void propagateBoundsDownPopTree() {
