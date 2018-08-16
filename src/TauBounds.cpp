@@ -7,8 +7,8 @@
 #include "McRefCommon.h"
 #include "MemoryMng.h"
 
-double *tau_ubounds; // Temporary array. Reinitialized per iteration. Holds final tau bounds
-double *tau_lbounds; // Ditto
+double *tau_ubounds; // Temporary array. Reinitialized per iteration. Holds upper tau bounds
+double *tau_lbounds; // Ditto, but with lower tau bounds
 int **lca_pops; // "cache" of the lca of every pair of pops. e.g. - lca_pops[1][2] is the lca of pops 1 & 2
 
 
