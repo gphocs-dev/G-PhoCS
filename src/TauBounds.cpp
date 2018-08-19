@@ -17,6 +17,7 @@ void calculateTauBounds() {
   calculateTauUpperBounds1();
   calculateTauUpperBounds2();
   calculateTauLowerBounds();
+  propagateBoundsDownPopTree();
   if (DEBUG_TAU_BOUNDS) runTauBoundsAssertions();
 }
 
@@ -50,7 +51,6 @@ void calculateTauUpperBounds1() {
     int rootNodeId = dataState.lociData[gen]->root;
     calculateLocusTauBounds(rootNodeId, gen);
   }
-  propagateUpperBoundsDownPopTree();
 }
 
 void calculateTauUpperBounds2() {
@@ -106,9 +106,19 @@ int migLcaPop(int nodeId, int gen, int defaultLcaPop) {
   return defaultLcaPop;
 }
 
-void propagateUpperBoundsDownPopTree() {
+void propagateBoundsDownPopTree() {
   int root = dataSetup.popTree->rootPop;
+  updateLowerBoundsOfDescendants(root);
   updateUpperBoundsOfDescendants(root, tau_ubounds[root]);
+}
+
+double updateLowerBoundsOfDescendants(int pop) {
+  if (isLeafPop(pop)) return 0.0;
+
+  double left_lbound = updateLowerBoundsOfDescendants(getSon(pop, LEFT));
+  double right_lbound = updateLowerBoundsOfDescendants(getSon(pop, RIGHT));
+  tau_lbounds[pop] = fmax(tau_lbounds[pop], fmax(left_lbound, right_lbound));
+  return tau_lbounds[pop];
 }
 
 void updateUpperBoundsOfDescendants(int pop, double bound) {
