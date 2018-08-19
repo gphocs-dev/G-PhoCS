@@ -17,6 +17,7 @@ void calculateTauBounds() {
   calculateTauUpperBounds1();
   calculateTauUpperBounds2();
   calculateTauLowerBounds();
+  propagateBoundsAcrossPopTree();
   if (DEBUG_TAU_BOUNDS) runTauBoundsAssertions();
 }
 
@@ -30,16 +31,8 @@ void calculateTauLowerBounds() {
       target = genetree_migs[gen].mignodes[mig].target_pop;
       source = genetree_migs[gen].mignodes[mig].source_pop;
       age = genetree_migs[gen].mignodes[mig].age;
-      propagateLowerBoundUpwards(target, age);
-      propagateLowerBoundUpwards(source, age);
-    }
-  }
-}
-
-void propagateLowerBoundUpwards(int pop, double bound) {
-  for (int anc = 0; anc < dataSetup.popTree->numPops; anc++) {
-    if (isAncestralTo(anc, pop)) {
-      tau_lbounds[anc] = fmax(tau_lbounds[anc], bound);
+      tau_lbounds[source] = fmax(tau_lbounds[source], age);
+      tau_lbounds[target] = fmax(tau_lbounds[target], age);
     }
   }
 }
@@ -48,9 +41,8 @@ void propagateLowerBoundUpwards(int pop, double bound) {
 void calculateTauUpperBounds1() {
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
     int rootNodeId = dataState.lociData[gen]->root;
-    calculateLocusTauBounds(rootNodeId, gen);
+    calculateLocusTauUpperBounds(rootNodeId, gen);
   }
-  propagateUpperBoundsDownPopTree();
 }
 
 void calculateTauUpperBounds2() {
@@ -62,31 +54,21 @@ void calculateTauUpperBounds2() {
       target = genetree_migs[gen].mignodes[mig].target_pop;
       source = genetree_migs[gen].mignodes[mig].source_pop;
       age = genetree_migs[gen].mignodes[mig].age;
-      propagateUpperBoundDownwards(target, age);
-      propagateUpperBoundDownwards(source, age);
+      tau_ubounds[source] = fmin(tau_ubounds[source], age);
+      tau_ubounds[target] = fmin(tau_ubounds[target], age);
     }
   }
 }
 
-void propagateUpperBoundDownwards(int pop, double bound) {
-  tau_ubounds[pop] = fmin(tau_ubounds[pop], bound);
-  for (int dec = 0; dec < dataSetup.popTree->numPops; dec++) {
-    if (isAncestralTo(pop, dec)) {
-      tau_ubounds[dec] = fmin(tau_ubounds[dec], bound);
-    }
-  }
-}
-
-
-int calculateLocusTauBounds(int nodeId, int gen) {
+int calculateLocusTauUpperBounds(int nodeId, int gen) {
   LikelihoodNode *currentNode = getNode(nodeId, gen);
   int pop = getNodePop(nodeId, gen);
 
   if (isLeafPop(pop))
     return migLcaPop(nodeId, gen, pop);
 
-  int leftLca = calculateLocusTauBounds(currentNode->leftSon, gen);
-  int rightLca = calculateLocusTauBounds(currentNode->rightSon, gen);
+  int leftLca = calculateLocusTauUpperBounds(currentNode->leftSon, gen);
+  int rightLca = calculateLocusTauUpperBounds(currentNode->rightSon, gen);
 
   int lca_pop = lca_pops[leftLca][rightLca];
   tau_ubounds[lca_pop] = fmin(tau_ubounds[lca_pop], currentNode->age);
@@ -106,9 +88,19 @@ int migLcaPop(int nodeId, int gen, int defaultLcaPop) {
   return defaultLcaPop;
 }
 
-void propagateUpperBoundsDownPopTree() {
+void propagateBoundsAcrossPopTree() {
   int root = dataSetup.popTree->rootPop;
+  updateLowerBoundsOfDescendants(root);
   updateUpperBoundsOfDescendants(root, tau_ubounds[root]);
+}
+
+double updateLowerBoundsOfDescendants(int pop) {
+  if (isLeafPop(pop)) return 0.0;
+
+  double left_lbound = updateLowerBoundsOfDescendants(getSon(pop, LEFT));
+  double right_lbound = updateLowerBoundsOfDescendants(getSon(pop, RIGHT));
+  tau_lbounds[pop] = fmax(tau_lbounds[pop], fmax(left_lbound, right_lbound));
+  return tau_lbounds[pop];
 }
 
 void updateUpperBoundsOfDescendants(int pop, double bound) {
