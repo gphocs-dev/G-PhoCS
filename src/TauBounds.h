@@ -8,9 +8,9 @@
 
 void initializeBounds();
 
-void updateTauBoundsOfDescendants(int pop, double bound);
+void updateUpperBoundsOfDescendants(int pop, double bound);
 
-void propagateBoundsDownPopTree();
+void propagateUpperBoundsDownPopTree();
 
 void allocateTauBoundsMem();
 
