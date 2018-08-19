@@ -164,7 +164,7 @@ void initializeBounds() {
     if (isLeafPop(pop)) {
       tau_ubounds[pop] = 0.0;
     } else {
-      tau_ubounds[pop] = 100.0; // TODO - init with proper value (tau of father pop? MAX/INF value?)
+      tau_ubounds[pop] = OLDAGE;
     }
   }
 }
