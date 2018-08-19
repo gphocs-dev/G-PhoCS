@@ -76,16 +76,22 @@ int calculateLocusTauUpperBounds(int nodeId, int gen) {
 }
 
 /**
- *  if nodeId is right below a migration event, returns the source population of the migration event.
- *  Otherwise, returns defaultPop
+ *  if nodeId is right below a migration event, returns the source population of the oldest such migration event.
+ *  Otherwise, returns defaultLcaPop
  */
 int migLcaPop(int nodeId, int gen, int defaultLcaPop) {
-  for (int i = 0; i < genetree_migs[gen].num_migs; i++) {
-    int mig = genetree_migs[gen].living_mignodes[i];
-    if (genetree_migs[gen].mignodes[mig].gtree_branch == nodeId)
-      return genetree_migs[gen].mignodes[mig].source_pop;
+  int oldestMigSource = -1;
+  double oldestMigAge = -1.0;
+  GENETREE_MIGS &genMigs = genetree_migs[gen];
+
+  for (int i = 0; i < genMigs.num_migs; i++) {
+    int mig = genMigs.living_mignodes[i];
+    if ((genMigs.mignodes[mig].gtree_branch == nodeId) && (genMigs.mignodes[mig].age > oldestMigAge)) {
+      oldestMigSource = genMigs.mignodes[mig].source_pop;
+      oldestMigAge = genMigs.mignodes[mig].age;
+    }
   }
-  return defaultLcaPop;
+  return oldestMigSource == -1 ? defaultLcaPop : oldestMigSource;
 }
 
 void propagateBoundsAcrossPopTree() {
