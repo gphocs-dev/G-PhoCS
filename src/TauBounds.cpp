@@ -14,48 +14,42 @@ int **lca_pops; // "cache" of the lca of every pair of pops. e.g. - lca_pops[1][
 
 void calculateTauBounds() {
   initializeBounds();
-  calculateTauUpperBounds1();
-  calculateTauUpperBounds2();
-  calculateTauLowerBounds();
+  calculateUpperAndLowerBounds();
   propagateBoundsAcrossPopTree();
   if (DEBUG_TAU_BOUNDS) runTauBoundsAssertions();
 }
 
-void calculateTauLowerBounds() {
-  int mig, target, source;
-  double age;
-
-  for (int gen = 0; gen < dataSetup.numLoci; gen++) {
-    for (int i = 0; i < genetree_migs[gen].num_migs; i++) {
-      mig = genetree_migs[gen].living_mignodes[i];
-      target = genetree_migs[gen].mignodes[mig].target_pop;
-      source = genetree_migs[gen].mignodes[mig].source_pop;
-      age = genetree_migs[gen].mignodes[mig].age;
-      tau_lbounds[source] = fmax(tau_lbounds[source], age);
-      tau_lbounds[target] = fmax(tau_lbounds[target], age);
+void initializeBounds() {
+  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+    tau_lbounds[pop] = 0.0;
+    if (isLeafPop(pop)) {
+      tau_ubounds[pop] = 0.0;
+    } else {
+      tau_ubounds[pop] = OLDAGE;
     }
   }
 }
 
-
-void calculateTauUpperBounds1() {
-  for (int gen = 0; gen < dataSetup.numLoci; gen++) {
-    int rootNodeId = dataState.lociData[gen]->root;
-    calculateLocusTauUpperBounds(rootNodeId, gen);
-  }
-}
-
-void calculateTauUpperBounds2() {
-  int mig, target, source;
+void calculateUpperAndLowerBounds() {
+  int mig, target, source, rootNodeId, i;
   double age;
+
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
-    for (int i = 0; i < genetree_migs[gen].num_migs; i++) {
+
+    rootNodeId = dataState.lociData[gen]->root;
+    calculateLocusTauUpperBounds(rootNodeId, gen);  // ubound1
+
+    for (i = 0; i < genetree_migs[gen].num_migs; i++) {
       mig = genetree_migs[gen].living_mignodes[i];
       target = genetree_migs[gen].mignodes[mig].target_pop;
       source = genetree_migs[gen].mignodes[mig].source_pop;
       age = genetree_migs[gen].mignodes[mig].age;
-      tau_ubounds[source] = fmin(tau_ubounds[source], age);
-      tau_ubounds[target] = fmin(tau_ubounds[target], age);
+
+      tau_ubounds[source] = fmin(tau_ubounds[source], age); // ubound2
+      tau_ubounds[target] = fmin(tau_ubounds[target], age); // ubound2
+
+      tau_lbounds[getFather(source)] = fmax(tau_lbounds[source], age); // lbound
+      tau_lbounds[getFather(target)] = fmax(tau_lbounds[target], age); // lbound
     }
   }
 }
@@ -117,6 +111,9 @@ void updateUpperBoundsOfDescendants(int pop, double bound) {
   updateUpperBoundsOfDescendants(getSon(pop, RIGHT), tau_ubounds[pop]);
 }
 
+
+/*  ===========================================================================  */
+
 void printTauBoundsHeader(FILE *file) {
   fprintf(file, "iteration");
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
@@ -150,17 +147,6 @@ void computeLcas() {
   for (int pop1 = 0; pop1 < dataSetup.popTree->numPops; pop1++) {
     for (int pop2 = 0; pop2 < dataSetup.popTree->numPops; pop2++) {
       lca_pops[pop1][pop2] = lca(pop1, pop2);
-    }
-  }
-}
-
-void initializeBounds() {
-  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    tau_lbounds[pop] = 0.0;
-    if (isLeafPop(pop)) {
-      tau_ubounds[pop] = 0.0;
-    } else {
-      tau_ubounds[pop] = OLDAGE;
     }
   }
 }

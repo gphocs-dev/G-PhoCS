@@ -39,7 +39,7 @@ double requiredRelativePrecision();
 
 int lca(int pop1, int pop2);
 
-int getPopFather(int popId);
+int getFather(int popId);
 
 int getNodePop(int nodeId, int gen);
 
