@@ -30,7 +30,7 @@ void printTauBounds(int iteration, FILE *file);
 
 void assertBoundsAreMonotonousAscending();
 
-void assertTausAreSmallerThanBounds();
+void assertTausAreBetweenBounds();
 
 void runTauBoundsAssertions();
 

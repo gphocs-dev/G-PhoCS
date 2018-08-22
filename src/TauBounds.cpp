@@ -153,14 +153,15 @@ void computeLcas() {
 
 void runTauBoundsAssertions() {
   assertBoundsAreMonotonousAscending();
-  assertTausAreSmallerThanBounds();
+  assertTausAreBetweenBounds();
 }
 
-void assertTausAreSmallerThanBounds() {
+void assertTausAreBetweenBounds() {
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-    if (getPopAge(pop) > tau_ubounds[pop]) {
-      printf("age of %s is over its tau bound.\n", getPopName(pop));
-      printf("%.10f is the age and-\n %.10f is the bound", getPopAge(pop), tau_ubounds[pop]);
+    double tau = getPopAge(pop);
+    if (tau > tau_ubounds[pop] || tau < tau_lbounds[pop]) {
+      printf("age of %s isnt inside its tau bound.\n", getPopName(pop));
+      printf("%.10f is the age and-\n [%.10f, %.10f] is the bound", getPopAge(pop), tau_lbounds[pop], tau_ubounds[pop]);
       exit(-1);
     }
   }
@@ -170,10 +171,12 @@ void assertBoundsAreMonotonousAscending() {
   for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
     for (int ancestor = 0; ancestor < dataSetup.popTree->numPops; ancestor++) {
       if (isAncestralTo(ancestor, pop)) {
-        if (tau_ubounds[pop] > tau_ubounds[ancestor]) {
-          printf("\nTau bound of pop %s was larger than of his ancestor %s", getPopName(pop), getPopName(ancestor));
-          printf("\n%.10f is the bound of %s and - ", tau_ubounds[pop], getPopName(pop));
-          printf("\n%.10f is the bound of %s.", tau_ubounds[ancestor], getPopName(ancestor));
+        if (tau_ubounds[pop] > tau_ubounds[ancestor] or tau_lbounds[pop] > tau_lbounds[ancestor]) {
+          printf("\nTau bound of pop %s was larger than that of his ancestor %s", getPopName(pop),
+                 getPopName(ancestor));
+          printf("\n[%.10f, %.10f] is the bound of %s and - ", tau_lbounds[pop], tau_ubounds[pop], getPopName(pop));
+          printf("\n[%.10f, %.10f] is the bound of %s.", tau_lbounds[ancestor], tau_ubounds[ancestor],
+                 getPopName(ancestor));
           exit(-1);
         }
       }
