@@ -31,7 +31,7 @@ void initializeBounds() {
 }
 
 void calculateUpperAndLowerBounds() {
-  int mig, target, source, rootNodeId, i;
+  int mig, target, targetFather, source, sourceFather, rootNodeId, i;
   double age;
 
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
@@ -42,14 +42,16 @@ void calculateUpperAndLowerBounds() {
     for (i = 0; i < genetree_migs[gen].num_migs; i++) {
       mig = genetree_migs[gen].living_mignodes[i];
       target = genetree_migs[gen].mignodes[mig].target_pop;
+      targetFather = getFather(target);
       source = genetree_migs[gen].mignodes[mig].source_pop;
+      sourceFather = getFather(source);
       age = genetree_migs[gen].mignodes[mig].age;
 
       tau_ubounds[source] = fmin(tau_ubounds[source], age); // ubound2
       tau_ubounds[target] = fmin(tau_ubounds[target], age); // ubound2
 
-      tau_lbounds[getFather(source)] = fmax(tau_lbounds[source], age); // lbound
-      tau_lbounds[getFather(target)] = fmax(tau_lbounds[target], age); // lbound
+      tau_lbounds[sourceFather] = fmax(tau_lbounds[sourceFather], age); // lbound
+      tau_lbounds[targetFather] = fmax(tau_lbounds[targetFather], age); // lbound
     }
   }
 }
