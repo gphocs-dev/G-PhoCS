@@ -4,7 +4,6 @@ project(G_PhoCS)
 set(CMAKE_CXX_STANDARD 11)
 
 set(SOURCE_FILES
-#        src/AlignmentMain.cpp
         src/AlignmentProcessor.cpp
         src/AlignmentProcessor.h
         src/CladePrinter.cpp
@@ -37,11 +36,18 @@ set(SOURCE_FILES
         src/patch.h
         src/PopulationTree.cpp
         src/PopulationTree.h
-#        src/readTrace.cpp
         src/TraceLineages.cpp
         src/TraceLineages.h
         src/utils.cpp
-        src/utils.h src/CombAssertions.cpp src/CombAssertions.h src/HypothesisPrinter.cpp src/HypothesisPrinter.h src/TauBounds.cpp src/TauBounds.h)
+        src/utils.h
+        src/CombAssertions.cpp
+        src/CombAssertions.h
+        src/HypothesisPrinter.cpp
+        src/HypothesisPrinter.h
+        src/TauBounds.cpp
+        src/TauBounds.h
+        src/mcref/RefMigStats.cpp
+        src/mcref/RefMigStats.h)
 
 add_executable(G_PhoCS ${SOURCE_FILES})
 

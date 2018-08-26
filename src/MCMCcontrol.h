@@ -56,6 +56,7 @@ struct IO_SETUP {
 	char combStatsFileName[NAME_LENGTH];
 	char cladeStatsFileName[NAME_LENGTH];
 	char tauBoundsFileName[NAME_LENGTH];
+	char refMigStatsFileName[NAME_LENGTH];
 	char hypStatsFileName[NAME_LENGTH];
 	int samplesPerLog;						// number of samples for which to generate a log summary in stdout
 	int logsPerLine;						// number of sample logs per log line
@@ -68,6 +69,7 @@ struct IO_SETUP {
 	FILE*	combStatsFile;					// comb stats (coalescent & migration) file for all possible combs
 	FILE*	cladeStatsFile;
 	FILE*	tauBoundsFile;
+	FILE*	refMigStatsFile;
 	FILE*	hypStatsFile;
 
 };
