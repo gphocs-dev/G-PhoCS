@@ -67,44 +67,6 @@ char *getPopName(int popId) {
   return dataSetup.popTree->pops[popId]->name;
 }
 
-//char* getMigName(int mig){
-//	char* sourceName = getPopName(getSourcePop(mig));
-//	char* targetName = getPopName(getTargetPop(mig));
-//	return concat(sourceName, targetName);
-//}
-//char* concat(const char *s1, const char *s2){ // THIS SHOULD NOT BE USED IN PRODUCTION! This memory isn't released
-//    char *result = malloc(strlen(s1)+strlen(s2)+3);//+3 for the zero-terminator and arrow
-//    strcpy(result, s1);
-//    strcat(result, "->");
-//    strcat(result, s2);
-//    return result;
-//}
-
-
-//const char *getEventTypeName(int eventType) {
-//  switch (eventType) {
-//    case COAL:
-//      return "COAL";
-//    case IN_MIG:
-//      return "IN_MIG";
-//    case OUT_MIG:
-//      return "OUT_MIG";
-//    case MIG_BAND_START:
-//      return "MIG_START";
-//    case MIG_BAND_END:
-//      return "MIG_END";
-//    case SAMPLES_START:
-//      return "SAM_START";
-//    case END_CHAIN:
-//      return "END_CHAIN";
-//    case DUMMY:
-//      return "DUMMY";
-//    default:
-//      return "UNDEFINED";
-//  }
-//}
-
-
 int lca(int pop1, int pop2) {
   int ancestor1 = pop1;
   while (ancestor1 != -1) {
@@ -112,14 +74,14 @@ int lca(int pop1, int pop2) {
     while (ancestor2 != -1) {
       if (ancestor1 == ancestor2)
         return ancestor1;
-      ancestor2 = getPopFather(ancestor2);
+      ancestor2 = getFather(ancestor2);
     }
-    ancestor1 = getPopFather(ancestor1);
+    ancestor1 = getFather(ancestor1);
   }
   return -1;
 }
 
-int getPopFather(int popId) {
+int getFather(int popId) {
   Population *pop = dataSetup.popTree->pops[popId];
   if (pop && pop->father) return pop->father->id;
   else return -1;

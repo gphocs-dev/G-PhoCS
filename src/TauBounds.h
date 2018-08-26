@@ -8,15 +8,21 @@
 
 void initializeBounds();
 
-void updateTauBoundsOfDescendants(int pop, double bound);
-
-void propagateBoundsDownPopTree();
+void propagateBoundsAcrossPopTree();
 
 void allocateTauBoundsMem();
 
 void calculateTauBounds();
 
-int calculateLociTauBounds(int nodeId, int gen);
+void calculateUpperAndLowerBounds();
+
+int calculateLocusTauUpperBounds(int nodeId, int gen);
+
+int migLcaPop(int nodeId, int gen, int defaultLcaPop);
+
+double updateLowerBoundsOfDescendants(int pop);
+
+void updateUpperBoundsOfDescendants(int pop, double bound);
 
 void printTauBoundsHeader(FILE *file);
 
@@ -24,7 +30,7 @@ void printTauBounds(int iteration, FILE *file);
 
 void assertBoundsAreMonotonousAscending();
 
-void assertTausAreSmallerThanBounds();
+void assertTausAreBetweenBounds();
 
 void runTauBoundsAssertions();
 

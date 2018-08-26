@@ -39,18 +39,11 @@ double requiredRelativePrecision();
 
 int lca(int pop1, int pop2);
 
-int getPopFather(int popId);
+int getFather(int popId);
 
 int getNodePop(int nodeId, int gen);
 
 LikelihoodNode *getNode(int nodeId, int gen);
 
-
-/*=== Debug functions ===*/
-const char *getEventTypeName(int eventType);
-
-char *getMigName(int mig);
-
-char *concat(const char *s1, const char *s2); // NOTE - this should not be used in production. the memory isn't released
 
 #endif
