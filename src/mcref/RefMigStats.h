@@ -3,9 +3,11 @@
 
 void allocateRefMigStatsMem();
 
+void printRefMigStatsHeader(FILE *file);
+
 void calculateReferenceMigrationStats();
 
-void printRefMigStatsHeader(FILE *file);
+void initRefMigStats() ;
 
 void printReferenceMigrationStats(int iteration, FILE *file);
 
