@@ -48,8 +48,11 @@ int areChildrenLeaves(int pop) {
   return (isLeafPop(left_son) && isLeafPop(right_son));
 }
 
-int isAncestralTo(int father, int son) {
-  return dataSetup.popTree->pops[father]->isAncestralTo[son];
+int isAncestralTo(int ancestor, int descendant) {
+  return dataSetup.popTree->pops[ancestor]->isAncestralTo[descendant];
+}
+int isAncestralOrEqual(int ancestor, int descendant) {
+  return ancestor == descendant || isAncestralTo(ancestor, descendant);
 }
 
 int getSon(int pop, int SON) {

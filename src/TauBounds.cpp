@@ -64,9 +64,9 @@ int calculateLocusTauUpperBounds(int nodeId, int gen) {
   int leftLca = calculateLocusTauUpperBounds(currentNode->leftSon, gen);
   int rightLca = calculateLocusTauUpperBounds(currentNode->rightSon, gen);
 
-  int lca_pop = lca_pops[leftLca][rightLca];
-  tau_ubounds[lca_pop] = fmin(tau_ubounds[lca_pop], currentNode->age);
-  return migLcaPop(nodeId, gen, lca_pop);
+  int lcaPop = lca_pops[leftLca][rightLca];
+  tau_ubounds[lcaPop] = fmin(tau_ubounds[lcaPop], currentNode->age);
+  return migLcaPop(nodeId, gen, lcaPop);
 }
 
 

@@ -23,16 +23,21 @@ int calculateReferenceGenMigStats(int nodeId, int gen) {
   LikelihoodNode *currentNode = getNode(nodeId, gen);
   int leftLca = calculateReferenceGenMigStats(currentNode->leftSon, gen);
   int rightLca = calculateReferenceGenMigStats(currentNode->rightSon, gen);
-
+  int lcaPop = lca_pops[leftLca][rightLca];
+  
   // TODO - calculate migstats of both child nodes
+  for (int mb = 0; mb < dataSetup.popTree->numMigBands; mb++) {
+    int target = dataSetup.popTree->migBands[mb].targetPop;
+    if (isAncestralOrEqual(target, lcaPop)) {
 
-  int lca_pop = lca_pops[leftLca][rightLca];
-  return migLcaPop(nodeId, gen, lca_pop);
+    }
+  }
+  return migLcaPop(nodeId, gen, lcaPop);
 }
 
 void initRefMigStats() {
-  for (int band = 0; band < dataSetup.popTree->numMigBands; band++) {
-    migBandRefStats[band] = 0.0;
+  for (int mb = 0; mb < dataSetup.popTree->numMigBands; mb++) {
+    migBandRefStats[mb] = 0.0;
   }
 }
 
