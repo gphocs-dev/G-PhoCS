@@ -16,11 +16,19 @@ void initRefMigStats() {
 }
 
 void printRefMigStatsHeader(FILE *file) {
-  printf("printing migrefstats header\n");
+  fprintf(file, "iteration");
+  for (int band = 0; band < dataSetup.popTree->numMigBands; band++) {
+    int sourceId = dataSetup.popTree->migBands[band].sourcePop;
+    int targetId = dataSetup.popTree->migBands[band].targetPop;
+    Population &source = dataSetup.popTree->popArray[sourceId];
+    Population &target = dataSetup.popTree->popArray[targetId];
+    fprintf(file, "\t%s->%s", source.name, target.name); // TODO - refactor migbandName to some member of `MigrationBand`
+  }
+  fprintf(file, "\n");
 }
 
 void calculateReferenceMigrationStats() {
-  initRefMigStats()
+  initRefMigStats();
   printf("calculating migrefstats\n");
 }
 
