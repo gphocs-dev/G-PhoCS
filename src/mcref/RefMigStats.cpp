@@ -1,13 +1,33 @@
 #include <cstdio>
 #include "RefMigStats.h"
 #include "../patch.h"
+#include "../GPhoCS.h"
+#include "../McRefCommon.h"
 
 double *migBandRefStats;
 
 
 void calculateReferenceMigrationStats() {
   initRefMigStats();
-  printf("calculating migrefstats\n");
+  for (int gen = 0; gen < dataSetup.numLoci; gen++) {
+    int rootNodeId = dataState.lociData[gen]->root;
+    calculateReferenceGenMigStats(rootNodeId, gen);
+  }
+}
+
+int calculateReferenceGenMigStats(int nodeId, int gen) {
+  int currPop = getNodePop(nodeId, gen);
+  if (isLeafNode(nodeId, gen))
+    return migLcaPop(nodeId, gen, currPop);
+
+  LikelihoodNode *currentNode = getNode(nodeId, gen);
+  int leftLca = calculateReferenceGenMigStats(currentNode->leftSon, gen);
+  int rightLca = calculateReferenceGenMigStats(currentNode->rightSon, gen);
+
+  // TODO - calculate migstats of both child nodes
+
+  int lca_pop = lca_pops[leftLca][rightLca];
+  return migLcaPop(nodeId, gen, lca_pop);
 }
 
 void initRefMigStats() {

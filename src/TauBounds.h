@@ -18,8 +18,6 @@ void calculateUpperAndLowerBounds();
 
 int calculateLocusTauUpperBounds(int nodeId, int gen);
 
-int migLcaPop(int nodeId, int gen, int defaultLcaPop);
-
 double updateLowerBoundsOfDescendants(int pop);
 
 void updateUpperBoundsOfDescendants(int pop, double bound);
@@ -33,7 +31,5 @@ void assertBoundsAreMonotonousAscending();
 void assertTausAreBetweenBounds();
 
 void runTauBoundsAssertions();
-
-void computeLcas();
 
 #endif //G_PHOCS_TAUBOUNDS_H

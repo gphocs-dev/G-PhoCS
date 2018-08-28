@@ -1,3 +1,4 @@
+#include "TauBounds.h"
 #include "CombStats.h"
 #include "MCMCcontrol.h"
 #include "McRefCommon.h"
@@ -16,6 +17,11 @@ double calculateCoalStats(double *elapsed_times, int *num_lineages, int size) {
     result += n * (n - 1) * t;
   }
   return result;
+}
+
+int isLeafNode(int nodeId, int gen) {
+  LikelihoodNode *node = getNode(nodeId, gen);
+  return areAlmostEqual(node->age, 0.0);
 }
 
 int isLeafPop(int pop) {
@@ -102,6 +108,25 @@ bool hasNextEvent(EventChain chain, int event) {
   return next >= 0;
 }
 
+/**
+ *  if nodeId is right below a migration event, returns the source population of the oldest such migration event.
+ *  Otherwise, returns defaultLcaPop
+ */
+int migLcaPop(int nodeId, int gen, int defaultLcaPop) {
+  int oldestMigSource = -1;
+  double oldestMigAge = -1.0;
+  GENETREE_MIGS &genMigs = genetree_migs[gen];
+
+  for (int i = 0; i < genMigs.num_migs; i++) {
+    int mig = genMigs.living_mignodes[i];
+    if ((genMigs.mignodes[mig].gtree_branch == nodeId) && (genMigs.mignodes[mig].age > oldestMigAge)) {
+      oldestMigSource = genMigs.mignodes[mig].source_pop;
+      oldestMigAge = genMigs.mignodes[mig].age;
+    }
+  }
+  return oldestMigSource == -1 ? defaultLcaPop : oldestMigSource;
+}
+
 
 bool areAlmostEqual(double eventAge, double combAge) {
   return relativeDistance(eventAge, combAge) <= requiredRelativePrecision();
@@ -118,4 +143,13 @@ double RELATIVE_PRECISION = 0.000000000001;
 
 double requiredRelativePrecision() {
   return RELATIVE_PRECISION;
+}
+
+
+void computeLcas() {
+  for (int pop1 = 0; pop1 < dataSetup.popTree->numPops; pop1++) {
+    for (int pop2 = 0; pop2 < dataSetup.popTree->numPops; pop2++) {
+      lca_pops[pop1][pop2] = lca(pop1, pop2);
+    }
+  }
 }

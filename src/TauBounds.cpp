@@ -9,8 +9,6 @@
 
 double *tau_ubounds; // Temporary array. Reinitialized per iteration. Holds upper tau bounds
 double *tau_lbounds; // Ditto, but with lower tau bounds
-int **lca_pops; // "cache" of the lca of every pair of pops. e.g. - lca_pops[1][2] is the lca of pops 1 & 2
-
 
 void calculateTauBounds() {
   initializeBounds();
@@ -71,24 +69,7 @@ int calculateLocusTauUpperBounds(int nodeId, int gen) {
   return migLcaPop(nodeId, gen, lca_pop);
 }
 
-/**
- *  if nodeId is right below a migration event, returns the source population of the oldest such migration event.
- *  Otherwise, returns defaultLcaPop
- */
-int migLcaPop(int nodeId, int gen, int defaultLcaPop) {
-  int oldestMigSource = -1;
-  double oldestMigAge = -1.0;
-  GENETREE_MIGS &genMigs = genetree_migs[gen];
 
-  for (int i = 0; i < genMigs.num_migs; i++) {
-    int mig = genMigs.living_mignodes[i];
-    if ((genMigs.mignodes[mig].gtree_branch == nodeId) && (genMigs.mignodes[mig].age > oldestMigAge)) {
-      oldestMigSource = genMigs.mignodes[mig].source_pop;
-      oldestMigAge = genMigs.mignodes[mig].age;
-    }
-  }
-  return oldestMigSource == -1 ? defaultLcaPop : oldestMigSource;
-}
 
 void propagateBoundsAcrossPopTree() {
   int root = dataSetup.popTree->rootPop;
@@ -143,14 +124,6 @@ void allocateTauBoundsMem() {
     lca_pops[pop] = (int *) malloc(dataSetup.popTree->numPops * sizeof(int));
   }
   computeLcas();
-}
-
-void computeLcas() {
-  for (int pop1 = 0; pop1 < dataSetup.popTree->numPops; pop1++) {
-    for (int pop2 = 0; pop2 < dataSetup.popTree->numPops; pop2++) {
-      lca_pops[pop1][pop2] = lca(pop1, pop2);
-    }
-  }
 }
 
 void runTauBoundsAssertions() {
