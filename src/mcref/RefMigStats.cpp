@@ -1,6 +1,7 @@
 #include <cstdio>
 #include "RefMigStats.h"
 #include "../patch.h"
+#include "../TauBounds.h"
 #include "../GPhoCS.h"
 #include "../McRefCommon.h"
 
@@ -24,15 +25,30 @@ int calculateReferenceGenMigStats(int nodeId, int gen) {
   int leftLca = calculateReferenceGenMigStats(currentNode->leftSon, gen);
   int rightLca = calculateReferenceGenMigStats(currentNode->rightSon, gen);
   int lcaPop = lca_pops[leftLca][rightLca];
-  
-  // TODO - calculate migstats of both child nodes
+
+  addChildEdgesToMigStats(currentNode, gen, lcaPop);
+
+  return migLcaPop(nodeId, gen, lcaPop);
+}
+
+void addChildEdgesToMigStats(const LikelihoodNode *currentNode, int gen, int lcaPop) {
   for (int mb = 0; mb < dataSetup.popTree->numMigBands; mb++) {
     int target = dataSetup.popTree->migBands[mb].targetPop;
     if (isAncestralOrEqual(target, lcaPop)) {
-
+      LikelihoodNode *leftSon = getNode(currentNode->leftSon, gen);
+      migBandRefStats[mb] += migBandIntersection(mb, leftSon->age, currentNode->age);
+      LikelihoodNode *rightSon = getNode(currentNode->rightSon, gen);
+      migBandRefStats[mb] += migBandIntersection(mb, rightSon->age, currentNode->age);
     }
   }
-  return migLcaPop(nodeId, gen, lcaPop);
+}
+
+double migBandIntersection(int mb, double fromAge, double toAge) {
+  int target = dataSetup.popTree->migBands[mb].targetPop;
+  int source = dataSetup.popTree->migBands[mb].sourcePop;
+  double mbUbound = fmin(tau_ubounds[source], tau_ubounds[target]);
+
+  return fromAge < mbUbound ? fmin(mbUbound, toAge) - fromAge : 0.0;
 }
 
 void initRefMigStats() {

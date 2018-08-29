@@ -7,9 +7,6 @@
 #include "McRefCommon.h"
 #include "MemoryMng.h"
 
-double *tau_ubounds; // Temporary array. Reinitialized per iteration. Holds upper tau bounds
-double *tau_lbounds; // Ditto, but with lower tau bounds
-
 void calculateTauBounds() {
   initializeBounds();
   calculateUpperAndLowerBounds();

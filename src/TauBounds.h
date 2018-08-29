@@ -6,6 +6,9 @@
 
 #include "LocusDataLikelihood.h"
 
+double *tau_ubounds; // Temporary array. Reinitialized per iteration. Holds upper tau bounds
+double *tau_lbounds; // Ditto, but with lower tau bounds
+
 void initializeBounds();
 
 void propagateBoundsAcrossPopTree();
