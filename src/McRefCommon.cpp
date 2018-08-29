@@ -19,7 +19,7 @@ double calculateCoalStats(double *elapsed_times, int *num_lineages, int size) {
   return result;
 }
 
-int isLeafNode(int nodeId, int gen) {
+int isLeafNode(int nodeId, int gen) { // TODO - ask Ilan for a better way to answer this question
   LikelihoodNode *node = getNode(nodeId, gen);
   return areAlmostEqual(node->age, 0.0);
 }
