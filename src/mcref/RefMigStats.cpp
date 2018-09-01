@@ -4,6 +4,7 @@
 #include "../TauBounds.h"
 #include "../GPhoCS.h"
 #include "../McRefCommon.h"
+#include "../MemoryMng.h"
 
 double *migBandRefStats;
 
@@ -12,43 +13,59 @@ void calculateReferenceMigrationStats() {
   initRefMigStats();
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
     int rootNodeId = dataState.lociData[gen]->root;
-    calculateReferenceGenMigStats(rootNodeId, gen);
+    double rootNodeAge = getNode(rootNodeId, gen)->age; // TODO - make sure this workaround makes sense
+    calculateReferenceGenMigStats(rootNodeId, rootNodeAge, gen);
   }
 }
 
-int calculateReferenceGenMigStats(int nodeId, int gen) {
-  int currPop = getNodePop(nodeId, gen);
-  if (isLeafNode(nodeId, gen))
-    return migLcaPop(nodeId, gen, currPop);
+int calculateReferenceGenMigStats(int nodeId, double parentNodeAge, int gen) {
+  int nodeLcaPop, leftLcaPop, rightLcaPop, migNodeId;
+  double currentNodeAge = 0.0, bottomAge, topAge;
+  LikelihoodNode *currentNode;
 
-  LikelihoodNode *currentNode = getNode(nodeId, gen);
-  int leftLca = calculateReferenceGenMigStats(currentNode->leftSon, gen);
-  int rightLca = calculateReferenceGenMigStats(currentNode->rightSon, gen);
-  int lcaPop = lca_pops[leftLca][rightLca];
+  /*** determine population and age of current node ***/
+  if (isLeafNode(nodeId, gen)) {
+    nodeLcaPop = getNodePop(nodeId, gen);
+  } else {
+    currentNode = getNode(nodeId, gen);
+    currentNodeAge = currentNode->age;
+    leftLcaPop = calculateReferenceGenMigStats(currentNode->leftSon, currentNodeAge, gen);
+    rightLcaPop = calculateReferenceGenMigStats(currentNode->rightSon, currentNodeAge, gen);
+    nodeLcaPop = lca_pops[leftLcaPop][rightLcaPop];
+  }
 
-  addChildEdgesToMigStats(currentNode, gen, lcaPop);
+  /*** iterate through all migration events above current node ***/
+  bottomAge = currentNodeAge;
+  while (TRUE) {
+    migNodeId = getMigNodeAbove(nodeId, gen, bottomAge);
+    topAge = migNodeId >= 0 ? genetree_migs[gen].mignodes[migNodeId].age : parentNodeAge;
 
-  return migLcaPop(nodeId, gen, lcaPop);
-}
-
-void addChildEdgesToMigStats(const LikelihoodNode *currentNode, int gen, int lcaPop) {
-  for (int mb = 0; mb < dataSetup.popTree->numMigBands; mb++) {
-    int target = dataSetup.popTree->migBands[mb].targetPop;
-    if (isAncestralOrEqual(target, lcaPop)) {
-      LikelihoodNode *leftSon = getNode(currentNode->leftSon, gen);
-      migBandRefStats[mb] += migBandIntersection(mb, leftSon->age, currentNode->age);
-      LikelihoodNode *rightSon = getNode(currentNode->rightSon, gen);
-      migBandRefStats[mb] += migBandIntersection(mb, rightSon->age, currentNode->age);
+    /*** add contribution of edge fragment to all relevant mig bands - code copied from addChildEdgesToMigStats() ***/
+    for (int mb = 0; mb < dataSetup.popTree->numMigBands; mb++) {
+      int target = dataSetup.popTree->migBands[mb].targetPop;
+      if (isAncestralOrEqual(target, nodeLcaPop)) {
+        migBandRefStats[mb] += migBandIntersection(mb, bottomAge, topAge);
+      }
     }
+
+    /*** if no more mig nodes, then nothing more to do ***/
+    if (migNodeId < 0) break;
+
+    /*** Otherwise, update pop and bottomAge ***/
+    nodeLcaPop = genetree_migs[gen].mignodes[migNodeId].source_pop;
+    bottomAge = topAge;
   }
+
+  return nodeLcaPop;
 }
 
-double migBandIntersection(int mb, double fromAge, double toAge) {
+
+double migBandIntersection(int mb, double bottomAge, double topAge) {
   int target = dataSetup.popTree->migBands[mb].targetPop;
   int source = dataSetup.popTree->migBands[mb].sourcePop;
   double mbUbound = fmin(tau_ubounds[getFather(source)], tau_ubounds[getFather(target)]);
 
-  return fmax(0.0, fmin(mbUbound, toAge) - fromAge);
+  return fmax(0.0, fmin(mbUbound, topAge) - bottomAge);
 }
 
 void initRefMigStats() {

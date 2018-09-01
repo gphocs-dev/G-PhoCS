@@ -7,11 +7,9 @@ void calculateReferenceMigrationStats();
 
 void initRefMigStats();
 
-int calculateReferenceGenMigStats(int nodeId, int gen);
+int calculateReferenceGenMigStats(int nodeId, double parentNodeAge, int gen);
 
-void addChildEdgesToMigStats(const LikelihoodNode *currentNode, int gen, int lcaPop);
-
-double migBandIntersection(int mb, double fromAge, double toAge);
+double migBandIntersection(int mb, double bottomAge, double topAge);
 
 // ============================
 

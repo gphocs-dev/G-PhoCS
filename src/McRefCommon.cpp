@@ -17,7 +17,7 @@ double calculateCoalStats(double *elapsed_times, int *num_lineages, int size) {
   return result;
 }
 
-int isLeafNode(int nodeId, int gen) { // TODO - ask Ilan for a better way to answer this question
+int isLeafNode(int nodeId, int gen) {
   LocusData *locus = dataState.lociData[gen];
   return nodeId < locus->numLeaves;
 }
@@ -113,7 +113,7 @@ bool hasNextEvent(EventChain chain, int event) {
  *  if nodeId is right below a migration event, returns the source population of the oldest such migration event.
  *  Otherwise, returns defaultLcaPop
  */
-int migLcaPop(int nodeId, int gen, int defaultLcaPop) {
+int migLcaPop(int nodeId, int gen, int defaultLcaPop) { // TODO - refactor to utilize getMigNodeAbove
   int oldestMigSource = -1;
   double oldestMigAge = -1.0;
   GENETREE_MIGS &genMigs = genetree_migs[gen];
@@ -126,6 +126,18 @@ int migLcaPop(int nodeId, int gen, int defaultLcaPop) {
     }
   }
   return oldestMigSource == -1 ? defaultLcaPop : oldestMigSource;
+}
+
+int getMigNodeAbove(int nodeId, int gen, double requiredAge) {
+  int i, mig;
+  GENETREE_MIGS &genMigs = genetree_migs[gen];
+
+  for (i = 0, mig = genMigs.living_mignodes[i]; i < genMigs.num_migs; i++) {
+    if ((genMigs.mignodes[mig].gtree_branch == nodeId) && (genMigs.mignodes[mig].age > requiredAge)) {
+      return mig;
+    }
+  }
+  return -1;
 }
 
 

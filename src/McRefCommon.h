@@ -51,5 +51,6 @@ LikelihoodNode *getNode(int nodeId, int gen);
 extern int **lca_pops; // "cache" of LCA of all pops. for example, lca_pops[1][2] is the lca of pops 1 & 2. Filled once by computeLca().
 void computeLcas();
 int migLcaPop(int nodeId, int gen, int defaultLcaPop);
+int getMigNodeAbove(int nodeId, int gen, double requiredAge);
 
 #endif
