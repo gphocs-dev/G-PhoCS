@@ -2,10 +2,10 @@
 #include <map>
 
 #include "TauBounds.h"
-#include "patch.h"
-#include "GPhoCS.h"
+#include "../patch.h"
+#include "../GPhoCS.h"
 #include "McRefCommon.h"
-#include "MemoryMng.h"
+#include "../MemoryMng.h"
 
 double *tau_ubounds;
 double *tau_lbounds;

@@ -1,8 +1,8 @@
 #ifndef SRC_MCREFCOMMON_H_
 #define SRC_MCREFCOMMON_H_
 
-#include "DataLayer.h"
-#include "LocusDataLikelihood.h"
+#include "../DataLayer.h"
+#include "../LocusDataLikelihood.h"
 
 #define TRUE 1
 #define FALSE 0

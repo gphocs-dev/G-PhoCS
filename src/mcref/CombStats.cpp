@@ -1,14 +1,14 @@
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
-#include "utils.h"
-#include "MCMCcontrol.h"
-#include "patch.h"
-#include "DataLayer.h"
+#include "../utils.h"
+#include "../MCMCcontrol.h"
+#include "../patch.h"
+#include "../DataLayer.h"
 #include "CombStats.h"
 #include "McRefCommon.h"
 #include "CombAssertions.h"
-#include "MemoryMng.h"
+#include "../MemoryMng.h"
 
 COMB_STATS *comb_stats;
 

@@ -4,7 +4,7 @@
 #ifndef G_PHOCS_TAUBOUNDS_H
 #define G_PHOCS_TAUBOUNDS_H
 
-#include "LocusDataLikelihood.h"
+#include "../LocusDataLikelihood.h"
 
 extern double *tau_ubounds;
 extern double *tau_lbounds;

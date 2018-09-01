@@ -3,7 +3,7 @@
 #define SRC_COMBSTATS_H_
 
 #include <string>
-#include "DataLayer.h"
+#include "../DataLayer.h"
 
 #define TRUE 1
 #define FALSE 0

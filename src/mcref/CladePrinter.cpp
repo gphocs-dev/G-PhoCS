@@ -1,5 +1,5 @@
 #include "CladePrinter.h"
-#include "MemoryMng.h"
+#include "../MemoryMng.h"
 #include "CladeStats.h"
 
 void printCladeStatsHeader(FILE *file) {

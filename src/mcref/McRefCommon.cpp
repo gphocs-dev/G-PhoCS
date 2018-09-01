@@ -1,8 +1,8 @@
-#include "MCMCcontrol.h"
+#include "../MCMCcontrol.h"
 #include "McRefCommon.h"
-#include "patch.h"
-#include "GPhoCS.h"
-#include "MemoryMng.h"
+#include "../patch.h"
+#include "../GPhoCS.h"
+#include "../MemoryMng.h"
 
 
 double calculateCoalStats(double *elapsed_times, int *num_lineages, int size) {

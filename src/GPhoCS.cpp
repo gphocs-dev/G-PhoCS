@@ -24,12 +24,12 @@
 /** CombStats & Printer require patch.c 
     (event_chains, genetree_stats, 
   genetree_stats_total & genetree_stats_flat) **/
-#include "CombStats.h"
-#include "CombPrinter.h"
-#include "CladeStats.h"
-#include "CladePrinter.h"
-#include "HypothesisPrinter.h"
-#include "TauBounds.h"
+#include "mcref/CombStats.h"
+#include "mcref/CombPrinter.h"
+#include "mcref/CladeStats.h"
+#include "mcref/CladePrinter.h"
+#include "mcref/HypothesisPrinter.h"
+#include "mcref/TauBounds.h"
 
 #include "mcref/RefMigStats.h"
 

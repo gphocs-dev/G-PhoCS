@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utils.h"
-#include "MCMCcontrol.h"
-#include "patch.h"
-#include "DataLayer.h"
-#include "MemoryMng.h"
+#include "../utils.h"
+#include "../MCMCcontrol.h"
+#include "../patch.h"
+#include "../DataLayer.h"
+#include "../MemoryMng.h"
 #include "McRefCommon.h"
 #include "CladeStats.h"
 

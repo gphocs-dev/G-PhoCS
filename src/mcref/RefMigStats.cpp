@@ -1,9 +1,9 @@
 #include <cstdio>
 #include "RefMigStats.h"
 #include "../patch.h"
-#include "../TauBounds.h"
+#include "TauBounds.h"
 #include "../GPhoCS.h"
-#include "../McRefCommon.h"
+#include "McRefCommon.h"
 #include "../MemoryMng.h"
 
 double *migBandRefStats;

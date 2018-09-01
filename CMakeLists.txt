@@ -6,14 +6,14 @@ set(CMAKE_CXX_STANDARD 11)
 set(SOURCE_FILES
         src/AlignmentProcessor.cpp
         src/AlignmentProcessor.h
-        src/CladePrinter.cpp
-        src/CladePrinter.h
-        src/CladeStats.cpp
-        src/CladeStats.h
-        src/CombPrinter.cpp
-        src/CombPrinter.h
-        src/CombStats.cpp
-        src/CombStats.h
+        src/mcref/CladePrinter.cpp
+        src/mcref/CladePrinter.h
+        src/mcref/CladeStats.cpp
+        src/mcref/CladeStats.h
+        src/mcref/CombPrinter.cpp
+        src/mcref/CombPrinter.h
+        src/mcref/CombStats.cpp
+        src/mcref/CombStats.h
         src/DataLayer.cpp
         src/DataLayer.h
         src/DataLayerConstants.h
@@ -26,8 +26,8 @@ set(SOURCE_FILES
         src/LocusDataLikelihood.h
         src/MCMCcontrol.cpp
         src/MCMCcontrol.h
-        src/McRefCommon.cpp
-        src/McRefCommon.h
+        src/mcref/McRefCommon.cpp
+        src/mcref/McRefCommon.h
         src/MemoryMng.cpp
         src/MemoryMng.h
         src/MultiCoreUtils.h
@@ -40,12 +40,12 @@ set(SOURCE_FILES
         src/TraceLineages.h
         src/utils.cpp
         src/utils.h
-        src/CombAssertions.cpp
-        src/CombAssertions.h
-        src/HypothesisPrinter.cpp
-        src/HypothesisPrinter.h
-        src/TauBounds.cpp
-        src/TauBounds.h
+        src/mcref/CombAssertions.cpp
+        src/mcref/CombAssertions.h
+        src/mcref/HypothesisPrinter.cpp
+        src/mcref/HypothesisPrinter.h
+        src/mcref/TauBounds.cpp
+        src/mcref/TauBounds.h
         src/mcref/RefMigStats.cpp
         src/mcref/RefMigStats.h)
 

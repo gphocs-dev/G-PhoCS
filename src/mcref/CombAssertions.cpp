@@ -1,9 +1,9 @@
 #include "CombStats.h"
 #include "CombAssertions.h"
-#include "utils.h"
-#include "MCMCcontrol.h"
-#include "patch.h"
-#include "MemoryMng.h"
+#include "../utils.h"
+#include "../MCMCcontrol.h"
+#include "../patch.h"
+#include "../MemoryMng.h"
 #include "McRefCommon.h"
 
 void runAssertions() {
