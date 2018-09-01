@@ -46,7 +46,7 @@ void addChildEdgesToMigStats(const LikelihoodNode *currentNode, int gen, int lca
 double migBandIntersection(int mb, double fromAge, double toAge) {
   int target = dataSetup.popTree->migBands[mb].targetPop;
   int source = dataSetup.popTree->migBands[mb].sourcePop;
-  double mbUbound = fmin(tau_ubounds[source], tau_ubounds[target]);
+  double mbUbound = fmin(tau_ubounds[getFather(source)], tau_ubounds[getFather(target)]);
 
   return fromAge < mbUbound ? fmin(mbUbound, toAge) - fromAge : 0.0;
 }
