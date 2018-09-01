@@ -48,7 +48,7 @@ double migBandIntersection(int mb, double fromAge, double toAge) {
   int source = dataSetup.popTree->migBands[mb].sourcePop;
   double mbUbound = fmin(tau_ubounds[getFather(source)], tau_ubounds[getFather(target)]);
 
-  return fromAge < mbUbound ? fmin(mbUbound, toAge) - fromAge : 0.0;
+  return fmax(0.0, fmin(mbUbound, toAge) - fromAge);
 }
 
 void initRefMigStats() {
