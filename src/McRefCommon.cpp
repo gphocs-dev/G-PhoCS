@@ -18,8 +18,8 @@ double calculateCoalStats(double *elapsed_times, int *num_lineages, int size) {
 }
 
 int isLeafNode(int nodeId, int gen) { // TODO - ask Ilan for a better way to answer this question
-  LikelihoodNode *node = getNode(nodeId, gen);
-  return areAlmostEqual(node->age, 0.0);
+  LocusData *locus = dataState.lociData[gen];
+  return nodeId < locus->numLeaves;
 }
 
 int isLeafPop(int pop) {
