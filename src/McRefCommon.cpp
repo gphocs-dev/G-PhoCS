@@ -1,5 +1,3 @@
-#include "TauBounds.h"
-#include "CombStats.h"
 #include "MCMCcontrol.h"
 #include "McRefCommon.h"
 #include "patch.h"
@@ -148,7 +146,7 @@ double requiredRelativePrecision() {
   return RELATIVE_PRECISION;
 }
 
-
+int **lca_pops;
 void computeLcas() {
   for (int pop1 = 0; pop1 < dataSetup.popTree->numPops; pop1++) {
     for (int pop2 = 0; pop2 < dataSetup.popTree->numPops; pop2++) {

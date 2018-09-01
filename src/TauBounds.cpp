@@ -7,6 +7,9 @@
 #include "McRefCommon.h"
 #include "MemoryMng.h"
 
+double *tau_ubounds;
+double *tau_lbounds;
+
 void calculateTauBounds() {
   initializeBounds();
   calculateUpperAndLowerBounds();
