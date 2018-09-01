@@ -20,7 +20,6 @@ int isLeafNode(int node, int gen);
 int areChildrenLeaves(int pop);
 
 int isAncestralTo(int ancestor, int descendant);
-int isAncestralOrEqual(int ancestor, int descendant);
 
 int getSon(int pop, int SON);
 

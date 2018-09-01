@@ -43,7 +43,7 @@ int calculateReferenceGenMigStats(int nodeId, double parentNodeAge, int gen) {
     /*** add contribution of edge fragment to all relevant mig bands - code copied from addChildEdgesToMigStats() ***/
     for (int mb = 0; mb < dataSetup.popTree->numMigBands; mb++) {
       int target = dataSetup.popTree->migBands[mb].targetPop;
-      if (isAncestralOrEqual(target, nodeLcaPop)) {
+      if (isAncestralTo(target, nodeLcaPop)) {
         migBandRefStats[mb] += migBandIntersection(mb, bottomAge, topAge);
       }
     }
