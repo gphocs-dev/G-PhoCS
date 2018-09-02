@@ -132,7 +132,7 @@ int getMigNodeAbove(int nodeId, int gen, double requiredAge) {
 
   for (i = 0, mig = genMigs.living_mignodes[i]; i < genMigs.num_migs; i++) {
     _GENETREE_MIGS::MIGNODE &mignode = genMigs.mignodes[mig];
-    if (mignode.gtree_branch == nodeId && requiredAge < mignode.age < lowestMigAge) {
+    if (mignode.gtree_branch == nodeId && requiredAge < mignode.age && mignode.age < lowestMigAge) {
       lowestMigAge = mignode.age;
       migNodeAbove = mig;
     }
@@ -159,6 +159,7 @@ double requiredRelativePrecision() {
 }
 
 int **lca_pops;
+
 void computeLcas() {
   for (int pop1 = 0; pop1 < dataSetup.popTree->numPops; pop1++) {
     for (int pop2 = 0; pop2 < dataSetup.popTree->numPops; pop2++) {
