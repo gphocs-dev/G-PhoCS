@@ -126,15 +126,18 @@ int migLcaPop(int nodeId, int gen, int defaultLcaPop) { // TODO - refactor to ut
 }
 
 int getMigNodeAbove(int nodeId, int gen, double requiredAge) {
-  int i, mig;
+  int i, mig, migNodeAbove = -1;
+  double lowestMigAge = OLDAGE;
   GENETREE_MIGS &genMigs = genetree_migs[gen];
 
   for (i = 0, mig = genMigs.living_mignodes[i]; i < genMigs.num_migs; i++) {
-    if ((genMigs.mignodes[mig].gtree_branch == nodeId) && (genMigs.mignodes[mig].age > requiredAge)) {
-      return mig;
+    _GENETREE_MIGS::MIGNODE &mignode = genMigs.mignodes[mig];
+    if (mignode.gtree_branch == nodeId && requiredAge < mignode.age < lowestMigAge) {
+      lowestMigAge = mignode.age;
+      migNodeAbove = mig;
     }
   }
-  return -1;
+  return migNodeAbove;
 }
 
 

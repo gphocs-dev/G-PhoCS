@@ -13,8 +13,7 @@ void calculateReferenceMigrationStats() {
   initRefMigStats();
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
     int rootNodeId = dataState.lociData[gen]->root;
-    double rootNodeAge = getNode(rootNodeId, gen)->age; // TODO - make sure this workaround makes sense
-    calculateReferenceGenMigStats(rootNodeId, rootNodeAge, gen);
+    calculateReferenceGenMigStats(rootNodeId, OLDAGE, gen);
   }
 }
 
@@ -40,7 +39,7 @@ int calculateReferenceGenMigStats(int nodeId, double parentNodeAge, int gen) {
     migNodeId = getMigNodeAbove(nodeId, gen, bottomAge);
     topAge = migNodeId >= 0 ? genetree_migs[gen].mignodes[migNodeId].age : parentNodeAge;
 
-    /*** add contribution of edge fragment to all relevant mig bands - code copied from addChildEdgesToMigStats() ***/
+    /*** add contribution of edge fragment to all relevant mig bands ***/
     for (int mb = 0; mb < dataSetup.popTree->numMigBands; mb++) {
       int target = dataSetup.popTree->migBands[mb].targetPop;
       if (isAncestralTo(target, nodeLcaPop)) {
