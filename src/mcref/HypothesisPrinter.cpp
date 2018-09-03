@@ -1,8 +1,8 @@
 #include "CombPrinter.h"
 #include "HypothesisPrinter.h"
-#include "patch.h"
+#include "../patch.h"
 #include "McRefCommon.h"
-#include "MemoryMng.h"
+#include "../MemoryMng.h"
 
 void printHypStatsHeader(FILE *file) {
 

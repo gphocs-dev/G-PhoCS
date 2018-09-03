@@ -1,9 +1,8 @@
-#include "CombStats.h"
-#include "MCMCcontrol.h"
+#include "../MCMCcontrol.h"
 #include "McRefCommon.h"
-#include "patch.h"
-#include "GPhoCS.h"
-#include "MemoryMng.h"
+#include "../patch.h"
+#include "../GPhoCS.h"
+#include "../MemoryMng.h"
 
 
 double calculateCoalStats(double *elapsed_times, int *num_lineages, int size) {
@@ -16,6 +15,11 @@ double calculateCoalStats(double *elapsed_times, int *num_lineages, int size) {
     result += n * (n - 1) * t;
   }
   return result;
+}
+
+int isLeafNode(int nodeId, int gen) {
+  LocusData *locus = dataState.lociData[gen];
+  return nodeId < locus->numLeaves;
 }
 
 int isLeafPop(int pop) {
@@ -42,8 +46,8 @@ int areChildrenLeaves(int pop) {
   return (isLeafPop(left_son) && isLeafPop(right_son));
 }
 
-int isAncestralTo(int father, int son) {
-  return dataSetup.popTree->pops[father]->isAncestralTo[son];
+int isAncestralTo(int ancestor, int descendant) {
+  return dataSetup.popTree->pops[ancestor]->isAncestralTo[descendant];
 }
 
 int getSon(int pop, int SON) {
@@ -102,6 +106,40 @@ bool hasNextEvent(EventChain chain, int event) {
   return next >= 0;
 }
 
+/**
+ *  if nodeId is right below a migration event, returns the source population of the oldest such migration event.
+ *  Otherwise, returns defaultLcaPop
+ */
+int migLcaPop(int nodeId, int gen, int defaultLcaPop) { // TODO - refactor to utilize getMigNodeAbove
+  int oldestMigSource = -1;
+  double oldestMigAge = -1.0;
+  GENETREE_MIGS &genMigs = genetree_migs[gen];
+
+  for (int i = 0; i < genMigs.num_migs; i++) {
+    int mig = genMigs.living_mignodes[i];
+    if ((genMigs.mignodes[mig].gtree_branch == nodeId) && (genMigs.mignodes[mig].age > oldestMigAge)) {
+      oldestMigSource = genMigs.mignodes[mig].source_pop;
+      oldestMigAge = genMigs.mignodes[mig].age;
+    }
+  }
+  return oldestMigSource == -1 ? defaultLcaPop : oldestMigSource;
+}
+
+int getMigNodeAbove(int nodeId, int gen, double requiredAge) {
+  int i, mig, migNodeAbove = -1;
+  double lowestMigAge = OLDAGE;
+  GENETREE_MIGS &genMigs = genetree_migs[gen];
+
+  for (i = 0, mig = genMigs.living_mignodes[i]; i < genMigs.num_migs; i++) {
+    _GENETREE_MIGS::MIGNODE &mignode = genMigs.mignodes[mig];
+    if (mignode.gtree_branch == nodeId && requiredAge < mignode.age && mignode.age < lowestMigAge) {
+      lowestMigAge = mignode.age;
+      migNodeAbove = mig;
+    }
+  }
+  return migNodeAbove;
+}
+
 
 bool areAlmostEqual(double eventAge, double combAge) {
   return relativeDistance(eventAge, combAge) <= requiredRelativePrecision();
@@ -118,4 +156,14 @@ double RELATIVE_PRECISION = 0.000000000001;
 
 double requiredRelativePrecision() {
   return RELATIVE_PRECISION;
+}
+
+int **lca_pops;
+
+void computeLcas() {
+  for (int pop1 = 0; pop1 < dataSetup.popTree->numPops; pop1++) {
+    for (int pop2 = 0; pop2 < dataSetup.popTree->numPops; pop2++) {
+      lca_pops[pop1][pop2] = lca(pop1, pop2);
+    }
+  }
 }

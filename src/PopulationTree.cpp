@@ -125,16 +125,16 @@ PopulationTree* createPopTree(int numCurPops)	{
   }
 
   for(migBand=0; migBand<numPops*(numPops-1); migBand++) {
-	popTree->migBands[migBand].sourcePop = 0;
-	popTree->migBands[migBand].targetPop = 0;
-	popTree->migBands[migBand].migRate = 0.0;
-	popTree->migBands[migBand].startTime = 0.0;
-	popTree->migBands[migBand].endTime = 0.0;
-	popTree->migBands[migBand].firstSet = NULL;
-	popTree->migBands[migBand].lastSet = NULL;
-	popTree->migBands[migBand].migRatePrior.alpha = 0.0;
-	popTree->migBands[migBand].migRatePrior.beta = 0.0;
-	popTree->migBands[migBand].migRatePrior.sampleStart = 0.0;
+    popTree->migBands[migBand].sourcePop = 0;
+    popTree->migBands[migBand].targetPop = 0;
+    popTree->migBands[migBand].migRate = 0.0;
+    popTree->migBands[migBand].startTime = 0.0;
+    popTree->migBands[migBand].endTime = 0.0;
+    popTree->migBands[migBand].firstSet = NULL;
+    popTree->migBands[migBand].lastSet = NULL;
+    popTree->migBands[migBand].migRatePrior.alpha = 0.0;
+    popTree->migBands[migBand].migRatePrior.beta = 0.0;
+    popTree->migBands[migBand].migRatePrior.sampleStart = 0.0;
   }
   return popTree;
 }

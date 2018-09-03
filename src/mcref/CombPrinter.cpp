@@ -1,7 +1,7 @@
 #include "CombPrinter.h"
 #include "CombStats.h"
-#include "MCMCcontrol.h"
-#include "patch.h"
+#include "../MCMCcontrol.h"
+#include "../patch.h"
 #include "McRefCommon.h"
 
 void printCombStatsHeader(FILE *file) {

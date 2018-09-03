@@ -4,7 +4,10 @@
 #ifndef G_PHOCS_TAUBOUNDS_H
 #define G_PHOCS_TAUBOUNDS_H
 
-#include "LocusDataLikelihood.h"
+#include "../LocusDataLikelihood.h"
+
+extern double *tau_ubounds;
+extern double *tau_lbounds;
 
 void initializeBounds();
 
@@ -17,8 +20,6 @@ void calculateTauBounds();
 void calculateUpperAndLowerBounds();
 
 int calculateLocusTauUpperBounds(int nodeId, int gen);
-
-int migLcaPop(int nodeId, int gen, int defaultLcaPop);
 
 double updateLowerBoundsOfDescendants(int pop);
 
@@ -33,7 +34,5 @@ void assertBoundsAreMonotonousAscending();
 void assertTausAreBetweenBounds();
 
 void runTauBoundsAssertions();
-
-void computeLcas();
 
 #endif //G_PHOCS_TAUBOUNDS_H

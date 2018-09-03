@@ -52,6 +52,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
                    obj/CombPrinter.o \
                    obj/CladeStats.o \
                    obj/TauBounds.o \
+                   obj/RefMigStats.o \
                    obj/CladePrinter.o \
                    obj/omp_stub.o \
                    obj/DataLayer.o \
@@ -73,6 +74,7 @@ bin/G-PhoCS:       obj/GPhoCS.o \
 	                obj/CladeStats.o \
                     obj/CladePrinter.o \
                     obj/TauBounds.o \
+                    obj/RefMigStats.o \
                     obj/omp_stub.o \
                     obj/DataLayer.o \
                     obj/MemoryMng.o \
@@ -99,13 +101,14 @@ obj/GPhoCS.o: src/GPhoCS.cpp \
               src/GenericTree.h \
               src/PopulationTree.h \
               src/AlignmentProcessor.h \
-              src/McRefCommon.h \
-              src/CombStats.h \
-              src/CombAssertions.h \
-              src/CombPrinter.h \
-              src/CladeStats.h \
-              src/CladePrinter.h \
-              src/TauBounds.h \
+              src/mcref/McRefCommon.h \
+              src/mcref/CombStats.h \
+              src/mcref/CombAssertions.h \
+              src/mcref/CombPrinter.h \
+              src/mcref/CladeStats.h \
+              src/mcref/CladePrinter.h \
+              src/mcref/TauBounds.h \
+              src/mcref/RefMigStats.h \
               src/MultiCoreUtils.h
 	$(CC) $(CFLAGS) -c src/GPhoCS.cpp -o obj/GPhoCS.o
 
@@ -150,42 +153,46 @@ obj/AlignmentMain.o: src/AlignmentMain.cpp \
 	$(CC) $(CFLAGS) -c src/AlignmentMain.cpp -o obj/AlignmentMain.o
 
 
-obj/McRefCommon.o:   src/McRefCommon.cpp \
+obj/McRefCommon.o:   src/mcref/McRefCommon.cpp \
 					 src/MCMCcontrol.h \
 					 src/DataLayer.h \
-                     src/McRefCommon.h
-	$(CC) $(CFLAGS) -c src/McRefCommon.cpp -o obj/McRefCommon.o
+                     src/mcref/McRefCommon.h
+	$(CC) $(CFLAGS) -c src/mcref/McRefCommon.cpp -o obj/McRefCommon.o
 
-obj/HypothesisPrinter.o:	 src/HypothesisPrinter.cpp \
-                     src/HypothesisPrinter.h
-	$(CC) $(CFLAGS) -c src/HypothesisPrinter.cpp -o obj/HypothesisPrinter.o
+obj/HypothesisPrinter.o:	 src/mcref/HypothesisPrinter.cpp \
+                     src/mcref/HypothesisPrinter.h
+	$(CC) $(CFLAGS) -c src/mcref/HypothesisPrinter.cpp -o obj/HypothesisPrinter.o
 
-obj/CombPrinter.o:	 src/CombPrinter.cpp \
-                     src/CombPrinter.h
-	$(CC) $(CFLAGS) -c src/CombPrinter.cpp -o obj/CombPrinter.o
+obj/CombPrinter.o:	 src/mcref/CombPrinter.cpp \
+                     src/mcref/CombPrinter.h
+	$(CC) $(CFLAGS) -c src/mcref/CombPrinter.cpp -o obj/CombPrinter.o
 		
-obj/CombStats.o: 	 src/CombStats.cpp \
-                     src/CombStats.h
-	$(CC) $(CFLAGS) -c src/CombStats.cpp -o obj/CombStats.o
+obj/CombStats.o: 	 src/mcref/CombStats.cpp \
+                     src/mcref/CombStats.h
+	$(CC) $(CFLAGS) -c src/mcref/CombStats.cpp -o obj/CombStats.o
 
-obj/CombAssertions.o:src/CombAssertions.cpp \
-                     src/CombAssertions.h
-	$(CC) $(CFLAGS) -c src/CombAssertions.cpp -o obj/CombAssertions.o
+obj/CombAssertions.o:src/mcref/CombAssertions.cpp \
+                     src/mcref/CombAssertions.h
+	$(CC) $(CFLAGS) -c src/mcref/CombAssertions.cpp -o obj/CombAssertions.o
 
-obj/CladePrinter.o:  src/CladePrinter.cpp \
-                     src/CladePrinter.h \
-					 src/CladeStats.h \
+obj/CladePrinter.o:  src/mcref/CladePrinter.cpp \
+                     src/mcref/CladePrinter.h \
+					 src/mcref/CladeStats.h \
 					 src/MemoryMng.h \
-					 src/McRefCommon.h
-	$(CC) $(CFLAGS) -c src/CladePrinter.cpp -o obj/CladePrinter.o
+					 src/mcref/McRefCommon.h
+	$(CC) $(CFLAGS) -c src/mcref/CladePrinter.cpp -o obj/CladePrinter.o
 		
-obj/CladeStats.o:	 src/CladeStats.cpp \
-					 src/CladeStats.h
-	$(CC) $(CFLAGS) -c src/CladeStats.cpp -o obj/CladeStats.o
+obj/CladeStats.o:	 src/mcref/CladeStats.cpp \
+					 src/mcref/CladeStats.h
+	$(CC) $(CFLAGS) -c src/mcref/CladeStats.cpp -o obj/CladeStats.o
 
-obj/TauBounds.o:	 src/TauBounds.cpp \
-					 src/TauBounds.h
-	$(CC) $(CFLAGS) -c src/TauBounds.cpp -o obj/TauBounds.o
+obj/TauBounds.o:	 src/mcref/TauBounds.cpp \
+					 src/mcref/TauBounds.h
+	$(CC) $(CFLAGS) -c src/mcref/TauBounds.cpp -o obj/TauBounds.o
+
+obj/RefMigStats.o:	 src/mcref/RefMigStats.cpp \
+					 src/mcref/RefMigStats.h
+	$(CC) $(CFLAGS) -c src/mcref/RefMigStats.cpp -o obj/RefMigStats.o
 
 obj/DataLayer.o: 	 src/DataLayer.cpp \
                      src/DataLayer.h

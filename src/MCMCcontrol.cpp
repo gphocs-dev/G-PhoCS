@@ -85,6 +85,7 @@ int initGeneralInfo() {
 	strcpy(ioSetup.combStatsFileName, "NONE");
 	strcpy(ioSetup.cladeStatsFileName, "NONE");
 	strcpy(ioSetup.tauBoundsFileName, "NONE");
+	strcpy(ioSetup.refMigStatsFileName, "NONE");
 	strcpy(ioSetup.traceFileName, "mcmc-trace.out");
 
 	ioSetup.samplesPerLog 	= 100;
@@ -628,6 +629,8 @@ int readGeneralInfo(FILE* fctl) {
 			strncpy(ioSetup.hypStatsFileName, token2, NAME_LENGTH-1);
 		} else if(0 == strcmp("tau-bounds-file",token)) {
 			strncpy(ioSetup.tauBoundsFileName, token2, NAME_LENGTH-1);
+		} else if(0 == strcmp("ref-mig-stats-file",token)) {
+			strncpy(ioSetup.refMigStatsFileName, token2, NAME_LENGTH-1);
 		} else if(0 == strcmp("num-pop-partitions",token)) {
 			if (sscanf(token2, "%d", &dataSetup.numPopPartitions) != 1 || dataSetup.numPopPartitions <= 0) {
 				fprintf(stderr,"Error: value for num-pop-partitions should be positive integer, got %s.\n", token2);
