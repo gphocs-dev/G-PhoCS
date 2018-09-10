@@ -92,7 +92,7 @@ void printRefMigStatsHeader(FILE *file) {
     int targetId = dataSetup.popTree->migBands[band].targetPop;
     Population &source = dataSetup.popTree->popArray[sourceId];
     Population &target = dataSetup.popTree->popArray[targetId];
-    fprintf(file, "\t%s->%s", source.name, target.name); // TODO - refactor migbandName to a member of `MigrationBand`
+    fprintf(file, "\tMB_P%s->%s ms", source.name, target.name); // TODO - refactor migbandName to a member of `MigrationBand`
   }
   fprintf(file, "\n");
 }
