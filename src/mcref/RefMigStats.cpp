@@ -92,7 +92,8 @@ void printRefMigStatsHeader(FILE *file) {
     int targetId = dataSetup.popTree->migBands[band].targetPop;
     Population &source = dataSetup.popTree->popArray[sourceId];
     Population &target = dataSetup.popTree->popArray[targetId];
-    fprintf(file, "\tMB_%s->%s ms", source.name, target.name); // TODO - refactor migbandName to a member of `MigrationBand`
+    fprintf(file, "\tMB_%s->%s ms\tMB_%s->%s nm", source.name, target.name, source.name, target.name);
+    // TODO - refactor migbandName to a member of `MigrationBand`
   }
   fprintf(file, "\n");
 }
@@ -100,7 +101,7 @@ void printRefMigStatsHeader(FILE *file) {
 void printReferenceMigrationStats(int iteration, FILE *file) {
   fprintf(file, "%d", iteration);
   for (int band = 0; band < dataSetup.popTree->numMigBands; band++) {
-    fprintf(file, "\t%.40f", migBandRefStats[band]);
+    fprintf(file, "\t%.40f\t%d", migBandRefStats[band], genetree_stats_total.num_migs[band]);
   }
   fprintf(file, "\n");
   fflush(file);
