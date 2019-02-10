@@ -16,7 +16,7 @@ extern DATA_STATE dataState;
 //-----------------------------------------------------------------------------
 int checkGtreeStructure_dispatch_check_event_chain(
                                          CheckGtreeStructureAutoVars* p_stack,
-                                         EventType e_event_type)
+                                         EventTypeIvgeny e_event_type)
 {
   int& gen                  = p_stack->gen;
   int& num_lineages         = p_stack->num_lineages;
@@ -392,7 +392,7 @@ int checkGtreeStructure(int gen)
   double& age               = stack_vars.age;
   double& delta_t           = stack_vars.delta_t;
   double PRECISION          = stack_vars.PRECISION;
-  Event* pCurrEvent         = NULL;
+  EventIvgeny* pCurrEvent         = NULL;
   // essentially follow the same path as procedure computeGenetreeStats,
   // but validates with genetree nodes
 

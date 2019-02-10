@@ -42,7 +42,7 @@ static struct option long_options[] = {{"help",     no_argument, 0, 'h'},
                                        {0, 0,                    0, 0}};
 
 extern RandGeneratorContext RndCtx;
-extern DAGsPerLocus<Event>* pAllDAGs;
+extern DAGsPerLocus<EventIvgeny>* pAllDAGs;
 
 DATA_STATE dataState;
 MISC_STATS misc_stats;
@@ -2600,7 +2600,7 @@ int UpdateGB_MigSPR()
              i < locus_data[gen].genetree_stats_delta[1].num_changed_events();
              ++i )
         {
-          Event* pChangedEvent =
+          EventIvgeny* pChangedEvent =
                     locus_data[gen].genetree_stats_delta[1].changed_events[i];
           pChangedEvent->incrementLineages();
           //event_chains[gen].events[event].incrementLineages();
@@ -2662,7 +2662,7 @@ int UpdateGB_MigSPR()
              i < locus_data[gen].genetree_stats_delta[0].num_changed_events();
              ++i )
         {
-          Event* pChangedEvent =
+          EventIvgeny* pChangedEvent =
               locus_data[gen].genetree_stats_delta[0].changed_events[i];
           pChangedEvent->incrementLineages();
           //event = locus_data[gen].genetree_stats_delta[0].changed_events[i];

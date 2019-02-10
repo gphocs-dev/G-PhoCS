@@ -33,7 +33,7 @@ GENETREE_NODE_STATS  genetree_node_stats;
 int**                nodePops;
 int**                nodeEvents;
 Locus_SuperStruct*   locus_data;
-extern DAGsPerLocus<Event>* pAllDAGs;
+extern DAGsPerLocus<EventIvgeny>* pAllDAGs;
 
 
 /*-----------------------------------------------------------------------------
@@ -104,7 +104,7 @@ int GetMem( void )
   }
 
   event_chains.reserve( dataSetup.numLoci );
-  pAllDAGs = new DAGsPerLocus<Event>( dataSetup.numLoci, dataSetup.popTree->numPops);
+  pAllDAGs = new DAGsPerLocus<EventIvgeny>( dataSetup.numLoci, dataSetup.popTree->numPops);
 
   genetree_stats_flat.sortedAgesArray = (double*)
                                         malloc( maxNodes * sizeof(double) );
@@ -130,7 +130,7 @@ int GetMem( void )
   // compute max number of events for all loci
   count = event_chains[0].total_events * dataSetup.numLoci;
 
-  event_chains[0].events = new Event[count];
+  event_chains[0].events = new EventIvgeny[count];
   if(event_chains[0].events == NULL)
   {
     fprintf(stderr, "\nError: Out Of Memory event space.\n");

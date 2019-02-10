@@ -12,12 +12,12 @@
 #include "EventsDAG.h"
 
 EventChains  event_chains;
-DAGsPerLocus<Event>* pAllDAGs;
+DAGsPerLocus<EventIvgeny>* pAllDAGs;
 //=============================================================================
 /*-----------------------------------------------------------------------------
  * CTOR
  * */
-Event::Event():
+EventIvgeny::EventIvgeny():
 id_(-1),
 type_(DUMMY),
 next_(-1),
@@ -32,31 +32,31 @@ num_lineages_(-1)
  * Object state modifiers
  */
 void
-Event::multiplyElapsedTime(double factor)
+EventIvgeny::multiplyElapsedTime(double factor)
 {
   this->elapsed_time_ *= factor;
 }
 
 void
-Event::addElapsedTime(double delta)
+EventIvgeny::addElapsedTime(double delta)
 {
   this->elapsed_time_ += delta;
 }
 
 void
-Event::addLineages(int delta)
+EventIvgeny::addLineages(int delta)
 {
   this->num_lineages_ += delta;
 }
 
 int
-Event::incrementLineages()
+EventIvgeny::incrementLineages()
 {
   return this->num_lineages_++;
 }
 
 int
-Event::decrementLineages()
+EventIvgeny::decrementLineages()
 {
   return this->num_lineages_--;
 }
@@ -65,7 +65,7 @@ Event::decrementLineages()
  * Predicates
  */
 bool
-Event::isOfType(int eventTypeMask) const
+EventIvgeny::isOfType(int eventTypeMask) const
 {
 	bool r = this->type_ & eventTypeMask;
   return r > 0;

@@ -60,11 +60,11 @@ bool isBorderEvent(double eventAge, double previousAge, double combAge);
 
 bool isEventCompletelyInsideComb(double eventAge, double combAge);
 
-void countCoalEventTowardsBelowComb(Event event, Stats *belowCombLeafStats);
+void countCoalEventTowardsBelowComb(EventIvgeny event, Stats *belowCombLeafStats);
 
-void countCoalEventTowardsHalfAndHalf(Event event, double eventAge, double previousAge, double combAge, Stats *belowCombLeafStats, Stats *aboveCombLeafStats, Stats *combTotalStats);
+void countCoalEventTowardsHalfAndHalf(EventIvgeny event, double eventAge, double previousAge, double combAge, Stats *belowCombLeafStats, Stats *aboveCombLeafStats, Stats *combTotalStats);
 
-void countCoalEventTowardsAboveComb(Event event, double eventAge, Stats *aboveCombLeafStats, Stats *combTotalStats);
+void countCoalEventTowardsAboveComb(EventIvgeny event, double eventAge, Stats *aboveCombLeafStats, Stats *combTotalStats);
 
 
 void handleNonLeafCoals(int comb, int currentPop, int gene);
@@ -83,11 +83,11 @@ void migrations(int comb, int gene);
 
 void handleCombLeavesMigBand(int comb, int mig, int gene);
 
-void countMigEventTowardsBelowComb(Event event, MigStats *leafMigStats);
+void countMigEventTowardsBelowComb(EventIvgeny event, MigStats *leafMigStats);
 
-void countMigEventTowardsHalfAndHalf(Event event, double eventAge, double previousAge, double combAge, MigStats *leafMigStats);
+void countMigEventTowardsHalfAndHalf(EventIvgeny event, double eventAge, double previousAge, double combAge, MigStats *leafMigStats);
 
-void countMigEventTowardsAboveComb(Event event, MigStats *leafMigStats);
+void countMigEventTowardsAboveComb(EventIvgeny event, MigStats *leafMigStats);
 
 
 Stats *getCombPopStats(int comb, int pop);

@@ -26,7 +26,7 @@
 #include "GTreeStructVal.h"
 #include <assert.h>
 
-extern DAGsPerLocus<Event>* pAllDAGs;
+extern DAGsPerLocus<EventIvgeny>* pAllDAGs;
 
 /******************************************************************************************************/
 /******                               FUNCTION IMPLEMENTATION                                    ******/
@@ -982,7 +982,7 @@ int acceptEventChainChanges(int gen, int instance) {
   auto iChangedEventEnd = locus_data[gen].genetree_stats_delta[instance].changed_events.rend();
   int n_lin_delta = locus_data[gen].genetree_stats_delta[instance].num_lin_delta;
   int n_orig_event_idx = locus_data[gen].genetree_stats_delta[instance].original_event;
-  Event* pOrigEvent = &(event_chains[gen].events[n_orig_event_idx]);
+  EventIvgeny* pOrigEvent = &(event_chains[gen].events[n_orig_event_idx]);
   for( ; iChangedEvent !=  iChangedEventEnd; ++iChangedEvent )
     if((*iChangedEvent) != pOrigEvent)
       (*iChangedEvent)->addLineages(n_lin_delta);
@@ -1150,7 +1150,7 @@ int createEventBefore(int gen, int pop, int event, double elapsed_time) {
   return new_event;
 }
 
-int createEventBefore(int gen, int pop, Event* pCurrEvent, double elapsed_time)
+int createEventBefore(int gen, int pop, EventIvgeny* pCurrEvent, double elapsed_time)
 {
   int prev_event_idx = pCurrEvent->getPrevIdx();
   int curr_event_idx = -1;
@@ -1327,7 +1327,7 @@ computeCoalStatsDelta(int instance, int gen, int bottom_event, int bottom_pop,
                           2 * event_chains[gen].events[event].getNumLineages())
         * event_chains[gen].events[event].getElapsedTime();
 
-    Event* pChangedEvent =  &(event_chains[gen].events[event]);
+    EventIvgeny* pChangedEvent =  &(event_chains[gen].events[event]);
     locus_data[gen].genetree_stats_delta[instance].push_changed_event(pChangedEvent);
     //changed_events[locus_data[gen].genetree_stats_delta[instance].num_changed_events] = event;
     //locus_data[gen].genetree_stats_delta[instance].num_changed_events++;

@@ -22,12 +22,12 @@ extern int debug;
 
 
 //======================== Trace Lineages Code ===============================
-Event* get_first_event_in_pop(int gen, int pop)
+EventIvgeny* get_first_event_in_pop(int gen, int pop)
 {
   return &(event_chains[gen].events[event_chains[gen].first_event[pop]]);
 }
 
-Event* get_next_event(int gen, Event* pCurrEvent)
+EventIvgeny* get_next_event(int gen, EventIvgeny* pCurrEvent)
 {
   int next_idx = pCurrEvent->getNextIdx();
   if( -1 != next_idx)
