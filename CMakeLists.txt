@@ -21,6 +21,12 @@ set(SOURCE_FILES
         src/DbgErrMsg.h
 		src/DbgErrMsgGTreeStruct.h
 		src/DbgErrMsgTraceLineages.h
+        src/Event.h
+        src/Event.cpp
+        src/EventNode.h
+        src/EventNode.cpp
+        src/EventsGraph.h
+        src/EventsGraph.cpp
 		src/EventsDAG.h
         src/GenericTree.cpp
         src/GenericTree.h
@@ -49,7 +55,7 @@ set(SOURCE_FILES
         src/CombAssertions.cpp
         src/CombAssertions.h
         src/HypothesisPrinter.cpp
-        src/HypothesisPrinter.h)
+        src/HypothesisPrinter.h src/DbgErrMsgEvents.h)
 
 add_executable(G_PhoCS ${SOURCE_FILES})
 

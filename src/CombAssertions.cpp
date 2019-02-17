@@ -20,12 +20,12 @@ void runAssertions() {
 }
 
 void assertRootNumCoals() { // this test only works when combAge is set to zero
-  int root = getPopIdByName(dataSetup.popTree, "root");
+  int root = getPopIdByName(dataSetup.popTree_, "root");
 
   int maxCoals = dataSetup.numLoci * (dataSetup.numSamples - 1);
 
   int actualCoals = comb_stats[root].total.num_coals;
-  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+  for (int pop = 0; pop < dataSetup.popTree_->numPops; pop++) {
     if (isLeaf(pop)) {
       actualCoals += comb_stats[root].leaves[pop].below_comb.num_coals;
     }
@@ -43,7 +43,7 @@ void assertRootNumCoals() { // this test only works when combAge is set to zero
  *  To enable this test, you must hard-code getCombAge() to return 0.0 AND enable flat stats
  */
 void assertRootCoalStats() {
-  int root = getPopIdByName(dataSetup.popTree, "root");
+  int root = getPopIdByName(dataSetup.popTree_, "root");
   double actualCoalStats = comb_stats[root].total.coal_stats;
   double expectedCoalStats = genetree_stats_flat.coal_stats_flat;
 
@@ -61,7 +61,7 @@ void assertRootCoalStats() {
  * Compares trivial combs (pops directly above two leaves) with regular pops.
  */
 void assertBottomCombs() {
-  for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
+  for (int comb = 0; comb < dataSetup.popTree_->numPops; comb++) {
     if (isFeasibleComb(comb) && areChildrenLeaves(comb)) {
       assertBottomCombsNumCoals(comb);
       assertBottomCombsCoalStats(comb);
@@ -94,9 +94,9 @@ void assertBottomCombsCoalStats(int comb) {
 }
 
 void assertCombLeaves() {
-  for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
+  for (int comb = 0; comb < dataSetup.popTree_->numPops; comb++) {
     if (isFeasibleComb(comb)) {
-      for (int leaf = 0; leaf < dataSetup.popTree->numPops; leaf++) {
+      for (int leaf = 0; leaf < dataSetup.popTree_->numPops; leaf++) {
         if (isLeaf(leaf) && isAncestralTo(comb, leaf)) {
           assertCombLeafNumCoals(comb, leaf);
           assertCombLeafCoalStats(comb, leaf);
@@ -143,8 +143,8 @@ void assertCombLeafCoalStats(int comb, int leaf) {
 }
 
 void assertMigStats() {
-  for (int migband = 0; migband < dataSetup.popTree->numMigBands; migband++) {
-    for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
+  for (int migband = 0; migband < dataSetup.popTree_->numMigBands; migband++) {
+    for (int comb = 0; comb < dataSetup.popTree_->numPops; comb++) {
       if (isFeasibleComb(comb) && isCombLeafMigBand(migband, comb)) {
         assertLeafMigStats(migband, comb);
       }
@@ -165,8 +165,8 @@ void assertLeafMigMigStats(int migband, int comb) {
   double error = fabs(actualMigStats - expectedMigStats);
   double relativeError = error / expectedMigStats;
   if (relativeError > requiredRelativePrecision()) {
-    int source = dataSetup.popTree->migBands[migband].sourcePop;
-    int target = dataSetup.popTree->migBands[migband].targetPop;
+    int source = dataSetup.popTree_->migBands[migband].sourcePop;
+    int target = dataSetup.popTree_->migBands[migband].targetPop;
     printf("\nError while checking migband '%s->%s'  '#%d->#%d' mig_stats for comb '%s':\n"
                   "Expected:%0.35f\n"
                   "  Actual:%0.35f\n"
@@ -191,8 +191,8 @@ void assertLeafMigNumMigs(int migband, int comb) {
   int expectedNumMig = genetree_stats_total.num_migs[migband];
   int actualNumMig = comb_stats[comb].leafMigs[migband].num_migs + comb_stats[comb].leafMigs[migband].num_migs_above;
   if (expectedNumMig != actualNumMig) {
-    int source = dataSetup.popTree->migBands[migband].sourcePop;
-    int target = dataSetup.popTree->migBands[migband].targetPop;
+    int source = dataSetup.popTree_->migBands[migband].sourcePop;
+    int target = dataSetup.popTree_->migBands[migband].targetPop;
     printf("\nError while checking migband '%s->%s' '#%d->#%d' num migs for comb '%s'. Expected:%d. Actual:%d",
            getPopName(source), getPopName(target),
            source, target,
@@ -203,8 +203,8 @@ void assertLeafMigNumMigs(int migband, int comb) {
 }
 
 void assertCombLeavesEventChains() {
-  for (int comb = 0; comb < dataSetup.popTree->numPops; comb++) {
-    for (int leaf = 0; leaf < dataSetup.popTree->numPops; leaf++) {
+  for (int comb = 0; comb < dataSetup.popTree_->numPops; comb++) {
+    for (int leaf = 0; leaf < dataSetup.popTree_->numPops; leaf++) {
       if (isFeasibleComb(comb) && isLeaf(leaf) && isAncestralTo(comb, leaf)) {
         for (int gene = 0; gene < dataSetup.numLoci; gene++) {
           assertCombLeafEventChain(comb, leaf, gene);
@@ -243,7 +243,7 @@ void assertLastEventId(int lastEvent) {
 }
 
 void assertLastEventIsSampleEnd(EventChain chain, int lastEvent) {
-  EventType type = chain.events[lastEvent].getType();
+  EventTypeIvgeny type = chain.events[lastEvent].getType();
   if (type != END_CHAIN) printErrorAndExit("Last event isn't END_CHAIN");
 }
 
@@ -284,7 +284,7 @@ void assertFirstEventZeroElapsedTime(EventChain chain, int firstEvent) {
 }
 
 void assertFirstEventIsSampleStart(EventChain chain, int firstEvent) {
-  EventType type = chain.events[firstEvent].getType();
+  EventTypeIvgeny type = chain.events[firstEvent].getType();
   if (type != SAMPLES_START) printErrorAndExit("first event isn't SAMPLE_START");
 }
 
