@@ -271,87 +271,87 @@ int checkSettings() {
 	}
 	
 	// set start point of tau for sampling for prior mean, if not pre-set
-	for(pop=dataSetup.popTree->numCurPops; pop<dataSetup.popTree->numPops; pop++) {
-		if(dataSetup.popTree->pops[pop]->agePrior.sampleStart <= 0) {
-			dataSetup.popTree->pops[pop]->agePrior.sampleStart =  dataSetup.popTree->pops[pop]->agePrior.alpha / dataSetup.popTree->pops[pop]->agePrior.beta;
+	for(pop=dataSetup.popTree_->numCurPops; pop<dataSetup.popTree_->numPops; pop++) {
+		if(dataSetup.popTree_->pops[pop]->agePrior.sampleStart <= 0) {
+			dataSetup.popTree_->pops[pop]->agePrior.sampleStart =  dataSetup.popTree_->pops[pop]->agePrior.alpha / dataSetup.popTree_->pops[pop]->agePrior.beta;
 		}
 	}
 	
 	// check population specific settings
-	for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
-		if(dataSetup.popTree->pops[pop]->thetaPrior.alpha < 0) {
-			fprintf(stderr, "Error: gamma prior alpha parameter not set for theta of pop %s (%d).\n", dataSetup.popTree->pops[pop]->name,pop+1);
+	for(pop=0; pop<dataSetup.popTree_->numPops; pop++) {
+		if(dataSetup.popTree_->pops[pop]->thetaPrior.alpha < 0) {
+			fprintf(stderr, "Error: gamma prior alpha parameter not set for theta of pop %s (%d).\n", dataSetup.popTree_->pops[pop]->name,pop+1);
 			numErrors++;
 		}
-		if(dataSetup.popTree->pops[pop]->thetaPrior.beta < 0) {
-			fprintf(stderr, "Error: gamma prior beta argument not set for theta of pop %s (%d).\n", dataSetup.popTree->pops[pop]->name,pop+1);
+		if(dataSetup.popTree_->pops[pop]->thetaPrior.beta < 0) {
+			fprintf(stderr, "Error: gamma prior beta argument not set for theta of pop %s (%d).\n", dataSetup.popTree_->pops[pop]->name,pop+1);
 			numErrors++;
 		}
 		// set start point of theta for sampling for prior mean
-		dataSetup.popTree->pops[pop]->thetaPrior.sampleStart =  dataSetup.popTree->pops[pop]->thetaPrior.alpha / dataSetup.popTree->pops[pop]->thetaPrior.beta;
+		dataSetup.popTree_->pops[pop]->thetaPrior.sampleStart =  dataSetup.popTree_->pops[pop]->thetaPrior.alpha / dataSetup.popTree_->pops[pop]->thetaPrior.beta;
 
 		// for ancestral pops
-		if(pop >= dataSetup.popTree->numCurPops) {
-			if(dataSetup.popTree->pops[pop]->agePrior.alpha < 0) {
-				fprintf(stderr, "Error: gamma prior alpha parameter not set for tau of ancestral pop %s (%d).\n", dataSetup.popTree->pops[pop]->name,pop+1);
+		if(pop >= dataSetup.popTree_->numCurPops) {
+			if(dataSetup.popTree_->pops[pop]->agePrior.alpha < 0) {
+				fprintf(stderr, "Error: gamma prior alpha parameter not set for tau of ancestral pop %s (%d).\n", dataSetup.popTree_->pops[pop]->name,pop+1);
 				numErrors++;
 			}
-			if(dataSetup.popTree->pops[pop]->agePrior.beta < 0) {
-				fprintf(stderr, "Error: gamma prior beta argument not set for tau of ancestral pop %s (%d).\n", dataSetup.popTree->pops[pop]->name,pop+1);
+			if(dataSetup.popTree_->pops[pop]->agePrior.beta < 0) {
+				fprintf(stderr, "Error: gamma prior beta argument not set for tau of ancestral pop %s (%d).\n", dataSetup.popTree_->pops[pop]->name,pop+1);
 				numErrors++;
 			}
 			if( !mcmcSetup.findFinetunes && mcmcSetup.finetunes.taus[pop] < 0) {
-				fprintf(stderr, "Error: finetune not set for update of tau of ancestral pop %s (%d).\n", dataSetup.popTree->pops[pop]->name,pop+1);
+				fprintf(stderr, "Error: finetune not set for update of tau of ancestral pop %s (%d).\n", dataSetup.popTree_->pops[pop]->name,pop+1);
 				numErrors++;
 			}
 
 			
 			// check to see that population tau priors  and start times are lower than parent's
-			if(dataSetup.popTree->rootPop != pop && 
-				( dataSetup.popTree->pops[pop]->father->agePrior.alpha/dataSetup.popTree->pops[pop]->father->agePrior.beta < 
-					dataSetup.popTree->pops[pop]->agePrior.alpha/dataSetup.popTree->pops[pop]->agePrior.beta) ) {
+			if(dataSetup.popTree_->rootPop != pop &&
+				( dataSetup.popTree_->pops[pop]->father->agePrior.alpha/dataSetup.popTree_->pops[pop]->father->agePrior.beta <
+					dataSetup.popTree_->pops[pop]->agePrior.alpha/dataSetup.popTree_->pops[pop]->agePrior.beta) ) {
 						fprintf(stderr, "\nError:Conflicting priors for ancestral population ages found for pop %s, and parent pop %s.\n",
-              					dataSetup.popTree->pops[pop]->name, dataSetup.popTree->pops[pop]->father->name);
+              					dataSetup.popTree_->pops[pop]->name, dataSetup.popTree_->pops[pop]->father->name);
 						numErrors++;
 			}
-			if(dataSetup.popTree->rootPop != pop && 
-				(dataSetup.popTree->pops[pop]->father->agePrior.sampleStart < dataSetup.popTree->pops[pop]->agePrior.sampleStart) ) {
+			if(dataSetup.popTree_->rootPop != pop &&
+				(dataSetup.popTree_->pops[pop]->father->agePrior.sampleStart < dataSetup.popTree_->pops[pop]->agePrior.sampleStart) ) {
 						fprintf(stderr, "\nError:Conflicting initalization settings for ancestral population ages found for pop %s, and parent pop %s.\n",
-              					dataSetup.popTree->pops[pop]->name, dataSetup.popTree->pops[pop]->father->name);
+              					dataSetup.popTree_->pops[pop]->name, dataSetup.popTree_->pops[pop]->father->name);
 						numErrors++;
 			}
 		}// end of if(pop>=numCurPops)
 		else {
-			if( ( dataSetup.popTree->pops[pop]->father->agePrior.alpha/dataSetup.popTree->pops[pop]->father->agePrior.beta < 
-					dataSetup.popTree->pops[pop]->sampleAge ) ) {
+			if( ( dataSetup.popTree_->pops[pop]->father->agePrior.alpha/dataSetup.popTree_->pops[pop]->father->agePrior.beta <
+					dataSetup.popTree_->pops[pop]->sampleAge ) ) {
 						fprintf(stderr, "\nError:Conflicting prior for ancestral population age for parent pop %s and sample age for pop %s.\n",
-              					dataSetup.popTree->pops[pop]->father->name , dataSetup.popTree->pops[pop]->name );
+              					dataSetup.popTree_->pops[pop]->father->name , dataSetup.popTree_->pops[pop]->name );
 						numErrors++;
 			}
-			if( (dataSetup.popTree->pops[pop]->father->agePrior.sampleStart < dataSetup.popTree->pops[pop]->sampleAge) ) {
+			if( (dataSetup.popTree_->pops[pop]->father->agePrior.sampleStart < dataSetup.popTree_->pops[pop]->sampleAge) ) {
 						fprintf(stderr, "\nError:Conflicting initialization for ancestral population age for parent pop %s and sample age for pop %s (%g,%g).\n",
-              					dataSetup.popTree->pops[pop]->father->name , dataSetup.popTree->pops[pop]->name,
-								dataSetup.popTree->pops[pop]->father->agePrior.sampleStart,dataSetup.popTree->pops[pop]->sampleAge
+              					dataSetup.popTree_->pops[pop]->father->name , dataSetup.popTree_->pops[pop]->name,
+								dataSetup.popTree_->pops[pop]->father->agePrior.sampleStart,dataSetup.popTree_->pops[pop]->sampleAge
    							);
 						numErrors++;
 			}
 		}
 	}// end of for(pop)
 
-	for(migBand=0; migBand<dataSetup.popTree->numMigBands; migBand++) {
+	for(migBand=0; migBand<dataSetup.popTree_->numMigBands; migBand++) {
 		// check that priors are set
-		if(dataSetup.popTree->migBands[migBand].migRatePrior.alpha < 0) {
+		if(dataSetup.popTree_->migBands[migBand].migRatePrior.alpha < 0) {
 			fprintf(stderr, "Error: gamma prior alpha argument not set for mig-rate of mig-band (#%d).\n", migBand+1);
 			numErrors++;
 		}
-		if(dataSetup.popTree->migBands[migBand].migRatePrior.beta < 0) {
+		if(dataSetup.popTree_->migBands[migBand].migRatePrior.beta < 0) {
 			fprintf(stderr, "Error: gamma prior beta argument not set for mig-rate of mig-band (#%d).\n", migBand+1);
 			numErrors++;
 		}
 		
 		// set start point of migration rate for sampling for prior mean
-		dataSetup.popTree->migBands[migBand].migRatePrior.sampleStart =  
-				dataSetup.popTree->migBands[migBand].migRatePrior.alpha / dataSetup.popTree->migBands[migBand].migRatePrior.beta;
+		dataSetup.popTree_->migBands[migBand].migRatePrior.sampleStart =
+				dataSetup.popTree_->migBands[migBand].migRatePrior.alpha / dataSetup.popTree_->migBands[migBand].migRatePrior.beta;
 	}// end of for(migBand)
   return numErrors;
 }
@@ -371,41 +371,41 @@ int printPriorSettings()
   double alpha,beta;
 	
   // print out tree and population parameters
-  printPopulationTree(dataSetup.popTree, stdout, 0);
+  printPopulationTree(dataSetup.popTree_, stdout, 0);
   printf("\n");
   printf("---------------------------------------------------------------\n");
   
 
   printf("\nGamma prior: mean +- SE for theta's ,tau's and m's\n");
-  for(pop=0; pop<dataSetup.popTree->numPops; pop++)
+  for(pop=0; pop<dataSetup.popTree_->numPops; pop++)
   {
-    sprintf(string, "theta_%s: ", dataSetup.popTree->pops[pop]->name);
-    alpha = dataSetup.popTree->pops[pop]->thetaPrior.alpha;
-    beta  = dataSetup.popTree->pops[pop]->thetaPrior.beta;
+    sprintf(string, "theta_%s: ", dataSetup.popTree_->pops[pop]->name);
+    alpha = dataSetup.popTree_->pops[pop]->thetaPrior.alpha;
+    beta  = dataSetup.popTree_->pops[pop]->thetaPrior.beta;
     printf("%-15s %9.5f +- %9.5f\n", string, alpha/beta, sqrt(alpha)/beta);
   }
   printf("---------------------------------------------------------------\n");
 
-  for(pop=dataSetup.popTree->numCurPops; pop<dataSetup.popTree->numPops; pop++)
+  for(pop=dataSetup.popTree_->numCurPops; pop<dataSetup.popTree_->numPops; pop++)
   {
-    sprintf(string, "tau_%s: ", dataSetup.popTree->pops[pop]->name);
-    alpha = dataSetup.popTree->pops[pop]->agePrior.alpha;
-    beta  = dataSetup.popTree->pops[pop]->agePrior.beta;
+    sprintf(string, "tau_%s: ", dataSetup.popTree_->pops[pop]->name);
+    alpha = dataSetup.popTree_->pops[pop]->agePrior.alpha;
+    beta  = dataSetup.popTree_->pops[pop]->agePrior.beta;
     printf("%-15s %9.5f +- %9.5f\n", string, alpha/beta, sqrt(alpha)/beta);
   }
   printf("---------------------------------------------------------------\n");
 	
-  if(dataSetup.popTree->numMigBands > 0)
+  if(dataSetup.popTree_->numMigBands > 0)
   {
-    for(migBand=0; migBand<dataSetup.popTree->numMigBands; migBand++)
+    for(migBand=0; migBand<dataSetup.popTree_->numMigBands; migBand++)
     {
-      alpha = dataSetup.popTree->migBands[migBand].migRatePrior.alpha;
-      beta = dataSetup.popTree->migBands[migBand].migRatePrior.beta;
+      alpha = dataSetup.popTree_->migBands[migBand].migRatePrior.alpha;
+      beta = dataSetup.popTree_->migBands[migBand].migRatePrior.beta;
       printf("m_%s->%s:  %9.5f +- %9.5f\n",
-             dataSetup.popTree->pops[ \
-               dataSetup.popTree->migBands[migBand].sourcePop ]->name,
-             dataSetup.popTree->pops[ \
-               dataSetup.popTree->migBands[migBand].targetPop ]->name,
+             dataSetup.popTree_->pops[ \
+               dataSetup.popTree_->migBands[migBand].sourcePop ]->name,
+             dataSetup.popTree_->pops[ \
+               dataSetup.popTree_->migBands[migBand].targetPop ]->name,
              alpha/beta, sqrt(alpha)/beta);
     }
     printf("---------------------------------------------------------------\n");
@@ -428,13 +428,13 @@ int finalizeNumParameters() {
 	int numAncientPops = 0;
 	int param;
 	
-	for(param=0; param<dataSetup.popTree->numCurPops; param++) {
-		if(dataSetup.popTree->pops[param]->updateSampleAge || dataSetup.popTree->pops[param]->sampleAge > 0.0)  numAncientPops++;
+	for(param=0; param<dataSetup.popTree_->numCurPops; param++) {
+		if(dataSetup.popTree_->pops[param]->updateSampleAge || dataSetup.popTree_->pops[param]->sampleAge > 0.0)  numAncientPops++;
 	}
 
 	mcmcSetup.numParameters = 
-		2*dataSetup.popTree->numPops - dataSetup.popTree->numCurPops + 
-		dataSetup.popTree->numMigBands + 
+		2*dataSetup.popTree_->numPops - dataSetup.popTree_->numCurPops +
+		dataSetup.popTree_->numMigBands +
 		numAncientPops +
 		(mcmcSetup.mutRateMode == 1);
 		
@@ -447,14 +447,14 @@ int finalizeNumParameters() {
 		exit(-1);
 	}
 	
-	for(param=2*dataSetup.popTree->numPops - dataSetup.popTree->numCurPops + dataSetup.popTree->numMigBands; 
-		param<2*dataSetup.popTree->numPops - dataSetup.popTree->numCurPops + dataSetup.popTree->numMigBands+numAncientPops;
+	for(param=2*dataSetup.popTree_->numPops - dataSetup.popTree_->numCurPops + dataSetup.popTree_->numMigBands;
+		param<2*dataSetup.popTree_->numPops - dataSetup.popTree_->numCurPops + dataSetup.popTree_->numMigBands+numAncientPops;
 		param++) {
 			mcmcSetup.printFactors[param] = globalSetup.printFactor;
 	}
 	
 	//set print factors to 1 for all non-scaled parameters
-	for(param=2*dataSetup.popTree->numPops - dataSetup.popTree->numCurPops + numAncientPops + dataSetup.popTree->numMigBands; param<mcmcSetup.numParameters; param++) {
+	for(param=2*dataSetup.popTree_->numPops - dataSetup.popTree_->numCurPops + numAncientPops + dataSetup.popTree_->numMigBands; param<mcmcSetup.numParameters; param++) {
 		mcmcSetup.printFactors[param] = 1.0;
 	}
 	return 0;
@@ -809,16 +809,16 @@ int readCurrentPops(FILE* fctl) {
 		return numErrors+1;
 	}
 	
-	dataSetup.popTree = createPopTree(curPops);
+	dataSetup.popTree_ = createPopTree(curPops);
 
 	// allocate temporary array for print factors, might expand later on, with migrations, etc.
-	mcmcSetup.printFactors = (double*)malloc((3*dataSetup.popTree->numCurPops - 2)*sizeof(double));
+	mcmcSetup.printFactors = (double*)malloc((3*dataSetup.popTree_->numCurPops - 2)*sizeof(double));
 	if(mcmcSetup.printFactors == NULL) {
 		fprintf(stderr, "\n Error: oom allocating printFactors array.\n");
 		exit(-1);
 	}
 	
-	dataSetup.numSamplesPerPop = (int*)malloc(dataSetup.popTree->numCurPops*sizeof(int));
+	dataSetup.numSamplesPerPop = (int*)malloc(dataSetup.popTree_->numCurPops*sizeof(int));
 	if(dataSetup.numSamplesPerPop == NULL) {
 		fprintf(stderr, "\nError: oom allocating maxSamplesPerPop array.\n");
 		exit(-1);
@@ -827,7 +827,7 @@ int readCurrentPops(FILE* fctl) {
 	// start up sample name array
 	dataSetup.maxSamples = 0;
 	dataSetup.numSamples = 0;
-	for(pop=0; pop<dataSetup.popTree->numCurPops; pop++) {
+	for(pop=0; pop<dataSetup.popTree_->numCurPops; pop++) {
 		numErrors += expectNextToken(fctl,"POP-START",token);
 		if(feof(fctl)) {
 			fprintf(stderr, "Error: unexpected end of file before POP-START.\n");
@@ -836,10 +836,10 @@ int readCurrentPops(FILE* fctl) {
 		
 		// initialize population arguments
 		dataSetup.numSamplesPerPop[pop] = 0;
-		dataSetup.popTree->pops[pop]->thetaPrior.alpha = globalSetup.alpha;
-		dataSetup.popTree->pops[pop]->thetaPrior.beta  = globalSetup.beta;
-		dataSetup.popTree->pops[pop]->age = 0.0;
-		dataSetup.popTree->pops[pop]->isAncestralTo[pop] = 1;
+		dataSetup.popTree_->pops[pop]->thetaPrior.alpha = globalSetup.alpha;
+		dataSetup.popTree_->pops[pop]->thetaPrior.beta  = globalSetup.beta;
+		dataSetup.popTree_->pops[pop]->age = 0.0;
+		dataSetup.popTree_->pops[pop]->isAncestralTo[pop] = 1;
 		mcmcSetup.printFactors[pop] = globalSetup.printFactor;
 		
 		while(1) {
@@ -865,24 +865,24 @@ int readCurrentPops(FILE* fctl) {
 					continue;
 				}
 				if(0 == strcmp("name",token)) {
-					strncpy(dataSetup.popTree->pops[pop]->name, token2,  NAME_LENGTH-1);
+					strncpy(dataSetup.popTree_->pops[pop]->name, token2,  NAME_LENGTH-1);
 				} else if(0 == strcmp("theta-print",token)) {
 					if (sscanf(token2, "%lf", &mcmcSetup.printFactors[pop]) != 1) {
 						fprintf(stderr,"Error: value for POP theta-print should be floating point number, got %s.\n", token2);
 						numErrors++;
 					}
 				} else if(0 == strcmp("theta-alpha",token)) {
-					if (sscanf(token2, "%lf", &dataSetup.popTree->pops[pop]->thetaPrior.alpha) != 1) {
+					if (sscanf(token2, "%lf", &dataSetup.popTree_->pops[pop]->thetaPrior.alpha) != 1) {
 						fprintf(stderr,"Error: value for POP theta-alpha should be floating point number, got %s.\n", token2);
 						numErrors++;
 					}
 				} else if(0 == strcmp("theta-beta",token)) {
-					if (sscanf(token2, "%lf", &dataSetup.popTree->pops[pop]->thetaPrior.beta) != 1) {
+					if (sscanf(token2, "%lf", &dataSetup.popTree_->pops[pop]->thetaPrior.beta) != 1) {
 						fprintf(stderr,"Error: value for POP theta-beta should be floating point number, got %s.\n", token2);
 						numErrors++;
 					}
 				} else if(0 == strcmp("age",token)) {
-					if (sscanf(token2, "%lf", &dataSetup.popTree->pops[pop]->sampleAge) != 1) {
+					if (sscanf(token2, "%lf", &dataSetup.popTree_->pops[pop]->sampleAge) != 1) {
 						fprintf(stderr,"Error: value for POP age should be floating point number, got %s.\n", token2);
 						numErrors++;
 					}
@@ -892,12 +892,12 @@ int readCurrentPops(FILE* fctl) {
 						numErrors++;
 					}
 					if(token2[0] == 'f') {
-						dataSetup.popTree->pops[pop]->updateSampleAge = 0;
-						if(dataSetup.popTree->pops[pop]->sampleAge != 0.0) {
+						dataSetup.popTree_->pops[pop]->updateSampleAge = 0;
+						if(dataSetup.popTree_->pops[pop]->sampleAge != 0.0) {
 							mcmcSetup.doMixing = 0;
 						}
 					} else {
-						dataSetup.popTree->pops[pop]->updateSampleAge = 1;
+						dataSetup.popTree_->pops[pop]->updateSampleAge = 1;
 					}					
 				} else {
 					fprintf(stderr, "Error: argument '%s' is not accepted in POP module of CURRENT-POPS.\n",token);
@@ -907,7 +907,7 @@ int readCurrentPops(FILE* fctl) {
 		}// end of while(1)
 
 		// check that name is set
-		if(dataSetup.popTree->pops[pop]->name[0] == '\0') {
+		if(dataSetup.popTree_->pops[pop]->name[0] == '\0') {
 			fprintf(stderr, "Error: no name is given for current pop %d.\n", pop+1);
 			numErrors++;
 		}
@@ -946,28 +946,28 @@ int readAncestralPops(FILE* fctl) {
 	}
 
 	// create array for per-population TAU split time finetunes, and initialize with global finetune
-	mcmcSetup.finetunes.taus = (double*)malloc(sizeof(double) * dataSetup.popTree->numPops);
-	for(pop=0; pop<dataSetup.popTree->numPops;pop++) {
+	mcmcSetup.finetunes.taus = (double*)malloc(sizeof(double) * dataSetup.popTree_->numPops);
+	for(pop=0; pop<dataSetup.popTree_->numPops;pop++) {
 		mcmcSetup.finetunes.taus[pop] = globalSetup.finetuneTaus;
   	}
   	
 				
-	for(pop=dataSetup.popTree->numCurPops; pop<dataSetup.popTree->numPops; pop++) {
+	for(pop=dataSetup.popTree_->numCurPops; pop<dataSetup.popTree_->numPops; pop++) {
 		numErrors += expectNextToken(fctl,"POP-START",token);
 		if(feof(fctl)) {
-			fprintf(stderr, "Error: could not find module POP for ancestral population %d (expecting %d populations total).\n",pop+1, dataSetup.popTree->numPops);
+			fprintf(stderr, "Error: could not find module POP for ancestral population %d (expecting %d populations total).\n",pop+1, dataSetup.popTree_->numPops);
 			return numErrors+1;
 		}
 		
 		// initialize population arguments
-		dataSetup.popTree->pops[pop]->thetaPrior.alpha = globalSetup.alpha;
-		dataSetup.popTree->pops[pop]->thetaPrior.beta  = globalSetup.beta;
-		dataSetup.popTree->pops[pop]->agePrior.alpha   = globalSetup.alpha;
-		dataSetup.popTree->pops[pop]->agePrior.beta    = globalSetup.beta;
-		dataSetup.popTree->pops[pop]->agePrior.sampleStart = -1;
-		dataSetup.popTree->pops[pop]->isAncestralTo[pop] = 1;
+		dataSetup.popTree_->pops[pop]->thetaPrior.alpha = globalSetup.alpha;
+		dataSetup.popTree_->pops[pop]->thetaPrior.beta  = globalSetup.beta;
+		dataSetup.popTree_->pops[pop]->agePrior.alpha   = globalSetup.alpha;
+		dataSetup.popTree_->pops[pop]->agePrior.beta    = globalSetup.beta;
+		dataSetup.popTree_->pops[pop]->agePrior.sampleStart = -1;
+		dataSetup.popTree_->pops[pop]->isAncestralTo[pop] = 1;
 		mcmcSetup.printFactors[pop] = globalSetup.printFactor;	// theta
-		mcmcSetup.printFactors[pop + dataSetup.popTree->numCurPops-1] = globalSetup.printFactor; //tau
+		mcmcSetup.printFactors[pop + dataSetup.popTree_->numCurPops-1] = globalSetup.printFactor; //tau
 		
 		while(1) {
 			// read token
@@ -989,27 +989,27 @@ int readAncestralPops(FILE* fctl) {
 			}
 			
 			if(0 == strcmp("name",token)) {
-				strncpy(dataSetup.popTree->pops[pop]->name, token2,  NAME_LENGTH-1);
+				strncpy(dataSetup.popTree_->pops[pop]->name, token2,  NAME_LENGTH-1);
 			} else if(0 == strcmp("children",token)) {
 				for(son=0; son<2; son++) {
-					pop1 = getPopIdByName(dataSetup.popTree, token2);
+					pop1 = getPopIdByName(dataSetup.popTree_, token2);
 					if(pop1<0) {
 						fprintf(stderr, "Error: pop child name '%s' unrecognized for ancestral pop %d.\n", token2, pop+1);
 						numErrors++;
 					}
 					
-					dataSetup.popTree->pops[pop]->sons[son] = dataSetup.popTree->pops[pop1];
-					if(dataSetup.popTree->pops[pop1]->father != NULL) {
+					dataSetup.popTree_->pops[pop]->sons[son] = dataSetup.popTree_->pops[pop1];
+					if(dataSetup.popTree_->pops[pop1]->father != NULL) {
 						fprintf(stderr, "Error: population %s already has a parent defined already (%d in addition to %d).\n",
-							dataSetup.popTree->pops[pop1]->name, dataSetup.popTree->pops[pop1]->father->id+1,pop+1);
+							dataSetup.popTree_->pops[pop1]->name, dataSetup.popTree_->pops[pop1]->father->id+1,pop+1);
 						numErrors++;
 					} else {
-						dataSetup.popTree->pops[pop1]->father = dataSetup.popTree->pops[pop];
+						dataSetup.popTree_->pops[pop1]->father = dataSetup.popTree_->pops[pop];
 					}
 					// copy ancestral array of child to parent
-					for(pop2=0; pop2<dataSetup.popTree->numPops; pop2++) {
-						if(dataSetup.popTree->pops[pop1]->isAncestralTo[pop2]) {
-							dataSetup.popTree->pops[pop]->isAncestralTo[pop2] = 1;
+					for(pop2=0; pop2<dataSetup.popTree_->numPops; pop2++) {
+						if(dataSetup.popTree_->pops[pop1]->isAncestralTo[pop2]) {
+							dataSetup.popTree_->pops[pop]->isAncestralTo[pop2] = 1;
 						}
 					}
 
@@ -1026,32 +1026,32 @@ int readAncestralPops(FILE* fctl) {
 					numErrors++;
 				}
 			} else if(0 == strcmp("theta-alpha",token)) {
-				if (sscanf(token2, "%lf", &dataSetup.popTree->pops[pop]->thetaPrior.alpha) != 1) {
+				if (sscanf(token2, "%lf", &dataSetup.popTree_->pops[pop]->thetaPrior.alpha) != 1) {
 					fprintf(stderr,"Error: value for POP theta-alpha should be floating point number, got %s.\n", token2);
 					numErrors++;
 				}
 			} else if(0 == strcmp("theta-beta",token)) {
-				if (sscanf(token2, "%lf", &dataSetup.popTree->pops[pop]->thetaPrior.beta) != 1) {
+				if (sscanf(token2, "%lf", &dataSetup.popTree_->pops[pop]->thetaPrior.beta) != 1) {
 					fprintf(stderr,"Error: value for POP theta-beta should be floating point number, got %s.\n", token2);
 					numErrors++;
 				}
 			} else if(0 == strcmp("tau-print",token)) {
-				if (sscanf(token2, "%lf", &mcmcSetup.printFactors[dataSetup.popTree->numCurPops+pop-1]) != 1) {
+				if (sscanf(token2, "%lf", &mcmcSetup.printFactors[dataSetup.popTree_->numCurPops+pop-1]) != 1) {
 					fprintf(stderr,"Error: value for POP tau-print should be floating point number, got %s.\n", token2);
 					numErrors++;
 				}
 			} else if(0 == strcmp("tau-alpha",token)) {
-				if (sscanf(token2, "%lf", &dataSetup.popTree->pops[pop]->agePrior.alpha) != 1) {
+				if (sscanf(token2, "%lf", &dataSetup.popTree_->pops[pop]->agePrior.alpha) != 1) {
 					fprintf(stderr,"Error: value for POP tau-alpha should be floating point number, got %s.\n", token2);
 					numErrors++;
 				}
 			} else if(0 == strcmp("tau-beta",token)) {
-				if (sscanf(token2, "%lf", &dataSetup.popTree->pops[pop]->agePrior.beta) != 1) {
+				if (sscanf(token2, "%lf", &dataSetup.popTree_->pops[pop]->agePrior.beta) != 1) {
 					fprintf(stderr,"Error: value for POP tau-beta should be floating point number, got %s.\n", token2);
 					numErrors++;
 				}
 			} else if(0 == strcmp("tau-initial",token)) {
-				if (sscanf(token2, "%lf", &dataSetup.popTree->pops[pop]->agePrior.sampleStart) != 1) {
+				if (sscanf(token2, "%lf", &dataSetup.popTree_->pops[pop]->agePrior.sampleStart) != 1) {
 					fprintf(stderr,"Error: value for POP tau-initial should be floating point number, got %s.\n", token2);
 					numErrors++;
 				}
@@ -1072,14 +1072,14 @@ int readAncestralPops(FILE* fctl) {
 		}// end of while(1)
 
 		// check that name is set
-		if(dataSetup.popTree->pops[pop]->name[0] == '\0') {
+		if(dataSetup.popTree_->pops[pop]->name[0] == '\0') {
 			fprintf(stderr, "Error: no name is given for ancestral pop %d.\n", pop+1);
 			numErrors++;
 		}
 		
 		// check that both children are set
 		for(son=0; son<2; son++) {
-			if(dataSetup.popTree->pops[pop]->sons[son] == NULL) {
+			if(dataSetup.popTree_->pops[pop]->sons[son] == NULL) {
 				fprintf(stderr, "Error: son #%d is not set for ancestral pop %d.\n", son+1, pop+1);
 				numErrors++;
 			}
@@ -1087,12 +1087,12 @@ int readAncestralPops(FILE* fctl) {
 		
 	}// end of for(pop)
 	
-    if(pop != dataSetup.popTree->numPops) {
-		fprintf(stderr, "Error: with %d currnet pops, expecting to see a total of %d pops, but reading %d.\n", dataSetup.popTree->numCurPops, dataSetup.popTree->numPops, pop);
+    if(pop != dataSetup.popTree_->numPops) {
+		fprintf(stderr, "Error: with %d currnet pops, expecting to see a total of %d pops, but reading %d.\n", dataSetup.popTree_->numCurPops, dataSetup.popTree_->numPops, pop);
 		numErrors++;
 	}
 	// set root pop
-	dataSetup.popTree->rootPop = dataSetup.popTree->numPops-1;
+	dataSetup.popTree_->rootPop = dataSetup.popTree_->numPops-1;
 		
 	numErrors += expectNextToken(fctl,"ANCESTRAL-POPS-END",token);
 	if(feof(fctl)) {
@@ -1128,17 +1128,17 @@ int readMigrationBands(FILE* fctl) {
 	}
 
 	// determine number of migration bands
-	dataSetup.popTree->numMigBands = countTokens(fctl, "BAND-START", "MIG-BANDS-END", token);
+	dataSetup.popTree_->numMigBands = countTokens(fctl, "BAND-START", "MIG-BANDS-END", token);
 
 	//reallocate space for print factors
-	mcmcSetup.printFactors = (double*)realloc(mcmcSetup.printFactors, (3*dataSetup.popTree->numCurPops - 2 + dataSetup.popTree->numMigBands)*sizeof(double));
+	mcmcSetup.printFactors = (double*)realloc(mcmcSetup.printFactors, (3*dataSetup.popTree_->numCurPops - 2 + dataSetup.popTree_->numMigBands)*sizeof(double));
 	if(mcmcSetup.printFactors == NULL) {
 		fprintf( stderr, "Error: oom reallocating mcmcSetup.printFactors for mig bands.\n");
 		exit(-1);
 	}
 
 			
-	for(migBand=0; migBand<dataSetup.popTree->numMigBands; migBand++) {
+	for(migBand=0; migBand<dataSetup.popTree_->numMigBands; migBand++) {
 		numErrors += expectNextToken(fctl,"BAND-START",token);
 		if(feof(fctl)) {
 			fprintf(stderr, "Error: unexpected end of file before satrt of mig band %d.\n", migBand);
@@ -1146,11 +1146,11 @@ int readMigrationBands(FILE* fctl) {
 		}
 		
 		// initialize mig band arguments
-		dataSetup.popTree->migBands[migBand].sourcePop = -1;
-		dataSetup.popTree->migBands[migBand].targetPop = -1;
-		dataSetup.popTree->migBands[migBand].migRatePrior.alpha = globalSetup.migAlpha;
-		dataSetup.popTree->migBands[migBand].migRatePrior.beta  = globalSetup.migBeta;
-		mcmcSetup.printFactors[migBand + 2*dataSetup.popTree->numPops - dataSetup.popTree->numCurPops] = globalSetup.migFactor;
+		dataSetup.popTree_->migBands[migBand].sourcePop = -1;
+		dataSetup.popTree_->migBands[migBand].targetPop = -1;
+		dataSetup.popTree_->migBands[migBand].migRatePrior.alpha = globalSetup.migAlpha;
+		dataSetup.popTree_->migBands[migBand].migRatePrior.beta  = globalSetup.migBeta;
+		mcmcSetup.printFactors[migBand + 2*dataSetup.popTree_->numPops - dataSetup.popTree_->numCurPops] = globalSetup.migFactor;
        
 		while(1) {
 			// read token
@@ -1172,33 +1172,33 @@ int readMigrationBands(FILE* fctl) {
 			}
 			
 			if(0 == strcmp("source",token)) {
-				sourcePop = getPopIdByName(dataSetup.popTree, token2);
+				sourcePop = getPopIdByName(dataSetup.popTree_, token2);
 				if(sourcePop<0) {
 					fprintf(stderr, "Error: invalid name '%s' for source pop of mig-band %d.\n", token2, migBand+1);
 					numErrors++;
 				} else {
-					dataSetup.popTree->migBands[migBand].sourcePop = sourcePop;
+					dataSetup.popTree_->migBands[migBand].sourcePop = sourcePop;
 				}
 			} else if(0 == strcmp("target",token)) {
-				targetPop = getPopIdByName(dataSetup.popTree, token2);
+				targetPop = getPopIdByName(dataSetup.popTree_, token2);
 				if(targetPop<0) {
 					fprintf(stderr, "Error: invalid name '%s' for target pop of mig-band %d.\n", token2, migBand+1);
 					numErrors++;
 				} else {
-					dataSetup.popTree->migBands[migBand].targetPop = targetPop;
+					dataSetup.popTree_->migBands[migBand].targetPop = targetPop;
 				}
 			} else if(0 == strcmp("mig-rate-print",token)) {
-				if (sscanf(token2, "%lf", &mcmcSetup.printFactors[3*dataSetup.popTree->numCurPops-2+migBand]) != 1) {
+				if (sscanf(token2, "%lf", &mcmcSetup.printFactors[3*dataSetup.popTree_->numCurPops-2+migBand]) != 1) {
 					fprintf(stderr,"Error: value for mig-rate-print should be floating point number, got %s.\n", token2);
 					numErrors++;
 				}
 			} else if(0 == strcmp("mig-rate-alpha",token)) {
-				if (sscanf(token2, "%lf", &dataSetup.popTree->migBands[migBand].migRatePrior.alpha) != 1) {
+				if (sscanf(token2, "%lf", &dataSetup.popTree_->migBands[migBand].migRatePrior.alpha) != 1) {
 					fprintf(stderr,"Error: value for mig-rate-alpha should be floating point number, got %s.\n", token2);
 					numErrors++;
 				}
 			} else if(0 == strcmp("mig-rate-beta",token)) {
-				if (sscanf(token2, "%lf", &dataSetup.popTree->migBands[migBand].migRatePrior.beta) != 1) {
+				if (sscanf(token2, "%lf", &dataSetup.popTree_->migBands[migBand].migRatePrior.beta) != 1) {
 					fprintf(stderr,"Error: value for mig-rate-beta should be floating point number, got %s.\n", token2);
 					numErrors++;
 				}
@@ -1209,21 +1209,21 @@ int readMigrationBands(FILE* fctl) {
 		}// end of while(1)
 
 		// check that source and target pops are set and not ancestral to one another
-		if(dataSetup.popTree->migBands[migBand].sourcePop == -1) {
+		if(dataSetup.popTree_->migBands[migBand].sourcePop == -1) {
 			fprintf(stderr, "Error: source population for migration band %d was not defined.\n", migBand+1);
 			return numErrors+1;
 		}
-		if(dataSetup.popTree->migBands[migBand].targetPop == -1) {
+		if(dataSetup.popTree_->migBands[migBand].targetPop == -1) {
 			fprintf(stderr, "Error: target population for migration band %d was not defined.\n", migBand+1);
 			return numErrors+1;
 		}
-		if(dataSetup.popTree->pops[ dataSetup.popTree->migBands[migBand].sourcePop ]->isAncestralTo[ dataSetup.popTree->migBands[migBand].targetPop ]) {
+		if(dataSetup.popTree_->pops[ dataSetup.popTree_->migBands[migBand].sourcePop ]->isAncestralTo[ dataSetup.popTree_->migBands[migBand].targetPop ]) {
 			fprintf(stderr, "Error: source pop for migration band %d is an ancestor of its target pop.\n\t\tMigration bands can only be placed between two populations which may have co-occured.\n",migBand+1);
 			return numErrors+1;
 		}      
-		if(dataSetup.popTree->pops[ dataSetup.popTree->migBands[migBand].targetPop ]->isAncestralTo[ dataSetup.popTree->migBands[migBand].sourcePop ]) {
+		if(dataSetup.popTree_->pops[ dataSetup.popTree_->migBands[migBand].targetPop ]->isAncestralTo[ dataSetup.popTree_->migBands[migBand].sourcePop ]) {
 			fprintf(stderr, "Error: target pop for migration band %d is an ancestor of its source pop.\n\t\tMigration bands can only be placed between two populations which may have co-occured.\n",migBand+1);
-         printPopulationTree(dataSetup.popTree, stdout, 0);
+         printPopulationTree(dataSetup.popTree_, stdout, 0);
 			return numErrors+1;
 		}
 	}// end of for(migBand)

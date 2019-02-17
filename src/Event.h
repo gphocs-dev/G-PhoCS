@@ -33,7 +33,6 @@ public:
     //reset Event content
     void reset();
 
-
     void incrementLineages();
     void decrementLineages();
 
@@ -62,8 +61,8 @@ enum class EventType {
     COAL,
     IN_MIG,
     OUT_MIG,
-    MIG_BAND_START,
-    MIG_BAND_END,
+    MIG_BAND_START, //later
+    MIG_BAND_END, //later
     SAMPLES_START,
     END_CHAIN,
     POP_START,

@@ -4,14 +4,14 @@
 
 void printCladeStatsHeader(FILE *file) {
   fprintf(file, "iteration\t");
-  for (int clade = 0; clade < dataSetup.popTree->numPops; clade++) {
+  for (int clade = 0; clade < dataSetup.popTree_->numPops; clade++) {
     printSpecificCladeHeader(clade, file);
   }
   fprintf(file, "\n");
 }
 
 void printSpecificCladeHeader(int clade, FILE *file) {
-  char *cladeName = dataSetup.popTree->popArray[clade].name;
+  char *cladeName = dataSetup.popTree_->popArray[clade].name;
   fprintf(file, "%s_%s\t%s_%s\t",
           cladeName, "coal_stats_total",
           cladeName, "num_coals_total");
@@ -19,7 +19,7 @@ void printSpecificCladeHeader(int clade, FILE *file) {
 
 void printCladeStats(int iteration, FILE *file) {
   fprintf(file, "%d\t", iteration);
-  for (int clade = 0; clade < dataSetup.popTree->numPops; clade++) {
+  for (int clade = 0; clade < dataSetup.popTree_->numPops; clade++) {
     printSpecificCladeStats(clade, file);
   }
   fprintf(file, "\n");

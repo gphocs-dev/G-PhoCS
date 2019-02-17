@@ -2,8 +2,6 @@
 #ifndef G_PHOCS_DAGNODE_H
 #define G_PHOCS_DAGNODE_H
 
-#include "DataLayer.h"
-#include "MCMCcontrol.h"
 #include "Event.h"
 
 /*=============================================================================

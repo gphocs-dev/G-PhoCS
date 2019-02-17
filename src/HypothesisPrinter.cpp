@@ -7,11 +7,11 @@
 void printHypStatsHeader(FILE *file) {
 
   fprintf(file, "iteration\t");
-  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+  for (int pop = 0; pop < dataSetup.popTree_->numPops; pop++) {
     printOnePopHeader(pop, file);
   }
 
-  for (int migband = 0; migband < dataSetup.popTree->numMigBands; migband++) {
+  for (int migband = 0; migband < dataSetup.popTree_->numMigBands; migband++) {
     printOneMigBandHeader(migband, file);
   }
 
@@ -20,15 +20,15 @@ void printHypStatsHeader(FILE *file) {
 }
 
 void printOnePopHeader(int pop, FILE *file) {
-  char *popName = dataSetup.popTree->popArray[pop].name;
+  char *popName = dataSetup.popTree_->popArray[pop].name;
   fprintf(file, "P_%s %s\tP_%s %s\t",
           popName, "cs",
           popName, "nc");
 }
 
 void printOneMigBandHeader(int migband, FILE *file) {
-  char *source = getPopName(dataSetup.popTree->migBands[migband].sourcePop);
-  char *target = getPopName(dataSetup.popTree->migBands[migband].targetPop);
+  char *source = getPopName(dataSetup.popTree_->migBands[migband].sourcePop);
+  char *target = getPopName(dataSetup.popTree_->migBands[migband].targetPop);
   fprintf(file, "MB_%s->%s ms\tMB_%s->%s nm\t",
           source, target,
           source, target);
@@ -38,11 +38,11 @@ void printHypStats(int iteration, FILE *file) {
 
   fprintf(file, "%d\t", iteration);
 
-  for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+  for (int pop = 0; pop < dataSetup.popTree_->numPops; pop++) {
     printOnePopStats(pop, file);
   }
 
-  for (int migband = 0; migband < dataSetup.popTree->numMigBands; migband++) {
+  for (int migband = 0; migband < dataSetup.popTree_->numMigBands; migband++) {
     printOneMigBandStats(migband, file);
   }
 

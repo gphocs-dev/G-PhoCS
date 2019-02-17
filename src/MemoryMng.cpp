@@ -104,7 +104,7 @@ int GetMem( void )
   }
 
   event_chains.reserve( dataSetup.numLoci );
-  pAllDAGs = new DAGsPerLocus<EventIvgeny>( dataSetup.numLoci, dataSetup.popTree->numPops);
+  pAllDAGs = new DAGsPerLocus<EventIvgeny>( dataSetup.numLoci, dataSetup.popTree_->numPops);
 
   genetree_stats_flat.sortedAgesArray = (double*)
                                         malloc( maxNodes * sizeof(double) );
@@ -121,8 +121,8 @@ int GetMem( void )
   // and migration bands (start + end + changed event).
   event_chains[0].total_events  =    2 * dataSetup.numSamples
                                    + 4 * MAX_MIGS
-                                   + 3 * dataSetup.popTree->numMigBands
-                                   + dataSetup.popTree->numPops
+                                   + 3 * dataSetup.popTree_->numMigBands
+                                   + dataSetup.popTree_->numPops
                                    + 10;
   for( gen = 1; gen < dataSetup.numLoci; ++gen )
     event_chains[gen].total_events = event_chains[0].total_events;
@@ -167,9 +167,9 @@ int GetMem( void )
 
   count = 3 * dataSetup.numSamples
             * dataSetup.numSamples
-            * dataSetup.popTree->numPops
+            * dataSetup.popTree_->numPops
           + maxNodes
-          + dataSetup.popTree->numPops;
+          + dataSetup.popTree_->numPops;
   genetree_node_stats.doubleArray = (double*)
                                     malloc( count * sizeof(double) );
   if( genetree_node_stats.doubleArray == NULL )
@@ -204,7 +204,7 @@ int GetMem( void )
   count =   dataSetup.numSamples
           * dataSetup.numSamples
           + dataSetup.numSamples
-          + dataSetup.popTree->numPops;
+          + dataSetup.popTree_->numPops;
   genetree_node_stats.intArray = (int*)
                                  malloc( count * sizeof(int) );
   if(genetree_node_stats.intArray == NULL)
@@ -236,15 +236,15 @@ int GetMem( void )
     genetree_node_stats.coalTimeMatrix[leaf1]      = genetree_node_stats.probCoalMatrix[leaf1] + 2 *         dataSetup.numSamples;
     for( leaf2 = 0; leaf2 < dataSetup.numSamples; ++leaf2)
     {
-      genetree_node_stats.probCoalMatrix     [leaf1][leaf2] = genetree_node_stats.doubleArray + 3 * dataSetup.popTree->numPops * (leaf1 * dataSetup.numSamples + leaf2);
-      genetree_node_stats.probFirstCoalMatrix[leaf1][leaf2] = genetree_node_stats.probCoalMatrix[leaf1][leaf2] +     dataSetup.popTree->numPops;
-      genetree_node_stats.coalTimeMatrix     [leaf1][leaf2] = genetree_node_stats.probCoalMatrix[leaf1][leaf2] + 2 * dataSetup.popTree->numPops;
+      genetree_node_stats.probCoalMatrix     [leaf1][leaf2] = genetree_node_stats.doubleArray + 3 * dataSetup.popTree_->numPops * (leaf1 * dataSetup.numSamples + leaf2);
+      genetree_node_stats.probFirstCoalMatrix[leaf1][leaf2] = genetree_node_stats.probCoalMatrix[leaf1][leaf2] +     dataSetup.popTree_->numPops;
+      genetree_node_stats.coalTimeMatrix     [leaf1][leaf2] = genetree_node_stats.probCoalMatrix[leaf1][leaf2] + 2 * dataSetup.popTree_->numPops;
     }
   }
   genetree_node_stats.leafArray       = genetree_node_stats.intArray       +     dataSetup.numSamples * dataSetup.numSamples;
   genetree_node_stats.firstNodesInPop = genetree_node_stats.leafArray      +     dataSetup.numSamples;
-  genetree_node_stats.firstNodesAges  = genetree_node_stats.doubleArray    + 3 * dataSetup.popTree->numPops * dataSetup.numSamples * dataSetup.numSamples;
-  genetree_node_stats.nodeAges        = genetree_node_stats.firstNodesAges +     dataSetup.popTree->numPops;
+  genetree_node_stats.firstNodesAges  = genetree_node_stats.doubleArray    + 3 * dataSetup.popTree_->numPops * dataSetup.numSamples * dataSetup.numSamples;
+  genetree_node_stats.nodeAges        = genetree_node_stats.firstNodesAges +     dataSetup.popTree_->numPops;
 
   return 0;
 }
