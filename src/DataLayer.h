@@ -35,10 +35,10 @@ enum EventTypeIvgeny{COAL           = 0x01,
                DUMMY          = 0x00};
 
 //-----------------------------------------------------------------------------
-class EventIvgeny
+class Event
 {
 public:
-  EventIvgeny();
+  Event();
 
 public:
   int       getId()                   const;
@@ -86,7 +86,7 @@ public:
 
   int free_events;                // pointer to a chain of free events for use.
                                   // Always have at least one free event
-  EventIvgeny* events;
+  Event* events;
 };
 
 //-----------------------------------------------------------------------------
@@ -94,7 +94,7 @@ public:
 class EventChains : public vector<EventChain>
 {
 public:
-  inline EventIvgeny* getEvent(int gen, int event) const
+  inline Event* getEvent(int gen, int event) const
     { return &((*this)[gen].events[event]); }
 };
 
@@ -108,73 +108,73 @@ extern EventChains event_chains;
  * Setters/Getters section
  * */
 inline int
-EventIvgeny::getId() const
+Event::getId() const
 {
   return this->id_;
 }
 
 inline void
-EventIvgeny::setId(int id)
+Event::setId(int id)
 {
   this->id_ = id;
 }
 
 inline EventTypeIvgeny
-EventIvgeny::getType() const
+Event::getType() const
 {
   return this->type_;
 }
 
 inline void
-EventIvgeny::setType(EventTypeIvgeny t)
+Event::setType(EventTypeIvgeny t)
 {
   this->type_ = t;
 }
 
 inline int
-EventIvgeny::getNextIdx() const
+Event::getNextIdx() const
 {
   return this->next_;
 }
 
 inline void
-EventIvgeny::setNextIdx(int i)
+Event::setNextIdx(int i)
 {
   this->next_ = i;
 }
 
 inline int
-EventIvgeny::getPrevIdx() const
+Event::getPrevIdx() const
 {
   return this->prev_;
 }
 
 inline void
-EventIvgeny::setPrevIdx(int i)
+Event::setPrevIdx(int i)
 {
   this->prev_ = i;
 }
 
 inline double
-EventIvgeny::getElapsedTime() const
+Event::getElapsedTime() const
 {
   return this->elapsed_time_;
 }
 
 inline void
-EventIvgeny::setElapsedTime(double t)
+Event::setElapsedTime(double t)
 {
   this->elapsed_time_ = t;
 }
 
 inline int
-EventIvgeny::getNumLineages() const
+Event::getNumLineages() const
 {
   return this->num_lineages_;
 }
 
 inline void
-EventIvgeny::setNumLineages(int n)
+Event::setNumLineages(int n)
 {
   this->num_lineages_ = n;
 }
@@ -196,7 +196,7 @@ public:
 public:
   int num_changed_events() const {return this->changed_events.size();}
   void clear_changed_events() {this->changed_events.clear();}
-  void push_changed_event(EventIvgeny* e) {this->changed_events.push_back(e);}
+  void push_changed_event(Event* e) {this->changed_events.push_back(e);}
 
 public:
   // id of event describing original placing of node
@@ -206,7 +206,7 @@ public:
   // the difference in lineage number for all events affected (typically +/- 1)
   int num_lin_delta;
   // events affected by change
-  vector<EventIvgeny*> changed_events;
+  vector<Event*> changed_events;
   // number of population affected by change
   int num_pops_changed;
   // an array of populations affected by change

@@ -19,7 +19,7 @@ double calculateCoalStats(double *elapsed_times, int *num_lineages, int size) {
 int isLeaf(int pop) {
   Population *population, *left_son, *right_son;
 
-  population = dataSetup.popTree_->pops[pop];
+  population = dataSetup.popTree->pops[pop];
 
   left_son = population->sons[LEFT];
   right_son = population->sons[RIGHT];
@@ -41,7 +41,7 @@ int areChildrenLeaves(int pop) {
 }
 
 int isAncestralTo(int father, int son) {
-  return dataSetup.popTree_->pops[father]->isAncestralTo[son];
+  return dataSetup.popTree->pops[father]->isAncestralTo[son];
 }
 
 const char *getEventTypeName(int eventType) {
@@ -68,19 +68,19 @@ const char *getEventTypeName(int eventType) {
 }
 
 int getSon(int pop, int SON) {
-  return dataSetup.popTree_->pops[pop]->sons[SON]->id;
+  return dataSetup.popTree->pops[pop]->sons[SON]->id;
 }
 
 int getSourcePop(int mig) {
-  return dataSetup.popTree_->migBands[mig].sourcePop;
+  return dataSetup.popTree->migBands[mig].sourcePop;
 }
 
 int getTargetPop(int mig) {
-  return dataSetup.popTree_->migBands[mig].targetPop;
+  return dataSetup.popTree->migBands[mig].targetPop;
 }
 
 char *getPopName(int pop) {
-  return dataSetup.popTree_->pops[pop]->name;
+  return dataSetup.popTree->pops[pop]->name;
 }
 //char* getMigName(int mig){
 //	char* sourceName = getPopName(getSourcePop(mig));
