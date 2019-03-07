@@ -62,6 +62,9 @@ public:
     //initialize EventsGraph with start and end events
     void initialiseGraph();
 
+    //print events graph
+    void printEventsGraph();
+
 //*****************************************************************************
     //get a free node from nodes pool
     EventNode* getNodeFromPool();
@@ -70,7 +73,7 @@ public:
     void addNodeToPool(EventNode* pNode);
 
 //*****************************************************************************
-    //get a pointer to start event (POP_START) of a given population
+    //get a pointer to pop start event of a given population
     EventNode* getStartEvent(int population);
 
     //get a pointer to sampleStart of a given population

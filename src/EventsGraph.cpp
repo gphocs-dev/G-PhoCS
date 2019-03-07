@@ -124,6 +124,15 @@ void EventsGraph::initialiseGraph() {
 }
 
 /*
+    Prints EventsGraph
+
+*/
+void EventsGraph::printEventsGraph() {
+
+}
+
+
+/*
     Returns a free EventNode from the nodes pool
     @return: pointer to a new EventNode
 
@@ -472,4 +481,6 @@ EventNode* EventsGraph::getEventByNode(int nodeID) {
 LocusData* EventsGraph::getLocusData() {
     return pDataState_->lociData[locusID_];
 }
+
+
 
