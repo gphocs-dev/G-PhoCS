@@ -116,7 +116,7 @@ typedef struct _DATA_SETUP
 	
 	int* numSamplesPerPop;			// number of samples per population
 	char**		sampleNames;		// array of sample names - ordered according to population order
-	PopulationTree* popTree_;		// population tree
+	PopulationTree* popTree;		// population tree
 }DATA_SETUP;
 
 //extern DATA_SETUP dataSetup;

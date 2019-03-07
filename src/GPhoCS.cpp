@@ -42,7 +42,7 @@ static struct option long_options[] = {{"help",     no_argument, 0, 'h'},
                                        {0, 0,                    0, 0}};
 
 extern RandGeneratorContext RndCtx;
-extern DAGsPerLocus<EventIvgeny>* pAllDAGs;
+extern DAGsPerLocus<Event>* pAllDAGs;
 
 DATA_STATE dataState;
 MISC_STATS misc_stats;
@@ -180,23 +180,23 @@ int main(int argc, char *argv[])
       exit(-1);
     }
   }
-  if (dataSetup.popTree_->numCurPops > NSPECIES)
+  if (dataSetup.popTree->numCurPops > NSPECIES)
   {
     printf("Error: defined too many populations (%d), maximum allowed is %d.\n",
-           dataSetup.popTree_->numCurPops, NSPECIES);
+           dataSetup.popTree->numCurPops, NSPECIES);
     printf( "Please set NSPECIES constant at top of patch.c source file to at "
             "least %d, recomplie, and re-run.\n",
-            dataSetup.popTree_->numCurPops);
+            dataSetup.popTree->numCurPops);
     exit(-1);
   }
-  if (dataSetup.popTree_->numMigBands > MAX_MIG_BANDS)
+  if (dataSetup.popTree->numMigBands > MAX_MIG_BANDS)
   {
     printf( "Error: defined too many migration bands (%d), maximum "
             "allowed is %d.\n",
-            dataSetup.popTree_->numMigBands, MAX_MIG_BANDS );
+            dataSetup.popTree->numMigBands, MAX_MIG_BANDS );
     printf( "Please set MAX_MIG_BANDS constant at top of patch.c source "
             "file to at least %d, recomplie, and re-run.\n",
-            dataSetup.popTree_->numMigBands );
+            dataSetup.popTree->numMigBands );
     exit(-1);
   }
   printf("Done.\n");
@@ -628,7 +628,7 @@ int freeAllMemory()
   if (ioSetup.coalStatsFile != NULL) fclose(ioSetup.coalStatsFile);
   if (ioSetup.nodeStatsFile != NULL)
   {
-    for (i = 0; i < 3 * dataSetup.popTree_->numPops; i++)
+    for (i = 0; i < 3 * dataSetup.popTree->numPops; i++)
     {
       fclose(ioSetup.nodeStatsFile[i]);
     }
@@ -647,7 +647,7 @@ int freeAllMemory()
   free(mcmcSetup.printFactors);
   // NEXTGEN - change this to locusGenealogy !!
   //Freeing population tree
-  freePopTree(dataSetup.popTree_);
+  freePopTree(dataSetup.popTree);
   //Freeing loci data array
   for (gen = 0; gen < dataSetup.numLoci; gen++)
   {
@@ -692,7 +692,7 @@ void printGenealogyAndExit(int gen, int errStatus)
 
   if (debug)
   {
-    printPopulationTree(dataSetup.popTree_, stderr, 1);
+    printPopulationTree(dataSetup.popTree, stderr, 1);
     printLocusGenTree(dataState.lociData[gen], stderr, nodePops[gen],
                       nodeEvents[gen]);
     printEventChains(stderr, gen);
@@ -799,27 +799,27 @@ int recordParamVals(double *paramVals)
 
   ind = 0;
 
-  for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
-    paramVals[ind++] = dataSetup.popTree_->pops[pop]->theta;
+    paramVals[ind++] = dataSetup.popTree->pops[pop]->theta;
   }
-  for (pop = dataSetup.popTree_->numCurPops;
-       pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = dataSetup.popTree->numCurPops;
+       pop < dataSetup.popTree->numPops; pop++)
   {
-    paramVals[ind++] = dataSetup.popTree_->pops[pop]->age;
+    paramVals[ind++] = dataSetup.popTree->pops[pop]->age;
   }
-  for (migBand = 0; migBand < dataSetup.popTree_->numMigBands; migBand++)
+  for (migBand = 0; migBand < dataSetup.popTree->numMigBands; migBand++)
   {
-    paramVals[ind++] = dataSetup.popTree_->migBands[migBand].migRate;
+    paramVals[ind++] = dataSetup.popTree->migBands[migBand].migRate;
   }
 
   // record ages of ancient populations
-  for (pop = 0; pop < dataSetup.popTree_->numCurPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numCurPops; pop++)
   {
-    if (dataSetup.popTree_->pops[pop]->updateSampleAge ||
-        dataSetup.popTree_->pops[pop]->sampleAge > 0.0)
+    if (dataSetup.popTree->pops[pop]->updateSampleAge ||
+        dataSetup.popTree->pops[pop]->sampleAge > 0.0)
     {
-      paramVals[ind++] = dataSetup.popTree_->pops[pop]->sampleAge;
+      paramVals[ind++] = dataSetup.popTree->pops[pop]->sampleAge;
     }
   }
 
@@ -858,27 +858,27 @@ double getLogPrior()
 
   double logPrior = 0.0;
 
-  for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
     logPrior += getLogGammaDist(
-        dataSetup.popTree_->pops[pop]->thetaPrior.alpha,
-        dataSetup.popTree_->pops[pop]->thetaPrior.beta,
-        dataSetup.popTree_->pops[pop]->theta);
+        dataSetup.popTree->pops[pop]->thetaPrior.alpha,
+        dataSetup.popTree->pops[pop]->thetaPrior.beta,
+        dataSetup.popTree->pops[pop]->theta);
   }
-  for (pop = dataSetup.popTree_->numCurPops;
-       pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = dataSetup.popTree->numCurPops;
+       pop < dataSetup.popTree->numPops; pop++)
   {
     logPrior += getLogGammaDist(
-        dataSetup.popTree_->pops[pop]->agePrior.alpha,
-        dataSetup.popTree_->pops[pop]->agePrior.beta,
-        dataSetup.popTree_->pops[pop]->age);
+        dataSetup.popTree->pops[pop]->agePrior.alpha,
+        dataSetup.popTree->pops[pop]->agePrior.beta,
+        dataSetup.popTree->pops[pop]->age);
   }
-  for (migBand = 0; migBand < dataSetup.popTree_->numMigBands; migBand++)
+  for (migBand = 0; migBand < dataSetup.popTree->numMigBands; migBand++)
   {
     logPrior += getLogGammaDist(
-        dataSetup.popTree_->migBands[migBand].migRatePrior.alpha,
-        dataSetup.popTree_->migBands[migBand].migRatePrior.beta,
-        dataSetup.popTree_->migBands[migBand].migRate);
+        dataSetup.popTree->migBands[migBand].migRatePrior.alpha,
+        dataSetup.popTree->migBands[migBand].migRatePrior.beta,
+        dataSetup.popTree->migBands[migBand].migRate);
   }
 
   return logPrior;
@@ -911,9 +911,9 @@ int printCoalStats(int iteration)
     fprintf(ioSetup.coalStatsFile,
             "iter\tcoalStat\tnumCoal\tmigStat\tnumMig\tlogPrior"
             "\tlogGenLikelihood\tlogDataLikelihood");
-    for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+    for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
     {
-      popName = dataSetup.popTree_->pops[pop]->name;
+      popName = dataSetup.popTree->pops[pop]->name;
       for (partition = 1;
            partition <= dataSetup.numPopPartitions; partition++)
       {
@@ -984,9 +984,9 @@ int printCoalStats(int iteration)
           dataState.logLikelihood * dataSetup.numLoci,
           dataState.dataLogLikelihood
   );
-  for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
-    popName = dataSetup.popTree_->pops[pop]->name;
+    popName = dataSetup.popTree->pops[pop]->name;
     for (partition = 0; partition < dataSetup.numPopPartitions; partition++)
     {
       fprintf(ioSetup.coalStatsFile, "\t%9d\t%8f",
@@ -997,7 +997,7 @@ int printCoalStats(int iteration)
   fprintf(ioSetup.coalStatsFile, "\n");
   fflush(ioSetup.coalStatsFile);
 
-  for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
     fprintf(ioSetup.nodeStatsFile[3 * pop], "%7d", iteration);
     fprintf(ioSetup.nodeStatsFile[3 * pop + 1], "%7d", iteration);
@@ -1041,7 +1041,7 @@ int initializeMCMC()
   double mutationRate = 0.0;
 
   // initialize population parameters (according to prior)
-  samplePopParameters(dataSetup.popTree_);
+  samplePopParameters(dataSetup.popTree);
 
   // initialize gen-specific mutation rates
   // if variable, sample uniformly in [0.8 , 1.2], and normalize
@@ -1123,7 +1123,7 @@ int initializeMCMC()
     dataState.dataLogLikelihood += computeLocusDataLikelihood(
         dataState.lociData[gen], /* reset values */0);
     resetSaved(dataState.lociData[gen]);
-    pAllDAGs->importEventChains(gen, &event_chains, dataSetup.popTree_);
+    pAllDAGs->importEventChains(gen, &event_chains, dataSetup.popTree);
   }
   if (verbose)
     printf("Done.\n");
@@ -1160,7 +1160,7 @@ int performMCMC()
   UpdateStats acceptanceCounts, acceptancePercents, finetuneMaxes, finetuneMins;
 
   int acceptCount;
-  int *acceptCountArray = (int *) malloc(sizeof(int) * dataSetup.popTree_->numPops);
+  int *acceptCountArray = (int *) malloc(sizeof(int) * dataSetup.popTree->numPops);
   int i, j, logCount, totalNumMigNodes, migBand;
   int numSamplesPerLog, logsPerLine;
 
@@ -1218,33 +1218,33 @@ int performMCMC()
 #endif
 
   fprintf(ioSetup.traceFile, "Sample");
-  for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
     fprintf(ioSetup.traceFile, "\ttheta_%s",
-            dataSetup.popTree_->pops[pop]->name);
+            dataSetup.popTree->pops[pop]->name);
   }
 
-  for (pop = dataSetup.popTree_->numCurPops;
-       pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = dataSetup.popTree->numCurPops;
+       pop < dataSetup.popTree->numPops; pop++)
   {
-    fprintf(ioSetup.traceFile, "\ttau_%s", dataSetup.popTree_->pops[pop]->name);
+    fprintf(ioSetup.traceFile, "\ttau_%s", dataSetup.popTree->pops[pop]->name);
   }
 
-  for (migBand = 0; migBand < dataSetup.popTree_->numMigBands; migBand++)
+  for (migBand = 0; migBand < dataSetup.popTree->numMigBands; migBand++)
   {
     fprintf(ioSetup.traceFile, "\tm_%s->%s",
-            dataSetup.popTree_->pops[\
-              dataSetup.popTree_->migBands[migBand].sourcePop]->name,
-            dataSetup.popTree_->pops[\
-              dataSetup.popTree_->migBands[migBand].targetPop]->name);
+            dataSetup.popTree->pops[\
+              dataSetup.popTree->migBands[migBand].sourcePop]->name,
+            dataSetup.popTree->pops[\
+              dataSetup.popTree->migBands[migBand].targetPop]->name);
   }
-  for (pop = 0; pop < dataSetup.popTree_->numCurPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numCurPops; pop++)
   {
-    if (dataSetup.popTree_->pops[pop]->updateSampleAge ||
-        dataSetup.popTree_->pops[pop]->sampleAge > 0.0)
+    if (dataSetup.popTree->pops[pop]->updateSampleAge ||
+        dataSetup.popTree->pops[pop]->sampleAge > 0.0)
     {
       fprintf(ioSetup.traceFile, "\ttau_%s",
-              dataSetup.popTree_->pops[pop]->name);
+              dataSetup.popTree->pops[pop]->name);
     }
   }
 
@@ -1268,7 +1268,7 @@ int performMCMC()
   // allocate and initialize parameter value arrays
   printf("There are %d parameters in the model.\n", mcmcSetup.numParameters);
   doubleArray = (double *) malloc(
-      (2 * mcmcSetup.numParameters + 4 * dataSetup.popTree_->numPops) *
+      (2 * mcmcSetup.numParameters + 4 * dataSetup.popTree->numPops) *
       sizeof(double));
   if (doubleArray == NULL)
   {
@@ -1280,9 +1280,9 @@ int performMCMC()
   paramVals = doubleArray;
   paramMeans = paramVals + mcmcSetup.numParameters;
   acceptanceCounts.taus = paramMeans + mcmcSetup.numParameters;
-  acceptancePercents.taus = acceptanceCounts.taus + dataSetup.popTree_->numPops;
-  finetuneMaxes.taus = acceptancePercents.taus + dataSetup.popTree_->numPops;
-  finetuneMins.taus = finetuneMaxes.taus + dataSetup.popTree_->numPops;
+  acceptancePercents.taus = acceptanceCounts.taus + dataSetup.popTree->numPops;
+  finetuneMaxes.taus = acceptancePercents.taus + dataSetup.popTree->numPops;
+  finetuneMins.taus = finetuneMaxes.taus + dataSetup.popTree->numPops;
 
   recordParamVals(paramVals);
 
@@ -1296,10 +1296,10 @@ int performMCMC()
   // title for log
   printf("Samples   CoalTimes MigTimes  SPRs      Thetas    MigRates ");
 
-  for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
-    if (pop >= dataSetup.popTree_->numCurPops ||
-        dataSetup.popTree_->pops[pop]->updateSampleAge)
+    if (pop >= dataSetup.popTree->numCurPops ||
+        dataSetup.popTree->pops[pop]->updateSampleAge)
     {
       printf("TAU_%2d    ", pop);
     }
@@ -1348,7 +1348,7 @@ int performMCMC()
   acceptanceCounts.migRate = 0;
   acceptanceCounts.locusRate = 0;
   acceptanceCounts.mixing = 0;
-  for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
     acceptanceCounts.taus[pop] = 0;
   }
@@ -1385,7 +1385,7 @@ int performMCMC()
       mcmcSetup.finetunes.locusRate = 1.0;
     if (mcmcSetup.finetunes.mixing < 0)
       mcmcSetup.finetunes.mixing = 1.0;
-    for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+    for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
     {
       if (mcmcSetup.finetunes.taus[pop] < 0)
         mcmcSetup.finetunes.taus[pop] = 1.0;
@@ -1449,7 +1449,7 @@ int performMCMC()
 #endif
       acceptanceCounts.migTime += acceptCount;
       // count number of events for acceptance ratio
-      for (i = 0; i < dataSetup.popTree_->numMigBands; i++)
+      for (i = 0; i < dataSetup.popTree->numMigBands; i++)
       {
         totalNumMigNodes += genetree_stats_total.num_migs[i];
       }
@@ -1554,7 +1554,7 @@ int performMCMC()
 #ifdef RECORD_METHOD_TIMES
     setEndTimeMethod(T_UpdateTau);
 #endif
-    for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+    for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
     {
       acceptanceCounts.taus[pop] += acceptCountArray[pop];
     }
@@ -1576,7 +1576,7 @@ int performMCMC()
     setEndTimeMethod(T_UpdateSampleAge);
 #endif
 
-    for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+    for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
     {
       acceptanceCounts.taus[pop] += acceptCountArray[pop];
     }
@@ -1653,7 +1653,7 @@ int performMCMC()
 #ifdef RECORD_METHOD_TIMES
       setStartTimeMethod(T_UpdateMigRates);
 #endif
-      sampleMigRates(dataSetup.popTree_);
+      sampleMigRates(dataSetup.popTree);
 #ifdef RECORD_METHOD_TIMES
       setEndTimeMethod(T_UpdateMigRates);
 #endif
@@ -1727,11 +1727,11 @@ int performMCMC()
                                 mcmcSetup.genetreeSamples);
       acceptancePercents.theta = acceptanceCounts.theta * 100.0 /
                                  (((double) logCount) *
-                                  dataSetup.popTree_->numPops);
+                                  dataSetup.popTree->numPops);
       acceptancePercents.migRate = acceptanceCounts.migRate * 100.0 /
                                    (((double) logCount) *
-                                    dataSetup.popTree_->numMigBands + 0.000001);
-      for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+                                    dataSetup.popTree->numMigBands + 0.000001);
+      for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
       {
         acceptancePercents.taus[pop] =
             acceptanceCounts.taus[pop] * 100.0 / (double) logCount;
@@ -1747,10 +1747,10 @@ int performMCMC()
           acceptancePercents.migTime, acceptancePercents.SPR,
           acceptancePercents.theta, acceptancePercents.migRate);
 
-      for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+      for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
       {
-        if (pop >= dataSetup.popTree_->numCurPops ||
-            dataSetup.popTree_->pops[pop]->updateSampleAge)
+        if (pop >= dataSetup.popTree->numCurPops ||
+            dataSetup.popTree->pops[pop]->updateSampleAge)
         {
           printf("%5.1f%%    ", acceptancePercents.taus[pop]);
         }
@@ -1759,7 +1759,7 @@ int performMCMC()
       printf("%6.1f%%    %5.1f%%    %5.1f%%    ",
              misc_stats.rubberband_mig_conflicts * 100.0
              / (logCount
-                * (dataSetup.popTree_->numPops - dataSetup.popTree_->numCurPops)),
+                * (dataSetup.popTree->numPops - dataSetup.popTree->numCurPops)),
              acceptancePercents.locusRate, acceptancePercents.mixing);
 
       // print parameter means
@@ -1989,8 +1989,8 @@ int performMCMC()
         mcmcSetup.finetunes.mixing = 0.5 * (finetuneMaxes.mixing +
                                             finetuneMins.mixing);
 
-        for (pop = dataSetup.popTree_->numCurPops;
-             pop < dataSetup.popTree_->numPops; pop++)
+        for (pop = dataSetup.popTree->numCurPops;
+             pop < dataSetup.popTree->numPops; pop++)
         {
           if (acceptancePercents.taus[pop] >
               TARGET_ACCEPTANCE_PERCENT + TARGET_ACCEPTANCE_RANGE)
@@ -2032,8 +2032,8 @@ int performMCMC()
                mcmcSetup.finetunes.migTime,
                mcmcSetup.finetunes.theta,
                mcmcSetup.finetunes.migRate);
-        for (pop = dataSetup.popTree_->numCurPops;
-             pop < dataSetup.popTree_->numPops; pop++)
+        for (pop = dataSetup.popTree->numCurPops;
+             pop < dataSetup.popTree->numPops; pop++)
         {
           printf("%-9.7lf ", mcmcSetup.finetunes.taus[pop]);
         }
@@ -2060,7 +2060,7 @@ int performMCMC()
       acceptanceCounts.SPR = 0;
       acceptanceCounts.theta = 0;
       acceptanceCounts.migRate = 0;
-      for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+      for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
       {
         acceptanceCounts.taus[pop] = 0;
       }
@@ -2083,7 +2083,7 @@ int performMCMC()
                mcmcSetup.finetunes.migTime,
                mcmcSetup.finetunes.theta,
                mcmcSetup.finetunes.migRate);
-        for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+        for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
         {
           printf("%8lf  ", mcmcSetup.finetunes.taus[pop]);
         }
@@ -2163,10 +2163,10 @@ int UpdateGB_InternalNode(double finetune)
       pop = nodePops[gen][inode];
 
       // set lower and upper bounds for new age
-      tb[0] = dataSetup.popTree_->pops[pop]->age;
-      if (pop != dataSetup.popTree_->rootPop)
+      tb[0] = dataSetup.popTree->pops[pop]->age;
+      if (pop != dataSetup.popTree->rootPop)
       {
-        tb[1] = dataSetup.popTree_->pops[pop]->father->age;
+        tb[1] = dataSetup.popTree->pops[pop]->father->age;
       }
       else
       {
@@ -2321,9 +2321,9 @@ int UpdateGB_MigrationNode(double finetune)
       // determine upper and lower bounds for new time
       // start up with start and end times of migration band
       // then bound according to events right below or above the migration event
-      t_bounds[0] = dataSetup.popTree_->migBands[genetree_migs[gen].\
+      t_bounds[0] = dataSetup.popTree->migBands[genetree_migs[gen].\
                                    mignodes[mignode].migration_band].startTime;
-      t_bounds[1] = dataSetup.popTree_->migBands[genetree_migs[gen].\
+      t_bounds[1] = dataSetup.popTree->migBands[genetree_migs[gen].\
                                    mignodes[mignode].migration_band].endTime;
 
       mig_below = findLastMig(gen, node_below, t);
@@ -2600,7 +2600,7 @@ int UpdateGB_MigSPR()
              i < locus_data[gen].genetree_stats_delta[1].num_changed_events();
              ++i )
         {
-          EventIvgeny* pChangedEvent =
+          Event* pChangedEvent =
                     locus_data[gen].genetree_stats_delta[1].changed_events[i];
           pChangedEvent->incrementLineages();
           //event_chains[gen].events[event].incrementLineages();
@@ -2609,7 +2609,7 @@ int UpdateGB_MigSPR()
         // apply changes to genetree stats
         // changes in number of coals and migs are applied separately
         for( mig_band = 0;
-             mig_band < dataSetup.popTree_->numMigBands;
+             mig_band < dataSetup.popTree->numMigBands;
              ++mig_band )
         {
 
@@ -2626,7 +2626,7 @@ int UpdateGB_MigSPR()
              locus_data[gen].genetree_stats_delta[0].mig_stats_delta[mig_band]);
         }
 
-        for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+        for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
         {
           genetree_stats[gen].coal_stats[pop] +=
               locus_data[gen].genetree_stats_delta[1].coal_stats_delta[pop]
@@ -2662,7 +2662,7 @@ int UpdateGB_MigSPR()
              i < locus_data[gen].genetree_stats_delta[0].num_changed_events();
              ++i )
         {
-          EventIvgeny* pChangedEvent =
+          Event* pChangedEvent =
               locus_data[gen].genetree_stats_delta[0].changed_events[i];
           pChangedEvent->incrementLineages();
           //event = locus_data[gen].genetree_stats_delta[0].changed_events[i];
@@ -2700,10 +2700,10 @@ int UpdateTheta(double finetune)
     return 0;
   }
 
-  for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
     // record previous theta
-    thetaold = dataSetup.popTree_->pops[pop]->theta;
+    thetaold = dataSetup.popTree->pops[pop]->theta;
     // perform MULTIPLICATIVE UPDATE
     lnc = finetune * rnd2normal8(RAND_GENERAL_SLOT);
     c = exp(lnc);
@@ -2715,8 +2715,8 @@ int UpdateTheta(double finetune)
 #endif
     // acceptance ratio according to proposal prior
     lnacceptance =
-        lnc + lnc * (dataSetup.popTree_->pops[pop]->thetaPrior.alpha - 1) -
-        (thetanew - thetaold) * dataSetup.popTree_->pops[pop]->thetaPrior.beta;
+        lnc + lnc * (dataSetup.popTree->pops[pop]->thetaPrior.alpha - 1) -
+        (thetanew - thetaold) * dataSetup.popTree->pops[pop]->thetaPrior.beta;
 
     // delta in log-likelihood of all genealogies
     deltaLogLikelihood =
@@ -2746,7 +2746,7 @@ int UpdateTheta(double finetune)
             genetree_stats[gen].coal_stats[pop]);
       }
       dataState.logLikelihood += deltaLogLikelihood / dataSetup.numLoci;
-      dataSetup.popTree_->pops[pop]->theta = thetanew;
+      dataSetup.popTree->pops[pop]->theta = thetanew;
     }
     else
     {
@@ -2778,12 +2778,12 @@ int UpdateMigRates(double finetune)
     return 0;
   }
 
-  for (mig_band = 0; mig_band < dataSetup.popTree_->numMigBands; mig_band++)
+  for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++)
   {
 
 
     // record old rate and propose new migration rate
-    old_rate = dataSetup.popTree_->migBands[mig_band].migRate;
+    old_rate = dataSetup.popTree->migBands[mig_band].migRate;
     // ADDITIVE UPDATE !!!
     //			new_rate = fabs(old_rate + finetune*rnd2normal8());
     //			c = new_rate/old_rate;
@@ -2813,10 +2813,10 @@ int UpdateMigRates(double finetune)
     // GAMA PRIOR
     if (new_rate < 0.00001) continue;
     lnacceptance = lnc + lnc *
-                   (dataSetup.popTree_->migBands[mig_band].\
+                   (dataSetup.popTree->migBands[mig_band].\
                       migRatePrior.alpha - 1 ) -
                    (new_rate - old_rate) *
-                   dataSetup.popTree_->migBands[mig_band].migRatePrior.beta;
+                   dataSetup.popTree->migBands[mig_band].migRatePrior.beta;
 
     // UNIFORM PRIOR
     // if new rate is outside boundary, reject
@@ -2853,7 +2853,7 @@ int UpdateMigRates(double finetune)
             lnc * genetree_stats[gen].num_migs[mig_band] -
             (new_rate - old_rate) * genetree_stats[gen].mig_stats[mig_band]);
       }
-      dataSetup.popTree_->migBands[mig_band].migRate = new_rate;
+      dataSetup.popTree->migBands[mig_band].migRate = new_rate;
       dataState.logLikelihood += deltaLogLikelihood / dataSetup.numLoci;
     }
     else
@@ -2902,48 +2902,48 @@ void UpdateTau(double *finetunes, int *accepted)
   bzero(start_or_end, MAX_MIG_BANDS*sizeof(int));
   bzero(affected_mig_bands, MAX_MIG_BANDS*sizeof(int));
 
-  for( ancestralPop = dataSetup.popTree_->numCurPops;
-       ancestralPop < dataSetup.popTree_->numPops;
+  for( ancestralPop = dataSetup.popTree->numCurPops;
+       ancestralPop < dataSetup.popTree->numPops;
        ++ancestralPop )
   {
     accepted[ancestralPop] = 0;
-    isRoot = (ancestralPop == dataSetup.popTree_->rootPop);
+    isRoot = (ancestralPop == dataSetup.popTree->rootPop);
 
-    tauold = dataSetup.popTree_->pops[ancestralPop]->age;
+    tauold = dataSetup.popTree->pops[ancestralPop]->age;
     dataDeltaLnLd = 0.0;
     genDeltaLnLd = 0.0;
-    sons[0] = dataSetup.popTree_->pops[ancestralPop]->sons[0]->id;
-    sons[1] = dataSetup.popTree_->pops[ancestralPop]->sons[1]->id;
-    taub[0] = max2(dataSetup.popTree_->pops[sons[0]]->age,
-                   dataSetup.popTree_->pops[sons[1]]->age);
+    sons[0] = dataSetup.popTree->pops[ancestralPop]->sons[0]->id;
+    sons[1] = dataSetup.popTree->pops[ancestralPop]->sons[1]->id;
+    taub[0] = max2(dataSetup.popTree->pops[sons[0]]->age,
+                   dataSetup.popTree->pops[sons[1]]->age);
     // MARK CHANGE
-    taub[0] = max2(taub[0], dataSetup.popTree_->pops[sons[0]]->sampleAge);
-    taub[0] = max2(taub[0], dataSetup.popTree_->pops[sons[1]]->sampleAge);
+    taub[0] = max2(taub[0], dataSetup.popTree->pops[sons[0]]->sampleAge);
+    taub[0] = max2(taub[0], dataSetup.popTree->pops[sons[1]]->sampleAge);
     if (isRoot)
     {
       taub[1] = OLDAGE;
     }
     else
     {
-      taub[1] = dataSetup.popTree_->pops[ancestralPop]->father->age;
+      taub[1] = dataSetup.popTree->pops[ancestralPop]->father->age;
     }
 
 
     // modify bounds according to migration bands -
     // make sure all migration bands stay alive
-    for (mig_band = 0; mig_band < dataSetup.popTree_->numMigBands; mig_band++)
+    for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++)
     {
-      sourcePop = dataSetup.popTree_->migBands[mig_band].sourcePop;
-      targetPop = dataSetup.popTree_->migBands[mig_band].targetPop;
+      sourcePop = dataSetup.popTree->migBands[mig_band].sourcePop;
+      targetPop = dataSetup.popTree->migBands[mig_band].targetPop;
       if (sourcePop == ancestralPop || targetPop == ancestralPop)
       {
-        taub[1] = min2(taub[1], dataSetup.popTree_->migBands[mig_band].endTime);
+        taub[1] = min2(taub[1], dataSetup.popTree->migBands[mig_band].endTime);
       }
       else if (sourcePop == sons[0] || sourcePop == sons[1] ||
                targetPop == sons[0] || targetPop == sons[1])
       {
         taub[0] = max2(taub[0],
-                       dataSetup.popTree_->migBands[mig_band].startTime);
+                       dataSetup.popTree->migBands[mig_band].startTime);
       }
     }
 
@@ -2953,7 +2953,7 @@ void UpdateTau(double *finetunes, int *accepted)
                * rnd2normal8(RAND_GENERAL_SLOT);
     taunew = reflect(taunew, taub[0], taub[1]);
     //set new age for now to compute migration band times, but restore later!!!
-    dataSetup.popTree_->pops[ancestralPop]->age = taunew;
+    dataSetup.popTree->pops[ancestralPop]->age = taunew;
 #ifdef LOG_STEPS
     fprintf(ioSetup.debugFile, "  ancestral pop %d, proposing age shift:"
             " %g-->%g, ",ancestralPop, tauold, taunew);
@@ -2975,11 +2975,11 @@ void UpdateTau(double *finetunes, int *accepted)
     //						 ancestralPop, tauold, taunew,taub[0],
     //             taub[1], taufactor[0], taufactor[1]);
     num_affected_mig_bands = 0;
-    for (mig_band = 0; mig_band < dataSetup.popTree_->numMigBands; mig_band++)
+    for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++)
     {
-      sourcePop = dataSetup.popTree_->migBands[mig_band].sourcePop;
-      targetPop = dataSetup.popTree_->migBands[mig_band].targetPop;
-      res = updateMigrationBandTimes(dataSetup.popTree_, mig_band);
+      sourcePop = dataSetup.popTree->migBands[mig_band].sourcePop;
+      targetPop = dataSetup.popTree->migBands[mig_band].targetPop;
+      res = updateMigrationBandTimes(dataSetup.popTree, mig_band);
 
       if ((sourcePop == sons[0] && targetPop == sons[1]) ||
           (sourcePop == sons[1] && targetPop == sons[0]))
@@ -2993,27 +2993,27 @@ void UpdateTau(double *finetunes, int *accepted)
         // mig bands entering rubber-banded populations are not affected
         // by the standard rubber band. We factor the times artificially
         // so that after rubber-band they will be in the right spot
-        if (dataSetup.popTree_->migBands[mig_band].endTime < taub[1])
+        if (dataSetup.popTree->migBands[mig_band].endTime < taub[1])
         {
           //									printf("    mig band %d, type 1a.\n",mig_band);
           affected_mig_bands[num_affected_mig_bands] = mig_band;
           //indicate that end time has changed
           start_or_end[num_affected_mig_bands] = 0;
           new_band_ages[num_affected_mig_bands] = taub[1] +
-                      (dataSetup.popTree_->migBands[mig_band].endTime - taub[1])
+                      (dataSetup.popTree->migBands[mig_band].endTime - taub[1])
                       / taufactor[1];
           num_affected_mig_bands++;
         }
         // do same with start time (if not bounded before and
         // after by age of ancestralPop)
-        if(    dataSetup.popTree_->migBands[mig_band].startTime < taub[1]
-            && dataSetup.popTree_->pops[sourcePop]->age > min2(tauold, taunew) )
+        if(    dataSetup.popTree->migBands[mig_band].startTime < taub[1]
+            && dataSetup.popTree->pops[sourcePop]->age > min2(tauold, taunew) )
         {
           affected_mig_bands[num_affected_mig_bands] = mig_band;
           //indicate that start time has changed
           start_or_end[num_affected_mig_bands] = 1;
           new_band_ages[num_affected_mig_bands] = taub[1] +
-                    (dataSetup.popTree_->migBands[mig_band].startTime - taub[1])
+                    (dataSetup.popTree->migBands[mig_band].startTime - taub[1])
                     / taufactor[1];
           //Added this part for v1.3.2 to eliminate Fatal Error 0016 and 0005.
           //Difference should only come from floating point rounding issues.
@@ -3037,28 +3037,28 @@ void UpdateTau(double *finetunes, int *accepted)
       else if (targetPop == sons[0] || targetPop == sons[1])
       {
         // same idea as previous condition, but with lower rubberband
-        if (dataSetup.popTree_->migBands[mig_band].startTime > taub[0])
+        if (dataSetup.popTree->migBands[mig_band].startTime > taub[0])
         {
           //printf("    mig band %d, type 2a.\n",mig_band);
           affected_mig_bands[num_affected_mig_bands] = mig_band;
           //indicate that start time has changed
           start_or_end[num_affected_mig_bands] = 1;
           new_band_ages[num_affected_mig_bands] = taub[0]
-                            + (dataSetup.popTree_->migBands[mig_band].startTime
+                            + (dataSetup.popTree->migBands[mig_band].startTime
                                - taub[0]) / taufactor[0];
           num_affected_mig_bands++;
         }
         // do same with start time (if not bounded before and after
         // by age of ancestralPop)
-        if (dataSetup.popTree_->migBands[mig_band].endTime > taub[0] &&
-            dataSetup.popTree_->pops[sourcePop]->father->age <
+        if (dataSetup.popTree->migBands[mig_band].endTime > taub[0] &&
+            dataSetup.popTree->pops[sourcePop]->father->age <
             max2(tauold, taunew))
         {
           affected_mig_bands[num_affected_mig_bands] = mig_band;
           //indicate that end time has changed
           start_or_end[num_affected_mig_bands] = 0;
           new_band_ages[num_affected_mig_bands] = taub[0]
-                             + (dataSetup.popTree_->migBands[mig_band].endTime
+                             + (dataSetup.popTree->migBands[mig_band].endTime
                                 - taub[0]) / taufactor[0];
           num_affected_mig_bands++;
           //printf("    mig band %d, type 2b. New end time = %g, so end "
@@ -3075,7 +3075,7 @@ void UpdateTau(double *finetunes, int *accepted)
         //indicate that start time has changed
         start_or_end[num_affected_mig_bands] = 1;
         new_band_ages[num_affected_mig_bands] =
-                               dataSetup.popTree_->migBands[mig_band].startTime;
+                               dataSetup.popTree->migBands[mig_band].startTime;
         num_affected_mig_bands++;
       }
       else if (res && (sourcePop == sons[0] || sourcePop == sons[1]))
@@ -3086,7 +3086,7 @@ void UpdateTau(double *finetunes, int *accepted)
         //indicate that end time has changed
         start_or_end[num_affected_mig_bands] = 0;
         new_band_ages[num_affected_mig_bands] =
-                                 dataSetup.popTree_->migBands[mig_band].endTime;
+                                 dataSetup.popTree->migBands[mig_band].endTime;
         num_affected_mig_bands++;
       }
       //					else {
@@ -3121,7 +3121,7 @@ void UpdateTau(double *finetunes, int *accepted)
     } // end of for(mig_band)
 
     // restoring old time for various computations - DIRTY !!!!
-    dataSetup.popTree_->pops[ancestralPop]->age = tauold;
+    dataSetup.popTree->pops[ancestralPop]->age = tauold;
 
 
     //      printf("\nConsidering UpdateTau for split of pop %d: %g-->%g. "
@@ -3136,9 +3136,9 @@ void UpdateTau(double *finetunes, int *accepted)
 #endif
 
     lnacceptance = log(taunew / tauold) *
-                   (dataSetup.popTree_->pops[ancestralPop]->agePrior.alpha - 1) -
+                   (dataSetup.popTree->pops[ancestralPop]->agePrior.alpha - 1) -
                    (taunew - tauold) *
-                   dataSetup.popTree_->pops[ancestralPop]->agePrior.beta;
+                   dataSetup.popTree->pops[ancestralPop]->agePrior.beta;
 
     dataDeltaLnLd = 0.0;
     genDeltaLnLd = 0.0;
@@ -3285,7 +3285,7 @@ void UpdateTau(double *finetunes, int *accepted)
             {
               inode_mt = genetree_migs[gen].mignodes[mig].gtree_branch;
               // check for conflicts
-              if (new_age_mt >= dataSetup.popTree_->migBands[mig_band].endTime)
+              if (new_age_mt >= dataSetup.popTree->migBands[mig_band].endTime)
               {
                 mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
@@ -3293,7 +3293,7 @@ void UpdateTau(double *finetunes, int *accepted)
 #endif
               }
               else if (new_age_mt <=
-                       dataSetup.popTree_->migBands[mig_band].startTime)
+                       dataSetup.popTree->migBands[mig_band].startTime)
               {
                 mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
@@ -3386,7 +3386,7 @@ void UpdateTau(double *finetunes, int *accepted)
           for (i = 0; i < num_affected_mig_bands; i++)
           {
             mig_band = affected_mig_bands[i];
-            targetPop_mt = dataSetup.popTree_->migBands[mig_band].targetPop;
+            targetPop_mt = dataSetup.popTree->migBands[mig_band].targetPop;
             for (event_mt = event_chains[gen].first_event[targetPop_mt];
                  event_mt >= 0;
                  event_mt = event_chains[gen].events[event_mt].getNextIdx())
@@ -3622,7 +3622,7 @@ void UpdateTau(double *finetunes, int *accepted)
 
       // commit to new split time [ no need to change mig-band times -
       // these were changed already ]
-      dataSetup.popTree_->pops[ancestralPop]->age = taunew;
+      dataSetup.popTree->pops[ancestralPop]->age = taunew;
 
       if (isRoot)
       {
@@ -3636,7 +3636,7 @@ void UpdateTau(double *finetunes, int *accepted)
 #endif
       // UNUSED       didAccept = 0;
       // restore old times of migration bands
-      computeMigrationBandTimes(dataSetup.popTree_);
+      computeMigrationBandTimes(dataSetup.popTree);
       if (mig_conflict)
       {
         //							printf("(migration conflict at gen %d)\n",gen);
@@ -3702,17 +3702,17 @@ void UpdateSampleAge(double *finetunes, int *accepted)
   int targetPop;
 
 
-  for (pop = 0; pop < dataSetup.popTree_->numCurPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numCurPops; pop++)
   {
     accepted[pop] = 0;
-    if (!dataSetup.popTree_->pops[pop]->updateSampleAge)
+    if (!dataSetup.popTree->pops[pop]->updateSampleAge)
       continue;
 
-    tauold = dataSetup.popTree_->pops[pop]->sampleAge;
+    tauold = dataSetup.popTree->pops[pop]->sampleAge;
     dataDeltaLnLd = 0.0;
     genDeltaLnLd = 0.0;
     taub[0] = 0.0;
-    taub[1] = dataSetup.popTree_->pops[pop]->father->age;
+    taub[1] = dataSetup.popTree->pops[pop]->father->age;
 
 
     //sample new time
@@ -3721,7 +3721,7 @@ void UpdateSampleAge(double *finetunes, int *accepted)
                * rnd2normal8(RAND_GENERAL_SLOT);
     taunew = reflect(taunew, taub[0], taub[1]);
     // set new age for now to compute migration band times, but restore later!!!
-    dataSetup.popTree_->pops[pop]->sampleAge = taunew;
+    dataSetup.popTree->pops[pop]->sampleAge = taunew;
 #ifdef LOG_STEPS
     fprintf(ioSetup.debugFile, "  pop %d, proposing sample age "
             "shift: %g-->%g, ",pop, tauold, taunew);
@@ -3734,39 +3734,39 @@ void UpdateSampleAge(double *finetunes, int *accepted)
 
 
     num_affected_mig_bands = 0;
-    for( mig_band = 0; mig_band < dataSetup.popTree_->numMigBands; ++mig_band )
+    for( mig_band = 0; mig_band < dataSetup.popTree->numMigBands; ++mig_band )
     {
       // the next assignment is unused
       //sourcePop = dataSetup.popTree->migBands[mig_band].sourcePop;
-      targetPop = dataSetup.popTree_->migBands[mig_band].targetPop;
+      targetPop = dataSetup.popTree->migBands[mig_band].targetPop;
 
       if (targetPop == pop)
       {
         // mig bands entering rubber-banded populations are not affected
         // by the standard rubber band. We factor the times artificially
         // so that after rubber-band they will be in the right spot
-        if(    dataSetup.popTree_->migBands[mig_band].endTime < taub[1]
-            && dataSetup.popTree_->migBands[mig_band].endTime > taub[0] )
+        if(    dataSetup.popTree->migBands[mig_band].endTime < taub[1]
+            && dataSetup.popTree->migBands[mig_band].endTime > taub[0] )
         {
           //printf("    mig band %d, type 1a.\n",mig_band);
           affected_mig_bands[num_affected_mig_bands] = mig_band;
           //indicate that end time has changed
           start_or_end[num_affected_mig_bands] = 0;
-          age = dataSetup.popTree_->migBands[mig_band].endTime;
+          age = dataSetup.popTree->migBands[mig_band].endTime;
           new_band_ages[num_affected_mig_bands] = taub[age > taunew] +
                                                   (age - taub[age > taunew]) /
                                                   taufactor[age > taunew];
           ++num_affected_mig_bands;
         }
         // do same with start time
-        if(    dataSetup.popTree_->migBands[mig_band].startTime < taub[1]
-            && dataSetup.popTree_->migBands[mig_band].startTime > taub[0] )
+        if(    dataSetup.popTree->migBands[mig_band].startTime < taub[1]
+            && dataSetup.popTree->migBands[mig_band].startTime > taub[0] )
         {
           //printf("    mig band %d, type 1b.\n",mig_band);
           affected_mig_bands[num_affected_mig_bands] = mig_band;
           //indicate that start time has changed
           start_or_end[num_affected_mig_bands] = 1;
-          age = dataSetup.popTree_->migBands[mig_band].startTime;
+          age = dataSetup.popTree->migBands[mig_band].startTime;
           new_band_ages[num_affected_mig_bands] = taub[age > taunew] +
                                                   (age - taub[age > taunew]) /
                                                   taufactor[age > taunew];
@@ -3793,7 +3793,7 @@ void UpdateSampleAge(double *finetunes, int *accepted)
 
 
     // restoring old time for various computations - DIRTY !!!!
-    dataSetup.popTree_->pops[pop]->sampleAge = tauold;
+    dataSetup.popTree->pops[pop]->sampleAge = tauold;
 
 
 #ifdef DEBUG_RUBBERBAND
@@ -3806,9 +3806,9 @@ void UpdateSampleAge(double *finetunes, int *accepted)
     //SAMPLEAGE: do we want to have a prior Gamma distribution
     // associated with sample age?
     lnacceptance = log(taunew / tauold) *
-                   (dataSetup.popTree_->pops[pop]->agePrior.alpha - 1) -
+                   (dataSetup.popTree->pops[pop]->agePrior.alpha - 1) -
                    (taunew - tauold) *
-                   dataSetup.popTree_->pops[pop]->agePrior.beta;
+                   dataSetup.popTree->pops[pop]->agePrior.beta;
 
     dataDeltaLnLd = 0.0;
     genDeltaLnLd = 0.0;
@@ -3927,7 +3927,7 @@ void UpdateSampleAge(double *finetunes, int *accepted)
             {
               inode = genetree_migs[gen].mignodes[mig].gtree_branch;
               // check for conflicts
-              if (new_age >= dataSetup.popTree_->migBands[mig_band].endTime)
+              if (new_age >= dataSetup.popTree->migBands[mig_band].endTime)
               {
                 mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
@@ -3935,7 +3935,7 @@ void UpdateSampleAge(double *finetunes, int *accepted)
 #endif
               }
               else if( new_age <=
-                       dataSetup.popTree_->migBands[mig_band].startTime )
+                       dataSetup.popTree->migBands[mig_band].startTime )
               {
                 mig_conflict = 1;
 #ifdef ENABLE_OMP_THREADS
@@ -4017,7 +4017,7 @@ void UpdateSampleAge(double *finetunes, int *accepted)
           for( i = 0; i < num_affected_mig_bands; ++i )
           {
             mig_band = affected_mig_bands[i];
-            targetPop_mt = dataSetup.popTree_->migBands[mig_band].targetPop;
+            targetPop_mt = dataSetup.popTree->migBands[mig_band].targetPop;
             for( event = event_chains[gen].first_event[targetPop_mt];
                  event >= 0;
                  event = event_chains[gen].events[event].getNextIdx() )
@@ -4219,7 +4219,7 @@ void UpdateSampleAge(double *finetunes, int *accepted)
 
       // commit to new sample age
       // [ no need to change mig-band times - these were changed already ]
-      dataSetup.popTree_->pops[pop]->sampleAge = taunew;
+      dataSetup.popTree->pops[pop]->sampleAge = taunew;
 
     }
     else
@@ -4388,56 +4388,56 @@ int mixing(double finetune)
 
   // compute number of coalescent and migration events whose age is scaled
   num_events = 0;
-  for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
     num_events += genetree_stats_total.num_coals[pop];
   }
-  for (mig_band = 0; mig_band < dataSetup.popTree_->numMigBands; mig_band++)
+  for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++)
   {
     num_events += genetree_stats_total.num_migs[mig_band];
   }
 
   // proposal ratio -note that migration rates are scaled in the other direction
-  lnacceptance = lnc * (2 * dataSetup.popTree_->numPops -
-                        dataSetup.popTree_->numCurPops -
-                        dataSetup.popTree_->numMigBands + num_events);
+  lnacceptance = lnc * (2 * dataSetup.popTree->numPops -
+                        dataSetup.popTree->numCurPops -
+                        dataSetup.popTree->numMigBands + num_events);
   //	lnacceptance = lnc;
 
   dataDeltaLnLd = 0.0;
   genDeltaLnLd = 0.0;
-  for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
-    xold = dataSetup.popTree_->pops[pop]->theta;
-    dataSetup.popTree_->pops[pop]->theta = xnew = xold * c;
+    xold = dataSetup.popTree->pops[pop]->theta;
+    dataSetup.popTree->pops[pop]->theta = xnew = xold * c;
     lnacceptance +=   lnc
-                    * (dataSetup.popTree_->pops[pop]->thetaPrior.alpha - 1)
+                    * (dataSetup.popTree->pops[pop]->thetaPrior.alpha - 1)
                     - (xnew - xold)
-                    * dataSetup.popTree_->pops[pop]->thetaPrior.beta;
+                    * dataSetup.popTree->pops[pop]->thetaPrior.beta;
     // change in genetree likelihoods is not in the stats
     // because times and rates are scaled together.
     // the difference is only in coalescence/migration densities.
     // this actually cancels out with proposal ratio.
     genDeltaLnLd -= lnc * genetree_stats_total.num_coals[pop];
-    if (pop < dataSetup.popTree_->numCurPops &&
-        dataSetup.popTree_->pops[pop]->sampleAge > 0.0)
+    if (pop < dataSetup.popTree->numCurPops &&
+        dataSetup.popTree->pops[pop]->sampleAge > 0.0)
     {
-      dataSetup.popTree_->pops[pop]->sampleAge *= c;
+      dataSetup.popTree->pops[pop]->sampleAge *= c;
     }
   }
-  for (pop = dataSetup.popTree_->numCurPops;
-       pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = dataSetup.popTree->numCurPops;
+       pop < dataSetup.popTree->numPops; pop++)
   {
     // consider also current populations with ancient samples
-    xold = dataSetup.popTree_->pops[pop]->age;
-    dataSetup.popTree_->pops[pop]->age = xnew = xold * c;
-    lnacceptance += lnc * (dataSetup.popTree_->pops[pop]->agePrior.alpha - 1) -
-                    (xnew - xold) * dataSetup.popTree_->pops[pop]->agePrior.beta;
+    xold = dataSetup.popTree->pops[pop]->age;
+    dataSetup.popTree->pops[pop]->age = xnew = xold * c;
+    lnacceptance += lnc * (dataSetup.popTree->pops[pop]->agePrior.alpha - 1) -
+                    (xnew - xold) * dataSetup.popTree->pops[pop]->agePrior.beta;
   }
-  for (mig_band = 0; mig_band < dataSetup.popTree_->numMigBands; mig_band++)
+  for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++)
   {
     // migration rates are scaled inversely
-    xold = dataSetup.popTree_->migBands[mig_band].migRate;
-    dataSetup.popTree_->migBands[mig_band].migRate = xnew = xold / c;
+    xold = dataSetup.popTree->migBands[mig_band].migRate;
+    dataSetup.popTree->migBands[mig_band].migRate = xnew = xold / c;
     // see if migration rate got out of bounds
     //if(   xnew < 0.00001
     //   || xnew > dataSetup.popTree->migBands[mig_band].upperBound)
@@ -4452,10 +4452,10 @@ int mixing(double finetune)
     //	}
     // GAMMA PRIOR
     lnacceptance +=
-        -lnc * (dataSetup.popTree_->migBands[mig_band].migRatePrior.alpha - 1) -
-        (xnew - xold) * dataSetup.popTree_->migBands[mig_band].migRatePrior.beta;
-    dataSetup.popTree_->migBands[mig_band].startTime *= c;
-    dataSetup.popTree_->migBands[mig_band].endTime *= c;
+        -lnc * (dataSetup.popTree->migBands[mig_band].migRatePrior.alpha - 1) -
+        (xnew - xold) * dataSetup.popTree->migBands[mig_band].migRatePrior.beta;
+    dataSetup.popTree->migBands[mig_band].startTime *= c;
+    dataSetup.popTree->migBands[mig_band].endTime *= c;
     // change in genetree likelihoods is not in the stats
     // because times and rates are scaled together.
     // the difference is only in coalescence/migration densities.
@@ -4508,12 +4508,12 @@ int mixing(double finetune)
             lnc * (dataSetup.numSamples - 1 + genetree_migs[gen].num_migs);
 
         // update all statistics by the constant
-        for (pop_mt = 0; pop_mt < dataSetup.popTree_->numPops; pop_mt++)
+        for (pop_mt = 0; pop_mt < dataSetup.popTree->numPops; pop_mt++)
         {
           genetree_stats[gen].coal_stats[pop_mt] *= c;
         }
         for (mig_band_mt = 0;
-             mig_band_mt < dataSetup.popTree_->numMigBands; mig_band_mt++)
+             mig_band_mt < dataSetup.popTree->numMigBands; mig_band_mt++)
         {
           genetree_stats[gen].mig_stats[mig_band_mt] *= c;
         }
@@ -4527,12 +4527,12 @@ int mixing(double finetune)
       }    // end of for(gen)
 
       // update total statistics by the constant
-      for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+      for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
       {
         genetree_stats_total.coal_stats[pop] *= c;
       }
       for (mig_band = 0;
-           mig_band < dataSetup.popTree_->numMigBands; mig_band++)
+           mig_band < dataSetup.popTree->numMigBands; mig_band++)
       {
         genetree_stats_total.mig_stats[mig_band] *= c;
       }
@@ -4567,27 +4567,27 @@ int mixing(double finetune)
   }
 
   // revert to old parameters and genealogies
-  for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
-    dataSetup.popTree_->pops[pop]->theta /= c;
+    dataSetup.popTree->pops[pop]->theta /= c;
   }
   //  for( pop=dataSetup.popTree->numCurPops;
   //       pop<dataSetup.popTree->numPops; pop++) {
-  for (pop = 0; pop < dataSetup.popTree_->numPops; pop++)
+  for (pop = 0; pop < dataSetup.popTree->numPops; pop++)
   {
-    dataSetup.popTree_->pops[pop]->age /= c;
-    if (pop < dataSetup.popTree_->numCurPops &&
-        dataSetup.popTree_->pops[pop]->sampleAge > 0.0)
+    dataSetup.popTree->pops[pop]->age /= c;
+    if (pop < dataSetup.popTree->numCurPops &&
+        dataSetup.popTree->pops[pop]->sampleAge > 0.0)
     {
-      dataSetup.popTree_->pops[pop]->sampleAge /= c;
+      dataSetup.popTree->pops[pop]->sampleAge /= c;
     }
   }
-  for (mig_band = 0; mig_band < dataSetup.popTree_->numMigBands; mig_band++)
+  for (mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++)
   {
     // migration rates are scaled inversely
-    dataSetup.popTree_->migBands[mig_band].migRate *= c;
-    dataSetup.popTree_->migBands[mig_band].startTime /= c;
-    dataSetup.popTree_->migBands[mig_band].endTime /= c;
+    dataSetup.popTree->migBands[mig_band].migRate *= c;
+    dataSetup.popTree->migBands[mig_band].startTime /= c;
+    dataSetup.popTree->migBands[mig_band].endTime /= c;
   }
 
   return 0;

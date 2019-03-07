@@ -20,19 +20,19 @@ void calculateCladeStats() {
 }
 
 void computeCladeNumMigs() {
-  for (int mig_band = 0; mig_band < dataSetup.popTree_->numMigBands; mig_band++) {
+  for (int mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
     clade_stats[mig_band].num_migs_total = genetree_stats_total.num_migs[mig_band];
   }
 }
 
 void computeCladeMigStats() {
-  for (int mig_band = 0; mig_band < dataSetup.popTree_->numMigBands; mig_band++) {
+  for (int mig_band = 0; mig_band < dataSetup.popTree->numMigBands; mig_band++) {
     clade_stats[mig_band].mig_stats_total = genetree_stats_total.mig_stats[mig_band];
   }
 }
 
 void computeCladeNumCoals() {
-  computeCladeNumCoals_rec(dataSetup.popTree_->rootPop);
+  computeCladeNumCoals_rec(dataSetup.popTree->rootPop);
 }
 
 void computeCladeNumCoals_rec(int pop) {
@@ -41,8 +41,8 @@ void computeCladeNumCoals_rec(int pop) {
   if (isLeaf(pop)) {
     clade_stats[pop].num_coals_total = genetree_stats_total.num_coals[pop];
   } else {
-    leftSon = dataSetup.popTree_->pops[pop]->sons[LEFT]->id;
-    rightSon = dataSetup.popTree_->pops[pop]->sons[RIGHT]->id;
+    leftSon = dataSetup.popTree->pops[pop]->sons[LEFT]->id;
+    rightSon = dataSetup.popTree->pops[pop]->sons[RIGHT]->id;
 
     computeCladeNumCoals_rec(leftSon);
     computeCladeNumCoals_rec(rightSon);
@@ -55,7 +55,7 @@ void computeCladeNumCoals_rec(int pop) {
 
 void computeCladeCoalStats() {
   for (int gen = 0; gen < dataSetup.numLoci; gen++) {
-    computeCladeCoalStats_rec(dataSetup.popTree_->rootPop, gen);
+    computeCladeCoalStats_rec(dataSetup.popTree->rootPop, gen);
   }
 }
 
@@ -65,8 +65,8 @@ void computeCladeCoalStats_rec(int clade, int gen) {
   if (isLeaf(clade)) {
     fillUpLeafCladeStats(clade, gen);
   } else {
-    leftSon = dataSetup.popTree_->pops[clade]->sons[LEFT]->id;
-    rightSon = dataSetup.popTree_->pops[clade]->sons[RIGHT]->id;
+    leftSon = dataSetup.popTree->pops[clade]->sons[LEFT]->id;
+    rightSon = dataSetup.popTree->pops[clade]->sons[RIGHT]->id;
 
     computeCladeCoalStats_rec(leftSon, gen);
     computeCladeCoalStats_rec(rightSon, gen);
@@ -83,7 +83,7 @@ void fillUpLeafCladeStats(int clade, int gen) {
 void appendPopToClade(int clade, int gen, int startingPoint) {
   int i = startingPoint;
   int event = event_chains[gen].first_event[clade];
-  double cladeStartTime = dataSetup.popTree_->pops[clade]->age;
+  double cladeStartTime = dataSetup.popTree->pops[clade]->age;
   double eventAge = cladeStartTime;
 
   for (; event >= 0; i++, event = event_chains[gen].events[event].getNextIdx()) {
@@ -118,8 +118,8 @@ void mergeChildren(int clade) {
   int i, j = 0, k = 0;
   double leftAge, rightAge;
   int leftSon, rightSon;
-  leftSon = dataSetup.popTree_->pops[clade]->sons[LEFT]->id;
-  rightSon = dataSetup.popTree_->pops[clade]->sons[RIGHT]->id;
+  leftSon = dataSetup.popTree->pops[clade]->sons[LEFT]->id;
+  rightSon = dataSetup.popTree->pops[clade]->sons[RIGHT]->id;
   int m = clade_stats[leftSon].num_events;
   int n = clade_stats[rightSon].num_events;
 
@@ -180,10 +180,10 @@ void addCurrentPopIntoCladeStats(int clade, int gen) {
 
 
 void allocateCladeMem() {
-  int max_events = 2 * dataSetup.numSamples + 4 * MAX_MIGS + 3 * dataSetup.popTree_->numMigBands + dataSetup.popTree_->numPops + 10;
-  clade_stats = (CLADE_STATS *) malloc(dataSetup.popTree_->numPops * sizeof(CLADE_STATS));
+  int max_events = 2 * dataSetup.numSamples + 4 * MAX_MIGS + 3 * dataSetup.popTree->numMigBands + dataSetup.popTree->numPops + 10;
+  clade_stats = (CLADE_STATS *) malloc(dataSetup.popTree->numPops * sizeof(CLADE_STATS));
 
-  for (int clade = 0; clade < dataSetup.popTree_->numPops; clade++) {
+  for (int clade = 0; clade < dataSetup.popTree->numPops; clade++) {
     clade_stats[clade].sorted_ages = (double *) malloc(max_events * sizeof(double));
     clade_stats[clade].elapsed_times = (double *) malloc(max_events * sizeof(double));
     clade_stats[clade].num_lineages = (int *) malloc(max_events * sizeof(int));
@@ -206,7 +206,7 @@ void allocateCladeMem() {
  * cleans up all variables in clade_stats
  */
 void initCladeStats() {
-  for (int clade = 0; clade < dataSetup.popTree_->numPops; clade++) {
+  for (int clade = 0; clade < dataSetup.popTree->numPops; clade++) {
     initSpecificCladeStats(clade);
   }
 }

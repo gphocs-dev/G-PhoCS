@@ -9,7 +9,7 @@
  ============================================================================*/
 
 
-class EventIvgeny;
+class Event;
 int traceLineage (int gen, int node, int reconnect);
 
 //----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ typedef struct _TraceLineageAutoVars
 {
   int gen, node, reconnect;
   int pop;
-  EventIvgeny* pEvent;
+  Event* pEvent;
   int node_id, mig_band, mig_source, proceed;
   int num_live_mig_bands, live_mig_bands[MAX_MIG_BANDS];
   double age, t;

@@ -35,7 +35,7 @@ int checkGtreeStructure_dispatch_check_event_chain(
   {
     case(SAMPLES_START):
       num_lineages += dataSetup.numSamplesPerPop[pop];
-      if( fabs( dataSetup.popTree_->pops[pop]->sampleAge - age) > PRECISION )
+      if( fabs( dataSetup.popTree->pops[pop]->sampleAge - age) > PRECISION )
       {
         CHECK_GTREE_STRUCT_FATAL_0036
       }
@@ -60,7 +60,7 @@ int checkGtreeStructure_dispatch_check_event_chain(
     case IN_MIG:
       // figure out migration band and update its statistics
       mig_band = genetree_migs[gen].mignodes[event_id].migration_band;
-      if( mig_band < 0 || mig_band > dataSetup.popTree_->numMigBands )
+      if( mig_band < 0 || mig_band > dataSetup.popTree->numMigBands )
       {
         CHECK_GTREE_STRUCT_FATAL_0039a
       }
@@ -81,7 +81,7 @@ int checkGtreeStructure_dispatch_check_event_chain(
         }
         res = 0;
       }
-      if(dataSetup.popTree_->migBands[mig_band].targetPop != pop)
+      if(dataSetup.popTree->migBands[mig_band].targetPop != pop)
       {
         if(debug)
         {
@@ -90,7 +90,7 @@ int checkGtreeStructure_dispatch_check_event_chain(
                           "of mignode %d (target event_idx %d) "
                           "doesn't match: %d, %d.",
                           mig_band, event_id, event_idx, pop,
-                          dataSetup.popTree_->migBands[mig_band].targetPop);
+                          dataSetup.popTree->migBands[mig_band].targetPop);
         }
         else
         {
@@ -117,7 +117,7 @@ int checkGtreeStructure_dispatch_check_event_chain(
         }
         res = 0;
       }
-      if( dataSetup.popTree_->migBands[mig_band].sourcePop != pop )
+      if( dataSetup.popTree->migBands[mig_band].sourcePop != pop )
       {
         if(debug)
         {
@@ -125,7 +125,7 @@ int checkGtreeStructure_dispatch_check_event_chain(
           fprintf(stderr, "source population of migration band %d of mignode "
                           "%d (source event_idx %d) doesn't match: %d, %d.",
                           mig_band, event_id, event_idx, pop,
-                          dataSetup.popTree_->migBands[mig_band].sourcePop);
+                          dataSetup.popTree->migBands[mig_band].sourcePop);
         }
         else
         {
@@ -155,14 +155,14 @@ int checkGtreeStructure_dispatch_check_event_chain(
       // initialize statistics for this new migration band
       locus_data[gen].genetree_stats_check.num_migs[event_id] = 0;
       locus_data[gen].genetree_stats_check.mig_stats[event_id] = 0.0;
-      if(fabs(dataSetup.popTree_->migBands[event_id].startTime - age) > PRECISION)
+      if(fabs(dataSetup.popTree->migBands[event_id].startTime - age) > PRECISION)
       {
         if(debug)
         {
           fprintf(stderr, "\nError: checking genetree for gen %d: ",gen);
           fprintf(stderr, "start time of migration band %d (start event_idx %d)"
                           " doesn't match: %g, %g.", event_id, event_idx, age,
-                          dataSetup.popTree_->migBands[event_id].startTime);
+                          dataSetup.popTree->migBands[event_id].startTime);
         }
         else
         {
@@ -170,7 +170,7 @@ int checkGtreeStructure_dispatch_check_event_chain(
         }
         res = 0;
       }
-      if(dataSetup.popTree_->migBands[event_id].targetPop != pop)
+      if(dataSetup.popTree->migBands[event_id].targetPop != pop)
       {
         if(debug)
         {
@@ -178,7 +178,7 @@ int checkGtreeStructure_dispatch_check_event_chain(
           fprintf(stderr, "target population of migration band %d (start "
                           "event_idx %d) doesn't match: %d, %d.",
                           event_id, event_idx, pop,
-                          dataSetup.popTree_->migBands[event_id].targetPop);
+                          dataSetup.popTree->migBands[event_id].targetPop);
         }
         else
         {
@@ -186,9 +186,9 @@ int checkGtreeStructure_dispatch_check_event_chain(
         }
         res = 0;
       }
-      if( fabs(age - max2(dataSetup.popTree_->pops[pop]->age,
-                          dataSetup.popTree_->pops[\
-                            dataSetup.popTree_->\
+      if( fabs(age - max2(dataSetup.popTree->pops[pop]->age,
+                          dataSetup.popTree->pops[\
+                            dataSetup.popTree->\
                               migBands[event_id].sourcePop]->age)) > PRECISION)
       {
         if(debug)
@@ -198,10 +198,10 @@ int checkGtreeStructure_dispatch_check_event_chain(
                           "doesn't match max of start times for populations "
                           "%d,%d: %g, max(%g,%g).",
                           event_id, event_idx, pop,
-                          dataSetup.popTree_->migBands[event_id].sourcePop,
-                          age, dataSetup.popTree_->pops[pop]->age,
-                          dataSetup.popTree_->pops[\
-                            dataSetup.popTree_->\
+                          dataSetup.popTree->migBands[event_id].sourcePop,
+                          age, dataSetup.popTree->pops[pop]->age,
+                          dataSetup.popTree->pops[\
+                            dataSetup.popTree->\
                               migBands[event_id].sourcePop]->age);
         }
         else
@@ -237,14 +237,14 @@ int checkGtreeStructure_dispatch_check_event_chain(
         p_stack->living_mig_bands[mig_band] =
                                p_stack->living_mig_bands[num_living_mig_bands];
       }
-      if(fabs(dataSetup.popTree_->migBands[event_id].endTime - age) > PRECISION)
+      if(fabs(dataSetup.popTree->migBands[event_id].endTime - age) > PRECISION)
       {
         if(debug)
         {
           fprintf(stderr, "\nError: checking genetree for gen %d: ",gen);
           fprintf(stderr, "end time of migration band %d (end event_idx %d)"
                           " doesn't match: %g, %g.", event_id, event_idx, age,
-                          dataSetup.popTree_->migBands[event_id].endTime);
+                          dataSetup.popTree->migBands[event_id].endTime);
         }
         else
         {
@@ -252,7 +252,7 @@ int checkGtreeStructure_dispatch_check_event_chain(
         }
         res = 0;
       }
-      if(dataSetup.popTree_->migBands[event_id].targetPop != pop)
+      if(dataSetup.popTree->migBands[event_id].targetPop != pop)
       {
         if(debug)
         {
@@ -260,7 +260,7 @@ int checkGtreeStructure_dispatch_check_event_chain(
           fprintf(stderr, "target population of migration band %d "
                           "(end event_idx %d) doesn't match: %d, %d.",
                           event_id, event_idx, pop,
-                          dataSetup.popTree_->migBands[event_id].targetPop);
+                          dataSetup.popTree->migBands[event_id].targetPop);
         }
         else
         {
@@ -268,9 +268,9 @@ int checkGtreeStructure_dispatch_check_event_chain(
         }
         res = 0;
       }
-      if(fabs( age - min2(  dataSetup.popTree_->pops[pop]->father->age,
-                            dataSetup.popTree_->pops[\
-                              dataSetup.popTree_->migBands[event_id].\
+      if(fabs( age - min2(  dataSetup.popTree->pops[pop]->father->age,
+                            dataSetup.popTree->pops[\
+                              dataSetup.popTree->migBands[event_id].\
                                 sourcePop]->father->age) ) > PRECISION)
       {
         if(debug)
@@ -280,13 +280,13 @@ int checkGtreeStructure_dispatch_check_event_chain(
                           "doesn't match min of start times for parent "
                           "populations %d,%d: %g, min(%g,%g).",
                           event_id, event_idx,
-                          dataSetup.popTree_->pops[pop]->father->id,
-                          dataSetup.popTree_->pops[\
-                            dataSetup.popTree_->migBands[\
+                          dataSetup.popTree->pops[pop]->father->id,
+                          dataSetup.popTree->pops[\
+                            dataSetup.popTree->migBands[\
                               event_id].sourcePop]->father->id,
-                          age, dataSetup.popTree_->pops[pop]->father->age,
-                          dataSetup.popTree_->pops[\
-                            dataSetup.popTree_->migBands[\
+                          age, dataSetup.popTree->pops[pop]->father->age,
+                          dataSetup.popTree->pops[\
+                            dataSetup.popTree->migBands[\
                               event_id].sourcePop]->father->age);
         }
         else
@@ -340,15 +340,15 @@ int checkGtreeStructure_dispatch_check_event_chain(
     //              res = 0;
     //            }
     //          }
-    if(pop != dataSetup.popTree_->rootPop) {
+    if(pop != dataSetup.popTree->rootPop) {
       // add to incoming lineages of parent population
-      p_stack->pop_lins_in[dataSetup.popTree_->pops[pop]->father->id] +=
+      p_stack->pop_lins_in[dataSetup.popTree->pops[pop]->father->id] +=
                                                                   num_lineages;
-      if(fabs(dataSetup.popTree_->pops[pop]->father->age - age) > PRECISION) {
+      if(fabs(dataSetup.popTree->pops[pop]->father->age - age) > PRECISION) {
   if(debug) {
     fprintf(stderr, "\nError: checking genetree for gen %d: ",gen);
     fprintf(stderr, "end time of population %d (end event_idx %d) doesn't match start of father pop %d: %f, %f.",
-        pop, event_idx, dataSetup.popTree_->pops[pop]->father->id, age, dataSetup.popTree_->pops[pop]->father->age);
+        pop, event_idx, dataSetup.popTree->pops[pop]->father->id, age, dataSetup.popTree->pops[pop]->father->age);
   } else {
     fprintf(stderr, "Fatal Error 0054.\n");
   }
@@ -392,12 +392,12 @@ int checkGtreeStructure(int gen)
   double& age               = stack_vars.age;
   double& delta_t           = stack_vars.delta_t;
   double PRECISION          = stack_vars.PRECISION;
-  EventIvgeny* pCurrEvent         = NULL;
+  Event* pCurrEvent         = NULL;
   // essentially follow the same path as procedure computeGenetreeStats,
   // but validates with genetree nodes
 
   // initialize number of in-lineages for leaf pops and order pops
-  for(pop=0; pop<dataSetup.popTree_->numPops; pop++)
+  for(pop=0; pop<dataSetup.popTree->numPops; pop++)
   {
     stack_vars.pop_lins_in[pop] = 0;
   }
@@ -407,18 +407,18 @@ int checkGtreeStructure(int gen)
   //  if(node < dataSetup.numSamples)
   //     pop_lins_in[ nodePops[gen][node] ]++;
   // }
-  populationPostOrder(dataSetup.popTree_->rootPop, stack_vars.pop_queue);
+  populationPostOrder(dataSetup.popTree->rootPop, stack_vars.pop_queue);
 
 
   // --- Check event chain per population
-  for( i = 0; i < dataSetup.popTree_->numPops; ++i )
+  for( i = 0; i < dataSetup.popTree->numPops; ++i )
   {
     pop = stack_vars.pop_queue[i];
     locus_data[gen].genetree_stats_check.coal_stats[pop] = 0.0;
     locus_data[gen].genetree_stats_check.num_coals[pop]  = 0;
     event_idx             = event_chains[gen].first_event[pop];
     num_lineages          = stack_vars.pop_lins_in[pop];
-    age                   = dataSetup.popTree_->pops[pop]->age;
+    age                   = dataSetup.popTree->pops[pop]->age;
     num_living_mig_bands  = 0;
 
 
@@ -468,7 +468,7 @@ int checkGtreeStructure(int gen)
   
   
   // --- Check computed stats per population ---
-  for( pop = 0; pop < dataSetup.popTree_->numPops; ++pop )
+  for( pop = 0; pop < dataSetup.popTree->numPops; ++pop )
   {
     if( fabs(locus_data[gen].genetree_stats_check.coal_stats[pop] -
              genetree_stats[gen].coal_stats[pop]) > PRECISION )
@@ -487,7 +487,7 @@ int checkGtreeStructure(int gen)
   }
 
   // --- Check migration bands per population ---
-  for(mig_band=0; mig_band<dataSetup.popTree_->numMigBands; mig_band++)
+  for(mig_band=0; mig_band<dataSetup.popTree->numMigBands; mig_band++)
   {
     if(fabs( locus_data[gen].genetree_stats_check.mig_stats[mig_band] -
              genetree_stats[gen].mig_stats[mig_band]) > PRECISION)
@@ -589,7 +589,7 @@ int checkGtreeStructure(int gen)
       age = genetree_migs[gen].mignodes[mig].age;
       mig_band = genetree_migs[gen].mignodes[mig].migration_band;
       
-      if( dataSetup.popTree_->migBands[mig_band].sourcePop !=
+      if( dataSetup.popTree->migBands[mig_band].sourcePop !=
           genetree_migs[gen].mignodes[mig].source_pop)
       {
         if(debug)
@@ -599,7 +599,7 @@ int checkGtreeStructure(int gen)
                           " match mig band %d: %d, %d.",
                   mig, mig_band,
                   genetree_migs[gen].mignodes[mig].source_pop,
-                  dataSetup.popTree_->migBands[mig_band].sourcePop);
+                  dataSetup.popTree->migBands[mig_band].sourcePop);
         }
         else
         {
@@ -607,7 +607,7 @@ int checkGtreeStructure(int gen)
         }
         res = 0;
       }
-      if( dataSetup.popTree_->migBands[mig_band].targetPop !=
+      if( dataSetup.popTree->migBands[mig_band].targetPop !=
               genetree_migs[gen].mignodes[mig].target_pop)
       {
         if(debug)
@@ -617,7 +617,7 @@ int checkGtreeStructure(int gen)
                           "match mig band %d: %d, %d.",
                   mig, mig_band,
                   genetree_migs[gen].mignodes[mig].target_pop,
-                  dataSetup.popTree_->migBands[mig_band].targetPop);
+                  dataSetup.popTree->migBands[mig_band].targetPop);
         }
         else
         {
@@ -625,8 +625,8 @@ int checkGtreeStructure(int gen)
         }
         res = 0;
       }
-      if(    age <= dataSetup.popTree_->migBands[mig_band].startTime
-          || age >= dataSetup.popTree_->migBands[mig_band].endTime )
+      if(    age <= dataSetup.popTree->migBands[mig_band].startTime
+          || age >= dataSetup.popTree->migBands[mig_band].endTime )
       {
         if(debug)
         {
@@ -634,8 +634,8 @@ int checkGtreeStructure(int gen)
           fprintf(stderr, "age of mignode %d conflicts with times of "
                           "migration band %d: %f, [%f,%f].",
               mig, mig_band, age,
-              dataSetup.popTree_->migBands[mig_band].startTime,
-              dataSetup.popTree_->migBands[mig_band].endTime);
+              dataSetup.popTree->migBands[mig_band].startTime,
+              dataSetup.popTree->migBands[mig_band].endTime);
         }
         else
         {
@@ -643,7 +643,7 @@ int checkGtreeStructure(int gen)
         }
         res = 0;
       }
-      if( !dataSetup.popTree_->pops[ genetree_migs[gen].\
+      if( !dataSetup.popTree->pops[ genetree_migs[gen].\
            mignodes[mig].target_pop ]->isAncestralTo[pop] )
       {
         if(debug)
@@ -695,7 +695,7 @@ int checkGtreeStructure(int gen)
     }
         res = 0;
       }
-      if(!dataSetup.popTree_->pops[ nodePops[gen][father] ]->isAncestralTo[pop]) {
+      if(!dataSetup.popTree->pops[ nodePops[gen][father] ]->isAncestralTo[pop]) {
         //      if(!dataSetup.popTree->pops[ gnodes[gen][gnodes[gen][node].father].ipop ]->isAncestralTo[pop]) {
     if(debug) {
       fprintf(stderr, "\nError: checking genetree for gen %d: ",gen);
@@ -734,7 +734,7 @@ int checkGtreeStructure(int gen)
     }
     res = 0;
   }
-  for( mig_band=0; mig_band < dataSetup.popTree_->numMigBands; ++mig_band )
+  for( mig_band=0; mig_band < dataSetup.popTree->numMigBands; ++mig_band )
   {
     num_migs -= genetree_stats[gen].num_migs[mig_band];
   }
@@ -768,11 +768,11 @@ int checkAll() {
   double PERCISION = 0.0000001;
   double lnLd_gen, genLnLd, dataLnLd;
 
-  for(pop=0; pop<dataSetup.popTree_->numPops; pop++) {
+  for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
     genetree_stats_total_check.num_coals[pop]  = 0;
     genetree_stats_total_check.coal_stats[pop] = 0.0;
   }
-  for(mig_band=0; mig_band<dataSetup.popTree_->numMigBands; mig_band++) {
+  for(mig_band=0; mig_band<dataSetup.popTree->numMigBands; mig_band++) {
     genetree_stats_total_check.num_migs[mig_band]  = 0;
     genetree_stats_total_check.mig_stats[mig_band] = 0.0;
   }
@@ -809,11 +809,11 @@ int checkAll() {
     genLnLd  += lnLd_gen;
 
     heredity_factor = 1;
-    for(pop=0; pop<dataSetup.popTree_->numPops; pop++) {
+    for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
       genetree_stats_total_check.num_coals[pop]  += genetree_stats[gen].num_coals[pop];
       genetree_stats_total_check.coal_stats[pop] += genetree_stats[gen].coal_stats[pop]/heredity_factor;
     }
-    for(mig_band=0; mig_band<dataSetup.popTree_->numMigBands; mig_band++) {
+    for(mig_band=0; mig_band<dataSetup.popTree->numMigBands; mig_band++) {
       genetree_stats_total_check.num_migs[mig_band]  += genetree_stats[gen].num_migs[mig_band];
       genetree_stats_total_check.mig_stats[mig_band] += genetree_stats[gen].mig_stats[mig_band];
     }
@@ -821,7 +821,7 @@ int checkAll() {
 
   }
 
-  for(pop=0; pop<dataSetup.popTree_->numPops; pop++) {
+  for(pop=0; pop<dataSetup.popTree->numPops; pop++) {
     if(   fabs(genetree_stats_total_check.coal_stats[pop] - genetree_stats_total.coal_stats[pop]) > PERCISION
        && fabs(1-genetree_stats_total_check.coal_stats[pop]/genetree_stats_total.coal_stats[pop]) > PERCISION) {
     if(debug) {
@@ -847,7 +847,7 @@ int checkAll() {
 
     genetree_stats_total.coal_stats[pop] = genetree_stats_total_check.coal_stats[pop];
   }
-  for(mig_band=0; mig_band<dataSetup.popTree_->numMigBands; mig_band++) {
+  for(mig_band=0; mig_band<dataSetup.popTree->numMigBands; mig_band++) {
     if(    fabs(genetree_stats_total_check.mig_stats[mig_band] - genetree_stats_total.mig_stats[mig_band]) > PERCISION
         && fabs(1-genetree_stats_total_check.mig_stats[mig_band]/genetree_stats_total.mig_stats[mig_band]) > PERCISION) {
     if(debug) {

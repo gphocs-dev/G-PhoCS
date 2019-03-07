@@ -14,13 +14,13 @@
 #define EVENTS_FATAL_0015 \
 if (debug) \
 { \
-    fprintf(stderr, "\nError: Empty event pool in gen %d.\n", genealogyID_); \
+    fprintf(stderr, "\nError: Empty event pool in gen %d.\n", locusID_); \
 } \
 else \
 { \
     fprintf(stderr, "Fatal Error 0015.\n"); \
 } \
-printGenealogyAndExit(genealogyID_,-1); //TODO: implement another print function
+printGenealogyAndExit(locusID_,-1); //TODO: implement another print function
 
 //----------------------------------------------------------------------------
 #define EVENTS_FATAL_0016 \
@@ -56,14 +56,14 @@ if (debug) \
     fprintf(stderr, \
             "\nError: createEvent: trying to insert new event in pop %d, " \
             "gen %d at time %g, %g above END_CHAIN event.\n", \
-            pop, genealogyID_, age, \
-            delta_time - pNode->getEvent().getElapsedTime()); \
+            pop, locusID_, age, \
+            delta_time - pNode->getElapsedTime()); \
 } \
 else \
 { \
     fprintf(stderr, "Fatal Error 0018.\n"); \
 } \
-printGenealogyAndExit(genealogyID_,-1);
+printGenealogyAndExit(locusID_,-1);
 
 //----------------------------------------------------------------------------
 #define EVENTS_FATAL_0020 \
@@ -76,7 +76,7 @@ else \
 { \
     fprintf(stderr, "Fatal Error 0020.\n"); \
 }
-//printGenealogyAndExit(genealogyID_, -1);
+//printGenealogyAndExit(locusID_, -1);
 
 //----------------------------------------------------------------------------
 #define EVENTS_FATAL_0021 \
@@ -89,7 +89,7 @@ else \
 { \
     fprintf(stderr, "Fatal Error 0021.\n"); \
 }
-//printGenealogyAndExit(genealogyID_, -1);
+//printGenealogyAndExit(locusID_, -1);
 
 //----------------------------------------------------------------------------
 #define EVENTS_FATAL_0022 \
@@ -101,7 +101,7 @@ else \
 { \
     fprintf(stderr, "Fatal Error 0022.\n"); \
 } \
-printGenealogyAndExit(genealogyID_, -1);
+printGenealogyAndExit(locusID_, -1);
 
 //----------------------------------------------------------------------------
 #define EVENTS_FATAL_0023 \
@@ -113,7 +113,7 @@ else \
 { \
     fprintf(stderr, "Fatal Error 0023.\n"); \
 } \
-printGenealogyAndExit(genealogyID_, -1);
+printGenealogyAndExit(locusID_, -1);
 
 //----------------------------------------------------------------------------
 #define EVENTS_FATAL_0024 \
@@ -125,7 +125,7 @@ else \
 { \
     fprintf(stderr, "Fatal Error 0024.\n"); \
 } \
-printGenealogyAndExit(genealogyID_, -1);
+printGenealogyAndExit(locusID_, -1);
 
 //----------------------------------------------------------------------------
 

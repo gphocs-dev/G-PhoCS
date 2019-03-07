@@ -6,42 +6,46 @@
 
 /*
     EventsGraph constructor
-    Allocates EventNode objects. Each Node contains an Event object
+    Allocates EventNode objects.
+    Concatenates nodes to each other.
 */
 EventsGraph::EventsGraph(int genealogyID, int nNodes,
         DATA_SETUP* pDataSetup, DATA_STATE* pDataState,
         GENETREE_MIGS* pGenetreeMigs) :
-            genealogyID_(genealogyID),
+            locusID_(genealogyID),
             nNodes_(nNodes),
             pDataSetup_(pDataSetup),
-            pPopTree_(pDataSetup->popTree_),
+            pPopTree_(pDataSetup->popTree),
             pDataState_(pDataState),
             pGenetreeMigs_(pGenetreeMigs) {
 
 
     //allocate n EventsGraph nodes consisting the events EventsGraph
-    this->eventNodes_ = new EventNode[nNodes];
+    this->eventsGraph_ = new EventNode[nNodes];
 
     //for each EventsGraph node, set its prev and next genealogy events
     for (int i = 0; i < nNodes; ++i) {
 
         if (i == 0){
-            eventNodes_[i].setNextGenEvent(eventNodes_ + 1);
-            eventNodes_[i].setPrevGenEvent(nullptr);
+            eventsGraph_[i].setNextGenEvent(eventsGraph_ + 1);
+            eventsGraph_[i].setPrevGenEvent(nullptr);
         }
         else if (i == nNodes-1) {
-            eventNodes_[i].setNextGenEvent(nullptr);
-            eventNodes_[i].setPrevGenEvent(eventNodes_ - 1);
+            eventsGraph_[i].setNextGenEvent(nullptr);
+            eventsGraph_[i].setPrevGenEvent(eventsGraph_ - 1);
         }
         else {
-            eventNodes_[i].setNextGenEvent(eventNodes_ + 1); //point to next cell
-            eventNodes_[i].setPrevGenEvent(eventNodes_ - 1); //point to prev cell
+            eventsGraph_[i].setNextGenEvent(eventsGraph_ + 1); //point to next cell
+            eventsGraph_[i].setPrevGenEvent(eventsGraph_ - 1); //point to prev cell
         }
     }
 
     //events pool points to the first EventsGraph node in eventsDAG
     // (in initialization all events in pool)
-    pNodesPool_ = eventNodes_;
+    pNodesPool_ = eventsGraph_;
+
+    //number of coalescent event is constant: 2*N -1, where N is num sumples
+    coalEvents_.reserve(2 * pDataSetup_->numSamples - 1);
     
 }
 
@@ -50,16 +54,18 @@ EventsGraph::EventsGraph(int genealogyID, int nNodes,
 */
 EventsGraph::~EventsGraph() {
     //delete array of DAGNodes
-    delete eventNodes_;
+    delete eventsGraph_;
 }
 
 /*
     Initializes EventsGraph
-    Defines the first N events in the EventsGraph (N = nPops) as start events
-    and the next N events as end events
+    In EventsGraph array, define:
+     1. The first N cells to be start events (N = num pops).
+     2. The next N cells to be end events.
+    Total: 2N cells are reserved to start / end events.
 
 */
-void EventsGraph::initializeGraph() {
+void EventsGraph::initialiseGraph() {
 
     int nPops = pPopTree_->numPops; //N
     int rootPop = pPopTree_->rootPop; //root population
@@ -70,48 +76,49 @@ void EventsGraph::initializeGraph() {
         //start events
 
         //set the i-th cell (i=pop) to be a start event
-        eventNodes_[pop].getEvent().setType(EventType::POP_START);
+        eventsGraph_[pop].setType(EventType::POP_START);
 
         //next of start event points to the end event of same pop
-        eventNodes_[pop].setNextGenEvent(eventNodes_ + nPops);
+        eventsGraph_[pop].setNextGenEvent(eventsGraph_ + nPops);
 
         //prev of start event points to NULL
-        eventNodes_[pop].setPrevGenEvent(nullptr);
+        eventsGraph_[pop].setPrevGenEvent(nullptr);
 
         //end events
 
         //set the (i+N)-th cell (i=pop) to be an end event
-        eventNodes_[pop + nPops].getEvent().setType(EventType::POP_END);
+        eventsGraph_[pop + nPops].setType(EventType::POP_END);
 
         //set num lineages - it is important to initialize 0 incoming lineages
-        eventNodes_[pop + nPops].getEvent().setNumLineages(0);
+        eventsGraph_[pop + nPops].setNumLineages(0);
 
         //set elapsed time - distinguish between rootPop and rest of pops
-        double t;
         if (pop == rootPop) {
-            t = OLDAGE - pPopTree_->pops[rootPop]->age;
+            double t = OLDAGE - pPopTree_->pops[rootPop]->age;
+            eventsGraph_[pop + nPops].setElapsedTime(t);
         }
         else {
-            t = pPopTree_->pops[pop]->father->age - pPopTree_->pops[pop]->age;
+            double t = pPopTree_->pops[pop]->father->age
+                        - pPopTree_->pops[pop]->age;
+            eventsGraph_[pop + nPops].setElapsedTime(t);
         }
-        eventNodes_[pop + nPops].getEvent().setElapsedTime(t);
 
         //next of end event points to the first event of parent pop.
         //next of root's end points to NULL
         if (pop == rootPop) {
-            eventNodes_[pop + nPops].setNextGenEvent(nullptr);
+            eventsGraph_[pop + nPops].setNextGenEvent(nullptr);
         }
         else {
             int parent_id = pPopTree_->pops[pop]->father->id; //get parent id
-            eventNodes_[pop + nPops].setNextGenEvent(eventNodes_ + parent_id);
+            eventsGraph_[pop + nPops].setNextGenEvent(eventsGraph_ + parent_id);
         }
 
         //prev of end event points to the start event of same pop
-        eventNodes_[pop + nPops].setPrevGenEvent(eventNodes_ - nPops);
+        eventsGraph_[pop + nPops].setPrevGenEvent(eventsGraph_ + pop);
     }
 
     //promote the free events pointer to the 2N cell
-    pNodesPool_ = eventNodes_ + 2*nPops;
+    pNodesPool_ = eventsGraph_ + 2*nPops;
     pNodesPool_->setPrevGenEvent(nullptr);
 
 }
@@ -166,7 +173,7 @@ void EventsGraph::addNodeToPool(EventNode* pEventNode) {
 
 */
 EventNode* EventsGraph::getStartEvent(int pop) {
-    return eventNodes_ + pop;
+    return eventsGraph_ + pop;
 }
 
 
@@ -183,17 +190,17 @@ EventNode* EventsGraph::createEventBefore(
     EventNode* pNewNode = this->getNodeFromPool();
 
     //set event type
-    pNewNode->getEvent().setType(type);
+    pNewNode->setType(type);
 
     //set number of lineages of new event to same number as given event
-    int nLineages = pNode->getEvent().getNumLineages();
-    pNewNode->getEvent().setNumLineages(nLineages);
+    int nLineages = pNode->getNumLineages();
+    pNewNode->setNumLineages(nLineages);
 
     //set elapsed time of new event
-    pNewNode->getEvent().setElapsedTime(elapsed_time);
+    pNewNode->setElapsedTime(elapsed_time);
 
     //decrease the elapsed time of the given event
-    pNode->getEvent().addElapsedTime(-elapsed_time);
+    pNode->addElapsedTime(-elapsed_time);
 
     //set pointers
     pNode->getPrevGenEvent()->setNextGenEvent(pNewNode);
@@ -215,9 +222,6 @@ EventNode* EventsGraph::createEventBefore(
 EventNode* EventsGraph::createEvent(
         int pop, double age, EventType type) {
 
-    ///////////////////////////////////////////////////////////////////////////////
-    //why not subtract the opposite???? popTree->pops[pop]->age - age?
-    ///////////////////////////////////////////////////////////////////////////////
     double delta_time = age - pPopTree_->pops[pop]->age;
 
     if (delta_time < 0) {
@@ -236,19 +240,18 @@ EventNode* EventsGraph::createEvent(
     //and while elapsed time of current event is smaller than delta time
     EventNode* pNode = this->getStartEvent(pop);
     for (;
-        pNode->getEvent().getType() != EventType::POP_END &&
-        pNode->getEvent().getElapsedTime() < delta_time;
+        pNode->getType() != EventType::POP_END &&
+        pNode->getElapsedTime() < delta_time;
         pNode = pNode->getNextGenEvent())
     {
-        delta_time -= pNode->getEvent().getElapsedTime();
+        delta_time -= pNode->getElapsedTime();
     }
 
-    if (pNode->getEvent().getElapsedTime() < delta_time)
+    if (pNode->getElapsedTime() < delta_time)
     {
-        if (pNode->getEvent().getElapsedTime() < (delta_time - 0.000001)) {
+        if (pNode->getElapsedTime() < (delta_time - 0.000001)) {
             EVENTS_FATAL_0018
         }
-        delta_time = pNode->getEvent().getElapsedTime();
     }
 
     //create the new event in the found slot, with elapsed_time = delta_time
@@ -259,91 +262,214 @@ EventNode* EventsGraph::createEvent(
 
 /*
 	Constructs events graph
-	Constructs everything from scratch (except for the start and end events which are defined in initaliztion)
+	Constructs everything from scratch
 	Typically used only for initial genetrees or for testing.
 	Records number of lineages only for first events in leaf populations.
 	The rest are recorded by computeGenetreeStats
 */
-int EventsGraph::constructEventGraph() {
+int EventsGraph::constructEventsGraph() {
 
+    //initialize graph with start and end events
+    this->initialiseGraph();
 
-    //initialise graph with start and end events
-    this->initializeGraph();
+    //create samples start events (for ancient samples)
+    for (int pop = 0; pop < pPopTree_->numCurPops; pop++) {
 
-    //TODO: samples start
+        //create event
+        EventNode* pSamplesStart =
+                this->createEvent(pop,
+                                  pPopTree_->pops[pop]->sampleAge,
+                                  EventType::SAMPLES_START);
 
-    // migration node events
-    int gen = genealogyID_; //shorter name;
-    for (int i = 0; i < genetree_migs[gen].num_migs; i++) {
-
-        int mig = pGenetreeMigs_[gen].living_mignodes[i];
-
-        #ifdef DEBUG_EVENT_GRAPH
-                printf("living migration %d: %d in gen %d.\n", i, mig, gen);
-        #endif
-
-        //get age of migration
-        int age = pGenetreeMigs_[gen].mignodes[mig].age;
-
-        //get target population
-        int popIn = pGenetreeMigs_[gen].mignodes[mig].target_pop;
-
-        //create an incoming migration event
-        EventNode* pNodeIn = this->createEvent(popIn, age, EventType::IN_MIG);
-        if (!pNodeIn) {
-            EVENTS_FATAL_0022
-        }
-        //TODO: genetree_migs[gen].mignodes[mig].target_event = event;
-
-        //get source population
-        int popOut = pGenetreeMigs_[gen].mignodes[mig].source_pop;
-
-        //create an outgoing migration event
-        EventNode* pNodeOut = this->createEvent(popOut, age, EventType::OUT_MIG);
-        if (!pNodeOut) {
-            EVENTS_FATAL_0023
-        }
-        //TODO: genetree_migs[gen].mignodes[mig].target_event = event;
+        //coalescent pointers of samplesStart are null
+        // (this is the default, no need to code)
     }
 
+    //create coalescent events
+    int nSamples = pDataSetup_->numSamples;
+    for (int node = 0; node < 2*nSamples-1; node++) {
 
-    // coalescent node events
-    for (int node = 0; node < 2 * pDataSetup_->numSamples - 1; node++) {
+        //get population of node
+        int pop = nodePops[locusID_][node];
 
-        int pop = nodePops[gen][node]; //TODO: get nodePops as argument
+        // if node is not a leaf
+        if (!this->isLeaf(node)) {
 
-        // if node is a leaf
-        if (node < pDataSetup_->numSamples) {
-
-            #ifdef DEBUG_EVENT_GRAPH
-                printf("L%d ",pop);
-            #endif
-        }
-        else {
-
-            int age = getNodeAge(pDataState_->lociData[gen], node);
-
-            //age = gnodes[gen][node].age;
+            //get age of node
+            int age = getNodeAge(getLocusData(), node);
 
             #ifdef DEBUG_EVENT_GRAPH
-                printf("C%d %d %f ", pop, node, age);
+                        printf("C%d %d %f ", pop, node, age);
             #endif
 
-            EventNode* pNode = createEvent(pop, age, EventType::COAL);
-            if (!pNode) {
+            //create a coalescent event
+            EventNode* pCoal = this->createEvent(pop, age, EventType::COAL);
+            if (!pCoal) {
                 EVENTS_FATAL_0024
             }
 
-            //TODO nodeEvents[gen][node] = event;
+            //save pointer in coalescent events array
+            coalEvents_[node] = pCoal;
+
+        } else {
+            #ifdef DEBUG_EVENT_GRAPH
+                        printf("L%d ",pop);
+            #endif
         }
     }
 
+    //set the coalescent pointers of the coalescent events
+    //iterate on internal nodes only (and not on leaves)
+    for (int node = nSamples; node < 2*nSamples-1; node++) {
+
+        //get nodes and corresponding eventNodes of the sons
+        //eventNode can be of type coalescent or samplesStart
+        int nodeLeftSon = getNodeSon(this->getLocusData(), node, 0);
+        int nodeRightSon = getNodeSon(this->getLocusData(), node, 1);
+        EventNode* pLeftSon = this->getEventByNode(nodeLeftSon);
+        EventNode* pRightSon = this->getEventByNode(nodeRightSon);
+
+        //get node and corresponding eventNode of the father
+        //if current node is the root - parent points to null
+        int nodeFather;
+        EventNode* pFather;
+        if ( node != getLocusRoot(this->getLocusData()) ) {
+            nodeFather = getNodeFather(this->getLocusData(), node);
+            pFather = this->getCoalEvent(nodeFather);
+        }
+        else {
+            pFather = nullptr;
+        }
+
+        //get eventNode of current node and set its coalescent pointers
+        EventNode* pCoal = this->getCoalEvent(node);
+
+        //set pointers of current event node
+        pCoal->setCoalParent(pFather);
+        pCoal->setCoalLeftSon(pLeftSon);
+        pCoal->setCoalRightSon(pRightSon);
+
+    }
+
+    //create migration events and if needed reset coalescent pointers
+    // of coalescent events
+    for (int node = 0; node < 2*nSamples-1; node++) {
+
+        //define upper and bottom pointers (the upper the closer to root)
+        EventNode* pBottom = this->getEventByNode(node);
+        EventNode* pUpper = pBottom->getCoalParent();
+
+        //find migration above current node and after specified time
+        int pop = nodePops[locusID_][node];
+        int mig = findFirstMig(locusID_, node, pPopTree_->pops[pop]->age);
+
+        //while there are migration events on the edge above current node
+        while (mig != -1) {
+
+            //create migration events (source and target)
+
+            //get age of migration, and target and source populations
+            double age = pGenetreeMigs_[locusID_].mignodes[mig].age;
+            int target_pop = pGenetreeMigs_[locusID_].mignodes[mig].target_pop;
+            int source_pop = pGenetreeMigs_[locusID_].mignodes[mig].source_pop;
+
+            //create an incoming migration event
+            EventNode* pMigIn = this->createEvent(target_pop, age, EventType::IN_MIG);
+            if (!pMigIn) {
+                EVENTS_FATAL_0022
+            }
+
+            //create an outgoing migration event
+            EventNode* pMigOut = this->createEvent(source_pop, age, EventType::OUT_MIG);
+            if (!pMigOut) {
+                EVENTS_FATAL_0023
+            }
+
+            //parent of incoming migration points to outgoing migration
+            //sons of incoming migration point to bottom node
+            pMigIn->setCoalParent(pMigOut);
+            pMigIn->setCoalSons(pBottom);
+
+            //parent of outgoing migration points to upper node
+            //sons of outgoing migration point to outgoing migration
+            pMigOut->setCoalParent(pUpper);
+            pMigOut->setCoalSons(pMigIn);
+
+            //promote bottom node to current outgoing migration
+            pBottom = pUpper;
+
+            //find next migration (after time of current migration)
+            mig = findFirstMig(locusID_, node, age);
+        }
+
+    }
+
     #ifdef DEBUG_EVENT_GRAPH
-        printf("\n");
+            printf("\n");
     #endif
 
     return 0;
 }
 
 
+
+/*
+    returns true if node is a leaf
+    @param: node id
+    @return: boolean
+*/
+bool EventsGraph::isLeaf(int node) {
+    if (node < pDataSetup_->numSamples)
+        return true;
+    return false;
+}
+
+
+/*
+    returns samplesStart of a population
+    @param: population id
+    @return: pointer to a SamplesStart event
+*/
+EventNode* EventsGraph::getSamplesStartEvent(int pop) {
+
+    //iterate over events and find event of type samplesStart
+    EventNode* pNode = this->getStartEvent(pop)->getNextGenEvent();
+    while (!pNode->isType(EventType::SAMPLES_START)) {
+        pNode->getNextGenEvent();
+    }
+    return pNode;
+}
+
+
+/*
+ * !!!A temp function, should be removed in future versions!!!
+   Gets a node id and returns a pointer to the corresponding coalescence event
+   @param: node ID
+   @return: a pointer to EventNode
+*/
+EventNode* EventsGraph::getCoalEvent(int nodeID) {
+    return coalEvents_[nodeID];
+}
+
+
+/*
+ * !!!A temp function, should be removed in future versions!!!
+   @param: node ID
+   @return: pointer to eventNode
+*/
+EventNode* EventsGraph::getEventByNode(int nodeID) {
+
+    //if node is a leaf - return a SamplesStart event
+    if (this->isLeaf(nodeID)) {
+        //get population of node
+        int pop = nodePops[locusID_][nodeID];
+        return this->getSamplesStartEvent(pop);
+    }
+    //o.w. return the corresponding coalescent event
+    return this->getCoalEvent(nodeID);
+}
+
+LocusData* EventsGraph::getLocusData() {
+    return pDataState_->lociData[locusID_];
+}
 

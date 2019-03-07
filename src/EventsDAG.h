@@ -14,7 +14,7 @@
 #include <algorithm>
 #include "DataLayer.h"
 
-class EventIvgeny;
+class Event;
 class EventChains;
 struct _POPULATION_TREE;
 typedef _POPULATION_TREE PopulationTree;
