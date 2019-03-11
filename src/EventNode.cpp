@@ -46,6 +46,7 @@ void EventNode::reset() {
 
 void EventNode::addElapsedTime(double delta) {
     this->elapsedTime_ += delta;
+
 }
 
 /*

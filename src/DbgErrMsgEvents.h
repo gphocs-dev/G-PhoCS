@@ -128,6 +128,18 @@ else \
 printGenealogyAndExit(locusID_, -1);
 
 //----------------------------------------------------------------------------
+#define EVENTS_FATAL_0025 \
+if (debug) \
+{ \
+    fprintf(stderr, "Error: Unable to create new leaf event.\n"); \
+} \
+else \
+{ \
+    fprintf(stderr, "Fatal Error 0025.\n"); \
+} \
+printGenealogyAndExit(locusID_, -1);
+
+//----------------------------------------------------------------------------
 
 
 #endif //G_PHOCS_DGBERRMSGEVENTS_H
