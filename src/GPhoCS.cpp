@@ -645,7 +645,7 @@ int freeAllMemory()
 
    //Freeing print factors array
   free(mcmcSetup.printFactors);
-  // NEXTGEN - change this to locusGenealogy !!
+  // NEXTGEN - change this to genealogy !!
   //Freeing population tree
   freePopTree(dataSetup.popTree);
   //Freeing loci data array
