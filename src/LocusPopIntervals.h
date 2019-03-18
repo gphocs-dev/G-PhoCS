@@ -1,0 +1,80 @@
+//
+// Created by nomihadar on 3/11/19.
+//
+
+#ifndef G_PHOCS_LOCUSPOPINTERVALS_H
+#define G_PHOCS_LOCUSPOPINTERVALS_H
+
+#include "PopInterval.h"
+//#include "MCMCcontrol.h"
+//#include "GPhoCS.h"
+#include "MemoryMng.h"
+
+/*=============================================================================
+ *
+ * LocusPopIntervals class
+ *
+ * Class LocusPopIntervals is the structure containing the interval chains.
+ * Each item in this structure will be of PopInterval class.
+ * This replaces the current event chains, with the main difference being that
+ * the chains of the daughter populations connect with the parent and
+ * we add pop-start and pop-end intervals (which are empty - elapsed_time = 0).
+ *
+ * Contains:
+ * 1.
+ * 2.
+ * 3.
+ * 4.
+ *===========================================================================*/
+
+class LocusPopIntervals {
+
+private:
+
+    PopInterval* intervalsArray_; //array of PopIntervals
+    PopInterval* pIntervalsPool_; //pointer to a pool of free intervals
+
+    int nIntervals_; //total number of intervals
+
+    int locusID_; //locus id, for error massages
+    PopulationTree* pPopTree_; //pointer to PopulationTree struct
+
+public:
+
+    //constructor
+    LocusPopIntervals(int locusID, int nIntervals, PopulationTree* pPopTree);
+
+    //destructor
+    ~LocusPopIntervals();
+
+    //get a free interval from intervals pool
+    PopInterval* getFromPool();
+
+    //return a free interval to intervals pool
+    void returnToPool(PopInterval* pInterval);
+
+    //create a new interval before a given interval
+    PopInterval *
+    createIntervalBefore(PopInterval* pInterval, int pop, double age,
+                         IntervalType type);
+
+    //create a new interval in specified population at given time
+    PopInterval* createInterval(int pop, double age, IntervalType type);
+
+    //get a pointer to samples start interval of a given population
+    PopInterval* getSamplesStart(int pop);
+
+    //get a pointer to pop start interval of a given population
+    PopInterval* getPopStart(int pop);
+
+    //reset intervals
+    void resetIntervals();
+
+    //initialize intervals array with pop-start and pop-end intervals
+    void initializeIntervals();
+
+
+};
+
+
+#endif //G_PHOCS_LOCUSPOPINTERVALS_H
