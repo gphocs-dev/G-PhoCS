@@ -98,6 +98,7 @@ public:
     Types of Event
 */
 enum class EventType {
+    LEAF,
     COAL,
     IN_MIG,
     OUT_MIG,

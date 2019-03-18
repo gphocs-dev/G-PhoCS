@@ -21,9 +21,10 @@
  * 3. Array of NodeEvent objects. This is actually the graph.
  * 5. A pointer to a pool of free (unoccupied) nodes in graph.
  *    Free nodes are linked to each other, and pointer points to head.
- * 6. Vector of pointers to EventNodes of type coalescent.
- * 7. Vector of pointers to EventNodes of type migration.
- * 8. Pointers to global structs.
+ * 6. Vector of pointers to EventNodes of type leaf.
+ * 7. Vector of pointers to EventNodes of type coalescent.
+ * 8. Vector of pointers to EventNodes of type migration.
+ * 9. Pointers to global structs.
  *   (DataSetup, PopulationTree, DATA_STATE, and GENETREE_MIGS structs)
  *
  *===========================================================================*/
@@ -38,6 +39,7 @@ private:
     EventNode* eventsGraph_;     //array of EventNodes
     EventNode* pNodesPool_;     //pointer to a pool of free nodes
 
+    std::vector<EventNode*> leafEvents_; //vector of pointers to leaves EventNodes
     std::vector<EventNode*> coalEvents_; //vector of pointers to coalescent EventNodes
     std::vector<EventNode*> migEvents_; //vector of pointers to migration EventNodes
 
@@ -82,7 +84,7 @@ public:
 //*****************************************************************************
     //create a new event before a given event
     EventNode* createEventBefore(
-            EventNode* pNode, double elapsed_time, EventType type);
+            EventNode* pNode, int pop, double elapsed_time, EventType type);
 
     //create a new event in specified population at given time.
     EventNode* createEvent(int pop, double age,
@@ -102,9 +104,11 @@ public:
     //return true if a node is a leaf
     bool isLeaf(int node);
 
-    //return a pointer to coalescence event by node id
-    EventNode* getCoalEvent(int nodeID);
+    //return a pointer to a leaf event by node id
+    EventNode* getLeafEvent(int nodeID);
 
+    //return a pointer to a coalescence event by node id
+    EventNode* getCoalEvent(int nodeID);
 
     //return a pointer to event by node id
     EventNode* getEventByNode(int nodeID);

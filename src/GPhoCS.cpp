@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-  debug = 0;
+  debug = 1;//TODO: change
 
   while (1)
   {
@@ -1114,6 +1114,11 @@ int initializeMCMC()
     GetRandomGtree(tree, gen);
     copyGenericTreeToLocus(dataState.lociData[gen], tree);
     constructEventChain(gen);
+
+    //TODO: remove - for debugging only
+    printGenealogyAndExit(gen, -1);
+    //
+
     computeGenetreeStats(gen);
     locus_data[gen].genLogLikelihood = gtreeLnLikelihood(gen);
     dataState.logLikelihood += locus_data[gen].genLogLikelihood;
