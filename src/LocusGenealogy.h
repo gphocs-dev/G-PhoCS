@@ -32,27 +32,30 @@ class LocusGenealogy {
 private:
 
     std::vector<LeafNode> leafNodes_;   //vector of tree nodes of type leaf
-    std::vector<CoalNode> coalNodes_;   //vector of tree nodes of type coal
-    std::vector<MigNode> migNodes_;     //vector of tree nodes of type mig //TODO: replace with list
+    std::vector<CoalNode> coalNodes_;  //vector of tree nodes of type coal
+    std::vector<MigNode> migNodes_;    //vector of tree nodes of type mig
 
     int nSamples_; //num samples
 
 public:
 
     //constructor
-    LocusGenealogy(int numSamples);
+    LocusGenealogy(int numSamples, int maxMig);
 
     //get leaf/coal/mig node by node index
     LeafNode* getLeafNode(int nodeIndex);
     CoalNode* getCoalNode(int nodeIndex);
 
-    //add migration nodes
+    //add a migration node
     MigNode* addMigNode(TreeNode* treeNode);
+
+    //remove a migration node
+    void removeMigNode(MigNode* pMigNode);
 
     //construct branches of genealogy
     void constructBranches(LocusData* pLocusData);
 
-    void printGenalogy();
+    void printGenealogy();
 
 
     //**************************************************************************

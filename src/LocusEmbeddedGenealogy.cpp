@@ -16,14 +16,14 @@
 */
 LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
         int locusID,
-        int nIntervals,
+        int numIntervals,
         DATA_SETUP* pDataSetup,
         PopulationTree* pPopTree,
         DATA_STATE* pDataState,
         GENETREE_MIGS* pGenetreeMigs)
 
-        : genealogy_(pDataSetup->numSamples), //construct genealogy
-          intervals_(locusID, nIntervals, pPopTree),  //construct intervals
+        : genealogy_(pDataSetup->numSamples, 0), //construct genealogy
+          intervals_(locusID, numIntervals, pPopTree),  //construct intervals
           locusID_(locusID),
           pDataSetup_(pDataSetup),
           pPopTree_(pPopTree),
@@ -35,7 +35,7 @@ LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
     for (int node = 0; node < pDataSetup_->numSamples; node++) {
         int pop = nodePops[locusID_][node];
         leafToPop_[node] = pop;
-        popToLeaves_[pop].push_back(node);
+        popToLeaves_[pop].emplace_back(node); //todo reserve?
     }
 
 }
@@ -174,7 +174,6 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
                 INTERVALS_FATAL_0023
             }
 
-
             //add a migration node to genealogy
             MigNode* pMigNode = genealogy_.addMigNode(pTreeNode);
 
@@ -199,69 +198,18 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
 }
 
 
-
-void printNumber(int x) {
-    std::cout << "X:" << std::setw(6) << x << ":X\n";
-}
-
-void printStuff() {
-    printNumber(528);
-    printNumber(3);
-    printNumber(73826);
-    printNumber(37);
-}
-
-
-/*
-*/
 void LocusEmbeddedGenealogy::print() {
 
-    //print population tree -
+    //print population tree
     printPopulationTree(this->pDataSetup_->popTree, stderr, 1);
 
+    //print genealogy
+    std::cout << "------------------------------------------------------" << endl;
+    genealogy_.printGenealogy();
+
+    //print intervals
     std::cout << "------------------------------------------------------" << endl;
     intervals_.printIntervals();
-    std::cout << "------------------------------------------------------" << endl;
-    genealogy_.printGenalogy();
 
-/*
-
-    printLocusGenTree(dataState.lociData[gen], stderr, nodePops[gen],nodeEvents[gen]);
-    //printEventChains(stderr, gen);
-
-    //print genealogy tree
-    std::cout << "Genalogy tree:" << std::endl;;
-
-    int nSamples = pDataSetup_->numSamples;//TODO: replace with 2*locusData->numLeaves - 1;
-    for (int node = 0; node < 2*nSamples-1; node++) {
-        //std::cout.precision(4);
-
-        //std::cout << std::left;
-
-
-    }
-
-    int node, numNodes = 2*locusData->numLeaves - 1;
-
-    fprintf(stream, "Genalogy tree:\n");
-    for(node=0; node<numNodes; node++) {
-        fprintf(stream, "Node %2d, age [%.10f], father (%2d), sons (%2d %2d), pop (%2d), event-id (%2d)",
-                node, locusData->nodeArray[node]->age, locusData->nodeArray[node]->father,
-                locusData->nodeArray[node]->leftSon, locusData->nodeArray[node]->rightSon,
-                nodePops[node], nodeEvents[node]);
-        if(locusData->root == node)			fprintf(stream, " - Root\n");
-        else if(node<locusData->numLeaves)	fprintf(stream, " - Leaf\n");
-        else								fprintf(stream, "\n");
-    }
-
-    fprintf(stream, "---------------------------------------------------------------\n");
-    if(locusData->savedVersion.numChangedNodes > 0) {
-        fprintf(stream, "There are %d changed nodes:",locusData->savedVersion.numChangedNodes);
-        for(node=0; node<locusData->savedVersion.numChangedNodes; node++) {
-            fprintf(stream, " %d",locusData->savedVersion.changedNodeIds[node]);
-        }
-        fprintf(stream, "\n---------------------------------------------------------------\n");
-    }
-*/
 }
 

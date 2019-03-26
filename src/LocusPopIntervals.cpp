@@ -74,7 +74,7 @@ PopInterval* LocusPopIntervals::getIntervalFromPool() {
     PopInterval* pInterval = pIntervalsPool_;
 
     //if no free intervals
-    if (pInterval == nullptr) {
+    if (!pInterval) {
         INTERVALS_FATAL_0015
     }
 
@@ -306,7 +306,7 @@ void LocusPopIntervals::printIntervals() {
     using std::cout;
     using std::endl;
 
-    cout << "Intervals for locus: " << locusID_ << "." << endl;
+    cout << "Intervals of locus " << locusID_ << "." << endl;
 
     //cout << "Max num interval: " << numIntervals_ << endl;
 

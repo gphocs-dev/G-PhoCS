@@ -3,6 +3,8 @@
 //
 
 #include "TreeNode.h"
+#include <iostream>
+#include <iomanip>
 
 TreeNode::TreeNode()
         : pParent_(nullptr),
@@ -38,10 +40,32 @@ void TreeNode::setRightSon(TreeNode* pRightSon) {
     TreeNode::pRightSon_ = pRightSon;
 }
 
+void TreeNode::printTreeNode() {
+
+    using std::cout;
+    using std::endl;
+    using std::setw;
+
+    cout << std::left;
+    cout << "type: " << setw(8);
+
+    switch (type_) {
+        case TreeNodeType::LEAF : cout << "LEAF"; break;
+        case TreeNodeType::COAL: cout << "COAl"; break;
+        case TreeNodeType::MIG: cout << "MIG"; break;
+    }
+
+    cout << "parent: " << setw(18) << pParent_;
+    cout << "sons: " << "(";
+    cout << setw(14) << pLeftSon_;
+    cout << ",";
+    cout << setw(14) << pRightSon_;
+    cout << setw(4) << ")" ;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
-LeafNode::LeafNode()
-        : pSamplesStart_(nullptr) {
+LeafNode::LeafNode() : pSamplesStart_(nullptr) {
     type_ = TreeNodeType::LEAF;
 }
 
@@ -49,14 +73,27 @@ PopInterval* LeafNode::getSamplesStart() const {
     return pSamplesStart_;
 }
 
-
-void LeafNode::setSamplesInterval(PopInterval *pSamplesStart) {
+void LeafNode::setSamplesInterval(PopInterval* pSamplesStart) {
     LeafNode::pSamplesStart_ = pSamplesStart;
 }
 
+void LeafNode::printTreeNode() {
+
+    TreeNode::printTreeNode();
+
+    std::cout << std::left;
+    std::cout << "Interval: " << std::setw(18) << pSamplesStart_;
+    std::cout << std::endl;
+}
+
+int LeafNode::getPopId() {
+    if (pSamplesStart_ == nullptr)
+        return -1;
+    return pSamplesStart_->getPopID();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
-CoalNode::CoalNode()
-        : pCoal_(nullptr) {
+CoalNode::CoalNode() : pCoal_(nullptr) {
     type_ = TreeNodeType::COAL;
 }
 
@@ -68,10 +105,24 @@ void CoalNode::setCoalInterval(PopInterval* pCoal) {
     CoalNode::pCoal_ = pCoal;
 }
 
+void CoalNode::printTreeNode() {
+
+    TreeNode::printTreeNode();
+
+    std::cout << std::left;
+    std::cout << "Interval: " << std::setw(18) << pCoal_;
+    std::cout << std::endl;
+}
+
+int CoalNode::getPopId() {
+    if (pCoal_ == nullptr)
+        return -1;
+    return pCoal_->getPopID();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
-MigNode::MigNode()
-        : pOutMig_(nullptr), pInMig_(nullptr) {
+MigNode::MigNode() : pOutMig_(nullptr), pInMig_(nullptr) {
     type_ = TreeNodeType::MIG;
 }
 
@@ -91,4 +142,19 @@ PopInterval* MigNode::getInMigInterval() const {
     return pInMig_;
 }
 
+void MigNode::printTreeNode() {
+
+    TreeNode::printTreeNode();
+
+    std::cout << std::left;
+    std::cout << "interval:: " << std::setw(18) << pInMig_;
+    std::cout << "interval:: " << std::setw(18) << pOutMig_;
+    std::cout << std::endl;
+}
+
+int MigNode::getPopId() {
+    if (pInMig_ == nullptr)
+        return -1;
+    return pInMig_->getPopID();
+}
 

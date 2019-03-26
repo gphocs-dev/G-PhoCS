@@ -20,11 +20,8 @@ set(SOURCE_FILES
         src/DataLayerConstants.h
         src/DbgErrMsg.h
 		src/DbgErrMsgGTreeStruct.h
+        src/DbgErrMsgIntervals.h
 		src/DbgErrMsgTraceLineages.h
-		src/EventNode.h
-        src/EventNode.cpp
-        src/EventsGraph.h
-        src/EventsGraph.cpp
 		src/EventsDAG.h
         src/GenericTree.cpp
         src/GenericTree.h
@@ -33,6 +30,12 @@ set(SOURCE_FILES
 		src/GTreeStructVal.cpp
         src/LocusDataLikelihood.cpp
         src/LocusDataLikelihood.h
+		src/LocusGenealogy.cpp
+		src/LocusGenealogy.h
+        src/LocusEmbeddedGenealogy.cpp
+        src/LocusEmbeddedGenealogy.h
+        src/LocusPopIntervals.cpp
+        src/LocusPopIntervals.h
         src/MCMCcontrol.cpp
         src/MCMCcontrol.h
         src/McRefCommon.cpp
@@ -43,17 +46,21 @@ set(SOURCE_FILES
         src/omp_stub.cpp
         src/patch.cpp
         src/patch.h
+        src/PopInterval.cpp
+        src/PopInterval.h
         src/PopulationTree.cpp
         src/PopulationTree.h
 #        src/readTrace.cpp
         src/TraceLineages.cpp
         src/TraceLineages.h
+		src/TreeNode.cpp
+		src/TreeNode.h
         src/utils.cpp
         src/utils.h
         src/CombAssertions.cpp
         src/CombAssertions.h
         src/HypothesisPrinter.cpp
-        src/HypothesisPrinter.h src/DbgErrMsgEvents.h src/LocusDataConnector.cpp src/LocusDataConnector.h src/TreeNode.cpp src/TreeNode.h src/LocusGenealogy.cpp src/LocusGenealogy.h src/PopInterval.cpp src/PopInterval.h src/LocusPopIntervals.cpp src/LocusPopIntervals.h src/LocusEmbeddedGenealogy.cpp src/LocusEmbeddedGenealogy.h src/DbgErrMsgIntervals.h)
+        src/HypothesisPrinter.h)
 
 add_executable(G_PhoCS ${SOURCE_FILES})
 

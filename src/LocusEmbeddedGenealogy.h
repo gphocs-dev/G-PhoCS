@@ -34,8 +34,7 @@ private:
 public:
 
     //constructor
-    LocusEmbeddedGenealogy(int locusID, int nIntervals, DATA_SETUP* pDataSetup);
-    LocusEmbeddedGenealogy(int locusID, int nIntervals, DATA_SETUP* pDataSetup,
+    LocusEmbeddedGenealogy(int locusID, int numIntervals, DATA_SETUP* pDataSetup,
                  PopulationTree* pPopTree, DATA_STATE* pDataState,
                  GENETREE_MIGS* pGenetreeMigs);
 

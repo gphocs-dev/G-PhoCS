@@ -32,7 +32,6 @@ protected:
     TreeNode*  pLeftSon_;   //pointer to left son in genealogy
     TreeNode*  pRightSon_;  //pointer to right son in genealogy
 
-
 public:
 
     TreeNode();
@@ -51,6 +50,10 @@ public:
     void setLeftSon(TreeNode* pLeftSon);
 
     void setRightSon(TreeNode* pRightSon);
+
+    virtual void printTreeNode();
+
+    virtual int getPopId() = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +68,10 @@ public:
     PopInterval* getSamplesStart() const;
 
     void setSamplesInterval(PopInterval* pSamplesStart);
+
+    void printTreeNode();
+
+    int getPopId();
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,6 +86,10 @@ public:
     PopInterval* getCoalInterval() const;
 
     void setCoalInterval(PopInterval *pCoal);
+
+    void printTreeNode();
+
+    int getPopId();
 
 };
 
@@ -100,6 +111,10 @@ public:
 
     void setInMigInterval(PopInterval* pInMig);
 
+    void printTreeNode();
+
+    int getPopId();
+
 };
 
 
@@ -110,7 +125,6 @@ enum class TreeNodeType {
     LEAF,
     COAL,   //coalescence
     MIG,    //migration
-    DUMMY
 };
 
 

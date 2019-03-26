@@ -113,8 +113,8 @@ void PopInterval::printInterval() {
     using std::setw;
 
     cout << std::left;
-    cout << "Pop: "  << setw(4)  << popID_;
-    cout << "type: " << setw(15);
+    cout << "pop: "  << setw(4)  << popID_;
+    cout << "type: " << setw(18);
 
     switch (type_) {
         case IntervalType::DUMMY: cout << "DUMMY"; break;
@@ -130,7 +130,7 @@ void PopInterval::printInterval() {
     cout << "elapsed-time: " << setw(15) << elapsedTime_;
     cout << "prev: " << setw(20) << pPrevInterval_;
     cout << "next: " << setw(20) << pNextInterval_;
-    cout << "Tree Node: " << setw(20) << pTreeNode_;
+    cout << "tree-node: " << setw(20) << pTreeNode_;
     cout << endl;
 }
 

@@ -14,13 +14,13 @@
     Initialize coalNodes vector with N-1 leaf nodes
     Reserve place in migNodes_ vector with X nodes (X=?)
 */
-LocusGenealogy::LocusGenealogy(int numSamples)
+LocusGenealogy::LocusGenealogy(int numSamples, int maxMig=100) //TODO: get max migrations
         : nSamples_(numSamples),
           leafNodes_(numSamples),
           coalNodes_(numSamples-1) {
 
-    //TODO: migNodes_.reserve(); what number to reserve?
-
+    //reserve max migrations
+    migNodes_.reserve(maxMig);
 }
 
 /*
@@ -73,13 +73,13 @@ TreeNode* LocusGenealogy::getTreeNodeByID(int nodeID) {
     @param: node id
     @return: reference to the new mig node
 */
-MigNode* LocusGenealogy::addMigNode(TreeNode *pTreeNode) {
+MigNode* LocusGenealogy::addMigNode(TreeNode* pTreeNode) {
 
     //get parent node
     TreeNode* pParent = pTreeNode->getParent();
 
     //create a mig node and push to mig vector
-    migNodes_.push_back(MigNode());
+    migNodes_.emplace_back();
 
     //get a (non-local) pointer to the new mig node
     MigNode* migNode = &migNodes_.back();
@@ -109,6 +109,29 @@ MigNode* LocusGenealogy::addMigNode(TreeNode *pTreeNode) {
     //return reference to mig node
     return migNode;
 }
+
+/*
+    removes given mig node
+    if it's not the last element replace it by the last element and pop back
+    @param: pointer to mig that should be removed
+*/
+void LocusGenealogy::removeMigNode(MigNode* pMigNode) {
+
+    //find the mig that should be remove (skip last element)
+    for (int i = 0; i < migNodes_.size()-1; i++) {
+
+        //if found
+        if (&migNodes_[i] == pMigNode) {
+
+            //replace the i'th position with the last mig node
+            migNodes_[i] = migNodes_.back();
+        }
+    }
+
+    //pop last mig node
+    migNodes_.pop_back();
+}
+
 
 /*
    Constructs branches of genealogy by iterating leaf and coalescent nodes
@@ -164,28 +187,25 @@ void LocusGenealogy::constructBranches(LocusData* pLocusData) {
 
 }
 
-void LocusGenealogy::printGenalogy() {
-
-    using std::cout;
-    using std::endl;
+void LocusGenealogy::printGenealogy() {
 
     //print genealogy tree
-    cout << "Genalogy tree:" << endl;;
+    std::cout << "Genalogy tree:" << std::endl;
 
     //for each leaf node
-    for (int node = 0; node < nSamples_; node++) {
-        TreeNode* parent = leafNodes_[node].getParent();
-        TreeNode* son = leafNodes_[node].getLeftSon();
-
-        cout << "Parent: " << parent << endl;;
-        cout << "Sons: " << son << endl;;
-
-
+    for (int i = 0; i < nSamples_; i++) {
+        leafNodes_[i].printTreeNode();
     }
 
     //for each coal node
-    for (int node = nSamples_; node < 2*nSamples_-1; node++) {
+    for (int i = 0; i < nSamples_-1; i++) {
+        coalNodes_[i].printTreeNode();
+    }
 
+    //for each mig node
+    for (int i = 0; i < migNodes_.size(); i++) {
+        migNodes_[i].printTreeNode();
     }
 
 }
+

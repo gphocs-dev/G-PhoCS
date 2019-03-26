@@ -1119,10 +1119,11 @@ int initializeMCMC()
 
 
     //TODO: remove - for debugging only
-    LocusEmbeddedGenealogy locusEmbeddedGenealogy(gen, MAX_EVENTS, &dataSetup, dataSetup.popTree, &dataState, genetree_migs);
+    LocusEmbeddedGenealogy locusEmbeddedGenealogy(gen, MAX_EVENTS, &dataSetup,
+            dataSetup.popTree, &dataState, genetree_migs);
     locusEmbeddedGenealogy.construct_genealogy_and_intervals();
     locusEmbeddedGenealogy.print();
-    printGenealogyAndExit(gen, -1);
+    //printGenealogyAndExit(gen, -1);
     exit(0);
 
     //
