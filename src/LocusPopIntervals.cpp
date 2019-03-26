@@ -4,10 +4,10 @@
 
 #include "LocusPopIntervals.h"
 #include "DbgErrMsgIntervals.h"
-
-
 #include "GPhoCS.h"
 #include "MemoryMng.h"
+
+#include <iostream>
 
 /*
     LocusPopIntervals constructor
@@ -17,11 +17,14 @@
 LocusPopIntervals::LocusPopIntervals(int locusID, int nIntervals,
                                      PopulationTree* pPopTree)
         : locusID_(locusID),
-          nIntervals_(nIntervals),
+          numIntervals_(nIntervals),
           pPopTree_(pPopTree) {
 
     //allocate N intervals (N = number of intervals, given as argument)
     intervalsArray_ = new PopInterval[nIntervals];
+
+    //intervals pool points to head of intervals array
+    pIntervalsPool_ = intervalsArray_;
 }
 
 /*
@@ -33,39 +36,40 @@ LocusPopIntervals::~LocusPopIntervals() {
 }
 
 /*
-    Links intervals to each other and resets the pointer to tree-node
+    Links intervals to each other and reset intervals
 */
 void LocusPopIntervals::resetIntervals() {
-
-    //for each interval, link to prev and next intervals
-    //set pointer to tree node to null
-    for (int i = 0; i < nIntervals_; ++i) {
-
-        if (i == 0) { //first interval
-            intervalsArray_[i].setNext(intervalsArray_ + 1);
-            intervalsArray_[i].setPrev(nullptr);
-        } else if (i == nIntervals_ - 1) { //last interval
-            intervalsArray_[i].setNext(nullptr);
-            intervalsArray_[i].setPrev(intervalsArray_ - 1);
-        } else {
-            intervalsArray_[i].setNext(intervalsArray_ + 1); //next cell
-            intervalsArray_[i].setPrev(intervalsArray_ - 1); //prev cell
-        }
-
-        intervalsArray_[i].setTreeNode(nullptr);
+    //reset all intervals
+    for (int i = 0; i < numIntervals_; ++i) {
+        intervalsArray_[i].reset();
     }
-
-    //intervals pool pointer points to the first interval in intervals array
-    // (in initialization all intervals are in pool)
-    pIntervalsPool_ = intervalsArray_;
 }
 
+/*
+    Links intervals to each other and reset intervals
+*/
+void LocusPopIntervals::linkIntervals() {
+    //for each interval, link to prev and next intervals
+    //set pointer to tree node to null
+    for (int i = 0; i < numIntervals_; ++i) {
+        if (i == 0) { //first interval
+            intervalsArray_[i].setNext(intervalsArray_ + i + 1);
+            intervalsArray_[i].setPrev(nullptr);
+        } else if (i == numIntervals_ - 1) { //last interval
+            intervalsArray_[i].setNext(nullptr);
+            intervalsArray_[i].setPrev(intervalsArray_ + i - 1);
+        } else {
+            intervalsArray_[i].setNext(intervalsArray_ + i + 1); //next cell
+            intervalsArray_[i].setPrev(intervalsArray_ + i - 1); //prev cell
+        }
+    }
+}
 
 /*
     Returns a free interval from the intervals pool
     @return: pointer to a free interval
 */
-PopInterval* LocusPopIntervals::getFromPool() {
+PopInterval* LocusPopIntervals::getIntervalFromPool() {
 
     PopInterval* pInterval = pIntervalsPool_;
 
@@ -106,7 +110,7 @@ void LocusPopIntervals::returnToPool(PopInterval *pInterval) {
      2. The next N cells to be pop-end intervals.
     Total: 2N cells are occupied to start/end intervals.
 */
-void LocusPopIntervals::initializeIntervals() {
+void LocusPopIntervals::addStartEndIntervals() {
 
     int nPops = pPopTree_->numPops; //N
     int rootPop = pPopTree_->rootPop; //root population
@@ -114,48 +118,57 @@ void LocusPopIntervals::initializeIntervals() {
     //for each population define a start and end intervals
     for (int pop = 0; pop < nPops; ++pop) {
 
-        //start intervals
+        int start_index = pop;
+        int end_index = pop + nPops;
+
+        //start interval
 
         //set the i-th cell (i=pop) to be a pop-start interval
-        intervalsArray_[pop].setType(IntervalType::POP_START);
+        intervalsArray_[start_index].setType(IntervalType::POP_START);
+
+        //set pop
+        intervalsArray_[start_index].setPopID(pop);
 
         //next of start interval points to the end interval of same pop
-        intervalsArray_[pop].setNext(intervalsArray_ + nPops);
+        intervalsArray_[start_index].setNext(intervalsArray_ + end_index);
 
         //prev of start interval points to NULL
-        intervalsArray_[pop].setPrev(nullptr);
+        intervalsArray_[start_index].setPrev(nullptr);
 
-        //end intervals
+        //end interval
 
         //set the (i+N)-th cell (i=pop) to be an end interval
-        intervalsArray_[pop + nPops].setType(IntervalType::POP_END);
+        intervalsArray_[end_index].setType(IntervalType::POP_END);
+
+        //set pop
+        intervalsArray_[end_index].setPopID(pop);
 
         //set num lineages - it is important to initialize 0 incoming lineages
-        intervalsArray_[pop + nPops].setNumLineages(0);
+        intervalsArray_[end_index].setNumLineages(0);
 
-        //set elapsed time - distinguish between rootPop and rest of pops
+        //set elapsed time, distinguish between rootPop and rest of pops
         if (pop == rootPop) {
             double t = OLDAGE - pPopTree_->pops[rootPop]->age;
-            intervalsArray_[pop + nPops].setElapsedTime(t);
+            intervalsArray_[end_index].setElapsedTime(t);
         }
         else {
             double t1 = pPopTree_->pops[pop]->father->age;
             double t2 = pPopTree_->pops[pop]->age;
-            intervalsArray_[pop + nPops].setElapsedTime(t1-t2);
+            intervalsArray_[end_index].setElapsedTime(t1-t2);
         }
 
-        //next of end interval points to the first interval of parent pop.
+        //next of end interval points to the start interval of parent pop.
         //next of root's interval points to NULL
         if (pop == rootPop) {
-            intervalsArray_[pop + nPops].setNext(nullptr);
+            intervalsArray_[end_index].setNext(nullptr);
         }
         else {
-            int parent_id = pPopTree_->pops[pop]->father->id; //get parent id
-            intervalsArray_[pop + nPops].setNext(intervalsArray_ + parent_id);
+            int parent_pop = pPopTree_->pops[pop]->father->id; //get parent pop
+            intervalsArray_[end_index].setNext(intervalsArray_ + parent_pop);
         }
 
         //prev of end interval points to the start interval of same pop
-        intervalsArray_[pop + nPops].setPrev(intervalsArray_ + pop);
+        intervalsArray_[end_index].setPrev(intervalsArray_ + start_index);
     }
 
     //promote the free intervals pointer to the 2N cell
@@ -177,7 +190,7 @@ LocusPopIntervals::createIntervalBefore(PopInterval *pInterval, int pop,
                                         IntervalType type) {
 
     //get a new interval from pool (default type is DUMMY)
-    PopInterval* pNewInterval = this->getFromPool();
+    PopInterval* pNewInterval = this->getIntervalFromPool();
 
     //set population ID
     pNewInterval->setPopID(pop);
@@ -232,10 +245,10 @@ LocusPopIntervals::createInterval(int pop, double age, IntervalType type) {
     //find a spot for a new interval
     //loop while not reaching the end interval of the population
     //and while elapsed time of current interval is smaller than delta time
-    PopInterval* pInterval = this->getPopStart(pop);
-    for (; pInterval->isType(IntervalType::POP_END) &&
-           pInterval->getElapsedTime() <
-           delta_time; pInterval = pInterval->getNext()) {
+    PopInterval* pInterval = this->getPopStart(pop)->getNext(); //todo: set elapsed time of smaple start to be 0, intsead og geeting next
+    for (; !pInterval->isType(IntervalType::POP_END) &&
+            pInterval->getElapsedTime() < delta_time;
+           pInterval = pInterval->getNext()) {
         delta_time -= pInterval->getElapsedTime();
     }
 
@@ -243,6 +256,7 @@ LocusPopIntervals::createInterval(int pop, double age, IntervalType type) {
         if (pInterval->getElapsedTime() < (delta_time - 0.000001)) {
             INTERVALS_FATAL_0018
         }
+        delta_time = pInterval->getElapsedTime(); //todo: a true statement?
     }
 
     //create the new interval in the found slot, with elapsed_time = delta_time
@@ -286,3 +300,34 @@ PopInterval* LocusPopIntervals::getSamplesStart(int pop) {
 
 }
 
+
+void LocusPopIntervals::printIntervals() {
+
+    using std::cout;
+    using std::endl;
+
+    cout << "Intervals for locus: " << locusID_ << "." << endl;
+
+    //cout << "Max num interval: " << numIntervals_ << endl;
+
+    //for each population iterate over all intervals
+    for (int pop = 0; pop < pPopTree_->numPops; ++pop) {
+
+        //cout << "Intervals of pop " << pop << ":" << endl;
+
+        PopInterval* pInterval = this->getPopStart(pop);
+
+        //iterate intervals of current pop while not pop-end
+        while (true) {
+            //print interval
+            pInterval->printInterval();
+
+            if (pInterval->isType(IntervalType::POP_END))
+                break;
+
+            pInterval = pInterval->getNext();
+
+        }
+    }
+
+}

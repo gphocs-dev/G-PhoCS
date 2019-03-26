@@ -12,7 +12,9 @@
 #include "GPhoCS.h"
 #include "MemoryMng.h"
 
-class LocusAllData {
+#include <map>
+
+class LocusEmbeddedGenealogy {
 
 private:
 
@@ -20,6 +22,9 @@ private:
 
     LocusGenealogy     genealogy_; //class of genealogy
     LocusPopIntervals  intervals_; //class of intervals
+
+    std::map<int,int> leafToPop_; //map between leaf ID to its pop
+    std::map<int,std::vector<int>> popToLeaves_; //map between pop to its leaves
 
     DATA_SETUP*     pDataSetup_;       //pointer to DATA_SETUP struct
     PopulationTree* pPopTree_;         //pointer to PopulationTree struct
@@ -29,14 +34,19 @@ private:
 public:
 
     //constructor
-    LocusAllData(int locusID, int nIntervals, DATA_SETUP *pDataSetup,
-                 PopulationTree *pPopTree, DATA_STATE *pDataState,
-                 GENETREE_MIGS *pGenetreeMigs);
+    LocusEmbeddedGenealogy(int locusID, int nIntervals, DATA_SETUP* pDataSetup);
+    LocusEmbeddedGenealogy(int locusID, int nIntervals, DATA_SETUP* pDataSetup,
+                 PopulationTree* pPopTree, DATA_STATE* pDataState,
+                 GENETREE_MIGS* pGenetreeMigs);
 
     //construct
     int construct_genealogy_and_intervals();
 
+    //get locus data
     LocusData* getLocusData();
+
+    //print
+    void print();
 
 };
 

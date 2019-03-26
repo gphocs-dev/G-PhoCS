@@ -11,6 +11,7 @@
 
 #include <vector>
 
+
 /*=============================================================================
  *
  * LocusGenealogy class
@@ -30,9 +31,9 @@ class LocusGenealogy {
 
 private:
 
-    std::vector<LeafNode> leafNodes_;   //vector of nodes of type leaf
-    std::vector<CoalNode> coalNodes_;   //vector of nodes of type coal
-    std::vector<MigNode> migNodes_;     //vector of nodes of type mig
+    std::vector<LeafNode> leafNodes_;   //vector of tree nodes of type leaf
+    std::vector<CoalNode> coalNodes_;   //vector of tree nodes of type coal
+    std::vector<MigNode> migNodes_;     //vector of tree nodes of type mig //TODO: replace with list
 
     int nSamples_; //num samples
 
@@ -51,6 +52,8 @@ public:
     //construct branches of genealogy
     void constructBranches(LocusData* pLocusData);
 
+    void printGenalogy();
+
 
     //**************************************************************************
     //temp functions intermediaries between node ids (integer) and tree nodes
@@ -60,8 +63,6 @@ public:
 
     //return a pointer to a tree node by node id
     TreeNode* getTreeNodeByID(int nodeID);
-
-
 
 };
 

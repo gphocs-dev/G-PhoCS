@@ -7,8 +7,6 @@
 
 #include "PopInterval.h"
 
-enum class TreeNodeType; //forward declaration
-
 /*=============================================================================
  *
  * TreeNode class
@@ -21,6 +19,9 @@ enum class TreeNodeType; //forward declaration
  * 2. Pointers ("edges") to parent and sons.
  * 3. Pointer to corresponding interval
  *===========================================================================*/
+
+enum class TreeNodeType; //forward declaration
+
 class TreeNode {
 
 protected:
@@ -100,7 +101,6 @@ public:
     void setInMigInterval(PopInterval* pInMig);
 
 };
-
 
 
 /*

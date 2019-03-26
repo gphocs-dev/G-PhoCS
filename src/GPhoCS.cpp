@@ -6,6 +6,8 @@
 
  ============================================================================*/
 
+#include "LocusEmbeddedGenealogy.h"//TODO: remove, for debugging only
+
 #include "utils.h"
 #include "MCMCcontrol.h"
 #include "AlignmentProcessor.h"
@@ -1115,8 +1117,14 @@ int initializeMCMC()
     copyGenericTreeToLocus(dataState.lociData[gen], tree);
     constructEventChain(gen);
 
+
     //TODO: remove - for debugging only
+    LocusEmbeddedGenealogy locusEmbeddedGenealogy(gen, MAX_EVENTS, &dataSetup, dataSetup.popTree, &dataState, genetree_migs);
+    locusEmbeddedGenealogy.construct_genealogy_and_intervals();
+    locusEmbeddedGenealogy.print();
     printGenealogyAndExit(gen, -1);
+    exit(0);
+
     //
 
     computeGenetreeStats(gen);

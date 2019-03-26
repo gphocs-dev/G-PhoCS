@@ -3,6 +3,11 @@
 //
 
 #include "PopInterval.h"
+#include "TreeNode.h"
+
+#include <iostream>
+#include <iomanip>
+
 
 /*
     PopInterval constructor
@@ -99,6 +104,34 @@ TreeNode* PopInterval::getTreeNode() const {
 
 void PopInterval::setTreeNode(TreeNode* pTreeNode) {
     PopInterval::pTreeNode_ = pTreeNode;
+}
+
+void PopInterval::printInterval() {
+
+    using std::cout;
+    using std::endl;
+    using std::setw;
+
+    cout << std::left;
+    cout << "Pop: "  << setw(4)  << popID_;
+    cout << "type: " << setw(15);
+
+    switch (type_) {
+        case IntervalType::DUMMY: cout << "DUMMY"; break;
+        case IntervalType::POP_START: cout << "POP_START"; break;
+        case IntervalType::POP_END: cout << "POP_END"; break;
+        case IntervalType::SAMPLES_START: cout << "SAMPLES_START"; break;
+        case IntervalType::COAL: cout << "COAL"; break;
+        case IntervalType::IN_MIG: cout << "IN_MIG"; break;
+        case IntervalType::OUT_MIG: cout << "OUT_MIG"; break;
+    }
+
+    cout << "num-lins: " << setw(4) << nLineages_;
+    cout << "elapsed-time: " << setw(15) << elapsedTime_;
+    cout << "prev: " << setw(20) << pPrevInterval_;
+    cout << "next: " << setw(20) << pNextInterval_;
+    cout << "Tree Node: " << setw(20) << pTreeNode_;
+    cout << endl;
 }
 
 

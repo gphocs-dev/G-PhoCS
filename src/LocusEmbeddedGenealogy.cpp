@@ -2,9 +2,10 @@
 // Created by nomihadar on 3/11/19.
 //
 
-#include "LocusAllData.h"
+#include "LocusEmbeddedGenealogy.h"
 #include "DbgErrMsgIntervals.h"
-
+#include <iostream>
+#include <iomanip>
 
 /*
 	Constructs
@@ -13,9 +14,13 @@
 	Records number of lineages only for first events in leaf populations.
 	The rest are recorded by computeGenetreeStats
 */
-LocusAllData::LocusAllData(int locusID, int nIntervals, DATA_SETUP *pDataSetup,
-                           PopulationTree *pPopTree, DATA_STATE *pDataState,
-                           GENETREE_MIGS *pGenetreeMigs)
+LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
+        int locusID,
+        int nIntervals,
+        DATA_SETUP* pDataSetup,
+        PopulationTree* pPopTree,
+        DATA_STATE* pDataState,
+        GENETREE_MIGS* pGenetreeMigs)
 
         : genealogy_(pDataSetup->numSamples), //construct genealogy
           intervals_(locusID, nIntervals, pPopTree),  //construct intervals
@@ -25,13 +30,21 @@ LocusAllData::LocusAllData(int locusID, int nIntervals, DATA_SETUP *pDataSetup,
           pDataState_(pDataState),
           pGenetreeMigs_(pGenetreeMigs) {
 
+    //create map between leaf to its pop
+    // and map between pop to its leaves
+    for (int node = 0; node < pDataSetup_->numSamples; node++) {
+        int pop = nodePops[locusID_][node];
+        leafToPop_[node] = pop;
+        popToLeaves_[pop].push_back(node);
+    }
+
 }
 
 
 /*
    @return: a pointer to locus data of current locus
 */
-LocusData* LocusAllData::getLocusData() {
+LocusData* LocusEmbeddedGenealogy::getLocusData() {
     return pDataState_->lociData[locusID_];
 }
 
@@ -40,33 +53,36 @@ LocusData* LocusAllData::getLocusData() {
 	Constructs genealogy and intervals
 	Genealogy: construct branches and link to corresponding intervals,
                 add mig nodes to tree
-    Intervals: initialize with start and end intervals,
+    Intervals: reset intervals, ling them to each other
+                initialize with start and end intervals,
                 create samples start intervals,
                 create coalescent and migration intervals,
                 link intervals to corresponding nodes.
-
 
 	Typically used only for initial genetrees or for testing.
 	Records number of lineages only for first events in leaf populations.
 	The rest are recorded by computeGenetreeStats
 */
-int LocusAllData::construct_genealogy_and_intervals() {
+int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
 
     //construct genealogy branches (edges between tree nodes)
-    genealogy_.constructBranches(this->getLocusData()); //todo: to ask if branches should be constructed in each call to construct_genealogy_and_intervals
+    genealogy_.constructBranches(this->getLocusData());
 
-    //reset intervals by linking them to each other
+    //reset intervals
     intervals_.resetIntervals();
 
-    //initialize intervals with start and end intervals
-    intervals_.initializeIntervals(); //todo: same question . should reset intervals and genealogy?
+    //link intervals to each other
+    intervals_.linkIntervals();
+
+    //add start and end intervals
+    intervals_.addStartEndIntervals();
 
     //create samples start intervals (for ancient samples)
     for (int pop = 0; pop < pPopTree_->numCurPops; pop++) {
 
         //create interval
         double age = pPopTree_->pops[pop]->sampleAge;
-        PopInterval *pInterval =
+        PopInterval* pInterval =
                 intervals_.createInterval(pop, age,
                                           IntervalType::SAMPLES_START);
 
@@ -125,6 +141,9 @@ int LocusAllData::construct_genealogy_and_intervals() {
     //and link between them
     for (int node = 0; node < 2*nSamples-1; node++) {
 
+        //get tree node by current node id
+        TreeNode* pTreeNode = genealogy_.getTreeNodeByID(node);
+
         //find migration above current node and after specified time
         int mig = findFirstMig(locusID_, node,
                                getNodeAge(getLocusData(), node));
@@ -155,8 +174,6 @@ int LocusAllData::construct_genealogy_and_intervals() {
                 INTERVALS_FATAL_0023
             }
 
-            //get tree node by current node id
-            TreeNode* pTreeNode = genealogy_.getTreeNodeByID(node);
 
             //add a migration node to genealogy
             MigNode* pMigNode = genealogy_.addMigNode(pTreeNode);
@@ -169,12 +186,82 @@ int LocusAllData::construct_genealogy_and_intervals() {
             pMigNode->setInMigInterval(pMigIn);
             pMigNode->setOutMigInterval(pMigOut);
 
+            //update tree node
+            pTreeNode = pMigNode;
+
             //find next migration (after time of current migration)
             mig = findFirstMig(locusID_, node, age);
         }
 
     }
 
-
     return 0;
 }
+
+
+
+void printNumber(int x) {
+    std::cout << "X:" << std::setw(6) << x << ":X\n";
+}
+
+void printStuff() {
+    printNumber(528);
+    printNumber(3);
+    printNumber(73826);
+    printNumber(37);
+}
+
+
+/*
+*/
+void LocusEmbeddedGenealogy::print() {
+
+    //print population tree -
+    printPopulationTree(this->pDataSetup_->popTree, stderr, 1);
+
+    std::cout << "------------------------------------------------------" << endl;
+    intervals_.printIntervals();
+    std::cout << "------------------------------------------------------" << endl;
+    genealogy_.printGenalogy();
+
+/*
+
+    printLocusGenTree(dataState.lociData[gen], stderr, nodePops[gen],nodeEvents[gen]);
+    //printEventChains(stderr, gen);
+
+    //print genealogy tree
+    std::cout << "Genalogy tree:" << std::endl;;
+
+    int nSamples = pDataSetup_->numSamples;//TODO: replace with 2*locusData->numLeaves - 1;
+    for (int node = 0; node < 2*nSamples-1; node++) {
+        //std::cout.precision(4);
+
+        //std::cout << std::left;
+
+
+    }
+
+    int node, numNodes = 2*locusData->numLeaves - 1;
+
+    fprintf(stream, "Genalogy tree:\n");
+    for(node=0; node<numNodes; node++) {
+        fprintf(stream, "Node %2d, age [%.10f], father (%2d), sons (%2d %2d), pop (%2d), event-id (%2d)",
+                node, locusData->nodeArray[node]->age, locusData->nodeArray[node]->father,
+                locusData->nodeArray[node]->leftSon, locusData->nodeArray[node]->rightSon,
+                nodePops[node], nodeEvents[node]);
+        if(locusData->root == node)			fprintf(stream, " - Root\n");
+        else if(node<locusData->numLeaves)	fprintf(stream, " - Leaf\n");
+        else								fprintf(stream, "\n");
+    }
+
+    fprintf(stream, "---------------------------------------------------------------\n");
+    if(locusData->savedVersion.numChangedNodes > 0) {
+        fprintf(stream, "There are %d changed nodes:",locusData->savedVersion.numChangedNodes);
+        for(node=0; node<locusData->savedVersion.numChangedNodes; node++) {
+            fprintf(stream, " %d",locusData->savedVersion.changedNodeIds[node]);
+        }
+        fprintf(stream, "\n---------------------------------------------------------------\n");
+    }
+*/
+}
+

@@ -53,7 +53,7 @@ set(SOURCE_FILES
         src/CombAssertions.cpp
         src/CombAssertions.h
         src/HypothesisPrinter.cpp
-        src/HypothesisPrinter.h src/DbgErrMsgEvents.h src/LocusDataConnector.cpp src/LocusDataConnector.h src/TreeNode.cpp src/TreeNode.h src/LocusGenealogy.cpp src/LocusGenealogy.h src/PopInterval.cpp src/PopInterval.h src/LocusPopIntervals.cpp src/LocusPopIntervals.h src/LocusAllData.cpp src/LocusAllData.h src/DbgErrMsgIntervals.h)
+        src/HypothesisPrinter.h src/DbgErrMsgEvents.h src/LocusDataConnector.cpp src/LocusDataConnector.h src/TreeNode.cpp src/TreeNode.h src/LocusGenealogy.cpp src/LocusGenealogy.h src/PopInterval.cpp src/PopInterval.h src/LocusPopIntervals.cpp src/LocusPopIntervals.h src/LocusEmbeddedGenealogy.cpp src/LocusEmbeddedGenealogy.h src/DbgErrMsgIntervals.h)
 
 add_executable(G_PhoCS ${SOURCE_FILES})
 

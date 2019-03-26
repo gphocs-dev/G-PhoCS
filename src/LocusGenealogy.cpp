@@ -4,6 +4,8 @@
 
 #include "LocusGenealogy.h"
 
+#include <iostream>
+
 
 /*
     LocusGenealogy constructor.
@@ -158,6 +160,32 @@ void LocusGenealogy::constructBranches(LocusData* pLocusData) {
             pNode->setLeftSon(nullptr);
             pNode->setRightSon(nullptr);
         }
+    }
+
+}
+
+void LocusGenealogy::printGenalogy() {
+
+    using std::cout;
+    using std::endl;
+
+    //print genealogy tree
+    cout << "Genalogy tree:" << endl;;
+
+    //for each leaf node
+    for (int node = 0; node < nSamples_; node++) {
+        TreeNode* parent = leafNodes_[node].getParent();
+        TreeNode* son = leafNodes_[node].getLeftSon();
+
+        cout << "Parent: " << parent << endl;;
+        cout << "Sons: " << son << endl;;
+
+
+    }
+
+    //for each coal node
+    for (int node = nSamples_; node < 2*nSamples_-1; node++) {
+
     }
 
 }
