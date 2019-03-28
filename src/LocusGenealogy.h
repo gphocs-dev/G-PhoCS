@@ -18,14 +18,14 @@
  *
  * Class LocusGenealogy is a tree structure containing the sampled leaves,
  * coalescent nodes, and migration nodes.
- * Each element in this tree will be of class TreeNode
- * with two children and a parent. TreeNodes have tree types (leaf, mig, coal).
+ * Each element in the tree will be of class TreeNode with two children
+ * and a parent. TreeNodes have tree types (leaf, mig, coal).
  *
  * Contains:
  * 1. Vector of leaf nodes. Constant size.
  * 2. Vector of coal nodes. Constant size.
  * 3. Vector of mig nodes. Variable size.
- * 4. A pointer to global structs.
+ * 4. Num samples.
  *===========================================================================*/
 class LocusGenealogy {
 
@@ -35,19 +35,22 @@ private:
     std::vector<CoalNode> coalNodes_;  //vector of tree nodes of type coal
     std::vector<MigNode> migNodes_;    //vector of tree nodes of type mig
 
-    int nSamples_; //num samples
+    int numSamples_; //num samples
 
 public:
 
     //constructor
-    LocusGenealogy(int numSamples, int maxMig);
+    explicit LocusGenealogy(int numSamples);
 
     //get leaf/coal/mig node by node index
     LeafNode* getLeafNode(int nodeIndex);
     CoalNode* getCoalNode(int nodeIndex);
 
+    //get total num of nodes in current genealogy
+    int getNumTreeNodes();
+
     //add a migration node
-    MigNode* addMigNode(TreeNode* treeNode);
+    MigNode *addMigNode(TreeNode *treeNode, int nodeID);
 
     //remove a migration node
     void removeMigNode(MigNode* pMigNode);

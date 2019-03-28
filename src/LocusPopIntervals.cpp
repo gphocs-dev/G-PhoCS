@@ -199,8 +199,7 @@ LocusPopIntervals::createIntervalBefore(PopInterval *pInterval, int pop,
     pNewInterval->setType(type);
 
     //set number of lineages of new interval to same number as given interval
-    int nLineages = pInterval->getNumLineages();
-    pNewInterval->setNumLineages(nLineages);
+    pNewInterval->setNumLineages(pInterval->getNumLineages());
 
     //set elapsed time of new interval
     pNewInterval->setElapsedTime(elapsed_time);
@@ -245,7 +244,7 @@ LocusPopIntervals::createInterval(int pop, double age, IntervalType type) {
     //find a spot for a new interval
     //loop while not reaching the end interval of the population
     //and while elapsed time of current interval is smaller than delta time
-    PopInterval* pInterval = this->getPopStart(pop)->getNext(); //todo: set elapsed time of smaple start to be 0, intsead og geeting next
+    PopInterval* pInterval = this->getPopStart(pop)->getNext(); //todo: set elapsed time of samples start to be 0, intsead og geeting next
     for (; !pInterval->isType(IntervalType::POP_END) &&
             pInterval->getElapsedTime() < delta_time;
            pInterval = pInterval->getNext()) {
@@ -303,12 +302,7 @@ PopInterval* LocusPopIntervals::getSamplesStart(int pop) {
 
 void LocusPopIntervals::printIntervals() {
 
-    using std::cout;
-    using std::endl;
-
-    cout << "Intervals of locus " << locusID_ << "." << endl;
-
-    //cout << "Max num interval: " << numIntervals_ << endl;
+    std::cout << "Intervals of locus " << locusID_ << "." << std::endl;
 
     //for each population iterate over all intervals
     for (int pop = 0; pop < pPopTree_->numPops; ++pop) {
@@ -326,7 +320,6 @@ void LocusPopIntervals::printIntervals() {
                 break;
 
             pInterval = pInterval->getNext();
-
         }
     }
 

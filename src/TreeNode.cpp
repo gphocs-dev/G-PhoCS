@@ -3,7 +3,7 @@
 //
 
 #include "TreeNode.h"
-#include <iostream>
+
 #include <iomanip>
 
 TreeNode::TreeNode()
@@ -14,6 +14,10 @@ TreeNode::TreeNode()
 
 TreeNodeType TreeNode::getType() const {
     return type_;
+}
+
+int TreeNode::getNodeId() const {
+    return nodeID_;
 }
 
 TreeNode* TreeNode::getParent() const {
@@ -28,6 +32,10 @@ TreeNode* TreeNode::getRightSon() const {
     return pRightSon_;
 }
 
+void TreeNode::setNodeId(int nodeId) {
+    TreeNode::nodeID_ = nodeId;
+}
+
 void TreeNode::setParent(TreeNode* pParent) {
     TreeNode::pParent_ = pParent;
 }
@@ -40,28 +48,28 @@ void TreeNode::setRightSon(TreeNode* pRightSon) {
     TreeNode::pRightSon_ = pRightSon;
 }
 
+
 void TreeNode::printTreeNode() {
 
     using std::cout;
-    using std::endl;
     using std::setw;
 
     cout << std::left;
-    cout << "type: " << setw(8);
+    cout << "id: " << setw(4) << nodeID_;
+    cout <<"type: " << setw(6) << this->typeToStr();
 
-    switch (type_) {
-        case TreeNodeType::LEAF : cout << "LEAF"; break;
-        case TreeNodeType::COAL: cout << "COAl"; break;
-        case TreeNodeType::MIG: cout << "MIG"; break;
-    }
+    int parent = pParent_ ? pParent_->getNodeId() : -1;
+    int leftSonId = pLeftSon_ ? pLeftSon_->getNodeId() : -1;
+    int rightSonId = pRightSon_ ? pRightSon_->getNodeId() : -1;
 
-    cout << "parent: " << setw(18) << pParent_;
+    cout << "parent: " << setw(4) << parent;
     cout << "sons: " << "(";
-    cout << setw(14) << pLeftSon_;
+    cout << setw(4) << leftSonId;
     cout << ",";
-    cout << setw(14) << pRightSon_;
+    cout << setw(4) << rightSonId;
     cout << setw(4) << ")" ;
 }
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +90,7 @@ void LeafNode::printTreeNode() {
     TreeNode::printTreeNode();
 
     std::cout << std::left;
-    std::cout << "Interval: " << std::setw(18) << pSamplesStart_;
+    std::cout << "interval: " << std::setw(18) << pSamplesStart_;
     std::cout << std::endl;
 }
 
@@ -91,6 +99,11 @@ int LeafNode::getPopId() {
         return -1;
     return pSamplesStart_->getPopID();
 }
+
+std::string LeafNode::typeToStr() {
+    return "leaf";
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 CoalNode::CoalNode() : pCoal_(nullptr) {
@@ -120,6 +133,9 @@ int CoalNode::getPopId() {
     return pCoal_->getPopID();
 }
 
+std::string CoalNode::typeToStr() {
+    return "coal";
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 MigNode::MigNode() : pOutMig_(nullptr), pInMig_(nullptr) {
@@ -153,8 +169,12 @@ void MigNode::printTreeNode() {
 }
 
 int MigNode::getPopId() {
-    if (pInMig_ == nullptr)
+    if (!pInMig_)
         return -1;
     return pInMig_->getPopID();
+}
+
+std::string MigNode::typeToStr() {
+    return "mig";
 }
 

@@ -41,11 +41,18 @@ public:
     //construct
     int construct_genealogy_and_intervals();
 
+    //get locus ID
+    int getLocusID();
+
     //get locus data
     LocusData* getLocusData();
 
     //print
     void print();
+
+    LocusGenealogy &getGenealogy();
+
+    LocusPopIntervals &getIntervals();
 
 };
 

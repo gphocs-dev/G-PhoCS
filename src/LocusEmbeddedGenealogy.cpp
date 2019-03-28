@@ -22,7 +22,7 @@ LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
         DATA_STATE* pDataState,
         GENETREE_MIGS* pGenetreeMigs)
 
-        : genealogy_(pDataSetup->numSamples, 0), //construct genealogy
+        : genealogy_(pDataSetup->numSamples), //construct genealogy
           intervals_(locusID, numIntervals, pPopTree),  //construct intervals
           locusID_(locusID),
           pDataSetup_(pDataSetup),
@@ -145,8 +145,7 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
         TreeNode* pTreeNode = genealogy_.getTreeNodeByID(node);
 
         //find migration above current node and after specified time
-        int mig = findFirstMig(locusID_, node,
-                               getNodeAge(getLocusData(), node));
+        int mig = findFirstMig(locusID_, node, getNodeAge(getLocusData(), node));
 
         //while there are migration events on the edge above current node
         while (mig != -1) {
@@ -175,7 +174,7 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
             }
 
             //add a migration node to genealogy
-            MigNode* pMigNode = genealogy_.addMigNode(pTreeNode);
+            MigNode* pMigNode = genealogy_.addMigNode(pTreeNode, mig);
 
             //mig intervals points to mig node
             pMigIn->setTreeNode(pMigNode);
@@ -198,6 +197,9 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
 }
 
 
+/*
+	print population tree, genealogy and intervals
+*/
 void LocusEmbeddedGenealogy::print() {
 
     //print population tree
@@ -211,5 +213,17 @@ void LocusEmbeddedGenealogy::print() {
     std::cout << "------------------------------------------------------" << endl;
     intervals_.printIntervals();
 
+}
+
+int LocusEmbeddedGenealogy::getLocusID() {
+    return locusID_;
+}
+
+LocusGenealogy &LocusEmbeddedGenealogy::getGenealogy() {
+    return genealogy_;
+}
+
+LocusPopIntervals &LocusEmbeddedGenealogy::getIntervals() {
+    return intervals_;
 }
 

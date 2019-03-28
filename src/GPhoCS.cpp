@@ -6,7 +6,10 @@
 
  ============================================================================*/
 
-#include "LocusEmbeddedGenealogy.h"//TODO: remove, for debugging only
+//TODO: remove, for debugging only
+#include "TestNewDesign.cpp"
+#include "LocusEmbeddedGenealogy.h"
+//
 
 #include "utils.h"
 #include "MCMCcontrol.h"
@@ -1123,7 +1126,8 @@ int initializeMCMC()
             dataSetup.popTree, &dataState, genetree_migs);
     locusEmbeddedGenealogy.construct_genealogy_and_intervals();
     locusEmbeddedGenealogy.print();
-    //printGenealogyAndExit(gen, -1);
+    testLocusGenealogy(&dataSetup.numSamples, locusEmbeddedGenealogy)
+    printGenealogyAndExit(gen, -1);
     exit(0);
 
     //
