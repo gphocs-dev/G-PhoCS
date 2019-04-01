@@ -243,7 +243,7 @@ void assertLastEventId(int lastEvent) {
 }
 
 void assertLastEventIsSampleEnd(EventChain chain, int lastEvent) {
-  EventTypeIvgeny type = chain.events[lastEvent].getType();
+  EventType type = chain.events[lastEvent].getType();
   if (type != END_CHAIN) printErrorAndExit("Last event isn't END_CHAIN");
 }
 
@@ -284,7 +284,7 @@ void assertFirstEventZeroElapsedTime(EventChain chain, int firstEvent) {
 }
 
 void assertFirstEventIsSampleStart(EventChain chain, int firstEvent) {
-  EventTypeIvgeny type = chain.events[firstEvent].getType();
+  EventType type = chain.events[firstEvent].getType();
   if (type != SAMPLES_START) printErrorAndExit("first event isn't SAMPLE_START");
 }
 

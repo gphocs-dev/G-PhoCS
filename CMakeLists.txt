@@ -51,7 +51,6 @@ set(SOURCE_FILES
         src/PopulationTree.cpp
         src/PopulationTree.h
 #        src/readTrace.cpp
-		src/TestNewDesign.cpp
         src/TraceLineages.cpp
         src/TraceLineages.h
 		src/TreeNode.cpp
@@ -61,7 +60,7 @@ set(SOURCE_FILES
         src/CombAssertions.cpp
         src/CombAssertions.h
         src/HypothesisPrinter.cpp
-        src/HypothesisPrinter.h )
+        src/HypothesisPrinter.h src/TestNewDataStructure.h)
 
 add_executable(G_PhoCS ${SOURCE_FILES})
 

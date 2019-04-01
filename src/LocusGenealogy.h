@@ -42,15 +42,22 @@ public:
     //constructor
     explicit LocusGenealogy(int numSamples);
 
-    //get leaf/coal/mig node by node index
-    LeafNode* getLeafNode(int nodeIndex);
-    CoalNode* getCoalNode(int nodeIndex);
+    //get leaf/coal/mig node by node id
+    LeafNode* getLeafNode(int nodeId);
+    CoalNode* getCoalNode(int nodeId);
+    MigNode* getMigNode(int nodeID);
+
+    //return true if node is a leaf
+    bool isLeaf(int nodeId);
+
+    //return a pointer to a tree node of type coal/leaf by node id
+    TreeNode* getTreeNodeByID(int nodeID);
 
     //get total num of nodes in current genealogy
     int getNumTreeNodes();
 
     //add a migration node
-    MigNode *addMigNode(TreeNode *treeNode, int nodeID);
+    MigNode* addMigNode(TreeNode* treeNode, int nodeID);
 
     //remove a migration node
     void removeMigNode(MigNode* pMigNode);
@@ -61,14 +68,6 @@ public:
     void printGenealogy();
 
 
-    //**************************************************************************
-    //temp functions intermediaries between node ids (integer) and tree nodes
-
-    //return true if node is a leaf
-    bool isLeaf(int nodeId);
-
-    //return a pointer to a tree node by node id
-    TreeNode* getTreeNodeByID(int nodeID);
 
 };
 

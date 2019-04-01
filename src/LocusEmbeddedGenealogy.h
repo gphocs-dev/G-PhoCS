@@ -20,10 +20,10 @@ private:
 
     int locusID_;   //id of locus (genealogy id)
 
-    LocusGenealogy     genealogy_; //class of genealogy
-    LocusPopIntervals  intervals_; //class of intervals
+    LocusGenealogy     genealogy_; //object of genealogy
+    LocusPopIntervals  intervals_; //object of intervals
 
-    std::map<int,int> leafToPop_; //map between leaf ID to its pop
+    std::map<int,int> leafToPop_; //map between leaf to its pop
     std::map<int,std::vector<int>> popToLeaves_; //map between pop to its leaves
 
     DATA_SETUP*     pDataSetup_;       //pointer to DATA_SETUP struct
@@ -38,7 +38,7 @@ public:
                  PopulationTree* pPopTree, DATA_STATE* pDataState,
                  GENETREE_MIGS* pGenetreeMigs);
 
-    //construct
+    //construct both genealogy and intervals and connect between them
     int construct_genealogy_and_intervals();
 
     //get locus ID
@@ -47,12 +47,26 @@ public:
     //get locus data
     LocusData* getLocusData();
 
-    //print
-    void print();
+    //print popToLeaves
+    void printPopToLeaves();
 
-    LocusGenealogy &getGenealogy();
+    //print leafToPop
+    void printLeafToPop();
 
-    LocusPopIntervals &getIntervals();
+    //print all
+    void printAll();
+
+    //get genealogy
+    LocusGenealogy& getGenealogy();
+
+    //get intervals
+    LocusPopIntervals& getIntervals();
+
+    //get all leaves of a population
+    std::vector<int>& getPopLeaves(int pop);
+
+    //get population of a leaf
+    int getLeafPop(int leafId);
 
 };
 

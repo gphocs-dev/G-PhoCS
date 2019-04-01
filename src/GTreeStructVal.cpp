@@ -16,7 +16,7 @@ extern DATA_STATE dataState;
 //-----------------------------------------------------------------------------
 int checkGtreeStructure_dispatch_check_event_chain(
                                          CheckGtreeStructureAutoVars* p_stack,
-                                         EventTypeIvgeny e_event_type)
+                                         EventType e_event_type)
 {
   int& gen                  = p_stack->gen;
   int& num_lineages         = p_stack->num_lineages;

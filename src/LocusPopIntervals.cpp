@@ -25,6 +25,7 @@ LocusPopIntervals::LocusPopIntervals(int locusID, int nIntervals,
 
     //intervals pool points to head of intervals array
     pIntervalsPool_ = intervalsArray_;
+    
 }
 
 /*

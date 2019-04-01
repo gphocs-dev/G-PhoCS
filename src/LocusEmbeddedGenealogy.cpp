@@ -198,19 +198,53 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
 
 
 /*
+	print pop to leaves map
+*/
+void LocusEmbeddedGenealogy::printPopToLeaves() {
+
+    std::cout << "Pop to leaves: " << std::endl;
+    for (auto& x : popToLeaves_) {
+        std::cout << "pop " << x.first << ", leaves: ";
+        for (int leaf : x.second) {
+            cout << leaf << ", ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+/*
+	print leaf to map
+*/
+void LocusEmbeddedGenealogy::printLeafToPop() {
+    std::cout << "Leaf to pop: " << std::endl;
+    for (auto& x : leafToPop_) {
+        std::cout << "leaf " << x.first << ", "
+                  << "pop: " << x.second << std::endl;
+    }
+}
+
+/*
 	print population tree, genealogy and intervals
 */
-void LocusEmbeddedGenealogy::print() {
+void LocusEmbeddedGenealogy::printAll() {
 
     //print population tree
     printPopulationTree(this->pDataSetup_->popTree, stderr, 1);
 
+    //print pop to leaves
+    std::cout << "------------------------------------------------------" << std::endl;
+    this->printPopToLeaves();
+
+    //print leaf to pop
+    std::cout << "------------------------------------------------------" << std::endl;
+    this->printLeafToPop();
+
     //print genealogy
-    std::cout << "------------------------------------------------------" << endl;
+    std::cout << "------------------------------------------------------" << std::endl;
     genealogy_.printGenealogy();
 
     //print intervals
-    std::cout << "------------------------------------------------------" << endl;
+    std::cout << "------------------------------------------------------" << std::endl;
     intervals_.printIntervals();
 
 }
@@ -219,11 +253,21 @@ int LocusEmbeddedGenealogy::getLocusID() {
     return locusID_;
 }
 
-LocusGenealogy &LocusEmbeddedGenealogy::getGenealogy() {
+LocusGenealogy& LocusEmbeddedGenealogy::getGenealogy() {
     return genealogy_;
 }
 
-LocusPopIntervals &LocusEmbeddedGenealogy::getIntervals() {
+LocusPopIntervals& LocusEmbeddedGenealogy::getIntervals() {
     return intervals_;
 }
+
+std::vector<int>& LocusEmbeddedGenealogy::getPopLeaves(int pop) {
+    return popToLeaves_[pop];
+}
+
+int LocusEmbeddedGenealogy::getLeafPop(int leafId) {
+    return leafToPop_[leafId];
+}
+
+
 
