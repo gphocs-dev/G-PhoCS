@@ -6,50 +6,64 @@
 #define G_PHOCS_TREENODE_H
 
 #include "PopInterval.h"
-
-enum class TreeNodeType; //forward declaration
+#include <iostream>
 
 /*=============================================================================
  *
  * TreeNode class
  *
  * TreeNode is a single node in genealogy tree.
- * Tree node is an abstract class.
+ * Tree node is an abstract class, and is inherited by three class:
+ * LeafNode, CoalNode and MigNode.
  *
- * Contains:
+ * TreeNode Contains:
  * 1. Type of node (leaf, migration or coal).
- * 2. Pointers ("edges") to parent and sons.
- * 3. Pointer to corresponding interval
+ * 2. Id of tree node (analogous to node id of old structure.)
+ * 3. Pointers ("edges") to parent and sons.
+ *
+ * The derived classes also contain:
+ * 4. Pointer(s) to corresponding interval(s).
  *===========================================================================*/
+
+enum class TreeNodeType; //forward declaration
+
 class TreeNode {
 
 protected:
 
     TreeNodeType  type_;    //type of node
 
+    int nodeID_; //id of tree node
+
     TreeNode*  pParent_;    //pointer to parent in genealogy
     TreeNode*  pLeftSon_;   //pointer to left son in genealogy
     TreeNode*  pRightSon_;  //pointer to right son in genealogy
 
-
 public:
 
+    //constructor
     TreeNode();
+
+    //get pop id. a pure virtual method.
+    virtual int getPopId() = 0;
+
+    //print tree node
+    virtual void printTreeNode();
+
+    //get type as string
+    virtual std::string typeToStr() = 0;
 
     //getters and setters
     TreeNodeType getType() const;
-
+    int getNodeId() const;
     TreeNode* getParent() const;
-
     TreeNode* getLeftSon() const;
-
     TreeNode* getRightSon() const;
-
+    void setNodeId(int nodeId);
     void setParent(TreeNode* pParent);
-
     void setLeftSon(TreeNode* pLeftSon);
-
     void setRightSon(TreeNode* pRightSon);
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,22 +75,35 @@ private:
 public:
     LeafNode();
 
-    PopInterval* getSamplesStart() const;
+    int getPopId();
 
+    void printTreeNode();
+
+    std::string typeToStr();
+
+    //getters and setters
+    PopInterval* getSamplesStart() const;
     void setSamplesInterval(PopInterval* pSamplesStart);
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 class CoalNode : public TreeNode {
 
 private:
-    PopInterval* pCoal_; //pointer to corresponding coalescent interval
+    PopInterval* pCoal_; //pointer to coalescent interval
 
 public:
     CoalNode();
 
-    PopInterval* getCoalInterval() const;
+    int getPopId();
 
+    void printTreeNode();
+
+    std::string typeToStr();
+
+    //getters and setters
+    PopInterval* getCoalInterval() const;
     void setCoalInterval(PopInterval *pCoal);
 
 };
@@ -91,26 +118,28 @@ private:
 public:
     MigNode();
 
+    int getPopId();
+
+    void printTreeNode();
+
+    std::string typeToStr();
+
+    //getters and setters
     PopInterval* getOutMigInterval() const;
-
     PopInterval* getInMigInterval() const;
-
     void setOutMigInterval(PopInterval* pOutMig);
-
     void setInMigInterval(PopInterval* pInMig);
 
 };
 
 
-
 /*
-    Types of Event
+    Types of tree nodes
 */
 enum class TreeNodeType {
     LEAF,
     COAL,   //coalescence
     MIG,    //migration
-    DUMMY
 };
 
 

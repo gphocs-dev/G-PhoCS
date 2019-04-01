@@ -5,9 +5,7 @@
 #ifndef G_PHOCS_POPINTERVAL_H
 #define G_PHOCS_POPINTERVAL_H
 
-#include "TreeNode.h"
 
-enum class IntervalType; //forward declaration
 
 /*=============================================================================
  *
@@ -24,7 +22,12 @@ enum class IntervalType; //forward declaration
  * 3. Number of lineages (before the event).
  * 4. Population ID.
  * 5. Pointers to previous and next intervals.
+ * 6. Pointer to corresponding tree node.
  *===========================================================================*/
+
+//forward declarations
+enum class IntervalType;
+class TreeNode;
 
 class PopInterval {
 
@@ -35,7 +38,7 @@ private:
     int nLineages_;        //number of lineages (before the event)
     int popID_;            //population ID
 
-    PopInterval* pNextInterval_;     //pointer to next interval
+    PopInterval* pNextInterval_; //pointer to next interval
     PopInterval* pPrevInterval_; //pointer to previous interval
 
     TreeNode* pTreeNode_; //pointer to corresponding tree node
@@ -53,6 +56,8 @@ public:
 
     //increment elapsed time
     void incrementElapsedTime(double delta);
+
+    void printInterval();
 
 public:
     //getters / setters
@@ -86,6 +91,7 @@ public:
 
 };
 
+
 /*
     Types of Event
 */
@@ -100,5 +106,6 @@ enum class IntervalType {
     POP_END,
     DUMMY
 };
+
 
 #endif //G_PHOCS_POPINTERVAL_H

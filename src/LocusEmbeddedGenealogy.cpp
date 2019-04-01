@@ -2,9 +2,10 @@
 // Created by nomihadar on 3/11/19.
 //
 
-#include "LocusAllData.h"
+#include "LocusEmbeddedGenealogy.h"
 #include "DbgErrMsgIntervals.h"
-
+#include <iostream>
+#include <iomanip>
 
 /*
 	Constructs
@@ -13,17 +14,29 @@
 	Records number of lineages only for first events in leaf populations.
 	The rest are recorded by computeGenetreeStats
 */
-LocusAllData::LocusAllData(int locusID, int nIntervals, DATA_SETUP *pDataSetup,
-                           PopulationTree *pPopTree, DATA_STATE *pDataState,
-                           GENETREE_MIGS *pGenetreeMigs)
+LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
+        int locusID,
+        int numIntervals,
+        DATA_SETUP* pDataSetup,
+        PopulationTree* pPopTree,
+        DATA_STATE* pDataState,
+        GENETREE_MIGS* pGenetreeMigs)
 
         : genealogy_(pDataSetup->numSamples), //construct genealogy
-          intervals_(locusID, nIntervals, pPopTree),  //construct intervals
+          intervals_(locusID, numIntervals, pPopTree),  //construct intervals
           locusID_(locusID),
           pDataSetup_(pDataSetup),
           pPopTree_(pPopTree),
           pDataState_(pDataState),
           pGenetreeMigs_(pGenetreeMigs) {
+
+    //create map between leaf to its pop
+    // and map between pop to its leaves
+    for (int node = 0; node < pDataSetup_->numSamples; node++) {
+        int pop = nodePops[locusID_][node];
+        leafToPop_[node] = pop;
+        popToLeaves_[pop].emplace_back(node); //todo reserve?
+    }
 
 }
 
@@ -31,7 +44,7 @@ LocusAllData::LocusAllData(int locusID, int nIntervals, DATA_SETUP *pDataSetup,
 /*
    @return: a pointer to locus data of current locus
 */
-LocusData* LocusAllData::getLocusData() {
+LocusData* LocusEmbeddedGenealogy::getLocusData() {
     return pDataState_->lociData[locusID_];
 }
 
@@ -40,33 +53,36 @@ LocusData* LocusAllData::getLocusData() {
 	Constructs genealogy and intervals
 	Genealogy: construct branches and link to corresponding intervals,
                 add mig nodes to tree
-    Intervals: initialize with start and end intervals,
+    Intervals: reset intervals, ling them to each other
+                initialize with start and end intervals,
                 create samples start intervals,
                 create coalescent and migration intervals,
                 link intervals to corresponding nodes.
-
 
 	Typically used only for initial genetrees or for testing.
 	Records number of lineages only for first events in leaf populations.
 	The rest are recorded by computeGenetreeStats
 */
-int LocusAllData::construct_genealogy_and_intervals() {
+int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
 
     //construct genealogy branches (edges between tree nodes)
-    genealogy_.constructBranches(this->getLocusData()); //todo: to ask if branches should be constructed in each call to construct_genealogy_and_intervals
+    genealogy_.constructBranches(this->getLocusData());
 
-    //reset intervals by linking them to each other
+    //reset intervals
     intervals_.resetIntervals();
 
-    //initialize intervals with start and end intervals
-    intervals_.initializeIntervals(); //todo: same question . should reset intervals and genealogy?
+    //link intervals to each other
+    intervals_.linkIntervals();
+
+    //add start and end intervals
+    intervals_.addStartEndIntervals();
 
     //create samples start intervals (for ancient samples)
     for (int pop = 0; pop < pPopTree_->numCurPops; pop++) {
 
         //create interval
         double age = pPopTree_->pops[pop]->sampleAge;
-        PopInterval *pInterval =
+        PopInterval* pInterval =
                 intervals_.createInterval(pop, age,
                                           IntervalType::SAMPLES_START);
 
@@ -125,9 +141,11 @@ int LocusAllData::construct_genealogy_and_intervals() {
     //and link between them
     for (int node = 0; node < 2*nSamples-1; node++) {
 
+        //get tree node by current node id
+        TreeNode* pTreeNode = genealogy_.getTreeNodeByID(node);
+
         //find migration above current node and after specified time
-        int mig = findFirstMig(locusID_, node,
-                               getNodeAge(getLocusData(), node));
+        int mig = findFirstMig(locusID_, node, getNodeAge(getLocusData(), node));
 
         //while there are migration events on the edge above current node
         while (mig != -1) {
@@ -155,11 +173,8 @@ int LocusAllData::construct_genealogy_and_intervals() {
                 INTERVALS_FATAL_0023
             }
 
-            //get tree node by current node id
-            TreeNode* pTreeNode = genealogy_.getTreeNodeByID(node);
-
             //add a migration node to genealogy
-            MigNode* pMigNode = genealogy_.addMigNode(pTreeNode);
+            MigNode* pMigNode = genealogy_.addMigNode(pTreeNode, mig);
 
             //mig intervals points to mig node
             pMigIn->setTreeNode(pMigNode);
@@ -169,12 +184,90 @@ int LocusAllData::construct_genealogy_and_intervals() {
             pMigNode->setInMigInterval(pMigIn);
             pMigNode->setOutMigInterval(pMigOut);
 
+            //update tree node
+            pTreeNode = pMigNode;
+
             //find next migration (after time of current migration)
             mig = findFirstMig(locusID_, node, age);
         }
 
     }
 
-
     return 0;
 }
+
+
+/*
+	print pop to leaves map
+*/
+void LocusEmbeddedGenealogy::printPopToLeaves() {
+
+    std::cout << "Pop to leaves: " << std::endl;
+    for (auto& x : popToLeaves_) {
+        std::cout << "pop " << x.first << ", leaves: ";
+        for (int leaf : x.second) {
+            cout << leaf << ", ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+/*
+	print leaf to map
+*/
+void LocusEmbeddedGenealogy::printLeafToPop() {
+    std::cout << "Leaf to pop: " << std::endl;
+    for (auto& x : leafToPop_) {
+        std::cout << "leaf " << x.first << ", "
+                  << "pop: " << x.second << std::endl;
+    }
+}
+
+/*
+	print population tree, genealogy and intervals
+*/
+void LocusEmbeddedGenealogy::printAll() {
+
+    //print population tree
+    printPopulationTree(this->pDataSetup_->popTree, stderr, 1);
+
+    //print pop to leaves
+    std::cout << "------------------------------------------------------" << std::endl;
+    this->printPopToLeaves();
+
+    //print leaf to pop
+    std::cout << "------------------------------------------------------" << std::endl;
+    this->printLeafToPop();
+
+    //print genealogy
+    std::cout << "------------------------------------------------------" << std::endl;
+    genealogy_.printGenealogy();
+
+    //print intervals
+    std::cout << "------------------------------------------------------" << std::endl;
+    intervals_.printIntervals();
+
+}
+
+int LocusEmbeddedGenealogy::getLocusID() {
+    return locusID_;
+}
+
+LocusGenealogy& LocusEmbeddedGenealogy::getGenealogy() {
+    return genealogy_;
+}
+
+LocusPopIntervals& LocusEmbeddedGenealogy::getIntervals() {
+    return intervals_;
+}
+
+std::vector<int>& LocusEmbeddedGenealogy::getPopLeaves(int pop) {
+    return popToLeaves_[pop];
+}
+
+int LocusEmbeddedGenealogy::getLeafPop(int leafId) {
+    return leafToPop_[leafId];
+}
+
+
+

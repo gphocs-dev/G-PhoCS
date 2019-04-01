@@ -11,55 +11,61 @@
 
 #include <vector>
 
+
 /*=============================================================================
  *
  * LocusGenealogy class
  *
  * Class LocusGenealogy is a tree structure containing the sampled leaves,
  * coalescent nodes, and migration nodes.
- * Each element in this tree will be of class TreeNode
- * with two children and a parent. TreeNodes have tree types (leaf, mig, coal).
+ * Each element in the tree will be of class TreeNode with two children
+ * and a parent. TreeNodes have tree types (leaf, mig, coal).
  *
  * Contains:
  * 1. Vector of leaf nodes. Constant size.
  * 2. Vector of coal nodes. Constant size.
  * 3. Vector of mig nodes. Variable size.
- * 4. A pointer to global structs.
+ * 4. Num samples.
  *===========================================================================*/
 class LocusGenealogy {
 
 private:
 
-    std::vector<LeafNode> leafNodes_;   //vector of nodes of type leaf
-    std::vector<CoalNode> coalNodes_;   //vector of nodes of type coal
-    std::vector<MigNode> migNodes_;     //vector of nodes of type mig
+    std::vector<LeafNode> leafNodes_;   //vector of tree nodes of type leaf
+    std::vector<CoalNode> coalNodes_;  //vector of tree nodes of type coal
+    std::vector<MigNode> migNodes_;    //vector of tree nodes of type mig
 
-    int nSamples_; //num samples
+    int numSamples_; //num samples
 
 public:
 
     //constructor
-    LocusGenealogy(int numSamples);
+    explicit LocusGenealogy(int numSamples);
 
-    //get leaf/coal/mig node by node index
-    LeafNode* getLeafNode(int nodeIndex);
-    CoalNode* getCoalNode(int nodeIndex);
-
-    //add migration nodes
-    MigNode* addMigNode(TreeNode* treeNode);
-
-    //construct branches of genealogy
-    void constructBranches(LocusData* pLocusData);
-
-
-    //**************************************************************************
-    //temp functions intermediaries between node ids (integer) and tree nodes
+    //get leaf/coal/mig node by node id
+    LeafNode* getLeafNode(int nodeId);
+    CoalNode* getCoalNode(int nodeId);
+    MigNode* getMigNode(int nodeID);
 
     //return true if node is a leaf
     bool isLeaf(int nodeId);
 
-    //return a pointer to a tree node by node id
+    //return a pointer to a tree node of type coal/leaf by node id
     TreeNode* getTreeNodeByID(int nodeID);
+
+    //get total num of nodes in current genealogy
+    int getNumTreeNodes();
+
+    //add a migration node
+    MigNode* addMigNode(TreeNode* treeNode, int nodeID);
+
+    //remove a migration node
+    void removeMigNode(MigNode* pMigNode);
+
+    //construct branches of genealogy
+    void constructBranches(LocusData* pLocusData);
+
+    void printGenealogy();
 
 
 

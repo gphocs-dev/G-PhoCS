@@ -34,7 +34,7 @@ private:
     PopInterval* intervalsArray_; //array of PopIntervals
     PopInterval* pIntervalsPool_; //pointer to a pool of free intervals
 
-    int nIntervals_; //total number of intervals
+    int numIntervals_; //total number of intervals
 
     int locusID_; //locus id, for error massages
     PopulationTree* pPopTree_; //pointer to PopulationTree struct
@@ -48,15 +48,14 @@ public:
     ~LocusPopIntervals();
 
     //get a free interval from intervals pool
-    PopInterval* getFromPool();
+    PopInterval* getIntervalFromPool();
 
     //return a free interval to intervals pool
     void returnToPool(PopInterval* pInterval);
 
     //create a new interval before a given interval
-    PopInterval *
-    createIntervalBefore(PopInterval* pInterval, int pop, double age,
-                         IntervalType type);
+    PopInterval* createIntervalBefore(PopInterval* pInterval,
+            int pop, double age, IntervalType type);
 
     //create a new interval in specified population at given time
     PopInterval* createInterval(int pop, double age, IntervalType type);
@@ -70,9 +69,14 @@ public:
     //reset intervals
     void resetIntervals();
 
-    //initialize intervals array with pop-start and pop-end intervals
-    void initializeIntervals();
+    //link intervals to each other
+    void linkIntervals();
 
+    //initialize intervals array with pop-start and pop-end intervals
+    void addStartEndIntervals();
+
+    //for each pop print all intervals
+    void printIntervals();
 
 };
 

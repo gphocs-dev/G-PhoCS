@@ -57,8 +57,7 @@ if (debug) \
     fprintf(stderr, \
             "\nError: create_interval: trying to insert new interval in pop %d,"\
             " gen %d at time %g, %g above END_CHAIN event.\n", \
-            pop, locusID_, age, \
-            delta_time - pInterval->getElapsedTime()); \
+            pop, locusID_, age, delta_time - pInterval->getElapsedTime()); \
 } \
 else \
 { \

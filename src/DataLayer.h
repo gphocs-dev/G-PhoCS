@@ -23,7 +23,7 @@ using namespace std;
  *---------------------------------------------------------------------------*/
 
 //-----------------------------------------------------------------------------
-enum EventTypeIvgeny{COAL           = 0x01,
+enum EventType{COAL           = 0x01,
                IN_MIG         = 0x02,
                OUT_MIG        = 0x04,
                MIG_BAND_START = 0x08,
@@ -43,8 +43,8 @@ public:
 public:
   int       getId()                   const;
   void      setId(int id);
-  EventTypeIvgeny getType()                 const;
-  void      setType(EventTypeIvgeny t);
+  EventType getType()                 const;
+  void      setType(EventType t);
   int       getNextIdx()              const;
   void      setNextIdx(int i);
   int       getPrevIdx()              const;
@@ -64,7 +64,7 @@ public:
 
 protected:
   int        id_;
-  EventTypeIvgeny  type_;
+  EventType  type_;
   int        next_;
   int        prev_;
   double     elapsed_time_;	// time from last event
@@ -119,14 +119,14 @@ Event::setId(int id)
   this->id_ = id;
 }
 
-inline EventTypeIvgeny
+inline EventType
 Event::getType() const
 {
   return this->type_;
 }
 
 inline void
-Event::setType(EventTypeIvgeny t)
+Event::setType(EventType t)
 {
   this->type_ = t;
 }

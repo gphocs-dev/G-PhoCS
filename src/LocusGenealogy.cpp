@@ -3,6 +3,8 @@
 //
 
 #include "LocusGenealogy.h"
+#include "DataLayerConstants.h"
+#include <iostream>
 
 
 /*
@@ -11,34 +13,58 @@
     Initialize leafNodes vector with N leaf nodes (N=num samples)
     Initialize coalNodes vector with N-1 leaf nodes
     Reserve place in migNodes_ vector with X nodes (X=?)
+    Set ids of leafNodes and coalNodes
 */
 LocusGenealogy::LocusGenealogy(int numSamples)
-        : nSamples_(numSamples),
+        : numSamples_(numSamples),
           leafNodes_(numSamples),
           coalNodes_(numSamples-1) {
 
-    //TODO: migNodes_.reserve(); what number to reserve?
+    //reserve max migrations
+    migNodes_.reserve(MAX_MIGS);
 
+    //set leaf nodes id
+    for (int i = 0; i < leafNodes_.size(); i++) {
+        leafNodes_[i].setNodeId(i);
+    }
+
+    //set coal nodes id
+    for (int i = 0; i < coalNodes_.size(); i++) {
+        coalNodes_[i].setNodeId(i+numSamples_);
+    }
 }
 
 /*
-    returns a leaf node by index
+    returns a leaf node by id
     @param: node index
     @return: leaf node
 */
-LeafNode* LocusGenealogy::getLeafNode(int nodeIndex) {
-    return &leafNodes_[nodeIndex];
+LeafNode* LocusGenealogy::getLeafNode(int nodeID) {
+    return &leafNodes_[nodeID];
 }
 
 /*
-    returns a coal node by index
+    returns a coal node by id
     @param: node index
     @return: coal node
 */
-CoalNode* LocusGenealogy::getCoalNode(int nodeIndex) {
-    int offset = nodeIndex - nSamples_;
+CoalNode* LocusGenealogy::getCoalNode(int nodeID) {
+    int offset = nodeID - numSamples_;
     return &coalNodes_[offset];
 }
+
+/*
+    returns a mig node by id
+    @param: node id
+    @return: mig node
+*/
+MigNode* LocusGenealogy::getMigNode(int nodeID) {
+    for (MigNode& migNode : migNodes_)
+        if (migNode.getNodeId() == nodeID)
+            return &migNode;
+    return nullptr;
+}
+
 
 /*
     returns true if node is a leaf
@@ -46,9 +72,7 @@ CoalNode* LocusGenealogy::getCoalNode(int nodeIndex) {
     @return: boolean
 */
 bool LocusGenealogy::isLeaf(int nodeId) {
-    if (nodeId < nSamples_)
-        return true;
-    return false;
+    return nodeId < numSamples_;
 }
 
 /*
@@ -67,46 +91,76 @@ TreeNode* LocusGenealogy::getTreeNodeByID(int nodeID) {
 }
 
 /*
+    @return: num tree nodes in genealogy
+*/
+int LocusGenealogy::getNumTreeNodes() {
+    return leafNodes_.size() + coalNodes_.size() + migNodes_.size();
+}
+
+
+/*
     creates a mig node after given node (after is closer to root)
     @param: node id
     @return: reference to the new mig node
 */
-MigNode* LocusGenealogy::addMigNode(TreeNode *pTreeNode) {
+MigNode* LocusGenealogy::addMigNode(TreeNode *pTreeNode, int nodeID) {
 
     //get parent node
     TreeNode* pParent = pTreeNode->getParent();
 
     //create a mig node and push to mig vector
-    migNodes_.push_back(MigNode());
+    migNodes_.emplace_back();
 
     //get a (non-local) pointer to the new mig node
-    MigNode* migNode = &migNodes_.back();
+    MigNode* pMigNode = &migNodes_.back();
+
+    //set mig id
+    pMigNode->setNodeId(nodeID);
 
     //set mig parent
-    migNode->setParent(pParent);
+    pMigNode->setParent(pParent);
 
     //set mig sons to given node
-    migNode->setLeftSon(pTreeNode);
-    migNode->setRightSon(pTreeNode);
+    pMigNode->setLeftSon(pTreeNode);
+    pMigNode->setRightSon(pTreeNode);
 
     //set parent of given node to be the mig node
-    pTreeNode->setParent(migNode);
+    pTreeNode->setParent(pMigNode);
 
     //set son or sons of given node's parent to mig node
     //(both sons can be set if given tree node is a migration itself)
 
     //if given node is a left son set the left son
     if (pParent->getLeftSon() == pTreeNode){
-        pParent->setLeftSon(migNode);
+        pParent->setLeftSon(pMigNode);
     }
     //if given node is a right son set the left son
     if (pParent->getRightSon() == pTreeNode){
-        pParent->setRightSon(migNode);
+        pParent->setRightSon(pMigNode);
     }
 
     //return reference to mig node
-    return migNode;
+    return pMigNode;
 }
+
+/*
+    removes given mig node
+    if it's not the last element replace it by the last element and pop back
+    @param: pointer to mig that should be removed
+*/
+void LocusGenealogy::removeMigNode(MigNode* pMigNode) {
+    //find the mig that should be remove (skip last element)
+    for (int i = 0; i < migNodes_.size()-1; i++) {
+        //if mig found
+        if (&migNodes_[i] == pMigNode) {
+            //replace the i'th position with the last mig node
+            migNodes_[i] = migNodes_.back();
+        }
+    }
+    //pop last mig node
+    migNodes_.pop_back();
+}
+
 
 /*
    Constructs branches of genealogy by iterating leaf and coalescent nodes
@@ -118,7 +172,7 @@ void LocusGenealogy::constructBranches(LocusData* pLocusData) {
     int rootNode = getLocusRoot(pLocusData);
 
     //for each node set its parent and sons in genealogy
-    for (int node = 0; node < 2*nSamples_-1; node++) {
+    for (int node = 0; node < 2*numSamples_-1; node++) {
 
         //get eventNode of current node
         TreeNode* pNode = this->getTreeNodeByID(node);
@@ -133,6 +187,7 @@ void LocusGenealogy::constructBranches(LocusData* pLocusData) {
 
             //set pointer
             pNode->setParent(pFather);
+
         } else {
             pNode->setParent(nullptr);
         }
@@ -161,3 +216,27 @@ void LocusGenealogy::constructBranches(LocusData* pLocusData) {
     }
 
 }
+
+void LocusGenealogy::printGenealogy() {
+
+    //print genealogy tree
+    std::cout << "Genealogy tree:" << std::endl;
+
+    //for each leaf node
+    for (LeafNode& leafNode : leafNodes_) {
+        leafNode.printTreeNode();
+    }
+
+    //for each coal node
+    for (CoalNode& coalNode : coalNodes_) {
+        coalNode.printTreeNode();
+    }
+
+    //for each mig node
+    for (MigNode& migNode : migNodes_) {
+        migNode.printTreeNode();
+    }
+
+}
+
+
