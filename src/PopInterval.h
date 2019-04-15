@@ -5,7 +5,7 @@
 #ifndef G_PHOCS_POPINTERVAL_H
 #define G_PHOCS_POPINTERVAL_H
 
-
+#include <iostream>
 
 /*=============================================================================
  *
@@ -27,6 +27,7 @@
 
 //forward declarations
 enum class IntervalType;
+
 class TreeNode;
 
 class PopInterval {
@@ -57,36 +58,33 @@ public:
     //increment elapsed time
     void incrementElapsedTime(double delta);
 
+    //convert type to string
+    std::string typeToStr();
+
+    //print interval
     void printInterval();
 
 public:
     //getters / setters
     IntervalType getType() const;
-
     void setType(IntervalType type);
 
     double getElapsedTime() const;
-
     void setElapsedTime(double elapsedTime);
 
     int getNumLineages() const;
-
     void setNumLineages(int nLineages);
 
     int getPopID() const;
-
     void setPopID(int popID);
 
     PopInterval* getNext() const;
-
     void setNext(PopInterval* pNext);
 
     PopInterval* getPrev() const;
-
     void setPrev(PopInterval* pPrev);
 
     TreeNode* getTreeNode() const;
-
     void setTreeNode(TreeNode* pTreeNode);
 
 };

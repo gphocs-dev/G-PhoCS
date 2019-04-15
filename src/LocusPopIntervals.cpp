@@ -32,7 +32,7 @@ LocusPopIntervals::LocusPopIntervals(int locusID, int nIntervals,
     LocusPopIntervals class destructor
 */
 LocusPopIntervals::~LocusPopIntervals() {
-    //delete array of DAGNodes
+    //delete array of intervals
     delete intervalsArray_;
 }
 
@@ -92,7 +92,7 @@ PopInterval* LocusPopIntervals::getIntervalFromPool() {
     Return an interval to the interval pool
     @param: pointer to the free interval
 */
-void LocusPopIntervals::returnToPool(PopInterval *pInterval) {
+void LocusPopIntervals::returnToPool(PopInterval* pInterval) {
 
     //reset interval content
     pInterval->reset();
@@ -111,7 +111,7 @@ void LocusPopIntervals::returnToPool(PopInterval *pInterval) {
      2. The next N cells to be pop-end intervals.
     Total: 2N cells are occupied to start/end intervals.
 */
-void LocusPopIntervals::addStartEndIntervals() {
+void LocusPopIntervals::createStartEndIntervals() {
 
     int nPops = pPopTree_->numPops; //N
     int rootPop = pPopTree_->rootPop; //root population
@@ -129,6 +129,9 @@ void LocusPopIntervals::addStartEndIntervals() {
 
         //set pop
         intervalsArray_[start_index].setPopID(pop);
+
+        //set num lineages - it is important to initialize 0 incoming lineages
+        intervalsArray_[start_index].setNumLineages(0);
 
         //next of start interval points to the end interval of same pop
         intervalsArray_[start_index].setNext(intervalsArray_ + end_index);
@@ -245,7 +248,7 @@ LocusPopIntervals::createInterval(int pop, double age, IntervalType type) {
     //find a spot for a new interval
     //loop while not reaching the end interval of the population
     //and while elapsed time of current interval is smaller than delta time
-    PopInterval* pInterval = this->getPopStart(pop)->getNext(); //todo: set elapsed time of samples start to be 0, intsead og geeting next
+    PopInterval* pInterval = this->getFirstInterval(pop);
     for (; !pInterval->isType(IntervalType::POP_END) &&
             pInterval->getElapsedTime() < delta_time;
            pInterval = pInterval->getNext()) {
@@ -279,6 +282,31 @@ PopInterval* LocusPopIntervals::getPopStart(int pop) {
 
 
 /*
+    Returns the pop-end interval of a specified population.
+    End-end interval is allocated in the n-th cell of the events array,
+    where n = num populations + population id
+    @param: population id
+    @return: pointer to a pop-end interval
+
+*/
+PopInterval* LocusPopIntervals::getPopEnd(int pop) {
+    return intervalsArray_ + pPopTree_->numPops + pop;
+}
+
+
+/*
+    Returns the first interval (which is not the pop start)
+    of a specified population.
+    @param: population id
+    @return: pointer to a pop-start interval
+
+*/
+PopInterval* LocusPopIntervals::getFirstInterval(int pop) {
+    return this->getPopStart(pop)->getNext();
+}
+
+
+/*
     returns the samplesStart interval of a population
     @param: population id
     @return: pointer to a SamplesStart interval
@@ -286,7 +314,7 @@ PopInterval* LocusPopIntervals::getPopStart(int pop) {
 PopInterval* LocusPopIntervals::getSamplesStart(int pop) {
 
     //iterate over intervals while not pop-end
-    PopInterval* pInterval = this->getPopStart(pop)->getNext();
+    PopInterval* pInterval = this->getFirstInterval(pop);
     while (!pInterval->isType(IntervalType::POP_END)) {
 
         //if interval is a sample start - return it
@@ -314,6 +342,7 @@ void LocusPopIntervals::printIntervals() {
 
         //iterate intervals of current pop while not pop-end
         while (true) {
+
             //print interval
             pInterval->printInterval();
 

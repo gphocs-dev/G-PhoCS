@@ -35,6 +35,8 @@ protected:
 
     int nodeID_; //id of tree node
 
+    double age_; //tree node age
+
     TreeNode*  pParent_;    //pointer to parent in genealogy
     TreeNode*  pLeftSon_;   //pointer to left son in genealogy
     TreeNode*  pRightSon_;  //pointer to right son in genealogy
@@ -56,10 +58,13 @@ public:
     //getters and setters
     TreeNodeType getType() const;
     int getNodeId() const;
+    double getAge() const;
     TreeNode* getParent() const;
     TreeNode* getLeftSon() const;
     TreeNode* getRightSon() const;
+
     void setNodeId(int nodeId);
+    void setAge(double age);
     void setParent(TreeNode* pParent);
     void setLeftSon(TreeNode* pLeftSon);
     void setRightSon(TreeNode* pRightSon);

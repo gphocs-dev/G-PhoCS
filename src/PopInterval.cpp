@@ -106,6 +106,21 @@ void PopInterval::setTreeNode(TreeNode* pTreeNode) {
     PopInterval::pTreeNode_ = pTreeNode;
 }
 
+
+std::string PopInterval::typeToStr() {
+    switch (type_) {
+        case IntervalType::POP_START: return "POP_START";
+        case IntervalType::POP_END: return "POP_END";
+        case IntervalType::SAMPLES_START: return "SAMPLES_START";
+        case IntervalType::COAL: return "COAL";
+        case IntervalType::IN_MIG: return "IN_MIG";
+        case IntervalType::OUT_MIG: return "OUT_MIG"; break;
+        case IntervalType::MIG_BAND_START: return "MIG_BAND_START";
+        case IntervalType::MIG_BAND_END:return "MIG_BAND_END";
+        case IntervalType::DUMMY: return "DUMMY";
+    }
+}
+
 void PopInterval::printInterval() {
 
     using std::cout;
@@ -114,23 +129,15 @@ void PopInterval::printInterval() {
 
     cout << std::left;
     cout << "pop: "  << setw(4)  << popID_;
-    cout << "type: " << setw(18);
-
-    switch (type_) {
-        case IntervalType::DUMMY: cout << "DUMMY"; break;
-        case IntervalType::POP_START: cout << "POP_START"; break;
-        case IntervalType::POP_END: cout << "POP_END"; break;
-        case IntervalType::SAMPLES_START: cout << "SAMPLES_START"; break;
-        case IntervalType::COAL: cout << "COAL"; break;
-        case IntervalType::IN_MIG: cout << "IN_MIG"; break;
-        case IntervalType::OUT_MIG: cout << "OUT_MIG"; break;
-    }
-
+    cout << "type: " << setw(18) << this->typeToStr();
     cout << "num-lins: " << setw(4) << nLineages_;
     cout << "elapsed-time: " << setw(15) << elapsedTime_;
-    cout << "prev: " << setw(20) << pPrevInterval_;
-    cout << "next: " << setw(20) << pNextInterval_;
-    cout << "tree-node: " << setw(20) << pTreeNode_;
+    //cout << "prev: " << setw(20) << pPrevInterval_;
+    //cout << "next: " << setw(20) << pNextInterval_;
+    if (pTreeNode_)
+        cout << "tree-node: " << setw(4) << pTreeNode_->getNodeId();
+    else
+        cout << "tree-node: -";
     cout << endl;
 }
 
