@@ -589,6 +589,11 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
     //for each pop
     for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
 
+
+        if (locusID_ ==1 && pop == 2) {
+            int i = 2;
+        }
+
         //get first event in old structure
         int event = event_chains[locusID_].first_event[pop];
 
@@ -673,6 +678,10 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
 
                 //compare elapsed time
                 double intervalTime = pInterval->getElapsedTime();
+                if (fabs(eventTime - intervalTime) > PRECISION) {
+                    int i = 1;
+                }
+
                 assert(fabs(eventTime - intervalTime) < PRECISION);
 
             //get next interval
