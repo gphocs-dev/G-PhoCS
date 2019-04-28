@@ -7,7 +7,7 @@ GENERAL-INFO-START
 	mcmc-iterations	  	2000
 	iterations-per-log  50
 	logs-per-line       10
-    random-seed         1292817593          
+    random-seed        1292817593
 
 	find-finetunes		FALSE
 	finetune-coal-time	0.01		

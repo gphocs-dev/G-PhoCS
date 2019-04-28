@@ -6,10 +6,12 @@
 
 #include <iomanip>
 
-TreeNode::TreeNode()
-        : pParent_(nullptr),
-          pLeftSon_(nullptr),
-          pRightSon_(nullptr) {
+TreeNode::TreeNode() :
+        age_(-1),
+        nodeID_(-1),
+        pParent_(nullptr),
+        pLeftSon_(nullptr),
+        pRightSon_(nullptr) {
 }
 
 TreeNodeType TreeNode::getType() const {
@@ -49,6 +51,15 @@ void TreeNode::setRightSon(TreeNode* pRightSon) {
 }
 
 
+double TreeNode::getAge() const {
+    return age_;
+}
+
+void TreeNode::setAge(double age) {
+    TreeNode::age_ = age;
+}
+
+
 void TreeNode::printTreeNode() {
 
     using std::cout;
@@ -68,8 +79,11 @@ void TreeNode::printTreeNode() {
     cout << ",";
     cout << setw(4) << rightSonId;
     cout << setw(4) << ")" ;
-}
 
+    cout << "age: " << setw(10) << age_;
+
+    cout << std::endl;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,9 +103,9 @@ void LeafNode::printTreeNode() {
 
     TreeNode::printTreeNode();
 
-    std::cout << std::left;
-    std::cout << "interval: " << std::setw(18) << pSamplesStart_;
-    std::cout << std::endl;
+    //std::cout << std::left;
+    //std::cout << "interval: " << std::setw(18) << pSamplesStart_;
+    //std::cout << std::endl;
 }
 
 int LeafNode::getPopId() {
@@ -122,9 +136,9 @@ void CoalNode::printTreeNode() {
 
     TreeNode::printTreeNode();
 
-    std::cout << std::left;
-    std::cout << "Interval: " << std::setw(18) << pCoal_;
-    std::cout << std::endl;
+    //std::cout << std::left;
+    //std::cout << "interval: " << std::setw(18) << pCoal_;
+    //std::cout << std::endl;
 }
 
 int CoalNode::getPopId() {
@@ -162,10 +176,10 @@ void MigNode::printTreeNode() {
 
     TreeNode::printTreeNode();
 
-    std::cout << std::left;
-    std::cout << "interval:: " << std::setw(18) << pInMig_;
-    std::cout << "interval:: " << std::setw(18) << pOutMig_;
-    std::cout << std::endl;
+    //std::cout << std::left;
+    //std::cout << "interval:: " << std::setw(18) << pInMig_;
+    //std::cout << "interval:: " << std::setw(18) << pOutMig_;
+    //std::cout << std::endl;
 }
 
 int MigNode::getPopId() {

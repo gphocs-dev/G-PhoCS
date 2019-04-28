@@ -21,9 +21,9 @@
  * we add pop-start and pop-end intervals (which are empty - elapsed_time = 0).
  *
  * Contains:
- * 1.
- * 2.
- * 3.
+ * 1. Array if intervals objects.
+ * 2. Pointer to a pool of free intervals
+ * 3. Total number of intervals
  * 4.
  *===========================================================================*/
 
@@ -60,11 +60,17 @@ public:
     //create a new interval in specified population at given time
     PopInterval* createInterval(int pop, double age, IntervalType type);
 
-    //get a pointer to samples start interval of a given population
+    //get a pointer to a samples start interval of a given population
     PopInterval* getSamplesStart(int pop);
 
-    //get a pointer to pop start interval of a given population
+    //get a pointer to a pop start interval of a given population
     PopInterval* getPopStart(int pop);
+
+    //get a pointer to a end start interval of a given population
+    PopInterval* getPopEnd(int pop);
+
+    //get first interval (after the pop start) of a given population
+    PopInterval* getFirstInterval(int pop);
 
     //reset intervals
     void resetIntervals();
@@ -73,7 +79,7 @@ public:
     void linkIntervals();
 
     //initialize intervals array with pop-start and pop-end intervals
-    void addStartEndIntervals();
+    void createStartEndIntervals();
 
     //for each pop print all intervals
     void printIntervals();

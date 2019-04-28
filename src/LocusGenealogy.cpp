@@ -57,13 +57,13 @@ CoalNode* LocusGenealogy::getCoalNode(int nodeID) {
     returns a mig node by id
     @param: node id
     @return: mig node
-*/
+
 MigNode* LocusGenealogy::getMigNode(int nodeID) {
     for (MigNode& migNode : migNodes_)
         if (migNode.getNodeId() == nodeID)
             return &migNode;
     return nullptr;
-}
+}*/
 
 
 /*
@@ -103,7 +103,7 @@ int LocusGenealogy::getNumTreeNodes() {
     @param: node id
     @return: reference to the new mig node
 */
-MigNode* LocusGenealogy::addMigNode(TreeNode *pTreeNode, int nodeID) {
+MigNode * LocusGenealogy::addMigNode(TreeNode *pTreeNode) {
 
     //get parent node
     TreeNode* pParent = pTreeNode->getParent();
@@ -113,9 +113,6 @@ MigNode* LocusGenealogy::addMigNode(TreeNode *pTreeNode, int nodeID) {
 
     //get a (non-local) pointer to the new mig node
     MigNode* pMigNode = &migNodes_.back();
-
-    //set mig id
-    pMigNode->setNodeId(nodeID);
 
     //set mig parent
     pMigNode->setParent(pParent);
@@ -174,8 +171,12 @@ void LocusGenealogy::constructBranches(LocusData* pLocusData) {
     //for each node set its parent and sons in genealogy
     for (int node = 0; node < 2*numSamples_-1; node++) {
 
-        //get eventNode of current node
+        //get tree node of current node
         TreeNode* pNode = this->getTreeNodeByID(node);
+
+        //set age of tree node
+        double age = getNodeAge(pLocusData, node);
+        pNode->setAge(age);
 
         //set parent pointer
         //if current node is the root - parent points to null

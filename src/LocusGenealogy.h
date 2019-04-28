@@ -45,7 +45,7 @@ public:
     //get leaf/coal/mig node by node id
     LeafNode* getLeafNode(int nodeId);
     CoalNode* getCoalNode(int nodeId);
-    MigNode* getMigNode(int nodeID);
+    //MigNode* getMigNode(int nodeID);//todo: remove
 
     //return true if node is a leaf
     bool isLeaf(int nodeId);
@@ -57,7 +57,7 @@ public:
     int getNumTreeNodes();
 
     //add a migration node
-    MigNode* addMigNode(TreeNode* treeNode, int nodeID);
+    MigNode* addMigNode(TreeNode* treeNode);
 
     //remove a migration node
     void removeMigNode(MigNode* pMigNode);

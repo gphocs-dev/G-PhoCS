@@ -7,8 +7,8 @@
  ============================================================================*/
 
 //TODO: remove, for debugging only
-#include "TestNewDataStructure.h"
-#include "LocusEmbeddedGenealogy.h"
+#include "LociEmbedded.h"
+
 //
 
 #include "utils.h"
@@ -1119,7 +1119,6 @@ int initializeMCMC()
     GetRandomGtree(tree, gen);
     copyGenericTreeToLocus(dataState.lociData[gen], tree);
     constructEventChain(gen);
-
     computeGenetreeStats(gen);
     locus_data[gen].genLogLikelihood = gtreeLnLikelihood(gen);
     dataState.logLikelihood += locus_data[gen].genLogLikelihood;
@@ -1411,6 +1410,8 @@ int performMCMC()
 #ifdef RECORD_METHOD_TIMES
   setStartTimeMethod(T_MCMCIterations);
 #endif
+
+  LociEmbedded lociEmbedded;
   for (iteration = -mcmcSetup.burnin; iteration < mcmcSetup.numSamples;
        iteration++)
   {
@@ -1672,19 +1673,6 @@ int performMCMC()
         locus_data[gen].genLogLikelihood = gtreeLnLikelihood(gen);
         dataState.logLikelihood +=
             locus_data[gen].genLogLikelihood / dataSetup.numLoci;
-
-
-          LocusEmbeddedGenealogy locusEmbeddedGenealogy(gen, MAX_EVENTS, &dataSetup,
-                                                        dataSetup.popTree, &dataState, genetree_migs);
-          locusEmbeddedGenealogy.construct_genealogy_and_intervals();
-          //locusEmbeddedGenealogy.printAll();
-          testLocusGenealogy(dataSetup.numSamples, locusEmbeddedGenealogy, genetree_migs);
-          testIntervals(locusEmbeddedGenealogy);
-          //printGenealogyAndExit(gen, -1);
-          //exit(0);
-
-
-
 
       }
     }
@@ -2116,7 +2104,12 @@ int performMCMC()
 
     } // print log
 
+      lociEmbedded.testLoci();
+      //exit(0);
+
   } // end of main loop - for(iteration)
+
+
 
 #ifdef RECORD_METHOD_TIMES
   setEndTimeMethod(T_MCMCIterations);
