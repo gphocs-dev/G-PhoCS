@@ -1,11 +1,6 @@
-//
-// Created by nomihadar on 4/1/19.
-//
-
-
 
 #include "LociEmbedded.h"
-#include "assert.h"
+#include "cassert"
 
 /*
     LociEmbedded constructor
@@ -38,7 +33,7 @@ void LociEmbedded::testLoci() {
         locus.computeGenetreeStats();
         locus.testLocusGenealogy();
         locus.testPopIntervals();
-        //locus.printAll();
+        //locus.print();
         //printGenealogyAndExit(locus.getLocusID(), -1);
         //break;
 

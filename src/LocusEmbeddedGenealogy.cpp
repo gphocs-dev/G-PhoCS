@@ -1,13 +1,10 @@
-//
-// Created by nomihadar on 3/11/19.
-//
 
 #include "LocusEmbeddedGenealogy.h"
 #include "DbgErrMsgIntervals.h"
 
 #include <iostream>
 #include <iomanip>
-#include <math.h>
+#include <cmath>
 
 /*
 	Constructs
@@ -70,11 +67,14 @@ LocusData* LocusEmbeddedGenealogy::getLocusData() {
 */
 int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
 
+    //reset genealogy
+    genealogy_.reset();
+
     //construct genealogy branches (edges between tree nodes)
     genealogy_.constructBranches(this->getLocusData());
 
     //reset intervals
-    intervals_.resetIntervals();
+    intervals_.reset();
 
     //link intervals to each other
     intervals_.linkIntervals();
@@ -455,7 +455,7 @@ void LocusEmbeddedGenealogy::printLeafToPop() {
 /*
 	print population tree, genealogy and intervals
 */
-void LocusEmbeddedGenealogy::printAll() {
+void LocusEmbeddedGenealogy::printEmbeddedGenealogy() {
 
     //print population tree
     printPopulationTree(this->pDataSetup_->popTree, stderr, 1);
@@ -581,18 +581,8 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
     //define precision for double comparision
     double PRECISION = 0.0000000001;
 
-    //get locus id and locus data
-    LocusData* locusData = this->getLocusData();
-
-    double elapsedTime = 0;
-
     //for each pop
     for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-
-
-        if (locusID_ ==1 && pop == 2) {
-            int i = 2;
-        }
 
         //get first event in old structure
         int event = event_chains[locusID_].first_event[pop];
@@ -616,7 +606,7 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
                     assert(pInterval->isType(IntervalType::SAMPLES_START));
 
                     //get elapsed time
-                    eventTime = event_chains[locusID_].events[event].getElapsedTime();
+                    eventTime += event_chains[locusID_].events[event].getElapsedTime();
                     break;
                 }
                 case COAL: {
@@ -624,7 +614,7 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
                     assert(pInterval->isType(IntervalType::COAL));
 
                     //get elapsed time
-                    eventTime = event_chains[locusID_].events[event].getElapsedTime();
+                    eventTime += event_chains[locusID_].events[event].getElapsedTime();
                     break;
                 }
                 case IN_MIG: {
@@ -632,7 +622,7 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
                     assert(pInterval->isType(IntervalType::IN_MIG));
 
                     //get elapsed time
-                    eventTime = event_chains[locusID_].events[event].getElapsedTime();
+                    eventTime += event_chains[locusID_].events[event].getElapsedTime();
 
                     break;
                 }
@@ -641,7 +631,7 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
                     assert(pInterval->isType(IntervalType::OUT_MIG));
 
                     //get elapsed time
-                    eventTime = event_chains[locusID_].events[event].getElapsedTime();
+                    eventTime += event_chains[locusID_].events[event].getElapsedTime();
                     break;
                 }
 
@@ -665,24 +655,16 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
                     eventTime += event_chains[locusID_].events[event].getElapsedTime();
                     break;
                 }
-
-                default: {
-                    std::cout << "other event type: " << eventType << std::endl;
-                }
             }
 
-                //compare num lineages
-                int eventLin = event_chains[locusID_].events[event].getNumLineages();
-                int intervalLin = pInterval->getNumLineages();
-                assert(eventLin == intervalLin);
+            //compare num lineages
+            int eventLin = event_chains[locusID_].events[event].getNumLineages();
+            int intervalLin = pInterval->getNumLineages();
+            assert(eventLin == intervalLin);
 
-                //compare elapsed time
-                double intervalTime = pInterval->getElapsedTime();
-                if (fabs(eventTime - intervalTime) > PRECISION) {
-                    int i = 1;
-                }
-
-                assert(fabs(eventTime - intervalTime) < PRECISION);
+            //compare elapsed time
+            double intervalTime = pInterval->getElapsedTime();
+            assert(fabs(eventTime - intervalTime) < PRECISION);
 
             //get next interval
             pInterval = pInterval->getNext();
@@ -690,7 +672,6 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
             eventTime = 0;
 
         }
-
     }
 
 

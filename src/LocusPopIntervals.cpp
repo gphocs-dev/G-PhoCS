@@ -1,6 +1,3 @@
-//
-// Created by nomihadar on 3/11/19.
-//
 
 #include "LocusPopIntervals.h"
 #include "DbgErrMsgIntervals.h"
@@ -39,7 +36,7 @@ LocusPopIntervals::~LocusPopIntervals() {
 /*
     Links intervals to each other and reset intervals
 */
-void LocusPopIntervals::resetIntervals() {
+void LocusPopIntervals::reset() {
     //reset all intervals
     for (int i = 0; i < numIntervals_; ++i) {
         intervalsArray_[i].reset();

@@ -14,14 +14,31 @@
 
 #include <map>
 
+
+/*=============================================================================
+ *
+ * LocusEmbeddedGenealogy class
+ *
+ * Class LocusEmbeddedGenealogy combines genealogy with its corresponding
+ * intervals
+ *
+ * Contains:
+ * 1. Object of locus genealogy.
+ * 2. Object of locus pop intervals.
+ * 3. Locus ID.
+ * 4. Map between leaf to its pop.
+ * 5. Map between pop to its leaves.
+ * 6. Pointers to old structs
+ *===========================================================================*/
+
 class LocusEmbeddedGenealogy {
 
 private:
 
-    int locusID_;   //id of locus (genealogy id)
-
     LocusGenealogy     genealogy_; //object of genealogy
     LocusPopIntervals  intervals_; //object of intervals
+
+    int locusID_;   //id of locus (genealogy id)
 
     std::map<int,int> leafToPop_; //map between leaf to its pop
     std::map<int,std::vector<int>> popToLeaves_; //map between pop to its leaves
@@ -60,7 +77,7 @@ public:
     void printLeafToPop();
 
     //print all
-    void printAll();
+    void printEmbeddedGenealogy();
 
     //get all leaves of a population
     std::vector<int>& getPopLeaves(int pop);
@@ -68,10 +85,10 @@ public:
     //get population of a leaf
     int getLeafPop(int leafId);
 
-    //test genealogy new structure against the original
+    //test if the new genealogy data structure is consistent with the original
     void testLocusGenealogy();
 
-    //test intervals new structure against the original
+    //test if the new events data structure is consistent with the original
     void testPopIntervals();
 
 
