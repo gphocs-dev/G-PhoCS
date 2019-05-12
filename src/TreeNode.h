@@ -80,11 +80,11 @@ private:
 public:
     LeafNode();
 
-    int getPopId();
+    int getPopId() override;
 
-    void printTreeNode();
+    void printTreeNode() override;
 
-    std::string typeToStr();
+    std::string typeToStr() override;
 
     //getters and setters
     PopInterval* getSamplesStart() const;
@@ -101,11 +101,11 @@ private:
 public:
     CoalNode();
 
-    int getPopId();
+    int getPopId() override;
 
-    void printTreeNode();
+    void printTreeNode() override;
 
-    std::string typeToStr();
+    std::string typeToStr() override;
 
     //getters and setters
     PopInterval* getCoalInterval() const;
@@ -123,11 +123,11 @@ private:
 public:
     MigNode();
 
-    int getPopId();
+    int getPopId() override;
 
-    void printTreeNode();
+    void printTreeNode() override;
 
-    std::string typeToStr();
+    std::string typeToStr() override;
 
     //getters and setters
     PopInterval* getOutMigInterval() const;

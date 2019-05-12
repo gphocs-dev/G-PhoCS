@@ -1412,6 +1412,8 @@ int performMCMC()
 #endif
 
   LociEmbedded lociEmbedded;
+  ActiveMigBands activeMigBands(dataSetup.popTree);
+  activeMigBands.constructActiveMigBands(dataSetup.popTree);
   for (iteration = -mcmcSetup.burnin; iteration < mcmcSetup.numSamples;
        iteration++)
   {

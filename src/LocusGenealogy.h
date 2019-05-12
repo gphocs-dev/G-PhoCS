@@ -45,7 +45,6 @@ public:
     //get leaf/coal/mig node by node id
     LeafNode* getLeafNode(int nodeId);
     CoalNode* getCoalNode(int nodeId);
-    //MigNode* getMigNode(int nodeID);//todo: remove
 
     //return true if node is a leaf
     bool isLeaf(int nodeId);

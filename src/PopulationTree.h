@@ -11,6 +11,8 @@
 
 
 #include "utils.h"
+#include <map>
+#include <vector>
 /***************************************************************************************************************/
 /******                                      EXTERNAL CONSTANTS                                           ******/
 /***************************************************************************************************************/
@@ -126,6 +128,70 @@ typedef struct _POPULATION_TREE
 
 
 
+/***********************************************************************************
+*	TimeBandMigs
+*	Time band is defined by a start time and end time, and it contains the
+ *	migration bands active within that period
+ *	(migration bands share same target pop)
+***********************************************************************************/
+class TimeBandMigs {
+private:
+    double startTime_;  //start time of band
+    double endTime_;    //end time of band
+    std::vector<MigrationBand*> migBands_; //pointers to mig bands
+public:
+    //constructor
+    TimeBandMigs(double start, double end);
+
+    //add migration to band
+    void addMig(MigrationBand* pMigBand);
+
+    //get age and return if age is contained in time band
+    bool ageInTimeBand(double age);
+};
+
+
+/***********************************************************************************
+*	PopTimeBands
+*	vector of time bands of a specific population
+***********************************************************************************/
+class PopTimeBands {
+private:
+    std::vector<TimeBandMigs> timeBands_;
+public:
+
+    //add a time band
+    void addTimeBand(TimeBandMigs &bandMigs);
+
+    TimeBandMigs * getActiveMigBands(double age);
+};
+
+/***********************************************************************************
+*   ActiveMigBands
+*   A data structure holding the living migration bands per pop.
+*   LivingMigBands object holds a vector of size num-pops.
+    Each pop associated with a vector of time bands, where each time band holds
+    a vector of migration bands active in that time band.
+*	Class should have a SINGLE instance.
+***********************************************************************************/
+class ActiveMigBands {
+
+private:
+    std::vector<PopTimeBands> activeMigBands_;
+
+public:
+    //constructor
+    ActiveMigBands(PopulationTree* pPopTree);
+
+    //constructs data structure
+    void constructActiveMigBands(PopulationTree *popTree);
+
+    //searches for a time band which contains the given age and return
+    // a pointer to it. if not found return null
+    TimeBandMigs * getActiveMigBands(int target_pop, double age);
+
+};
+
 /***************************************************************************************************************/
 /******                               EXTERNAL FUNCTION DECLARATIONS                                      ******/
 /***************************************************************************************************************/
@@ -150,6 +216,12 @@ PopulationTree*	createPopTree(int numPops);
 ***********************************************************************************/
 int initMigrationBands(PopulationTree* popTree);
 
+/***********************************************************************************
+*	getMigBandByPops
+*	- returns pointer to mig band with the given source and target populations
+* 	- returns pointer to migration band
+***********************************************************************************/
+MigrationBand* getMigBandByPops(PopulationTree* popTree, int sourcePop, int targetPop);
 
 
 /***********************************************************************************

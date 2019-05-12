@@ -54,8 +54,8 @@ public:
 
     //constructor
     LocusEmbeddedGenealogy(int locusID, int numIntervals,
-                           DATA_SETUP *pDataSetup, DATA_STATE *pDataState,
-                           GENETREE_MIGS *pGenetreeMigs);
+                           DATA_SETUP* pDataSetup, DATA_STATE* pDataState,
+                           GENETREE_MIGS* pGenetreeMigs);
 
     //construct both genealogy and intervals and connect between them
     int construct_genealogy_and_intervals();

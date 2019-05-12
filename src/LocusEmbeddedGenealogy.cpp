@@ -7,11 +7,7 @@
 #include <cmath>
 
 /*
-	Constructs
-	Constructs everything from scratch
-	Typically used only for initial genetrees or for testing.
-	Records number of lineages only for first events in leaf populations.
-	The rest are recorded by computeGenetreeStats
+	Constructor
 */
 LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
         int locusID,
@@ -113,10 +109,8 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
             //get leaf node by current node id
             LeafNode* pNode = genealogy_.getLeafNode(node);
 
-            //samplesStart interval points to leaf node
-            pInterval->setTreeNode(pNode);//todo: change points to nullptr? I implemented pop to leaves
-
-            //leaf node points to samplesStart interval
+            //leaf node points to samplesStart interval (but samplesStart
+            // interval points to null since there are several leaves)
             pNode->setSamplesInterval(pInterval);
 
 
@@ -228,21 +222,22 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
     //get num lineages of first interval
     int n = pInterval->getNumLineages();
 
-    // follow intervals chain and set number of lineages per interval according to previous event
-    // also update statistics
+    // follow intervals chain and set number of lineages per interval according
+    // to previous event also update statistics
     while (true) {
 
         pInterval->setNumLineages(n);
+
         //id = event_chains[locusID_].events[event].getId();
 
-        //t = pInterval->getElapsedTime();
+        t = pInterval->getElapsedTime();
 
-        /*locus_data[locusID_].genetree_stats_check.coal_stats[pop] += n * (n - 1) * t;
+        locus_data[locusID_].genetree_stats_check.coal_stats[pop] += n * (n - 1) * t;
 
         for (mig_band = 0; mig_band < num_live_mig_bands; mig_band++) {
             locus_data[locusID_].genetree_stats_check.mig_stats[live_mig_bands[mig_band]] +=
                     n * t;
-        }*/
+        }
 
         switch (pInterval->getType()) {
             case (IntervalType::SAMPLES_START):
@@ -250,7 +245,7 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
                 break;
 
             case (IntervalType::COAL):
-                //locus_data[locusID_].genetree_stats_check.num_coals[pop]++;
+                locus_data[locusID_].genetree_stats_check.num_coals[pop]++;
                 n--;
                 break;
 
@@ -387,15 +382,15 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
 
 int LocusEmbeddedGenealogy::computeGenetreeStats() {
 
-    int pop_queue[2 * NSPECIES - 1];
-    populationPostOrder(pPopTree_->rootPop, pop_queue);
+    //int pop_queue[2 * NSPECIES - 1];
+    //populationPostOrder(pPopTree_->rootPop, pop_queue);
 
     // go over all intervals and compute num_lineages per each interval
     // also update genetree statistics
     for (int i = 0; i < dataSetup.popTree->numPops; i++) {
 
         //get current pop
-        int pop = pop_queue[i];
+        int pop = pop_queue_[i];
 
         // if not leaf population get number of in-lineages from end-intervals
         // of son populations

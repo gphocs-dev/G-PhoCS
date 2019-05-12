@@ -61,18 +61,6 @@ CoalNode* LocusGenealogy::getCoalNode(int nodeID) {
     return &coalNodes_[offset];
 }
 
-/*
-    returns a mig node by id
-    @param: node id
-    @return: mig node
-
-MigNode* LocusGenealogy::getMigNode(int nodeID) {
-    for (MigNode& migNode : migNodes_)
-        if (migNode.getNodeId() == nodeID)
-            return &migNode;
-    return nullptr;
-}*/
-
 
 /*
     returns true if node is a leaf
