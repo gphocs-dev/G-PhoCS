@@ -1,6 +1,3 @@
-//
-// Created by nomihadar on 3/11/19.
-//
 
 #include "LocusGenealogy.h"
 #include "DataLayerConstants.h"
@@ -12,7 +9,7 @@
     Assign the DataSetup pointer.
     Initialize leafNodes vector with N leaf nodes (N=num samples)
     Initialize coalNodes vector with N-1 leaf nodes
-    Reserve place in migNodes_ vector with X nodes (X=?)
+    Reserve place in migNodes_ vector with X nodes (X=MAX_MIGS)
     Set ids of leafNodes and coalNodes
 */
 LocusGenealogy::LocusGenealogy(int numSamples)
@@ -35,6 +32,17 @@ LocusGenealogy::LocusGenealogy(int numSamples)
 }
 
 /*
+    resets genealogy
+    @param: node index
+    @return: leaf node
+*/
+void LocusGenealogy::reset() {
+    leafNodes_.clear();
+    coalNodes_.clear();
+    migNodes_.clear();
+}
+
+/*
     returns a leaf node by id
     @param: node index
     @return: leaf node
@@ -52,18 +60,6 @@ CoalNode* LocusGenealogy::getCoalNode(int nodeID) {
     int offset = nodeID - numSamples_;
     return &coalNodes_[offset];
 }
-
-/*
-    returns a mig node by id
-    @param: node id
-    @return: mig node
-
-MigNode* LocusGenealogy::getMigNode(int nodeID) {
-    for (MigNode& migNode : migNodes_)
-        if (migNode.getNodeId() == nodeID)
-            return &migNode;
-    return nullptr;
-}*/
 
 
 /*

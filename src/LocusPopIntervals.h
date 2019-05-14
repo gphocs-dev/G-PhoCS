@@ -73,7 +73,7 @@ public:
     PopInterval* getFirstInterval(int pop);
 
     //reset intervals
-    void resetIntervals();
+    void reset();
 
     //link intervals to each other
     void linkIntervals();

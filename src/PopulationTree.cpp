@@ -10,6 +10,8 @@
 #include "PopulationTree.h"
 #include "utils.h"
 #include <math.h>
+#include <algorithm>
+#include "set"
 /***************************************************************************************************************/
 /******                                      INTERNAL CONSTANTS                                           ******/
 /***************************************************************************************************************/
@@ -220,6 +222,24 @@ int initMigrationBands(PopulationTree* popTree) {
 }
 /** end of initMigrationBands **/
 
+
+/***********************************************************************************
+*	getMigBandByPops
+*	- returns pointer to mig band with the given source and target population
+* 	- returns pointer to migration band
+***********************************************************************************/
+MigrationBand* getMigBandByPops(PopulationTree* popTree, int sourcePop, int targetPop){
+
+    //traverse all mig bands and initialize all incoming migration bands
+    for(int migBand=0; migBand < popTree->numMigBands; migBand++) {
+
+        if (popTree->migBands[migBand].sourcePop == sourcePop &&
+            popTree->migBands[migBand].targetPop == targetPop)
+            return &popTree->migBands[migBand];
+    }
+
+    return nullptr;
+}
 
 
 /***********************************************************************************
@@ -631,8 +651,119 @@ int moveMigBandSource(PopulationTree* popTree, int migBand, double newAge, unsig
 }
 /** end of moveMigBandSource **/
 
+/***********************************************************************************
+ *	ActiveMigBands methods
+ ***********************************************************************************/
+TimeBandMigs::TimeBandMigs(double start, double end) : startTime_(start),
+                                               endTime_(end) {}
+
+//adda a migration band pointer
+void TimeBandMigs::addMig(MigrationBand* pMigBand) {
+    migBands_.push_back(pMigBand);
+}
+
+bool TimeBandMigs::ageInTimeBand(double age) {
+    return age >= startTime_ && age <= endTime_; //todo: >= ?
+}
+
+//adda a time band
+void PopTimeBands::addTimeBand(TimeBandMigs &bandMigs){
+    timeBands_.push_back(bandMigs);
+}
+
+
+/*
+    getActiveMigBands
+    Searches for a time band which contains the given age and return
+    a pointer to it. if not found return null.
+    @param: age
+    @return: pointer to time band
+*/
+TimeBandMigs * PopTimeBands::getActiveMigBands(double age) {
+    for (TimeBandMigs& timeBandMigs : timeBands_) {
+        if (timeBandMigs.ageInTimeBand(age))
+            return &timeBandMigs;
+    }
+    return nullptr;
+}
+
+//constructor
+ActiveMigBands::ActiveMigBands(PopulationTree* pPopTree) :
+        activeMigBands_(pPopTree->numPops) {
+}
+
+
+/*
+    constructActiveMigBands
+    Constructs the data structure holding the active migration bands per pop.
+    This function should be called only a single time during the program.
+    @param: pointer to pop tree
+*/
+void ActiveMigBands::constructActiveMigBands(PopulationTree *pPopTree) {
+
+    //split migration bands into groups with same target pop, save in map
+    std::map<int,std::vector<MigrationBand*>> migsPerPop;
+    for (int migBand=0; migBand < pPopTree->numMigBands; migBand++) {
+        int targetPop = pPopTree->migBands[migBand].targetPop;
+        migsPerPop[targetPop].push_back(&pPopTree->migBands[migBand]);
+
+    }
+
+    //for each target pop
+    for (auto keyValue : migsPerPop) {
+
+        int targetPop = keyValue.first;
+
+        //for each mig band save start and end times in a vector
+        std::vector<double> timePoints;
+        for (MigrationBand* pMigBand : keyValue.second) {
+            timePoints.push_back(pMigBand->startTime);
+            timePoints.push_back(pMigBand->endTime);
+        }
+
+        //sort time points and remove duplicates
+        sort(timePoints.begin(), timePoints.end());
+        timePoints.erase(unique(timePoints.begin(), timePoints.end()),
+                         timePoints.end());
+
+        //for each two successive time points
+        for (int i=0; i < timePoints.size()-1; i++) {
+
+            //create a time band object which lasts between the two time points
+            TimeBandMigs bandObj(timePoints[i], timePoints[i+1]);
+
+            //find mig bands which intersect with current time band
+            for (MigrationBand* pMigBand : keyValue.second) {
+
+                //if time band is contained in current migration band
+                if (timePoints[i] >= pMigBand->startTime &&
+                    timePoints[i + 1] <= pMigBand->endTime)
+
+                    //add mig band
+                    bandObj.addMig(pMigBand);
+            }
+
+            activeMigBands_[targetPop].addTimeBand(bandObj);
+        }
+    }
+}
+
+/*
+    getActiveMigBands
+    For the given target pop, searches for a time band which contains the
+    given age and return a pointer to it. if not found return null
+    @param: target pop, age
+    @return: pointer to time band
+*/
+TimeBandMigs * ActiveMigBands::getActiveMigBands(int target_pop, double age) {
+    return activeMigBands_[target_pop].getActiveMigBands(age);
+}
+
+
 
 
 /***************************************************************************************************************/
 /******                                        END OF FILE                                                ******/
 /***************************************************************************************************************/
+
+

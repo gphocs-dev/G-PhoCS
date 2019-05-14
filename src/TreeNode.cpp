@@ -1,6 +1,3 @@
-//
-// Created by nomihadar on 3/11/19.
-//
 
 #include "TreeNode.h"
 

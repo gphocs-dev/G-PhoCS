@@ -1,6 +1,3 @@
-//
-// Created by nomihadar on 3/11/19.
-//
 
 #ifndef G_PHOCS_LOCUSGENEALOGY_H
 #define G_PHOCS_LOCUSGENEALOGY_H
@@ -42,10 +39,12 @@ public:
     //constructor
     explicit LocusGenealogy(int numSamples);
 
+    //reset genealogy
+    void reset();
+
     //get leaf/coal/mig node by node id
     LeafNode* getLeafNode(int nodeId);
     CoalNode* getCoalNode(int nodeId);
-    //MigNode* getMigNode(int nodeID);//todo: remove
 
     //return true if node is a leaf
     bool isLeaf(int nodeId);

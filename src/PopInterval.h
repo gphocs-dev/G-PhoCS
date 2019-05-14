@@ -18,7 +18,7 @@
  *
  * Contains:
  * 1. Type of interval.
- * 2. Elapsed time of interval.
+ * 2. Age - start time of interval.
  * 3. Number of lineages (before the event).
  * 4. Population ID.
  * 5. Pointers to previous and next intervals.
@@ -35,7 +35,7 @@ class PopInterval {
 private:
 
     IntervalType type_;    //type of interval
-    double elapsedTime_;   //elapsed time
+    double age_;           //start time of interval
     int nLineages_;        //number of lineages (before the event)
     int popID_;            //population ID
 
@@ -52,11 +52,11 @@ public:
     //reset members
     void reset();
 
+    //get elapsed time of interval
+    double getElapsedTime();
+
     //return true if interval is of the specified type
     bool isType(IntervalType type);
-
-    //increment elapsed time
-    void incrementElapsedTime(double delta);
 
     //convert type to string
     std::string typeToStr();
@@ -69,8 +69,8 @@ public:
     IntervalType getType() const;
     void setType(IntervalType type);
 
-    double getElapsedTime() const;
-    void setElapsedTime(double elapsedTime);
+    double getAge() const;
+    void setAge(double age);
 
     int getNumLineages() const;
     void setNumLineages(int nLineages);
@@ -91,15 +91,13 @@ public:
 
 
 /*
-    Types of Event
+    Types of Interval
 */
 enum class IntervalType {
     SAMPLES_START,
     COAL,
     IN_MIG,
     OUT_MIG,
-    MIG_BAND_START, //later
-    MIG_BAND_END, //later
     POP_START,
     POP_END,
     DUMMY
