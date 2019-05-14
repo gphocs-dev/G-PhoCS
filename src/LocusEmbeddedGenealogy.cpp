@@ -83,8 +83,7 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
 
         //create interval
         double age = pPopTree_->pops[pop]->sampleAge;
-        PopInterval* pInterval =
-                intervals_.createInterval(pop, age,
+        PopInterval* pInterval = intervals_.createInterval(pop, age,
                                           IntervalType::SAMPLES_START);
         if (!pInterval) {
             INTERVALS_FATAL_0024
@@ -584,7 +583,7 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
 
         //get first (pop start) interval in the new structure
         PopInterval* pInterval = intervals_.getFirstInterval(pop);
-
+        cout<<"*********************************"<<pInterval->typeToStr()<<endl;
         //elapsed time of event
         double eventTime = 0;
 
@@ -598,6 +597,10 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
 
                 case SAMPLES_START: {
                     //compare types
+                    cout<<"*********************************"<<pInterval->typeToStr()<<endl;
+
+                    this->printEmbeddedGenealogy();
+                    printGenealogyAndExit(locusID_,1);
                     assert(pInterval->isType(IntervalType::SAMPLES_START));
 
                     //get elapsed time

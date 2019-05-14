@@ -13,7 +13,7 @@
     PopInterval constructor
 */
 PopInterval::PopInterval() : type_(IntervalType::DUMMY),
-                             elapsedTime_(-1),
+                             age_(-1),
                              nLineages_(-1),
                              popID_(-1),
                              pPrevInterval_(nullptr),
@@ -27,7 +27,7 @@ PopInterval::PopInterval() : type_(IntervalType::DUMMY),
 void PopInterval::reset() {
 
     type_ = IntervalType::DUMMY;
-    elapsedTime_ = -1;
+    age_ = -1;
     nLineages_ = -1;
     popID_ = -1;
     pPrevInterval_ = nullptr;
@@ -35,18 +35,22 @@ void PopInterval::reset() {
     pTreeNode_ = nullptr;
 }
 
+
+/*
+    Returns the elapsed time of interval by calculating the difference between
+    next interval age and current interval age
+*/
+double PopInterval::getElapsedTime() {
+    if (pNextInterval_)
+        return pNextInterval_->age_ - age_;
+    return age_;//todo root
+}
+
 /*
     Returns true if node is of the specified type
 */
 bool PopInterval::isType(IntervalType type) {
     return type_ == type;
-}
-
-/*
-    Increments given delta time from elapsed time
-*/
-void PopInterval::incrementElapsedTime(double delta) {
-    this->elapsedTime_ += delta;
 }
 
 
@@ -58,12 +62,13 @@ void PopInterval::setType(IntervalType type) {
     PopInterval::type_ = type;
 }
 
-double PopInterval::getElapsedTime() const {
-    return elapsedTime_;
+
+double PopInterval::getAge() const {
+    return age_;
 }
 
-void PopInterval::setElapsedTime(double elapsedTime) {
-    PopInterval::elapsedTime_ = elapsedTime;
+void PopInterval::setAge(double age) {
+    PopInterval::age_ = age;
 }
 
 int PopInterval::getNumLineages() const {
@@ -114,10 +119,9 @@ std::string PopInterval::typeToStr() {
         case IntervalType::SAMPLES_START: return "SAMPLES_START";
         case IntervalType::COAL: return "COAL";
         case IntervalType::IN_MIG: return "IN_MIG";
-        case IntervalType::OUT_MIG: return "OUT_MIG"; break;
-        case IntervalType::MIG_BAND_START: return "MIG_BAND_START";
-        case IntervalType::MIG_BAND_END:return "MIG_BAND_END";
+        case IntervalType::OUT_MIG: return "OUT_MIG";
         case IntervalType::DUMMY: return "DUMMY";
+        default: return "??????????";
     }
 }
 
@@ -131,7 +135,7 @@ void PopInterval::printInterval() {
     cout << "pop: "  << setw(4)  << popID_;
     cout << "type: " << setw(18) << this->typeToStr();
     cout << "num-lins: " << setw(4) << nLineages_;
-    cout << "elapsed-time: " << setw(15) << elapsedTime_;
+    cout << "age: " << setw(15) << age_;
     //cout << "prev: " << setw(20) << pPrevInterval_;
     //cout << "next: " << setw(20) << pNextInterval_;
     if (pTreeNode_)
@@ -140,5 +144,8 @@ void PopInterval::printInterval() {
         cout << "tree-node: -";
     cout << endl;
 }
+
+
+
 
 
