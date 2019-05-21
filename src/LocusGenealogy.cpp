@@ -141,17 +141,22 @@ MigNode * LocusGenealogy::addMigNode(TreeNode *pTreeNode) {
     if it's not the last element replace it by the last element and pop back
     @param: pointer to mig that should be removed
 */
-void LocusGenealogy::removeMigNode(MigNode* pMigNode) {
-    //find the mig that should be remove (skip last element)
-    for (int i = 0; i < migNodes_.size()-1; i++) {
+void LocusGenealogy::removeMigNode(MigNode* pMigNode) { //todo: replace loop
+
+    //find the mig that should be removed (skip last element)
+    for (int i = 0; i < migNodes_.size(); i++) {
         //if mig found
         if (&migNodes_[i] == pMigNode) {
+
+            //if it is not the last element
             //replace the i'th position with the last mig node
-            migNodes_[i] = migNodes_.back();
+            if (i < migNodes_.size()-1)
+                migNodes_[i] = migNodes_.back();
+
+            //pop last mig node
+            migNodes_.pop_back();
         }
     }
-    //pop last mig node
-    migNodes_.pop_back();
 }
 
 
