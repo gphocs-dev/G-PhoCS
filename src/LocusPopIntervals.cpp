@@ -136,6 +136,10 @@ void LocusPopIntervals::createStartEndIntervals() {
         //prev of start interval points to NULL
         intervalsArray_[start_index].setPrev(nullptr);
 
+        //set age, which is population age
+        intervalsArray_[start_index].setAge(pPopTree_->pops[pop]->age);
+
+
         //end interval
 
         //set the (i+N)-th cell (i=pop) to be an end interval
@@ -147,16 +151,13 @@ void LocusPopIntervals::createStartEndIntervals() {
         //set num lineages - it is important to initialize 0 incoming lineages
         intervalsArray_[end_index].setNumLineages(0);
 
-        //set age, distinguish between rootPop and rest of pops
-        if (pop == rootPop) {
-            double t = OLDAGE - pPopTree_->pops[rootPop]->age;
+        //set age, which is the parent population age
+        // distinguish between rootPop and rest of pops
+        if (pop == rootPop)
             intervalsArray_[end_index].setAge(OLDAGE);
-        }
-        else {
-            double t1 = pPopTree_->pops[pop]->father->age;
-            double t2 = pPopTree_->pops[pop]->age;
-            intervalsArray_[end_index].setAge(t1);//todo: yes?
-        }
+        else
+            intervalsArray_[end_index].setAge(pPopTree_->pops[pop]->father->age);
+
 
         //next of end interval points to the start interval of parent pop.
         //next of root's interval points to NULL
@@ -186,7 +187,7 @@ void LocusPopIntervals::createStartEndIntervals() {
     @return: pointer to the new interval
 */
 PopInterval *
-LocusPopIntervals::createIntervalBefore(PopInterval *pInterval, int pop,
+LocusPopIntervals::createIntervalBefore(PopInterval* pInterval, int pop,
                                         double age, IntervalType type) {
 
     //get a new interval from pool (default type is DUMMY)
@@ -241,21 +242,9 @@ LocusPopIntervals::createInterval(int pop, double age, IntervalType type) {
     //loop while not reaching the end interval of the population
     //and while age of current interval is smaller than time specified
     PopInterval* pInterval = this->getFirstInterval(pop);
-    while (!pInterval->isType(IntervalType::POP_END) && pInterval->getAge() > age) {
+    while (!pInterval->isType(IntervalType::POP_END) && pInterval->getAge() < age) {
            pInterval = pInterval->getNext();
     }
-
-    if (pInterval->isType(IntervalType::SAMPLES_START)) {
-        int i =2;
-    }
-    cout<<"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<pInterval->typeToStr()<<endl;
-
-    //if (pInterval->getElapsedTime() < delta_time) {
-     //   if (pInterval->getElapsedTime() < (delta_time - 0.000001)) {
-     //       INTERVALS_FATAL_0018
-     //   }
-     //   delta_time = pInterval->getElapsedTime();
-    //}
 
     //create the new interval in the found slot
     return this->createIntervalBefore(pInterval, pop, age, type);

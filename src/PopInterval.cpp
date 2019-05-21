@@ -13,7 +13,7 @@
     PopInterval constructor
 */
 PopInterval::PopInterval() : type_(IntervalType::DUMMY),
-                             age_(-1),
+                             age_(0),
                              nLineages_(-1),
                              popID_(-1),
                              pPrevInterval_(nullptr),
@@ -27,7 +27,7 @@ PopInterval::PopInterval() : type_(IntervalType::DUMMY),
 void PopInterval::reset() {
 
     type_ = IntervalType::DUMMY;
-    age_ = -1;
+    age_ = 0;
     nLineages_ = -1;
     popID_ = -1;
     pPrevInterval_ = nullptr;
@@ -37,13 +37,13 @@ void PopInterval::reset() {
 
 
 /*
-    Returns the elapsed time of interval by calculating the difference between
-    next interval age and current interval age
+    Returns the elapsed time of interval by subtracting previous interval age
+    from current interval age
 */
 double PopInterval::getElapsedTime() {
-    if (pNextInterval_)
-        return pNextInterval_->age_ - age_;
-    return age_;//todo root
+    if (pPrevInterval_)
+        return age_ - pPrevInterval_->age_;
+    return -1;
 }
 
 /*
@@ -121,7 +121,6 @@ std::string PopInterval::typeToStr() {
         case IntervalType::IN_MIG: return "IN_MIG";
         case IntervalType::OUT_MIG: return "OUT_MIG";
         case IntervalType::DUMMY: return "DUMMY";
-        default: return "??????????";
     }
 }
 
@@ -136,6 +135,7 @@ void PopInterval::printInterval() {
     cout << "type: " << setw(18) << this->typeToStr();
     cout << "num-lins: " << setw(4) << nLineages_;
     cout << "age: " << setw(15) << age_;
+    cout << "elapsed-time: " << setw(15) << this->getElapsedTime();
     //cout << "prev: " << setw(20) << pPrevInterval_;
     //cout << "next: " << setw(20) << pNextInterval_;
     if (pTreeNode_)
