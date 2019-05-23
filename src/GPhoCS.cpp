@@ -1412,7 +1412,7 @@ int performMCMC()
 #endif
 
   LociEmbedded lociEmbedded;
-  initializeLivingMigBands(dataSetup.popTree);
+    initializeMigBandTimes(dataSetup.popTree);
 
   for (iteration = -mcmcSetup.burnin; iteration < mcmcSetup.numSamples;
        iteration++)
@@ -2107,7 +2107,6 @@ int performMCMC()
     } // print log
 
     lociEmbedded.testLoci();
-    constructLivingMigBands(dataSetup.popTree);
       //exit(0);
 
   } // end of main loop - for(iteration)

@@ -241,7 +241,7 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
                 n * (n - 1) * t;
 
         age = pInterval->getAge();//todo: check
-        TimeBand *timeBand = getLiveMigBands(dataSetup.popTree, pop, age);
+        TimeMigBands *timeBand = getLiveMigBands(dataSetup.popTree, pop, age);
         MigrationBand *mig;
         //for (auto pMigBand) {
         //
@@ -587,126 +587,133 @@ void LocusEmbeddedGenealogy::testLocusGenealogy() {
 }
 
 
+//test if the new events data structure is consistent with the original
+//(terminology: old: events, new: intervals)
 void LocusEmbeddedGenealogy::testPopIntervals() {
-
 
     //define precision for double comparision
     double PRECISION = 0.0000000001;
 
-    //follow live mig bands
-    std::vector<int> liveMigBand;
 
     //for each pop
-    for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
+    for (int pop = 0; pop < pPopTree_->numPops; pop++) {
 
         //get first event in old structure
         int event = event_chains[locusID_].first_event[pop];
 
-        //get first (pop start) interval in the new structure
+        //get first interval (pop-start) in the new structure
         PopInterval* pInterval = intervals_.getFirstInterval(pop);
 
-        //elapsed time of event
-        double eventTime = 0;
+        //get pop age
+        double eventAge = pPopTree_->pops[pop]->age;
+
+        //vector of live mig bands (original data structure)
+        std::vector<int> liveMigsOri;
 
         //iterate both old and new structures (events VS intervals)
         for (event; event >=
                     0; event = event_chains[locusID_].events[event].getNextIdx()) {
 
-            //get event type and id (id for testing mig bands)
-            EventType eventType = event_chains[locusID_].events[event].getType();
-
-            //get elapsed time
-            eventTime += event_chains[locusID_].events[event].getElapsedTime();
-
-
-            switch (eventType) {
-                case SAMPLES_START: {
-                    //compare types
-                    assert(pInterval->isType(IntervalType::SAMPLES_START));
-                    break;
-                }
-                case COAL: {
-                    //compare types
-                    assert(pInterval->isType(IntervalType::COAL));
-                    break;
-                }
-                case IN_MIG: {
-                    //compare types
-                    assert(pInterval->isType(IntervalType::IN_MIG));
-                    break;
-                }
-                case OUT_MIG: {
-                    //compare types
-                    assert(pInterval->isType(IntervalType::OUT_MIG));
-                    break;
-                }
-                case END_CHAIN: {
-                    //compare types
-                    assert(pInterval->isType(IntervalType::POP_END));
-                    break;
-                }
-                case MIG_BAND_START: {
-                    //add id of mig band to live mig bands
-                    int event_id = event_chains[locusID_].events[event].getId();
-                    liveMigBand.push_back(event_id);
-                    break;
-                }
-                case MIG_BAND_END: {
-
-                    int event_id = event_chains[locusID_].events[event].getId();
-
-                    //remove id of mig band from live mig bands
-                    liveMigBand.erase(
-                            std::remove(liveMigBand.begin(), liveMigBand.end(),
-                                        event_id), liveMigBand.end());
-                    break;
-                }
-
-            }
-
-            //compare live mig bands
-            TimeBand* timeBand = getLiveMigBands(dataSetup.popTree, pop, pInterval->getAge());
-
-            if (timeBand) {
-                //compare num of live mig bands
-                assert(liveMigBand.size() == timeBand->migBands.size());
-
-                //for each live mig band
-                for (int id : liveMigBand) {
-                    //get pointer to mig band by its id
-                    MigrationBand* migBand = &dataSetup.popTree->migBands[id];
-                    //verify that current mig is found in the new data structure
-                    assert(std::find(timeBand->migBands.begin(),
-                                     timeBand->migBands.end(), migBand) != timeBand->migBands.end());
-                }//end of comparing live mig band
-            }
-
-
-            //new structure doesn't have mig-band intervals therefor
-            // if current event is a mig-band continue to next event
-            // and don't compare elapsed time (n)
-            if (eventType == MIG_BAND_START || eventType == MIG_BAND_END)
-                continue;
-
-            //compare num lineages
+            //num lineages
+            //verify that nums lineages are equal
             int eventLin = event_chains[locusID_].events[event].getNumLineages();
             int intervalLin = pInterval->getNumLineages();
             assert(eventLin == intervalLin);
 
-            //compare elapsed time
-            double intervalTime = pInterval->getElapsedTime();
-            assert(fabs(eventTime - intervalTime) < PRECISION);
+
+            //mig bands
+            //if elapsed time of event is greater than 0, compare live mig bands
+            if (event_chains[locusID_].events[event].getElapsedTime() > 0) {
+
+                TimeMigBands* liveMigsNew = getLiveMigBands(pPopTree_, pop, eventAge);
+                if (liveMigsNew) {
+
+                    if(liveMigsOri.size() != liveMigsNew->migBands.size()){
+                        int i = 2;
+                    }
+
+                    //compare num of live mig bands
+                    assert(liveMigsOri.size() == liveMigsNew->migBands.size());
+
+                    //for each live mig band
+                    for (int id : liveMigsOri) {
+                        //get pointer to mig band by its id
+                        MigrationBand* migBand = &pPopTree_->migBands[id];
+                        //verify that current mig is found in the new data structure
+                        assert(std::find(liveMigsNew->migBands.begin(),
+                                         liveMigsNew->migBands.end(), migBand) != liveMigsNew->migBands.end());
+                    }
+
+
+                    liveMigsNew->startTime;
+                    liveMigsNew->endTime;
+
+                }
+            }
+
+
+            //age
+            //add elapsed time to event age
+            eventAge += event_chains[locusID_].events[event].getElapsedTime();
+
+
+            //event type
+            //get event type and verify that interval is of same type
+            // or, in case of mig band start/end, add/remove a mig band
+            EventType eventType = event_chains[locusID_].events[event].getType();
+            switch (eventType) {
+                case SAMPLES_START: {
+                    assert(pInterval->isType(IntervalType::SAMPLES_START)); break;
+                }
+                case COAL: {
+                    assert(pInterval->isType(IntervalType::COAL)); break;
+                }
+                case IN_MIG: {
+                    assert(pInterval->isType(IntervalType::IN_MIG)); break;
+                }
+                case OUT_MIG: {
+                    assert(pInterval->isType(IntervalType::OUT_MIG)); break;
+                }
+                case END_CHAIN: {
+                    assert(pInterval->isType(IntervalType::POP_END)); break;
+                }
+
+                //mig bands (don't exist in the new data structure)
+                case MIG_BAND_START: {
+                    //add id of mig band to live mig bands
+                    int event_id = event_chains[locusID_].events[event].getId();
+                    liveMigsOri.push_back(event_id);
+                    continue;
+                }
+                case MIG_BAND_END: {
+                    //remove id of mig band from live mig bands
+                    int event_id = event_chains[locusID_].events[event].getId();
+                    liveMigsOri.erase(
+                            std::remove(liveMigsOri.begin(), liveMigsOri.end(),
+                                        event_id), liveMigsOri.end());
+                    continue;
+                }
+            }
+
+
+            //new data structure doesn't have mig-band intervals, therefore
+            // if current event is a mig-band continue to next event
+            // and don't compare ages (n)
+            //if (eventType != MIG_BAND_START && eventType != MIG_BAND_END)
+                //continue;
+
+
+            //age
+            //verify that ages are equal
+            double intervalAge = pInterval->getAge();
+            assert(fabs(eventAge - intervalAge) < PRECISION);
 
 
             //get next interval
             pInterval = pInterval->getNext();
 
-            //reset event time
-            eventTime = 0;
-
-            //reset live mig bands
-            liveMigBand.clear();
         }
-    }
+
+    }//end of pop loop
 
 }
