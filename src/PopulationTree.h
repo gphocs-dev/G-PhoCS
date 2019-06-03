@@ -42,6 +42,7 @@ typedef struct GAMMA_PRIOR {
 *	- Holds relevant info for migration band
 ***********************************************************************************/
 typedef struct MIGRATION_BAND {
+    int     id;                 //id of migration band
 	int		sourcePop;			// id of source population
 	int		targetPop;			// id of target population
 	double	migRate;			// migration rate for band
@@ -49,6 +50,7 @@ typedef struct MIGRATION_BAND {
 	GammaPrior	migRatePrior;	// parameters for gamma-prior of migration rate - NOT IN USE !!
 	double	startTime;			// start time for migration band
 	double	endTime;			// end time for migration band
+
 } MigrationBand;
 
 
@@ -83,13 +85,14 @@ struct POPULATION {
 
 };
 
-typedef struct TIME_BAND TimeBand;
-typedef struct POP_TIME_BANDS PopTimeBands;
 
 /***********************************************************************************
 *	PopulationTree
 *	- Holds relevant info for population
 ***********************************************************************************/
+typedef struct TIME_MIG_BANDS TimeMigBands;
+typedef struct MIG_BANDS_PER_TARGET_POP MigBandsPerTarget;
+
 typedef struct _POPULATION_TREE
 {
 	int 	numCurPops;			// number of current populations
@@ -103,46 +106,44 @@ typedef struct _POPULATION_TREE
 	unsigned short*		isAncestralArray;	// pointer to allocated memory for isAncestralTo[] arrays
 	int*				migBandIdArray;		// pointer to allocated memory for in/out migband arrays for pops
 
-    std::vector<PopTimeBands> liveMigBands; //living migration bands per pop
-    // liveMigBands is a vector of size num-pops.
-    // Each pop contains the two following vectors:
-    // 1. Vector of mig bands which pop is their target pop.
-    // 2. Vector of time bands, where each time band holds a vector of mig bands
-    //      active in that time band.
-
-
-    //_POPULATION_TREE(int numPops) : liveMigBands(numPops) {};
+    // migBandsPerTarget is a vector of size num-pops,
+    //contains MigBandsPerTarget structs.
+    std::vector<MigBandsPerTarget> migBandsPerTarget;
 
 } PopulationTree;
 
 
 /***********************************************************************************
-*	TimeBand
-*	Time band is defined by a start time and end time, and it contains the
- *	migration bands active within that period
+*	TIME_MIG_BANDS
+*	Time Mig band is defined by a start time and end time, and it contains
+ *	a vector of migration bands active within that period
  *	(migration bands share same target pop)
 ***********************************************************************************/
-typedef struct TIME_BAND
+typedef struct TIME_MIG_BANDS
 {
     double startTime;  //start time of band
     double endTime;    //end time of band
     std::vector<MigrationBand*> migBands; //pointers to mig bands
 
-    TIME_BAND() : startTime(-1), endTime(-1) {}; //constructor
-    TIME_BAND(double s, double e) : startTime(s), endTime(e) {};//constructor
+    TIME_MIG_BANDS() : startTime(-1), endTime(-1) {}; //constructor
+    TIME_MIG_BANDS(double s, double e) : startTime(s), endTime(e) {};//constructor
 
-} TimeBand;
+} TimeMigBands;
 
 
 /***********************************************************************************
-*	PopTimeBands
-*	vector of time bands of a specific population
+*	MIG_BANDS_PER_TARGET_POP
+*	Struct contains the two following vectors which are associated with each pop:
+    1. Vector of mig bands which pop is their target pop.
+    2. Vector of time bands, where each time band holds a vector of mig bands
+        active in that time band.
 ***********************************************************************************/
-typedef struct POP_TIME_BANDS
+typedef struct MIG_BANDS_PER_TARGET_POP
 {
     std::vector<MigrationBand*> migBands;
-    std::vector<TimeBand> timeBands;
-} PopTimeBands;
+    std::vector<TimeMigBands> timeMigBands;
+} MigBandsPerTarget;
+
 
 
 /***************************************************************************************************************/
@@ -209,6 +210,7 @@ int sampleMigRates(PopulationTree* popTree);
 *	updateMigrationBandTimes
 *	- updates start and end times of given migration band according to ages of populations
 *	- returns 0 if no change was made, and 1 otherwise
+*	- if change was made, re-construct live mig-bands data structure
 ***********************************************************************************/
 unsigned short updateMigrationBandTimes(PopulationTree* popTree, int migBand);
 
@@ -236,15 +238,15 @@ getMigBandByPops(PopulationTree* popTree, int sourcePop, int targetPop);
  *	create N elements in livingMigBands vector, where N is num of pops
  *	divide migration bands into groups with same target pop
  ******************************************************************************/
-void initializeLivingMigBands(PopulationTree* popTree);
+void initializeMigBandTimes(PopulationTree* popTree);
 
 
 /*******************************************************************************
- *	constructLivingMigBands
+ *	constructMigBandsTimes
  *
  *
  ******************************************************************************/
-void constructLivingMigBands(PopulationTree* popTree);
+void constructMigBandsTimes(PopulationTree* popTree);
 
 
 /*******************************************************************************
@@ -254,7 +256,7 @@ void constructLivingMigBands(PopulationTree* popTree);
     @param: popTree, target pop, age
     @return: pointer to a time band struct
  ******************************************************************************/
-TimeBand *
+TimeMigBands *
 getLiveMigBands(PopulationTree* popTree, int target_pop, double age);
 
 

@@ -28,8 +28,8 @@ set(SOURCE_FILES
         src/GPhoCS.cpp
         src/GPhoCS.h
 		src/GTreeStructVal.cpp
-        src/LociEmbedded.cpp
-        src/LociEmbedded.h
+        src/AllLoci.cpp
+        src/AllLoci.h
         src/LocusDataLikelihood.cpp
         src/LocusDataLikelihood.h
 		src/LocusGenealogy.cpp
@@ -62,7 +62,7 @@ set(SOURCE_FILES
         src/CombAssertions.cpp
         src/CombAssertions.h
         src/HypothesisPrinter.cpp
-        src/HypothesisPrinter.h )
+        src/HypothesisPrinter.h src/GenealogyStats.cpp src/GenealogyStats.h)
 
 add_executable(G_PhoCS ${SOURCE_FILES})
 

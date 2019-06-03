@@ -1,6 +1,3 @@
-//
-// Created by nomihadar on 4/1/19.
-//
 
 #ifndef G_PHOCS_LOCIEMBEDDED_H
 #define G_PHOCS_LOCIEMBEDDED_H
@@ -11,22 +8,22 @@
 
 /*=============================================================================
  *
- * LociEmbedded class
+ * AllLoci class
  *
- * Class LociEmbedded contains all loci embedded genealogy
+ * Class AllLoci contains all loci embedded genealogies
  *
  * Contains:
  * Vector of LocusEmbeddedGenealogy objects
 
  *===========================================================================*/
-class LociEmbedded {
+class AllLoci {
 
     std::vector<LocusEmbeddedGenealogy> lociVector_; //vector of loci
 
 public:
 
     //contructor
-    LociEmbedded();
+    AllLoci();
 
     LocusEmbeddedGenealogy& getLocus(int locusID);
 

@@ -91,7 +91,7 @@ public:
 
 //-----------------------------------------------------------------------------
 
-class EventChains : public vector<EventChain>
+class EventChains : public std::vector<EventChain>
 {
 public:
   inline Event* getEvent(int gen, int event) const
@@ -206,7 +206,7 @@ public:
   // the difference in lineage number for all events affected (typically +/- 1)
   int num_lin_delta;
   // events affected by change
-  vector<Event*> changed_events;
+  std::vector<Event*> changed_events;
   // number of population affected by change
   int num_pops_changed;
   // an array of populations affected by change
@@ -252,6 +252,7 @@ public:
   int    num_coals[2 * NSPECIES - 1];
   int    num_migs[MAX_MIG_BANDS];
 };
+
 
 /*-----------------------------------------------------------------------------
  * RUBBERBAND_MIGS

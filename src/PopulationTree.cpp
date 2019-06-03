@@ -6,12 +6,16 @@
    for handling a population tree with migration bands.	
 */
 
-#include <stdlib.h>
+
 #include "PopulationTree.h"
+#include "DataLayerConstants.h"
+
+#include <stdlib.h>
 #include "utils.h"
 #include <math.h>
 #include <algorithm>
 #include "set"
+
 /***************************************************************************************************************/
 /******                                      INTERNAL CONSTANTS                                           ******/
 /***************************************************************************************************************/
@@ -129,6 +133,7 @@ PopulationTree* createPopTree(int numCurPops)
 
   for( migBand = 0; migBand < numPops * (numPops-1); ++migBand )
   {
+    popTree->migBands[migBand].id                       = migBand;
     popTree->migBands[migBand].sourcePop                = 0;
     popTree->migBands[migBand].targetPop                = 0;
     popTree->migBands[migBand].migRate                  = 0.0;
@@ -138,6 +143,7 @@ PopulationTree* createPopTree(int numCurPops)
     popTree->migBands[migBand].migRatePrior.beta        = 0.0;
     popTree->migBands[migBand].migRatePrior.sampleStart = 0.0;
   }
+
   return popTree;
 }
 
@@ -371,6 +377,7 @@ int sampleMigRates(PopulationTree* popTree)
  *	updateMigrationBandTimes
  *	- updates satrt and end times of given migration band according to ages of populations
  *	- returns 0 if no change was made, and 1 otherwise
+ *	- if change was made, re-construct live mig-bands data structure
  ***********************************************************************************/
 unsigned short updateMigrationBandTimes(PopulationTree* popTree, int migBand) {
   int sourcePop, targetPop; 
@@ -395,6 +402,9 @@ unsigned short updateMigrationBandTimes(PopulationTree* popTree, int migBand) {
 
   //		printf("Setting migration band %d for times %f -- %f.\n",migBand, popTree->migBands[migBand].startTime, popTree->migBands[migBand].endTime);
 
+  //if change was made, re-construct live mig-bands data structure
+  //if (res) //todo call it here? and only if res?
+      //constructMigBandsTimes(popTree);
 
   return res;
 }
@@ -410,9 +420,8 @@ unsigned short updateMigrationBandTimes(PopulationTree* popTree, int migBand) {
  ***********************************************************************************/
 int computeMigrationBandTimes(PopulationTree* popTree) {
   int migBand, numZero = 0;
-	
-	
-  for(migBand=0; migBand<popTree->numMigBands; migBand++) {
+
+    for(migBand=0; migBand<popTree->numMigBands; migBand++) {
 		
     updateMigrationBandTimes(popTree, migBand);
 
@@ -458,15 +467,15 @@ MigrationBand* getMigBandByPops(PopulationTree* popTree, int sourcePop, int targ
  *	create N elements in livingMigBands vector, where N is num of pops
  *	divide migration bands into groups with same target pop
  ******************************************************************************/
-void initializeLivingMigBands(PopulationTree* popTree) {
+void initializeMigBandTimes(PopulationTree* popTree) {
 
     //fill vector with N empty elements
-    popTree->liveMigBands.reserve(popTree->numPops);
+    popTree->migBandsPerTarget.reserve(popTree->numPops);
     for (int i=0; i < popTree->numPops; i++) {
-        popTree->liveMigBands.emplace_back();
+        popTree->migBandsPerTarget.emplace_back();
     }
 
-    //for each mig band, save it in the PopTimeBands element located in the i'th
+    //for each mig band, save it in the MigBandsPerTarget element located in the i'th
     // place, where i is the id of the mig band's target pop
     for (int i=0; i < popTree->numMigBands; i++) {
 
@@ -475,33 +484,42 @@ void initializeLivingMigBands(PopulationTree* popTree) {
 
         //add pointer
         MigrationBand* pMigBand = &popTree->migBands[i];
-        popTree->liveMigBands[targetPop].migBands.push_back(pMigBand);
+        popTree->migBandsPerTarget[targetPop].migBands.push_back(pMigBand);
     }
 }
 
 
 /*******************************************************************************
- *	constructLivingMigBands
- *
+ *	constructMigBandsTimes
+ *  constructs mig bands times of each pop
  *
  ******************************************************************************/
-void constructLivingMigBands(PopulationTree* popTree) {
+void constructMigBandsTimes(PopulationTree* popTree) {
 
     //for each pop reset its time bands
-    for (auto& popBands : popTree->liveMigBands) {
-        popBands.timeBands.clear();
+    for (auto& popBands : popTree->migBandsPerTarget) {
+        popBands.timeMigBands.clear();
     }
 
     //for each target pop
-    for (auto& popBands : popTree->liveMigBands) {
+    for (int pop=0; pop < popTree->numPops; pop++) {
 
-        //if no migrations are incoming to current pop -
-        if (popBands.migBands.empty())
-            continue;
+        //get bands of current pop
+        auto & popBands = popTree->migBandsPerTarget[pop];
 
-        //for each mig band save start and end times in a vector
+        //create a vector of time points and fill with pop start and end,
+        // and the start and end times of each mig band
         std::vector<double> timePoints;
-        timePoints.reserve(2*popBands.migBands.size());
+        timePoints.reserve(2*popBands.migBands.size() + 2);
+
+        //pop times
+        timePoints.push_back(popTree->pops[pop]->age);
+        if (pop != popTree->rootPop)
+            timePoints.push_back(popTree->pops[pop]->father->age);
+        else
+            timePoints.push_back(OLDAGE);//todo: what age?
+
+        //mig bands times
         for (MigrationBand* pMigBand : popBands.migBands) {
             timePoints.push_back(pMigBand->startTime);
             timePoints.push_back(pMigBand->endTime);
@@ -519,21 +537,22 @@ void constructLivingMigBands(PopulationTree* popTree) {
             auto next = std::next(it,1);
 
             //create a time-band element which lasts between the two time points
-            TimeBand timeBand{*it, *next};
+            TimeMigBands timeMigBand{*it, *next};
 
             //find mig-bands which intersect with current time band
             for (MigrationBand* pMigBand : popBands.migBands) {
 
                 //if time-band is contained in current mig-band
-                if (pMigBand->endTime >= timeBand.endTime &&
-                    pMigBand->startTime <= timeBand.startTime)
+                if (pMigBand->startTime <= timeMigBand.startTime &&
+                        timeMigBand.endTime <= pMigBand->endTime )
 
                     //add mig band
-                    timeBand.migBands.push_back(pMigBand);
+                    timeMigBand.migBands.push_back(pMigBand);
             }
 
             //add time-band to pop's time-bands
-            popBands.timeBands.push_back(timeBand);
+            popBands.timeMigBands.push_back(timeMigBand);
+
         }
     }
 }
@@ -546,12 +565,21 @@ void constructLivingMigBands(PopulationTree* popTree) {
     @param: popTree, target pop, age
     @return: pointer to a time band struct
  ******************************************************************************/
-TimeBand *
+TimeMigBands *
 getLiveMigBands(PopulationTree* popTree, int target_pop, double age) {
-    for (auto& timeBand : popTree->liveMigBands[target_pop].timeBands) {
-        if (age > timeBand.startTime && age <= timeBand.endTime)
-            return &timeBand;//todo: decide if also equal
+
+    double EPSILON = 0.00000000000001;
+
+    for (auto& timeBand : popTree->migBandsPerTarget[target_pop].timeMigBands) {
+        if (timeBand.startTime <= age && age < timeBand.endTime)
+            return &timeBand;
+
+        //fabs(eventAge - intervalAge) < EPSILON
+        //if (timeBand.startTime <= (age + EPSILON) && (age + EPSILON ) < timeBand.endTime)
+         //   return &timeBand;
+
     }
+
     return nullptr;
 }
 
