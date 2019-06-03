@@ -24,17 +24,6 @@
 /***************************************************************************************************************/
 
 
-/***********************************************************************************
-*	STATISTICS
-*	- Holds num lineages, and statistics
-***********************************************************************************/
-typedef struct STATISTICS
-{
-    int num;        //num lineages
-    double stats;   //statistics
-} Statistics;
-
-
 
 /***********************************************************************************
 *	GammaPrior
@@ -53,6 +42,7 @@ typedef struct GAMMA_PRIOR {
 *	- Holds relevant info for migration band
 ***********************************************************************************/
 typedef struct MIGRATION_BAND {
+    int     id;                 //id of migration band
 	int		sourcePop;			// id of source population
 	int		targetPop;			// id of target population
 	double	migRate;			// migration rate for band
@@ -60,8 +50,6 @@ typedef struct MIGRATION_BAND {
 	GammaPrior	migRatePrior;	// parameters for gamma-prior of migration rate - NOT IN USE !!
 	double	startTime;			// start time for migration band
 	double	endTime;			// end time for migration band
-
-    Statistics stats;           // statistics of migration band
 
 } MigrationBand;
 
@@ -94,8 +82,6 @@ struct POPULATION {
 	int* 	inMigBands;			// array of in migration band id's
 	int 	numOutMigBands;		// length of outMigBands[] array
 	int* 	outMigBands;		// array of out migration band id's
-
-    Statistics stats;           // total statistics
 
 };
 
@@ -256,7 +242,7 @@ void initializeMigBandTimes(PopulationTree* popTree);
 
 
 /*******************************************************************************
- *	constructLivingMigBands
+ *	constructMigBandsTimes
  *
  *
  ******************************************************************************/

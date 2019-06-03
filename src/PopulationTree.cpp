@@ -6,12 +6,16 @@
    for handling a population tree with migration bands.	
 */
 
-#include <stdlib.h>
+
 #include "PopulationTree.h"
+#include "DataLayerConstants.h"
+
+#include <stdlib.h>
 #include "utils.h"
 #include <math.h>
 #include <algorithm>
 #include "set"
+
 /***************************************************************************************************************/
 /******                                      INTERNAL CONSTANTS                                           ******/
 /***************************************************************************************************************/
@@ -129,6 +133,7 @@ PopulationTree* createPopTree(int numCurPops)
 
   for( migBand = 0; migBand < numPops * (numPops-1); ++migBand )
   {
+    popTree->migBands[migBand].id                       = migBand;
     popTree->migBands[migBand].sourcePop                = 0;
     popTree->migBands[migBand].targetPop                = 0;
     popTree->migBands[migBand].migRate                  = 0.0;
@@ -138,6 +143,7 @@ PopulationTree* createPopTree(int numCurPops)
     popTree->migBands[migBand].migRatePrior.beta        = 0.0;
     popTree->migBands[migBand].migRatePrior.sampleStart = 0.0;
   }
+
   return popTree;
 }
 
@@ -397,8 +403,8 @@ unsigned short updateMigrationBandTimes(PopulationTree* popTree, int migBand) {
   //		printf("Setting migration band %d for times %f -- %f.\n",migBand, popTree->migBands[migBand].startTime, popTree->migBands[migBand].endTime);
 
   //if change was made, re-construct live mig-bands data structure
-  if (res)
-      constructMigBandsTimes(popTree);
+  //if (res) //todo call it here? and only if res?
+      //constructMigBandsTimes(popTree);
 
   return res;
 }
@@ -414,9 +420,8 @@ unsigned short updateMigrationBandTimes(PopulationTree* popTree, int migBand) {
  ***********************************************************************************/
 int computeMigrationBandTimes(PopulationTree* popTree) {
   int migBand, numZero = 0;
-	
-	
-  for(migBand=0; migBand<popTree->numMigBands; migBand++) {
+
+    for(migBand=0; migBand<popTree->numMigBands; migBand++) {
 		
     updateMigrationBandTimes(popTree, migBand);
 
@@ -462,7 +467,7 @@ MigrationBand* getMigBandByPops(PopulationTree* popTree, int sourcePop, int targ
  *	create N elements in livingMigBands vector, where N is num of pops
  *	divide migration bands into groups with same target pop
  ******************************************************************************/
-void initializeMigBandTimes(PopulationTree *popTree) {
+void initializeMigBandTimes(PopulationTree* popTree) {
 
     //fill vector with N empty elements
     popTree->migBandsPerTarget.reserve(popTree->numPops);
@@ -485,11 +490,11 @@ void initializeMigBandTimes(PopulationTree *popTree) {
 
 
 /*******************************************************************************
- *	constructLivingMigBands
- *
+ *	constructMigBandsTimes
+ *  constructs mig bands times of each pop
  *
  ******************************************************************************/
-void constructMigBandsTimes(PopulationTree *popTree) {
+void constructMigBandsTimes(PopulationTree* popTree) {
 
     //for each pop reset its time bands
     for (auto& popBands : popTree->migBandsPerTarget) {
@@ -497,15 +502,24 @@ void constructMigBandsTimes(PopulationTree *popTree) {
     }
 
     //for each target pop
-    for (auto& popBands : popTree->migBandsPerTarget) {
+    for (int pop=0; pop < popTree->numPops; pop++) {
 
-        //if no migrations are incoming to current pop -
-        if (popBands.migBands.empty())
-            continue;
+        //get bands of current pop
+        auto & popBands = popTree->migBandsPerTarget[pop];
 
-        //for each mig band save start and end times in a vector
+        //create a vector of time points and fill with pop start and end,
+        // and the start and end times of each mig band
         std::vector<double> timePoints;
-        timePoints.reserve(2*popBands.migBands.size());
+        timePoints.reserve(2*popBands.migBands.size() + 2);
+
+        //pop times
+        timePoints.push_back(popTree->pops[pop]->age);
+        if (pop != popTree->rootPop)
+            timePoints.push_back(popTree->pops[pop]->father->age);
+        else
+            timePoints.push_back(OLDAGE);//todo: what age?
+
+        //mig bands times
         for (MigrationBand* pMigBand : popBands.migBands) {
             timePoints.push_back(pMigBand->startTime);
             timePoints.push_back(pMigBand->endTime);
@@ -523,21 +537,22 @@ void constructMigBandsTimes(PopulationTree *popTree) {
             auto next = std::next(it,1);
 
             //create a time-band element which lasts between the two time points
-            TimeMigBands timeBand{*it, *next};
+            TimeMigBands timeMigBand{*it, *next};
 
             //find mig-bands which intersect with current time band
             for (MigrationBand* pMigBand : popBands.migBands) {
 
                 //if time-band is contained in current mig-band
-                if (pMigBand->endTime >= timeBand.endTime &&
-                    pMigBand->startTime <= timeBand.startTime)
+                if (pMigBand->startTime <= timeMigBand.startTime &&
+                        timeMigBand.endTime <= pMigBand->endTime )
 
                     //add mig band
-                    timeBand.migBands.push_back(pMigBand);
+                    timeMigBand.migBands.push_back(pMigBand);
             }
 
             //add time-band to pop's time-bands
-            popBands.timeMigBands.push_back(timeBand);
+            popBands.timeMigBands.push_back(timeMigBand);
+
         }
     }
 }
@@ -552,10 +567,19 @@ void constructMigBandsTimes(PopulationTree *popTree) {
  ******************************************************************************/
 TimeMigBands *
 getLiveMigBands(PopulationTree* popTree, int target_pop, double age) {
+
+    double EPSILON = 0.00000000000001;
+
     for (auto& timeBand : popTree->migBandsPerTarget[target_pop].timeMigBands) {
-        if (age >= timeBand.startTime && age < timeBand.endTime)
+        if (timeBand.startTime <= age && age < timeBand.endTime)
             return &timeBand;
+
+        //fabs(eventAge - intervalAge) < EPSILON
+        //if (timeBand.startTime <= (age + EPSILON) && (age + EPSILON ) < timeBand.endTime)
+         //   return &timeBand;
+
     }
+
     return nullptr;
 }
 

@@ -7,7 +7,7 @@
  ============================================================================*/
 
 //TODO: remove, for debugging only
-#include "LociEmbedded.h"
+#include "AllLoci.h"
 
 //
 
@@ -1411,8 +1411,7 @@ int performMCMC()
   setStartTimeMethod(T_MCMCIterations);
 #endif
 
-  LociEmbedded lociEmbedded;
-    initializeMigBandTimes(dataSetup.popTree);
+  AllLoci lociEmbedded;
 
   for (iteration = -mcmcSetup.burnin; iteration < mcmcSetup.numSamples;
        iteration++)
@@ -2107,6 +2106,7 @@ int performMCMC()
     } // print log
 
     lociEmbedded.testLoci();
+
       //exit(0);
 
   } // end of main loop - for(iteration)

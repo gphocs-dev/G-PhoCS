@@ -12,16 +12,18 @@
     Links intervals to each other.
 */
 LocusPopIntervals::LocusPopIntervals(int locusID, int nIntervals,
-                                     PopulationTree* pPopTree)
+                                     PopulationTree *pPopTree)
         : locusID_(locusID),
           numIntervals_(nIntervals),
-          pPopTree_(pPopTree) {
+          pPopTree_(pPopTree),
+          genealogyStats_(2*NSPECIES-1, MAX_MIG_BANDS) {
 
     //allocate N intervals (N = number of intervals, given as argument)
     intervalsArray_ = new PopInterval[nIntervals];
 
     //intervals pool points to head of intervals array
     pIntervalsPool_ = intervalsArray_;
+
     
 }
 
@@ -313,6 +315,9 @@ PopInterval* LocusPopIntervals::getSamplesStart(int pop) {
 }
 
 
+/*
+    Prints intervals
+*/
 void LocusPopIntervals::printIntervals() {
 
     std::cout << "Intervals of locus " << locusID_ << "." << std::endl;
@@ -337,4 +342,8 @@ void LocusPopIntervals::printIntervals() {
         }
     }
 
+}
+
+GenealogyStats & LocusPopIntervals::getStats() {
+    return genealogyStats_;
 }

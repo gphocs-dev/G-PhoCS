@@ -1,13 +1,13 @@
 
-#include "LociEmbedded.h"
+#include "AllLoci.h"
 #include "cassert"
 
 /*
-    LociEmbedded constructor
+    AllLoci constructor
     Allocates LocusEmbeddedGenealogy objects,
     each with a unique locus ID.
 */
-LociEmbedded::LociEmbedded() : lociVector_() {
+AllLoci::AllLoci() : lociVector_() {
 
     lociVector_.reserve(dataSetup.numLoci);
 
@@ -15,24 +15,34 @@ LociEmbedded::LociEmbedded() : lociVector_() {
         lociVector_.emplace_back(locusID, MAX_EVENTS, &dataSetup, &dataState,
                                  genetree_migs);
     }
+
+    //initialize mig band times
+    initializeMigBandTimes(dataSetup.popTree);
 }
 
 
-void LociEmbedded::testLocus(int locusID) {
+void AllLoci::testLocus(int locusID) {
 
     LocusEmbeddedGenealogy locus = lociVector_[locusID];
 
 }
 
-void LociEmbedded::testLoci() {
+void AllLoci::testLoci() {
 
     for (auto& locus : lociVector_) {
 
         //construct genealogy and intervals
         locus.construct_genealogy_and_intervals();
+
+        //compute genealogy statistics
         locus.computeGenetreeStats();
+
+        //construct mig bands times
+        constructMigBandsTimes(dataSetup.popTree);
+
         locus.testLocusGenealogy();
         locus.testPopIntervals();
+
         //locus.print();
         //printGenealogyAndExit(locus.getLocusID(), -1);
         //break;
@@ -41,6 +51,6 @@ void LociEmbedded::testLoci() {
 
 }
 
-LocusEmbeddedGenealogy& LociEmbedded::getLocus(int locusID) {
+LocusEmbeddedGenealogy& AllLoci::getLocus(int locusID) {
     return lociVector_[locusID];
 }

@@ -6,9 +6,11 @@
 #define G_PHOCS_LOCUSPOPINTERVALS_H
 
 #include "PopInterval.h"
-//#include "MCMCcontrol.h"
-//#include "GPhoCS.h"
 #include "MemoryMng.h"
+#include "DataLayer.h"
+#include "GenealogyStats.h"
+
+#include <vector>
 
 /*=============================================================================
  *
@@ -27,6 +29,7 @@
  * 4.
  *===========================================================================*/
 
+
 class LocusPopIntervals {
 
 private:
@@ -35,6 +38,8 @@ private:
     PopInterval* pIntervalsPool_; //pointer to a pool of free intervals
 
     int numIntervals_; //total number of intervals
+
+    GenealogyStats genealogyStats_; //statistics of genealogy
 
     int locusID_; //locus id, for error massages
     PopulationTree* pPopTree_; //pointer to PopulationTree struct
@@ -83,6 +88,9 @@ public:
 
     //for each pop print all intervals
     void printIntervals();
+
+    //get a reference to genealogy statistics
+    GenealogyStats& getStats();
 
 };
 
