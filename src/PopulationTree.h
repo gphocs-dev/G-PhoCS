@@ -226,11 +226,17 @@ int computeMigrationBandTimes(PopulationTree* popTree);
 
 /***********************************************************************************
 *	getMigBandByPops
-*	- returns pointer to mig band with the given source and target populations
-* 	- returns pointer to migration band
+*	- returns pointer to a mig band with the given source and target populations
 ***********************************************************************************/
 MigrationBand *
 getMigBandByPops(PopulationTree* popTree, int sourcePop, int targetPop);
+
+
+/***********************************************************************************
+*	getMigBandById
+*	- returns pointer to a mig band with the given ID
+***********************************************************************************/
+MigrationBand * getMigBandByID(PopulationTree* popTree, int id);
 
 
 /*******************************************************************************

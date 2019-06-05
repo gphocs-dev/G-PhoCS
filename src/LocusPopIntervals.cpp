@@ -11,12 +11,11 @@
     Allocates popIntervals objects.
     Links intervals to each other.
 */
-LocusPopIntervals::LocusPopIntervals(int locusID, int nIntervals,
-                                     PopulationTree *pPopTree)
+LocusPopIntervals::LocusPopIntervals(int locusID, int nIntervals)
         : locusID_(locusID),
           numIntervals_(nIntervals),
-          pPopTree_(pPopTree),
-          genealogyStats_(2*NSPECIES-1, MAX_MIG_BANDS) {
+          pPopTree_(dataSetup.popTree),
+          genealogyStats_(2*dataSetup.numSamples-1, dataSetup.popTree->numMigBands) {
 
     //allocate N intervals (N = number of intervals, given as argument)
     intervalsArray_ = new PopInterval[nIntervals];
@@ -24,7 +23,6 @@ LocusPopIntervals::LocusPopIntervals(int locusID, int nIntervals,
     //intervals pool points to head of intervals array
     pIntervalsPool_ = intervalsArray_;
 
-    
 }
 
 /*
@@ -108,7 +106,7 @@ void LocusPopIntervals::returnToPool(PopInterval* pInterval) {
     by defining:
      1. The first N cells to be pop-start intervals (N = num pops).
      2. The next N cells to be pop-end intervals.
-    Total: 2N cells are occupied to start/end intervals.
+    Total: 2N cells are occupied with start/end intervals.
 */
 void LocusPopIntervals::createStartEndIntervals() {
 
@@ -346,4 +344,21 @@ void LocusPopIntervals::printIntervals() {
 
 GenealogyStats & LocusPopIntervals::getStats() {
     return genealogyStats_;
+}
+
+
+
+/*	computeGenetreeStats
+	Computes the statistics of a given locus.
+    Assumes intervals chains are built, but number of lineages is ONLY
+    set for first intervals in the leaf populations.
+	Sets number of lineages for each non-leaf event by traversing the
+	population tree post-order. In parallel, also records the statistics.
+*/
+int LocusPopIntervals::computeGenetreeStats() {
+    return 0;
+}
+
+double LocusPopIntervals::recalcStats(int pop) {
+return 0;
 }

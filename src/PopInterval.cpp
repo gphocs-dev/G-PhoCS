@@ -14,8 +14,8 @@
 */
 PopInterval::PopInterval() : type_(IntervalType::DUMMY),
                              age_(0),
-                             nLineages_(-1),
-                             popID_(-1),
+                             nLineages_(0),
+                             popID_(0),
                              pPrevInterval_(nullptr),
                              pNextInterval_(nullptr),
                              pTreeNode_ (nullptr) {
@@ -28,8 +28,8 @@ void PopInterval::reset() {
 
     type_ = IntervalType::DUMMY;
     age_ = 0;
-    nLineages_ = -1;
-    popID_ = -1;
+    nLineages_ = 0;
+    popID_ = 0;
     pPrevInterval_ = nullptr;
     pNextInterval_ = nullptr;
     pTreeNode_ = nullptr;
@@ -43,7 +43,7 @@ void PopInterval::reset() {
 double PopInterval::getElapsedTime() {
     if (pPrevInterval_)
         return age_ - pPrevInterval_->age_;
-    return -1;
+    return 0;
 }
 
 /*

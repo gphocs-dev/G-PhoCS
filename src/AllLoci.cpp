@@ -7,7 +7,10 @@
     Allocates LocusEmbeddedGenealogy objects,
     each with a unique locus ID.
 */
-AllLoci::AllLoci() : lociVector_() {
+AllLoci::AllLoci()
+        : lociVector_(),
+          genealogiesStatsTotal_(2 * dataSetup.numSamples - 1,
+                          dataSetup.popTree->numMigBands) {
 
     lociVector_.reserve(dataSetup.numLoci);
 
@@ -31,14 +34,19 @@ void AllLoci::testLoci() {
 
     for (auto& locus : lociVector_) {
 
+
+        //construct mig bands times
+        constructMigBandsTimes(dataSetup.popTree);
+
         //construct genealogy and intervals
         locus.construct_genealogy_and_intervals();
 
         //compute genealogy statistics
-        locus.computeGenetreeStats();
+        locus.computeGenetreeStats(<#initializer#>);
 
-        //construct mig bands times
-        constructMigBandsTimes(dataSetup.popTree);
+
+        //locus.printEmbeddedGenealogy();
+        //printGenealogyAndExit(0,1);
 
         locus.testLocusGenealogy();
         locus.testPopIntervals();

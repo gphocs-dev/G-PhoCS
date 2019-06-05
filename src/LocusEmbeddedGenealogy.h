@@ -43,7 +43,10 @@ private:
     std::map<int,int> leafToPop_; //map between leaf to its pop
     std::map<int,std::vector<int>> popToLeaves_; //map between pop to its leaves
 
-    int pop_queue_[2 * NSPECIES - 1]; // post-order queue of populations //todo
+    int popQueue_[2 * NSPECIES - 1]; // post-order queue of populations //todo: replace by number of species
+
+    GenealogyStats genealogyStats_; //statistics of genealogy
+    GenealogyStats genealogyStatsCheck_; //statistics of genealogy - for check //todo: name? and is this member necessary?
 
     DATA_SETUP*     pDataSetup_;       //pointer to DATA_SETUP struct
     PopulationTree* pPopTree_;         //pointer to PopulationTree struct
@@ -60,9 +63,9 @@ public:
     //construct both genealogy and intervals and connect between them
     int construct_genealogy_and_intervals();
 
-    int computeGenetreeStats();
+    int computeGenetreeStats(GenealogyStats& genStatsTotal);
 
-    double recalcStats(int pop);
+    double recalcStats(int pop, GenealogyStats& genStatsTotal);
 
     //get locus ID
     int getLocusID();

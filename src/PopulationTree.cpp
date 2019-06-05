@@ -462,6 +462,18 @@ MigrationBand* getMigBandByPops(PopulationTree* popTree, int sourcePop, int targ
 }
 
 
+/***********************************************************************************
+*	getMigBandById
+*	- returns pointer to a mig band with the given ID
+***********************************************************************************/
+MigrationBand * getMigBandByID(PopulationTree* popTree, int id) {
+
+    if (id < popTree->numMigBands)
+        return &popTree->migBands[id];
+    return nullptr;
+}
+
+
 /*******************************************************************************
  *	initializeLivingMigBands
  *	create N elements in livingMigBands vector, where N is num of pops
@@ -568,18 +580,10 @@ void constructMigBandsTimes(PopulationTree* popTree) {
 TimeMigBands *
 getLiveMigBands(PopulationTree* popTree, int target_pop, double age) {
 
-    double EPSILON = 0.00000000000001;
-
     for (auto& timeBand : popTree->migBandsPerTarget[target_pop].timeMigBands) {
         if (timeBand.startTime <= age && age < timeBand.endTime)
             return &timeBand;
-
-        //fabs(eventAge - intervalAge) < EPSILON
-        //if (timeBand.startTime <= (age + EPSILON) && (age + EPSILON ) < timeBand.endTime)
-         //   return &timeBand;
-
     }
-
     return nullptr;
 }
 

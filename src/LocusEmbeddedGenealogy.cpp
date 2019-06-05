@@ -18,8 +18,7 @@ LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
         GENETREE_MIGS *pGenetreeMigs)
 
         : genealogy_(pDataSetup->numSamples), //construct genealogy
-          intervals_(locusID, numIntervals,
-                     pDataSetup->popTree),  //construct intervals
+          intervals_(locusID, numIntervals),  //construct intervals
 
           locusID_(locusID),
           pDataSetup_(pDataSetup),
@@ -36,7 +35,7 @@ LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
     }
 
     //fill queue with pops, sorted by post order
-    populationPostOrder(pPopTree_->rootPop, pop_queue_);
+    populationPostOrder(pPopTree_->rootPop, popQueue_);
 
 }
 
@@ -200,23 +199,70 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
 }
 
 
-//todo: rewrite recalcStats
-/* recalcStats
-   Re-calculates stats for given population in given gen.
-   Writes down stats in genetree_stats_check and then compares to prior stats to return the log-likelihood.
-   The log-likelihood computation ignores changes in number of migs/coals!!
+
+
+/*	computeGenetreeStats
+	Computes the statistics of a given locus.
+    Assumes intervals chains are built, but number of lineages is ONLY
+    set for first intervals in the leaf populations.
+	Sets number of lineages for each non-leaf event by traversing the
+	population tree post-order. In parallel, also records the statistics.
 */
 
-double LocusEmbeddedGenealogy::recalcStats(int pop) {
+int
+LocusEmbeddedGenealogy::computeGenetreeStats(GenealogyStats& genStatsTotal) {
 
-    int  event;
-    double heredity_factor = 1;
-    double delta_lnLd = 0.0;
+    // go over all intervals and compute num_lineages per each interval
+    // also update genetree statistics
+    for (int i = 0; i < pDataSetup_->popTree->numPops; i++) {
 
-    GenealogyStats& genealogyStats = intervals_.getStats();
+        //get current pop
+        int pop = popQueue_[i];
+
+        // if not leaf population get number of in-lineages from end-intervals
+        // of son populations
+        if (pop >= pPopTree_->numCurPops) {
+
+            //get num lineages of first interval of the left pop son
+            int lSon = pPopTree_->pops[pop]->sons[0]->id;
+            int n1 = intervals_.getPopEnd(lSon)->getNumLineages();
+
+            //get num lineages of first interval of the right pop son
+            int rSon = pPopTree_->pops[pop]->sons[1]->id;
+            int n2 = intervals_.getPopEnd(rSon)->getNumLineages();
+
+            //set num lineages of first interval of current pop to the sum
+            //of sons' num lineages
+            intervals_.getFirstInterval(pop)->setNumLineages(n1 + n2);
+
+        } else {
+            //set num lineages of first interval of current pop to 0
+            intervals_.getFirstInterval(pop)->setNumLineages(0);
+        }
+
+        this->recalcStats(pop, genStatsTotal);
+
+    }
+
+    return 0;
+}
+
+
+double
+LocusEmbeddedGenealogy::recalcStats(int pop, GenealogyStats& genStatsTotal) {
+
+
+    double popAge = pPopTree_->pops[pop]->age;
+
+    GenealogyStats& stats = this->genealogyStats_;
+    GenealogyStats& statsCheck = this->genealogyStatsCheck_;
+
 
     //get first interval
     PopInterval* pInterval = intervals_.getFirstInterval(pop);
+
+    TimeMigBands* timeBand = getLiveMigBands(dataSetup.popTree, pop, pInterval->getAge());
+
 
     //get num lineages of first interval
     int n = pInterval->getNumLineages();
@@ -225,23 +271,39 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
     // to previous interval also update statistics
     while (true) {
 
+        std::string s =pInterval->typeToStr();
+
         //set num lineages
         pInterval->setNumLineages(n);
 
-        //get elapsed time
-        double t = pInterval->getElapsedTime();
+        double t, delta;
+        if (timeBand) {
+
+
+            if (timeBand->endTime > pInterval->getAge()) {
+                t = pInterval->getElapsedTime();
+            } else {
+                delta = pInterval->getAge() - timeBand->endTime;
+                t = pInterval->getElapsedTime() - delta;
+            }
+        } else
+        {
+            t = pInterval->getElapsedTime();
+        }
+
+
 
         //update coal statistics
-        genealogyStats.coal_[pop].statistics_ += n * (n - 1) * t;
+        statsCheck.incrementCoalStats(pop, n * (n - 1) * t);
 
-        //get live mig bands
-        double age = pInterval->getAge();//todo: check
-        TimeMigBands* timeBand = getLiveMigBands(dataSetup.popTree, pop, age);
-
-        //for each live mig band update mig statistics
-        for (auto pMigBand : timeBand->migBands) {
-            genealogyStats.migs_[pMigBand->id].statistics_ += n * t;
+        if (timeBand) {
+            //for each live mig band update mig statistics
+            for (auto pMigBand : timeBand->migBands) {
+                statsCheck.incrementMigsStats(pMigBand->id, n * t);
+            }
         }
+
+
 
         //switch by interval type
         switch (pInterval->getType()) {
@@ -251,17 +313,20 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
                 break;
 
             case (IntervalType::COAL):
-                genealogyStats.coal_[pop].nLineages_++;
+                statsCheck.incrementNumCoal(pop, 1);
                 n--;
                 break;
 
             case (IntervalType::IN_MIG):
 
-               // getMigBandByPops()
+
+                // getMigBandByPops()
 
                 // figure out migration band and update its statistics
                 //mig_band = genetree_migs[locusID_].mignodes[id].migration_band;
                 //locus_data[locusID_].genetree_stats_check.num_migs[mig_band]++;
+                //statsCheck.incrementNumMigs(,1);//todo: get mig ID
+
                 n--;
                 break;
 
@@ -269,12 +334,6 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
                 n++;
                 break;
 
-                //case (MIG_BAND_START):
-                    //live_mig_bands[num_live_mig_bands++] = id;
-                    // initialize statistics for this new migration band
-                   // locus_data[locusID_].genetree_stats_check.num_migs[id] = 0;
-                    //locus_data[locusID_].genetree_stats_check.mig_stats[id] = 0.0;
-                    //break;
 
                 /*case (MIG_BAND_END):
                     // compare and copy stats for mig band
@@ -322,7 +381,7 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
             case (IntervalType::POP_END):
                 break;
 
-            default:
+            /*default:
                 if (debug) {
                     std::cout
                             << endl
@@ -334,8 +393,7 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
                 } else {
                     std::cout << "Fatal Error 0026." << endl;
                 }
-                printGenealogyAndExit(locusID_, -1);
-                break;
+                printGenealogyAndExit(locusID_, -1);*/
         }// end of switch
 
         if (pInterval->isType(IntervalType::POP_END))
@@ -343,24 +401,23 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
 
 
         pInterval = pInterval->getNext();
+        double a = pInterval->getAge();
+        //get live mig bands
+        //double age = pInterval->getAge();//todo: check
+        timeBand = getLiveMigBands(dataSetup.popTree, pop, pInterval->getAge());
 
     }// end of while
 
-    /*
-    if (num_live_mig_bands != 0) {
-        if (debug) {
-            fprintf(stderr,
-                    "\nError: recalcStats: number of live mig bands %d at end of population %d in gen %d.\n",
-                    num_live_mig_bands, pop, locusID_);
-        } else {
-            fprintf(stderr, "Fatal Error 0027.\n");
-        }
-        printGenealogyAndExit(locusID_, -1);
-    }
+    double delta_lnLd = 0.0;
+    double heredity_factor = 1;
+
 
     delta_lnLd -= (locus_data[locusID_].genetree_stats_check.coal_stats[pop] -
                    genetree_stats[locusID_].coal_stats[pop]) /
                   (dataSetup.popTree->pops[pop]->theta * heredity_factor);
+
+
+
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
@@ -375,58 +432,11 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
             genetree_stats[locusID_].num_coals[pop];
     genetree_stats[locusID_].coal_stats[pop] = locus_data[locusID_].genetree_stats_check.coal_stats[pop];
     genetree_stats[locusID_].num_coals[pop] = locus_data[locusID_].genetree_stats_check.num_coals[pop];
-    */
+
 
     return delta_lnLd;
 }
-/*** end of recalcStats ***/
 
-
-
-/*	computeGenetreeStats
-	Computes the statistics of a given locus.
-    Assumes intervals chains are built, but number of lineages is ONLY
-    set for first intervals in the leaf populations.
-	Sets number of lineages for each non-leaf event by traversing the
-	population tree post-order. In parallel, also records the statistics.
-*/
-
-int LocusEmbeddedGenealogy::computeGenetreeStats() {
-
-    // go over all intervals and compute num_lineages per each interval
-    // also update genetree statistics
-    for (int i = 0; i < dataSetup.popTree->numPops; i++) {
-
-        //get current pop
-        int pop = pop_queue_[i];
-
-        // if not leaf population get number of in-lineages from end-intervals
-        // of son populations
-        if (pop >= dataSetup.popTree->numCurPops) {
-
-            //get num lineages of first interval of the left pop son
-            int lSon = dataSetup.popTree->pops[pop]->sons[0]->id;
-            int n1 = intervals_.getPopEnd(lSon)->getNumLineages();
-
-            //get num lineages of first interval of the right pop son
-            int rSon = dataSetup.popTree->pops[pop]->sons[1]->id;
-            int n2 = intervals_.getPopEnd(rSon)->getNumLineages();
-
-            //set num lineages of first interval of current pop to the sum
-            //of sons' num lineages
-            intervals_.getFirstInterval(pop)->setNumLineages(n1 + n2);
-
-        } else {
-            //set num lineages of first interval of current pop to 0
-            intervals_.getFirstInterval(pop)->setNumLineages(0);
-        }
-
-        recalcStats(pop);
-
-    }
-
-    return 0;
-}
 
 
 /*
@@ -501,7 +511,7 @@ int LocusEmbeddedGenealogy::getLeafPop(int leafId) {
 void LocusEmbeddedGenealogy::testLocusGenealogy() {
 
     //define precision for double comparision
-    double PRECISION = 0.0000000001;
+    double EPSILON = 0.0000000001;
 
     //get locus id and locus data
     LocusData* pLocusData = this->getLocusData();
@@ -529,7 +539,7 @@ void LocusEmbeddedGenealogy::testLocusGenealogy() {
         double ageNew = pNode->getAge();
 
         //compare ages
-        assert(fabs(age - ageNew) < PRECISION);
+        assert(fabs(age - ageNew) < EPSILON);
 
         TreeNode* parentNew = pNode;
 
@@ -540,7 +550,7 @@ void LocusEmbeddedGenealogy::testLocusGenealogy() {
             double migAgeNew = parentNew->getAge();
 
             //compare ages
-            assert(fabs(migAge - migAgeNew) < PRECISION);
+            assert(fabs(migAge - migAgeNew) < EPSILON);
         }
 
         //compare parents ages
@@ -550,7 +560,7 @@ void LocusEmbeddedGenealogy::testLocusGenealogy() {
             double age = getNodeAge(pLocusData, parent);
             double ageNew = parentNew->getAge();
             //compare ages
-            assert(fabs(age - ageNew) < PRECISION);
+            assert(fabs(age - ageNew) < EPSILON);
         }
 
         //compare sons ages
@@ -566,7 +576,7 @@ void LocusEmbeddedGenealogy::testLocusGenealogy() {
                 double migAgeNew = pSonNew->getAge();
 
                 //compare ages
-                assert(fabs(migAge - migAgeNew) < PRECISION);
+                assert(fabs(migAge - migAgeNew) < EPSILON);
             }
 
             pSonNew = son ? pSonNew->getRightSon() : pSonNew->getLeftSon();
@@ -574,7 +584,7 @@ void LocusEmbeddedGenealogy::testLocusGenealogy() {
                 double age = getNodeAge(pLocusData, lSon);
                 double ageNew = pSonNew->getAge();
                 //compare ages
-                assert(fabs(age - ageNew) < PRECISION);
+                assert(fabs(age - ageNew) < EPSILON);
             }
         }
 
@@ -589,7 +599,6 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
 
     //define epsilon for double comparision
     double EPSILON = 0.0000000001;
-    double EPSILON2 = 0.0000000000001;
 
     //for each pop
     for (int pop = 0; pop < pPopTree_->numPops; pop++) {
@@ -597,14 +606,20 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
         //get first event in old structure
         int event = event_chains[locusID_].first_event[pop];
 
-        //get first interval (pop-start) in the new structure
-        PopInterval* pInterval = intervals_.getFirstInterval(pop);
+        //get pop-start interval
+        PopInterval* pInterval = intervals_.getPopStart(pop);
 
         //get pop age
         double eventAge = pPopTree_->pops[pop]->age;
 
+        //assert ages equal
+        assert(fabs(eventAge - pInterval->getAge()) < EPSILON);
+
         //vector of live mig bands (original data structure)
         std::vector<int> liveMigsOri;
+
+        //get next interval
+        pInterval = pInterval->getNext();
 
         //iterate both old and new structures (events VS intervals)
         for (event; event >= 0;
@@ -626,11 +641,6 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
                 double age = eventAge + elapsedTime/2;
                 TimeMigBands* liveMigsNew = getLiveMigBands(pPopTree_, pop, age);
 
-                /*if(liveMigsNew == nullptr){
-                    TimeMigBands* liveMigsNew = getLiveMigBands(pPopTree_, pop, eventAge);
-                    printEmbeddedGenealogy();
-                }*/
-
                 //assert live migs band is not null
                 assert(liveMigsNew != nullptr);
 
@@ -640,7 +650,7 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
                 //for each live mig band
                 for (int id : liveMigsOri) {
                     //get pointer to mig band by its id
-                    MigrationBand* migBand = &pPopTree_->migBands[id];
+                    MigrationBand* migBand = getMigBandByID(pPopTree_, id);
                     //verify that current mig is found in the new data structure
                     assert(std::find(liveMigsNew->migBands.begin(),
                                      liveMigsNew->migBands.end(), migBand) != liveMigsNew->migBands.end());
@@ -681,7 +691,6 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
                     //add id of mig band to live mig bands
                     int event_id = event_chains[locusID_].events[event].getId();
                     liveMigsOri.push_back(event_id);
-                    //break;
                     continue;
                 }
                 case MIG_BAND_END: {
@@ -690,7 +699,6 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
                     liveMigsOri.erase(
                             std::remove(liveMigsOri.begin(), liveMigsOri.end(),
                                         event_id), liveMigsOri.end());
-                    //break;
                     continue;
                 }
             }
@@ -700,12 +708,11 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
             double intervalAge = pInterval->getAge();
             assert(fabs(eventAge - intervalAge) < EPSILON);
 
-
             //get next interval
             pInterval = pInterval->getNext();
-
         }
 
     }//end of pop loop
 
 }
+

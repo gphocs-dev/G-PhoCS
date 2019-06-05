@@ -3,6 +3,8 @@
 #define G_PHOCS_LOCIEMBEDDED_H
 
 #include "LocusEmbeddedGenealogy.h"
+#include "GenealogyStats.h"
+
 #include <vector>
 
 
@@ -19,6 +21,8 @@
 class AllLoci {
 
     std::vector<LocusEmbeddedGenealogy> lociVector_; //vector of loci
+
+    GenealogyStats genealogiesStatsTotal_; //total statistics for all loci
 
 public:
 

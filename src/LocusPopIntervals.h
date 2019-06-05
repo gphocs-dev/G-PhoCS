@@ -39,15 +39,13 @@ private:
 
     int numIntervals_; //total number of intervals
 
-    GenealogyStats genealogyStats_; //statistics of genealogy
-
     int locusID_; //locus id, for error massages
     PopulationTree* pPopTree_; //pointer to PopulationTree struct
 
 public:
 
     //constructor
-    LocusPopIntervals(int locusID, int nIntervals, PopulationTree* pPopTree);
+    LocusPopIntervals(int locusID, int nIntervals);
 
     //destructor
     ~LocusPopIntervals();
@@ -91,6 +89,10 @@ public:
 
     //get a reference to genealogy statistics
     GenealogyStats& getStats();
+
+    int computeGenetreeStats();
+
+    double recalcStats(int pop);
 
 };
 

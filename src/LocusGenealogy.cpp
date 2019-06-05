@@ -3,7 +3,6 @@
 #include "DataLayerConstants.h"
 #include <iostream>
 
-
 /*
     LocusGenealogy constructor.
     Assign the DataSetup pointer.
