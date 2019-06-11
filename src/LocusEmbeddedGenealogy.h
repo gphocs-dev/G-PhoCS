@@ -7,7 +7,6 @@
 
 #include "LocusGenealogy.h"
 #include "LocusPopIntervals.h"
-
 #include "MCMCcontrol.h"
 #include "GPhoCS.h"
 #include "MemoryMng.h"
@@ -43,11 +42,6 @@ private:
     std::map<int,int> leafToPop_; //map between leaf to its pop
     std::map<int,std::vector<int>> popToLeaves_; //map between pop to its leaves
 
-    int popQueue_[2 * NSPECIES - 1]; // post-order queue of populations //todo: replace by number of species
-
-    GenealogyStats genealogyStats_; //statistics of genealogy
-    GenealogyStats genealogyStatsCheck_; //statistics of genealogy - for check //todo: name? and is this member necessary?
-
     DATA_SETUP*     pDataSetup_;       //pointer to DATA_SETUP struct
     PopulationTree* pPopTree_;         //pointer to PopulationTree struct
     DATA_STATE*     pDataState_;       //pointer to DATA_STATE struct
@@ -63,24 +57,11 @@ public:
     //construct both genealogy and intervals and connect between them
     int construct_genealogy_and_intervals();
 
-    int computeGenetreeStats(GenealogyStats& genStatsTotal);
-
-    double recalcStats(int pop, GenealogyStats& genStatsTotal);
-
     //get locus ID
     int getLocusID();
 
     //get locus data
     LocusData* getLocusData();
-
-    //print popToLeaves
-    void printPopToLeaves();
-
-    //print leafToPop
-    void printLeafToPop();
-
-    //print all
-    void printEmbeddedGenealogy();
 
     //get all leaves of a population
     std::vector<int>& getPopLeaves(int pop);
@@ -88,11 +69,36 @@ public:
     //get population of a leaf
     int getLeafPop(int leafId);
 
+    //get a reference to statistics
+    const GenealogyStats& getStats() const;
+
+    //compute genealogy tree statistics
+    int computeGenetreeStats();
+
+    //recalculate statistics
+    double recalcStats(int pop);
+
+    // **************** print methods ****************
+
+    //print popToLeaves
+    void printPopToLeaves();
+
+    //print leafToPop
+    void printLeafToPop();
+
+    //print all data
+    void printEmbeddedGenealogy();
+
+    // **************** test methods ****************
+
     //test if the new genealogy data structure is consistent with the original
     void testLocusGenealogy();
 
     //test if the new events data structure is consistent with the original
     void testPopIntervals();
+
+    //test if statistics are consistent with the original
+    void testGenealogyStats();
 
 
 };

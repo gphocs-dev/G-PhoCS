@@ -1,11 +1,14 @@
 
 #include "LocusGenealogy.h"
 #include "DataLayerConstants.h"
+
 #include <iostream>
+#include <cassert>
+
 
 /*
-    LocusGenealogy constructor.
-    Assign the DataSetup pointer.
+    LocusGenealogy .
+    constructor
     Initialize leafNodes vector with N leaf nodes (N=num samples)
     Initialize coalNodes vector with N-1 leaf nodes
     Reserve place in migNodes_ vector with X nodes (X=MAX_MIGS)
@@ -16,9 +19,6 @@ LocusGenealogy::LocusGenealogy(int numSamples)
           leafNodes_(numSamples),
           coalNodes_(numSamples-1) {
 
-    //reserve max migrations
-    migNodes_.reserve(MAX_MIGS);
-
     //set leaf nodes id
     for (int i = 0; i < leafNodes_.size(); i++) {
         leafNodes_[i].setNodeId(i);
@@ -28,20 +28,25 @@ LocusGenealogy::LocusGenealogy(int numSamples)
     for (int i = 0; i < coalNodes_.size(); i++) {
         coalNodes_[i].setNodeId(i+numSamples_);
     }
+
+    //reserve max migrations
+    migNodes_.reserve(MAX_MIGS);
 }
 
 /*
+    resetGenealogy
     resets genealogy
     @param: node index
     @return: leaf node
 */
-void LocusGenealogy::reset() {
+void LocusGenealogy::resetGenealogy() {
     leafNodes_.clear();
     coalNodes_.clear();
     migNodes_.clear();
 }
 
 /*
+    getLeafNode
     returns a leaf node by id
     @param: node index
     @return: leaf node
@@ -51,6 +56,7 @@ LeafNode* LocusGenealogy::getLeafNode(int nodeID) {
 }
 
 /*
+    getCoalNode
     returns a coal node by id
     @param: node index
     @return: coal node
@@ -62,6 +68,7 @@ CoalNode* LocusGenealogy::getCoalNode(int nodeID) {
 
 
 /*
+    isLeaf
     returns true if node is a leaf
     @param: node id
     @return: boolean
@@ -70,7 +77,9 @@ bool LocusGenealogy::isLeaf(int nodeId) {
     return nodeId < numSamples_;
 }
 
+
 /*
+    getTreeNodeByID
     returns a tree node by node id
     @param: node id
     @return: tree node (leaf or coal)
@@ -85,26 +94,29 @@ TreeNode* LocusGenealogy::getTreeNodeByID(int nodeID) {
     return this->getCoalNode(nodeID);
 }
 
+
 /*
+    getNumTreeNodes
     @return: num tree nodes in genealogy
 */
 int LocusGenealogy::getNumTreeNodes() {
-    return leafNodes_.size() + coalNodes_.size() + migNodes_.size();
+    return int(leafNodes_.size() + coalNodes_.size() + migNodes_.size());
 }
 
 
 /*
-    creates a mig node after given node (after is closer to root)
+    addMigNode
+    creates a mig node after a given node (after is closer to root)
     @param: node id
     @return: reference to the new mig node
 */
-MigNode * LocusGenealogy::addMigNode(TreeNode *pTreeNode) {
+MigNode* LocusGenealogy::addMigNode(TreeNode* pTreeNode, int migBandID) {
 
     //get parent node
     TreeNode* pParent = pTreeNode->getParent();
 
     //create a mig node and push to mig vector
-    migNodes_.emplace_back();
+    migNodes_.emplace_back(migBandID);
 
     //get a (non-local) pointer to the new mig node
     MigNode* pMigNode = &migNodes_.back();
@@ -135,8 +147,10 @@ MigNode * LocusGenealogy::addMigNode(TreeNode *pTreeNode) {
     return pMigNode;
 }
 
+
 /*
-    removes given mig node
+    removeMigNode
+    removes a given mig node
     if it's not the last element replace it by the last element and pop back
     @param: pointer to mig that should be removed
 */
@@ -160,6 +174,7 @@ void LocusGenealogy::removeMigNode(MigNode* pMigNode) { //todo: replace loop
 
 
 /*
+   constructBranches
    Constructs branches of genealogy by iterating leaf and coalescent nodes
    and link each node to its parent and sons
 */
@@ -218,6 +233,11 @@ void LocusGenealogy::constructBranches(LocusData* pLocusData) {
 
 }
 
+
+/*
+   printGenealogy
+   prints genealogy
+*/
 void LocusGenealogy::printGenealogy() {
 
     //print genealogy tree
@@ -234,10 +254,92 @@ void LocusGenealogy::printGenealogy() {
     }
 
     //for each mig node
-    for (MigNode& migNode : migNodes_) {
+    for (MigNode &migNode : migNodes_) {
         migNode.printTreeNode();
     }
 
+}
+
+
+/*
+   testLocusGenealogy
+   verify genealogy is consistent with previous version
+*/
+void LocusGenealogy::testLocusGenealogy(int locusID, LocusData *pLocusData,
+                                        GENETREE_MIGS *pGenetreeMigs) {
+
+    //get all migs into a map: <node,[migsAges]>
+    std::map<int, std::vector<double>> migsMap;
+    for (int node = 0; node < 2 * numSamples_ - 1; node++) {
+        int mig = findFirstMig(locusID, node, getNodeAge(pLocusData, node));
+        while (mig != -1) {
+            double age = pGenetreeMigs[locusID].mignodes[mig].age;
+            migsMap[node].emplace_back(age);
+            mig = findFirstMig(locusID, node, age);
+        }
+    }
+
+    //iterate by node id
+    for (int node = 0; node < 2 * numSamples_ - 1; node++) {
+
+        //get coal or leaf node
+        TreeNode* pNode = this->getTreeNodeByID(node);
+
+        //get ages
+        double age = getNodeAge(pLocusData, node);
+        double ageNew = pNode->getAge();
+
+        //compare ages
+        assert(fabs(age - ageNew) < EPSILON);
+
+        TreeNode* parentNew = pNode;
+
+        //if there are migrations above
+        for (double migAge : migsMap[node]) {
+
+            parentNew = parentNew->getParent();
+            double migAgeNew = parentNew->getAge();
+
+            //compare ages
+            assert(fabs(migAge - migAgeNew) < EPSILON);
+        }
+
+        //compare parents ages
+        int parent = getNodeFather(pLocusData, node);
+        parentNew = parentNew->getParent();
+        if (parent != -1) {
+            double age = getNodeAge(pLocusData, parent);
+            double ageNew = parentNew->getAge();
+            //compare ages
+            assert(fabs(age - ageNew) < EPSILON);
+        }
+
+        //compare sons ages
+        for (int son = 0; son < 2; son++) {
+            int lSon = getNodeSon(pLocusData, node, son);
+            TreeNode *pSonNew = pNode;
+
+            //reverse vector
+            std::vector<double> rev(migsMap[lSon].rbegin(), migsMap[lSon].rend());
+            for (double migAge : rev) {
+
+                pSonNew = son ? pSonNew->getRightSon() : pSonNew->getLeftSon();
+                double migAgeNew = pSonNew->getAge();
+
+                //compare ages
+                assert(fabs(migAge - migAgeNew) < EPSILON);
+            }
+
+            pSonNew = son ? pSonNew->getRightSon() : pSonNew->getLeftSon();
+            if (lSon != -1) {
+                double age = getNodeAge(pLocusData, lSon);
+                double ageNew = pSonNew->getAge();
+                //compare ages
+                assert(fabs(age - ageNew) < EPSILON);
+            }
+        }
+
+    }
 }
 
 

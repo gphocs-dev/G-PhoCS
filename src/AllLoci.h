@@ -15,27 +15,34 @@
  * Class AllLoci contains all loci embedded genealogies
  *
  * Contains:
- * Vector of LocusEmbeddedGenealogy objects
-
+ * 1. Vector of LocusEmbeddedGenealogy objects.
+ * 2. Object of total statistics.
  *===========================================================================*/
 class AllLoci {
 
     std::vector<LocusEmbeddedGenealogy> lociVector_; //vector of loci
 
-    GenealogyStats genealogiesStatsTotal_; //total statistics for all loci
+    GenealogyStats statsTotal_; //total statistics for all loci
+
+    std::vector<int> popQueue_; // post-order queue of populations //todo: replace by number of species
 
 public:
 
-    //contructor
+    //constructor
     AllLoci();
+
+    int populationPostOrder(int pop, std::vector<int>::iterator first);
 
     LocusEmbeddedGenealogy& getLocus(int locusID);
 
-    //test locus
-    void testLocus(int locusID);
+    void calcTotalStats();
+
+    void testGenealogyStats();
 
     //test all loci
     void testLoci();
+
+
 };
 
 

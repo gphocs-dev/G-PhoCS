@@ -26,7 +26,8 @@
  * 1. Array if intervals objects.
  * 2. Pointer to a pool of free intervals
  * 3. Total number of intervals
- * 4.
+ * 4. Statistics vector of coal for each pop
+ * 5. Statistics vector of migs for each mig band
  *===========================================================================*/
 
 
@@ -39,6 +40,12 @@ private:
 
     int numIntervals_; //total number of intervals
 
+    //std::vector<GenStats> coalStats_; //genealogy statistics of coal
+    //std::vector<GenStats> migsStats_; //genealogy statistics of migs
+    GenealogyStats stats_; //genealogy statistics of coal and migs
+
+    int popQueue_[2 * NSPECIES - 1]; // post-order queue of populations //todo: replace by number of species
+
     int locusID_; //locus id, for error massages
     PopulationTree* pPopTree_; //pointer to PopulationTree struct
 
@@ -49,6 +56,15 @@ public:
 
     //destructor
     ~LocusPopIntervals();
+
+    //reset intervals
+    void reset();
+
+    //link intervals to each other
+    void linkIntervals();
+
+    //initialize intervals array with pop-start and pop-end intervals
+    void createStartEndIntervals();
 
     //get a free interval from intervals pool
     PopInterval* getIntervalFromPool();
@@ -72,27 +88,23 @@ public:
     //get a pointer to a end start interval of a given population
     PopInterval* getPopEnd(int pop);
 
-    //get first interval (after the pop start) of a given population
-    PopInterval* getFirstInterval(int pop);
+    //get a reference to statistics
+    const GenealogyStats& getStats() const;
 
-    //reset intervals
-    void reset();
+    //compute genealogy tree statistics
+    int computeGenetreeStats();
 
-    //link intervals to each other
-    void linkIntervals();
-
-    //initialize intervals array with pop-start and pop-end intervals
-    void createStartEndIntervals();
+    //recalculate statistics
+    double recalcStats(int pop);
 
     //for each pop print all intervals
     void printIntervals();
 
-    //get a reference to genealogy statistics
-    GenealogyStats& getStats();
+    //verify intervals are equal to old data structure
+    void testPopIntervals();
 
-    int computeGenetreeStats();
-
-    double recalcStats(int pop);
+    //verify statistics are equal to statistics of old data structure
+    void testGenealogyStatistics();
 
 };
 

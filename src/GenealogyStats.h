@@ -6,37 +6,32 @@
 
 //genealogy statistics
 
-class GenealogyStats {
+struct GenStats {
+    int num;       //num occurrences
+    double stats; //statistics
 
-    struct X {
-        int num;           //num intervals
-        double statistics; //statistics
-    };
+    GenStats() : num(0), stats(0) {} //constructor
 
-    std::vector<X> coal_;
-    std::vector<X> migs_;
+    void reset() {num = 0; stats = 0;}
+};
 
-public:
-    GenealogyStats(int nCoal, int nMigs);
 
-    //get
-    int getNumCoal(int pop);
-    int getNumMigs(int migId);
-    double getCoalStats(int pop);
-    double getMigsStats(int migId);
+//struct for each locus
+struct GenealogyStats {
+    std::vector<GenStats> coal; //vector of coal statistics
+    std::vector<GenStats> migs; //vector of migs statistics
 
-    //set
-    void setNumCoal(int pop, int num);
-    void setNumMigs(int migId, int num);
-    void setCoalStats(int pop, double num);
-    void setMigsStats(int migId, double num);
+    //constructor
+    GenealogyStats(int nCoal, int nMigs) : coal(nCoal), migs(nMigs) {}
 
-    //increment
-    void incrementNumCoal(int pop, int num);
-    void incrementNumMigs(int migId, int num);
-    void incrementCoalStats(int pop, double num);
-    void incrementMigsStats(int migId, double num);
+    //reset statistics
+    void resetStatsTotal() {
+        for (auto stats : coal)
+            stats.reset();
 
+        for (auto stats : migs)
+            stats.reset();
+    }
 };
 
 

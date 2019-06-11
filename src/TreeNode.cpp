@@ -149,7 +149,8 @@ std::string CoalNode::typeToStr() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-MigNode::MigNode() : pOutMig_(nullptr), pInMig_(nullptr) {
+MigNode::MigNode(int migBandID) : pOutMig_(nullptr), pInMig_(nullptr),
+                                  migBandId_(migBandID) {
     type_ = TreeNodeType::MIG;
 }
 
@@ -167,6 +168,10 @@ PopInterval* MigNode::getOutMigInterval() const {
 
 PopInterval* MigNode::getInMigInterval() const {
     return pInMig_;
+}
+
+int MigNode::getMigBandId() const {
+    return migBandId_;
 }
 
 void MigNode::printTreeNode() {
@@ -188,4 +193,5 @@ int MigNode::getPopId() {
 std::string MigNode::typeToStr() {
     return "mig";
 }
+
 

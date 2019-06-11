@@ -1,6 +1,3 @@
-//
-// Created by nomihadar on 3/11/19.
-//
 
 #ifndef G_PHOCS_TREENODE_H
 #define G_PHOCS_TREENODE_H
@@ -55,7 +52,7 @@ public:
     //get type as string
     virtual std::string typeToStr() = 0;
 
-    //getters and setters
+    //getters
     TreeNodeType getType() const;
     int getNodeId() const;
     double getAge() const;
@@ -63,6 +60,7 @@ public:
     TreeNode* getLeftSon() const;
     TreeNode* getRightSon() const;
 
+    //setters
     void setNodeId(int nodeId);
     void setAge(double age);
     void setParent(TreeNode* pParent);
@@ -78,7 +76,7 @@ private:
     PopInterval* pSamplesStart_; //pointer to samplesStart interval
 
 public:
-    LeafNode();
+    LeafNode(); //constructor
 
     int getPopId() override;
 
@@ -99,7 +97,7 @@ private:
     PopInterval* pCoal_; //pointer to coalescent interval
 
 public:
-    CoalNode();
+    CoalNode(); //constructor
 
     int getPopId() override;
 
@@ -119,9 +117,10 @@ class MigNode : public TreeNode {
 private:
     PopInterval* pOutMig_;   //pointer to outgoing migration interval
     PopInterval* pInMig_;   //pointer to incoming migration interval
+    int migBandId_;         //mig band ID
 
 public:
-    MigNode();
+    explicit MigNode(int migBandID); //constructor
 
     int getPopId() override;
 
@@ -132,6 +131,7 @@ public:
     //getters and setters
     PopInterval* getOutMigInterval() const;
     PopInterval* getInMigInterval() const;
+    int getMigBandId() const;
     void setOutMigInterval(PopInterval* pOutMig);
     void setInMigInterval(PopInterval* pInMig);
 
@@ -142,7 +142,7 @@ public:
     Types of tree nodes
 */
 enum class TreeNodeType {
-    LEAF,
+    LEAF,   //leaf
     COAL,   //coalescence
     MIG,    //migration
 };

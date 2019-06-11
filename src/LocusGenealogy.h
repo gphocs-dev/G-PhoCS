@@ -3,8 +3,8 @@
 #define G_PHOCS_LOCUSGENEALOGY_H
 
 #include "TreeNode.h"
-#include "MCMCcontrol.h"
 #include "GPhoCS.h"
+#include "patch.h"
 
 #include <vector>
 
@@ -40,10 +40,12 @@ public:
     explicit LocusGenealogy(int numSamples);
 
     //reset genealogy
-    void reset();
+    void resetGenealogy();
 
-    //get leaf/coal/mig node by node id
+    //get a leaf node by node id
     LeafNode* getLeafNode(int nodeId);
+
+    //get a mig node by node id
     CoalNode* getCoalNode(int nodeId);
 
     //return true if node is a leaf
@@ -56,7 +58,7 @@ public:
     int getNumTreeNodes();
 
     //add a migration node
-    MigNode* addMigNode(TreeNode* treeNode);
+    MigNode* addMigNode(TreeNode* treeNode, int migBandID);
 
     //remove a migration node
     void removeMigNode(MigNode* pMigNode);
@@ -64,9 +66,12 @@ public:
     //construct branches of genealogy
     void constructBranches(LocusData* pLocusData);
 
+    //print genealogy
     void printGenealogy();
 
-
+    //verify genealogy is consistent with previous version
+    void testLocusGenealogy(int locusID, LocusData *pLocusData,
+                            GENETREE_MIGS *pGenetreeMigs);
 
 };
 
