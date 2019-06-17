@@ -26,19 +26,12 @@ LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
           pDataState_(pDataState),
           pGenetreeMigs_(pGenetreeMigs) {
 
-    //create map between leaf to its pop
-    // and map between pop to its leaves
-    for (int node = 0; node < pDataSetup_->numSamples; node++) {
-        int pop = nodePops[locusID_][node];
-        leafToPop_[node] = pop;
-        popToLeaves_[pop].emplace_back(node); //todo reserve?
-    }
-
 }
 
 
 /*
-   @return: a pointer to locus data of current locus
+ * getLocusData
+ * @return: a pointer to locus data of current locus
 */
 LocusData* LocusEmbeddedGenealogy::getLocusData() {
     return pDataState_->lociData[locusID_];
@@ -46,7 +39,7 @@ LocusData* LocusEmbeddedGenealogy::getLocusData() {
 
 
 /*
-	Constructs genealogy and intervals
+	construct_genealogy_and_intervals
 	Genealogy: construct branches and link to corresponding intervals,
                 add mig nodes to tree
     Intervals: reset intervals, ling them to each other
@@ -68,7 +61,7 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
     genealogy_.constructBranches(this->getLocusData());
 
     //reset intervals
-    intervals_.reset();
+    intervals_.resetPopIntervals();
 
     //link intervals to each other
     intervals_.linkIntervals();
@@ -199,7 +192,8 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
 
 
 /*
-	compute genealogy tree statistics
+ * computeGenetreeStats
+ * compute genealogy tree statistics
 */
 
 int LocusEmbeddedGenealogy::computeGenetreeStats() {
@@ -208,7 +202,8 @@ int LocusEmbeddedGenealogy::computeGenetreeStats() {
 
 
 /*
-	recalculate statistics
+ * recalcStats
+ * recalculate statistics
 */
 double LocusEmbeddedGenealogy::recalcStats(int pop) {
   return intervals_.recalcStats(pop);
@@ -216,48 +211,13 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
 
 
 /*
-	print pop to leaves map
-*/
-void LocusEmbeddedGenealogy::printPopToLeaves() {
-
-    std::cout << "Pop to leaves: " << std::endl;
-    for (auto &x : popToLeaves_) {
-        std::cout << "pop " << x.first << ", leaves: ";
-        for (int leaf : x.second) {
-            cout << leaf << ", ";
-        }
-        std::cout << std::endl;
-    }
-}
-
-/*
-	print leaf to map
-*/
-void LocusEmbeddedGenealogy::printLeafToPop() {
-    std::cout << "Leaf to pop: " << std::endl;
-    for (auto &x : leafToPop_) {
-        std::cout << "leaf " << x.first << ", "
-                  << "pop: " << x.second << std::endl;
-    }
-}
-
-/*
-	print population tree, genealogy and intervals
+ * printEmbeddedGenealogy
+ * print population tree, genealogy and intervals
 */
 void LocusEmbeddedGenealogy::printEmbeddedGenealogy() {
 
     //print population tree
     printPopulationTree(this->pDataSetup_->popTree, stderr, 1);
-
-    //print pop to leaves
-    std::cout << "------------------------------------------------------"
-              << std::endl;
-    this->printPopToLeaves();
-
-    //print leaf to pop
-    std::cout << "------------------------------------------------------"
-              << std::endl;
-    this->printLeafToPop();
 
     //print genealogy
     std::cout << "------------------------------------------------------"
@@ -272,49 +232,47 @@ void LocusEmbeddedGenealogy::printEmbeddedGenealogy() {
 }
 
 
+/*
+ * getLocusID
+*/
 int LocusEmbeddedGenealogy::getLocusID() {
     return locusID_;
 }
 
 
-/*
-	get all leaves of a population
-*/
-std::vector<int> &LocusEmbeddedGenealogy::getPopLeaves(int pop) {
-    return popToLeaves_[pop];
-}
-
 
 /*
-	get population of a leaf
-*/
-int LocusEmbeddedGenealogy::getLeafPop(int leafId) {
-    return leafToPop_[leafId];
-}
-
-
-/*
-   get a reference to statistics
+ * getStats
+ * get a reference to statistics
 */
 const GenealogyStats& LocusEmbeddedGenealogy::getStats() const {
     return intervals_.getStats();
 }
 
 
+/*
+ * testLocusGenealogy
+ * verify new genealogy data structure is consistent with the original
+*/
 void LocusEmbeddedGenealogy::testLocusGenealogy() {
     genealogy_.testLocusGenealogy(locusID_, this->getLocusData(),
                                   pGenetreeMigs_);
 }
 
 
-//test if the new events data structure is consistent with the original
-//(terminology: old: events, new: intervals)
+/*
+ * testPopIntervals
+ * verify new events data structure is consistent with the original
+*/
 void LocusEmbeddedGenealogy::testPopIntervals() {
     intervals_.testPopIntervals();
 }
 
 
-//verify statistics are equal to statistics of old data structure
+/*
+ * testGenealogyStats
+ * verify statistics are equal to statistics of old data structurel
+*/
 void LocusEmbeddedGenealogy::testGenealogyStats() {
     intervals_.testGenealogyStatistics();
 }

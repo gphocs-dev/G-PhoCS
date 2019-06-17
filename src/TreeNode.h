@@ -16,10 +16,11 @@
  * TreeNode Contains:
  * 1. Type of node (leaf, migration or coal).
  * 2. Id of tree node (analogous to node id of old structure.)
- * 3. Pointers ("edges") to parent and sons.
+ * 3. Age of tree node.
+ * 4. Pointers ("edges") to parent and sons.
  *
  * The derived classes also contain:
- * 4. Pointer(s) to corresponding interval(s).
+ * 5. Pointer(s) to corresponding interval(s).
  *===========================================================================*/
 
 enum class TreeNodeType; //forward declaration
@@ -43,7 +44,10 @@ public:
     //constructor
     TreeNode();
 
-    //get pop id. a pure virtual method.
+    //copy constructor
+    TreeNode(const TreeNode& treeNode2);
+
+    //get pop id. A pure virtual method.
     virtual int getPopId() = 0;
 
     //print tree node
@@ -78,6 +82,8 @@ private:
 public:
     LeafNode(); //constructor
 
+    LeafNode(const LeafNode& leafNode2); //copy-constructor
+
     int getPopId() override;
 
     void printTreeNode() override;
@@ -98,6 +104,8 @@ private:
 
 public:
     CoalNode(); //constructor
+
+    CoalNode(const CoalNode& coalNode2); //copy-constructor
 
     int getPopId() override;
 
@@ -121,6 +129,8 @@ private:
 
 public:
     explicit MigNode(int migBandID); //constructor
+
+    MigNode(const MigNode& migNode2); //copy-constructor
 
     int getPopId() override;
 

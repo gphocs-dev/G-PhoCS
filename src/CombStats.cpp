@@ -385,7 +385,7 @@ void allocatePopsMem() {
         allocateStats(&comb_stats[comb].combs[pop]);
       }
     }
-    if (comb_stats == NULL) {
+    if (comb_stats == nullptr) {
       // TODO - add memory allocation test for all of comb_stats
       fprintf(stderr, "\nError: Out Of Memory comb_stats\n");
       exit(-1);

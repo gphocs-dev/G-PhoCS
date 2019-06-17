@@ -169,8 +169,8 @@ int getLineagesAtInterval( int gen, int start_event,
 int getEdgesForTimePop (int gen, double time,
                         int pop, int exc_node,
                         int* out_array);
-int
-populationPostOrder (int pop, int* ordered_pops);
+
+//int populationPostOrder (int pop, int* ordered_pops);
 
 // event chain functions
 int

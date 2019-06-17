@@ -36,7 +36,7 @@ void printUsage(char *filename) {
 }
 
 int main (int argc, char*argv[]) {
-  FILE *traceFile = NULL;
+  FILE *traceFile = nullptr;
   const int bufferLen = 4096;
   char **colNames;
   char line[bufferLen], *token,  tempStr[bufferLen];
@@ -51,7 +51,7 @@ int main (int argc, char*argv[]) {
   char formatStr[bufferLen];
   double **data;
 
-  unsigned int *width = NULL;
+  unsigned int *width = nullptr;
   
   int option_index;
   int c;
@@ -98,7 +98,7 @@ int main (int argc, char*argv[]) {
     }
      
   
-  if(argv[optind] == NULL) {
+  if(argv[optind] == nullptr) {
     fprintf(stderr, "Missing trace filename.\n");
     printUsage(argv[0]);
     return 1;
@@ -107,21 +107,21 @@ int main (int argc, char*argv[]) {
   //Open trace file
   traceFile = fopen(argv[optind], "r");
   //Verify trace file was opened successfully
-  if(traceFile == NULL) {
+  if(traceFile == nullptr) {
     fprintf(stderr, "Could not find trace file '%s' specified.\n", argv[optind]);
     printUsage(argv[0]);
     return 1;
   }
 
   numLines = 0; //Determine number of lines in the file
-  if(NULL == fgets(line, bufferLen, traceFile))	// discard header
+  if(nullptr == fgets(line, bufferLen, traceFile))	// discard header
   {
     fprintf(stderr, "Unable to discard header of the trace file\n");
     return -1;
   }
   while(!feof(traceFile))
   {
-    if(NULL == fgets(line, bufferLen, traceFile))
+    if(nullptr == fgets(line, bufferLen, traceFile))
     {
       fprintf(stderr, "Unable to count lines of the trace file\n");
       return -1;
@@ -138,7 +138,7 @@ int main (int argc, char*argv[]) {
   }
   fseek(traceFile, 0, SEEK_SET);
   //Get first line of trace file
-  if(NULL == fgets(line, bufferLen, traceFile))
+  if(nullptr == fgets(line, bufferLen, traceFile))
   {
     fprintf(stderr, "Unable to get the first line of the trace file.\n" );
     return -1;
@@ -150,10 +150,10 @@ int main (int argc, char*argv[]) {
   //  to determine the number of columns
   token = strtok(line, delims);
   numCols = 0;
-  while (token != NULL) {
+  while (token != nullptr) {
 //	  printf("column %s.\n",token);
     numCols++;
-	token = strtok(NULL, delims);
+	token = strtok(nullptr, delims);
   }
   // remove first column from considerations
   numCols--;   
@@ -177,17 +177,17 @@ int main (int argc, char*argv[]) {
 
   //Parse each column name (header) from the line we read in
   token = strtok(tempStr, delims);
-  token = strtok(NULL, delims);
+  token = strtok(nullptr, delims);
   for(i=0;i<numCols;i++) {
     colNames[i] = (char*) malloc(sizeof(char) * (strlen(token)+1));
     strcpy(colNames[i],token);
-	token = strtok(NULL, delims);
+	token = strtok(nullptr, delims);
   }   
 
   
   //Discard specified number of samples
   for(i=0;i<discardXFromBeginning;i++)
-    if(NULL == fgets(line, bufferLen, traceFile))
+    if(nullptr == fgets(line, bufferLen, traceFile))
     {
         fprintf(stderr, "Unable to discard lines.\n");
     	return -1;
@@ -198,7 +198,7 @@ int main (int argc, char*argv[]) {
   blockCount = 0;
   while (1) {
     //Get the next line from the file
-    if(NULL == fgets(line, bufferLen, traceFile))
+    if(nullptr == fgets(line, bufferLen, traceFile))
     {
       fprintf(stderr, "Unable to read a lline for the trace file\n");
       return -1;
@@ -209,7 +209,7 @@ int main (int argc, char*argv[]) {
       break;
 
     token = strtok(line, delims);
-    token = strtok(NULL, delims);
+    token = strtok(nullptr, delims);
     count++;
     for(ancestorNum=0; ancestorNum < numCols; ancestorNum++) {
       //Convert next entry to float
@@ -229,7 +229,7 @@ int main (int argc, char*argv[]) {
       }
       
       //read in next entry
-      token = strtok(NULL, delims);
+      token = strtok(nullptr, delims);
     }
     if(count == blockSize) {
       count = 0;

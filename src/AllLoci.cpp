@@ -10,7 +10,7 @@
 */
 AllLoci::AllLoci()
         : lociVector_(), statsTotal_(dataSetup.popTree->numPops,
-                                     dataSetup.popTree->numMigBands), popQueue_(dataSetup.popTree->numPops) {
+                                     dataSetup.popTree->numMigBands) {
 
     lociVector_.reserve(dataSetup.numLoci);
 
@@ -22,38 +22,6 @@ AllLoci::AllLoci()
     //initialize mig band times
     initializeMigBandTimes(dataSetup.popTree);
 
-
-    //fill queue with pops, sorted by post order
-    //populationPostOrder(dataSetup.popTree->rootPop, popQueue_);
-
-
-    this->populationPostOrder(dataSetup.popTree->rootPop, popQueue_.begin());
-}
-
-
-/* populationPostOrder
-   Computes pots-order for population subtreetree rooted at pop.
-   Writes down the post order in specified vector.
-   Returns size of subtree.
-   A recursive procedure.
-*/
-int AllLoci::populationPostOrder(int pop, std::vector<int>::iterator it) {
-    int size;
-
-    // halting condition
-    if (pop < dataSetup.popTree->numCurPops) {
-        *it = pop;
-        return 1;
-    }
-
-    // compute post-order for every subtree and add root
-    size = populationPostOrder(dataSetup.popTree->pops[pop]->sons[0]->id,
-                               it);
-    size += populationPostOrder(dataSetup.popTree->pops[pop]->sons[1]->id,
-                                it + size);
-    popQueue_[size] = pop;
-
-    return size + 1;
 }
 
 
@@ -121,17 +89,17 @@ void AllLoci::testLoci() {
         //test locus statistics
         locus.testGenealogyStats();
 
-        locus.printEmbeddedGenealogy();
+        //locus.printEmbeddedGenealogy();
         //printGenealogyAndExit(locus.getLocusID(), -1);
         //break;
 
     }
 
     //calculate total statistics
-    //this->calcTotalStats();
+    this->calcTotalStats();
 
     //test total statistics
-    //this->testGenealogyStats();
+    this->testGenealogyStats();
 }
 
 

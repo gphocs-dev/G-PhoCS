@@ -51,7 +51,7 @@ int GetMem( void )
 
   locus_data = (Locus_SuperStruct*)
                malloc( dataSetup.numLoci * sizeof(Locus_SuperStruct) );
-  if(locus_data == NULL)
+  if(locus_data == nullptr)
   {
     fprintf(stderr, "\nError: Out Of Memory genLogLikelihood.\n");
     exit(-1);
@@ -60,7 +60,7 @@ int GetMem( void )
   // get mem for auxiliary node arrays
   nodePops = (int**)
              malloc( 2 * dataSetup.numLoci * sizeof(int*) );
-  if(nodePops == NULL)
+  if(nodePops == nullptr)
   {
     fprintf(stderr, "\nError: Out Of Memory nodePop array.\n");
     exit(-1);
@@ -68,7 +68,7 @@ int GetMem( void )
   nodeEvents  = nodePops + dataSetup.numLoci;
   nodePops[0] = (int*)
                 malloc( 2 * dataSetup.numLoci * maxNodes * sizeof(int) );
-  if( nodePops[0] == NULL )
+  if( nodePops[0] == nullptr )
   {
     fprintf(stderr, "\nError: Out Of Memory nodePop space.\n");
     exit(-1);
@@ -84,7 +84,7 @@ int GetMem( void )
   // get memory for event_chains and stats and initialize
   genetree_migs = (GENETREE_MIGS*)
                   malloc( dataSetup.numLoci * sizeof(GENETREE_MIGS) );
-  if(genetree_migs == NULL)
+  if(genetree_migs == nullptr)
   {
     fprintf(stderr, "\nError: Out Of Memory genetree migs.\n");
     exit(-1);
@@ -92,13 +92,13 @@ int GetMem( void )
 
   genetree_stats = (GENETREE_STATS*)
                    malloc( dataSetup.numLoci * sizeof(GENETREE_STATS) );
-  if(genetree_stats == NULL)
+  if(genetree_stats == nullptr)
   {
     fprintf(stderr, "\nError: Out Of Memory genetree stats.\n");
     exit(-1);
   }
   genetree_stats_total_partitioned=(GENETREE_STATS*)malloc(dataSetup.numPopPartitions*sizeof(GENETREE_STATS));
-  if(genetree_stats_total_partitioned == NULL) {
+  if(genetree_stats_total_partitioned == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory genetree stats total partitioned.\n");
     exit(-1);
   }
@@ -108,7 +108,7 @@ int GetMem( void )
 
   genetree_stats_flat.sortedAgesArray = (double*)
                                         malloc( maxNodes * sizeof(double) );
-  if(genetree_stats_flat.sortedAgesArray == NULL)
+  if(genetree_stats_flat.sortedAgesArray == nullptr)
   {
     fprintf(stderr, "\nError: Out Of Memory event chains.\n");
     exit(-1);
@@ -131,7 +131,7 @@ int GetMem( void )
   count = event_chains[0].total_events * dataSetup.numLoci;
 
   event_chains[0].events = new Event[count];
-  if(event_chains[0].events == NULL)
+  if(event_chains[0].events == nullptr)
   {
     fprintf(stderr, "\nError: Out Of Memory event space.\n");
     exit(-1);
@@ -172,7 +172,7 @@ int GetMem( void )
           + dataSetup.popTree->numPops;
   genetree_node_stats.doubleArray = (double*)
                                     malloc( count * sizeof(double) );
-  if( genetree_node_stats.doubleArray == NULL )
+  if( genetree_node_stats.doubleArray == nullptr )
   {
     fprintf(stderr, "\nError: Out Of Memory genetree node stats - doubles.\n");
     exit(-1);
@@ -182,7 +182,7 @@ int GetMem( void )
             * dataSetup.numSamples;
   genetree_node_stats.doublePtrArray = (double**)
                                        malloc( count * sizeof(double*) );
-  if(genetree_node_stats.doublePtrArray == NULL)
+  if(genetree_node_stats.doublePtrArray == nullptr)
   {
     fprintf( stderr,
              "\nError: Out Of Memory genetree node stats "
@@ -193,7 +193,7 @@ int GetMem( void )
   count = 3 * dataSetup.numSamples;
   genetree_node_stats.doublePtrPtrArray = (double***)
                                           malloc( count * sizeof(double*) );
-  if(genetree_node_stats.doublePtrPtrArray == NULL)
+  if(genetree_node_stats.doublePtrPtrArray == nullptr)
   {
     fprintf( stderr,
              "\nError: Out Of Memory genetree node stats "
@@ -207,7 +207,7 @@ int GetMem( void )
           + dataSetup.popTree->numPops;
   genetree_node_stats.intArray = (int*)
                                  malloc( count * sizeof(int) );
-  if(genetree_node_stats.intArray == NULL)
+  if(genetree_node_stats.intArray == nullptr)
   {
     fprintf(stderr, "\nError: Out Of Memory genetree node stats - ints.\n");
     exit( -1 );
@@ -216,7 +216,7 @@ int GetMem( void )
   count = dataSetup.numSamples;
   genetree_node_stats.intPtrArray = (int**)
                                     malloc( count * sizeof(int*) );
-  if(genetree_node_stats.intPtrArray == NULL)
+  if(genetree_node_stats.intPtrArray == nullptr)
   {
     fprintf( stderr,
              "\nError: Out Of Memory genetree node stats - int pointers.\n" );

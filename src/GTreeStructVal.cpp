@@ -392,7 +392,7 @@ int checkGtreeStructure(int gen)
   double& age               = stack_vars.age;
   double& delta_t           = stack_vars.delta_t;
   double PRECISION          = stack_vars.PRECISION;
-  Event* pCurrEvent         = NULL;
+  Event* pCurrEvent         = nullptr;
   // essentially follow the same path as procedure computeGenetreeStats,
   // but validates with genetree nodes
 
@@ -407,8 +407,8 @@ int checkGtreeStructure(int gen)
   //  if(node < dataSetup.numSamples)
   //     pop_lins_in[ nodePops[gen][node] ]++;
   // }
-  populationPostOrder(dataSetup.popTree->rootPop, stack_vars.pop_queue);
-
+  popPostOrder(dataSetup.popTree, dataSetup.popTree->rootPop,
+               stack_vars.pop_queue);
 
   // --- Check event chain per population
   for( i = 0; i < dataSetup.popTree->numPops; ++i )

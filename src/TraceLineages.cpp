@@ -132,7 +132,7 @@ int
 traceLineage_move_to_next_pop (TraceLineageAutoVars* p_stack)
 {
   int i = 0;
-  if (dataSetup.popTree->pops[p_stack->pop]->father == NULL)
+  if (dataSetup.popTree->pops[p_stack->pop]->father == nullptr)
   {
     // reject if trying to reconnect above OLDAGE
     if (p_stack->reconnect == 1)

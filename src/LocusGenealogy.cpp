@@ -33,6 +33,7 @@ LocusGenealogy::LocusGenealogy(int numSamples)
     migNodes_.reserve(MAX_MIGS);
 }
 
+
 /*
     resetGenealogy
     resets genealogy
@@ -45,6 +46,7 @@ void LocusGenealogy::resetGenealogy() {
     migNodes_.clear();
 }
 
+
 /*
     getLeafNode
     returns a leaf node by id
@@ -54,6 +56,7 @@ void LocusGenealogy::resetGenealogy() {
 LeafNode* LocusGenealogy::getLeafNode(int nodeID) {
     return &leafNodes_[nodeID];
 }
+
 
 /*
     getCoalNode

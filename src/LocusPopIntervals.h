@@ -44,8 +44,6 @@ private:
     //std::vector<GenStats> migsStats_; //genealogy statistics of migs
     GenealogyStats stats_; //genealogy statistics of coal and migs
 
-    int popQueue_[2 * NSPECIES - 1]; // post-order queue of populations //todo: replace by number of species
-
     int locusID_; //locus id, for error massages
     PopulationTree* pPopTree_; //pointer to PopulationTree struct
 
@@ -58,7 +56,7 @@ public:
     ~LocusPopIntervals();
 
     //reset intervals
-    void reset();
+    void resetPopIntervals();
 
     //link intervals to each other
     void linkIntervals();

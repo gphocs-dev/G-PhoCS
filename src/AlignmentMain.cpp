@@ -75,19 +75,19 @@ int main_analyze_patterns(int argc, char*argv[]) {
     }
   }
   fsample=(FILE*)fopen(sampleFile,"r");
-  if(fsample == NULL) {
+  if(fsample == nullptr) {
     fprintf(stderr, "Error: Could not open sample file %s.\n", sampleFile);
     return 1;
   }
   res = fscanf(fsample,"%d",&numSamples);
   seqNames = (char**)malloc(numSamples*sizeof(char*));
-  if(seqNames == NULL) {
+  if(seqNames == nullptr) {
     fprintf(stderr, "Error: Out Of Memory seqNames array in main().\n");
     fclose(fsample);
     return 1;
   }
   seqNames[0] = (char*)malloc(NAME_LENGTH*numSamples*sizeof(char));
-  if(seqNames == NULL) {
+  if(seqNames == nullptr) {
     fprintf(stderr, "Error: Out Of Memory seqNames space in main().\n");
     free(seqNames);
     fclose(fsample);
@@ -109,7 +109,7 @@ int main_analyze_patterns(int argc, char*argv[]) {
   fclose(fsample);
 
   //	readSeqFile(seqFile,numSamples,seqNames,numLoci);
-  readSeqFile(seqFile,numSamples,NULL,numLoci);
+  readSeqFile(seqFile,numSamples,nullptr,numLoci);
 
   free(seqNames[0]);
   free(seqNames);
@@ -170,19 +170,19 @@ int main_4gam_test(int argc, char*argv[]) {
     }
   }
   fsample=(FILE*)fopen(sampleFile,"r");
-  if(fsample == NULL) {
+  if(fsample == nullptr) {
     fprintf(stderr, "Error: Could not open sample file %s.\n", sampleFile);
     return 1;
   }
   res = fscanf(fsample,"%d",&numSamples);
   seqNames = (char**)malloc(numSamples*sizeof(char*));
-  if(seqNames == NULL) {
+  if(seqNames == nullptr) {
     fprintf(stderr, "Error: Out Of Memory seqNames array in main().\n");
     fclose(fsample);
     return 1;
   }
   seqNames[0] = (char*)malloc(NAME_LENGTH*numSamples*sizeof(char));
-  if(seqNames == NULL) {
+  if(seqNames == nullptr) {
     fprintf(stderr, "Error: Out Of Memory seqNames space in main().\n");
     free(seqNames);
     fclose(fsample);
@@ -204,7 +204,7 @@ int main_4gam_test(int argc, char*argv[]) {
   fclose(fsample);
 
   readSeqFile(seqFile,numSamples,seqNames,numLoci);
-  //	readSeqFile(seqFile,numSamples,NULL,numLoci);
+  //	readSeqFile(seqFile,numSamples,nullptr,numLoci);
 
   free(seqNames[0]);
   free(seqNames);

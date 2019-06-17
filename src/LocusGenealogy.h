@@ -48,6 +48,9 @@ public:
     //get a mig node by node id
     CoalNode* getCoalNode(int nodeId);
 
+    //getCoalNode(TreeNode* nodeId);
+
+
     //return true if node is a leaf
     bool isLeaf(int nodeId);
 

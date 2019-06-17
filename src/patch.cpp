@@ -48,7 +48,7 @@ int GetRandomGtree(GenericBinaryTree *tree, int gen) {
   int pop;
   int *livingLineages = (int *) malloc(dataSetup.numSamples * sizeof(int));
 
-  if (livingLineages == NULL) {
+  if (livingLineages == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory living lineages at gen %d.\n", gen);
     exit(-1);
   }
@@ -271,7 +271,7 @@ getLineagesAtInterval_UNUSED(int gen, int start_event, int pop, int exc_node,
     event = event_chains[gen].events[event].getNextIdx();
 
     if (event < 0) {
-      if (dataSetup.popTree->pops[pop]->father == NULL) {
+      if (dataSetup.popTree->pops[pop]->father == nullptr) {
         if (debug) {
           fprintf(stderr,
                   "\nError: getLineagesAtInterval reached top event and could not find %d lineages for event %d (excluding %d).\n",
@@ -1339,7 +1339,7 @@ computeCoalStatsDelta(int instance, int gen, int bottom_event, int bottom_pop,
     event = event_chains[gen].events[event].getNextIdx();
     // if you reach top of population, move to next one
     if (event < 0) {
-      if (dataSetup.popTree->pops[pop]->father == NULL) {
+      if (dataSetup.popTree->pops[pop]->father == nullptr) {
         if (debug) {
           fprintf(stderr,
                   "\nError: computeCoalStatsDelta: Could not find top event %d from bottom event %d (bottom pop %d) in gen %d.\n",
@@ -1787,14 +1787,14 @@ int computeFlatStats() {
 
 int computeGenetreeStats(int gen) {
 
-  int i, pop, pop_queue[2 * NSPECIES - 1];    // post-order queue of populations
+  int i, pop;    // post-order queue of populations
 
   // go over all chains and compute num_lineages per each event
   // also update genetree statistics
-  populationPostOrder(dataSetup.popTree->rootPop, pop_queue);
 
   for (i = 0; i < dataSetup.popTree->numPops; i++) {
-    pop = pop_queue[i];
+    pop = dataSetup.popTree->popsPostOrder[i];
+
     // if not leaf population get number of in-lineages from end-events of son populations.
     if (pop >= dataSetup.popTree->numCurPops) {
       event_chains[gen].events[event_chains[gen].first_event[pop]].setNumLineages(
@@ -2029,16 +2029,12 @@ double gtreeLnLikelihood(int gen) {
 int synchronizeEvents(int gen) {
 
   int i, pop, event, id;
-  int pop_queue[2 * NSPECIES - 1];
   int res = 1;
 
   double realAge = 0.0, age, PERCISION = 0.0000001;
 
-
-  populationPostOrder(dataSetup.popTree->rootPop, pop_queue);
-
   for (i = 0; i < dataSetup.popTree->numPops; i++) {
-    pop = pop_queue[i];
+    pop = dataSetup.popTree->popsPostOrder[i];
     event = event_chains[gen].first_event[pop];
     age = dataSetup.popTree->pops[pop]->age;
 

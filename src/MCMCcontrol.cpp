@@ -103,7 +103,7 @@ int initGeneralInfo() {
 	mcmcSetup.finetunes.migTime = -1.0;
 	mcmcSetup.finetunes.theta = -1.0;
 	mcmcSetup.finetunes.migRate = -1.0;
-	mcmcSetup.finetunes.taus = NULL;
+	mcmcSetup.finetunes.taus = nullptr;
 	mcmcSetup.finetunes.locusRate =  -1.0;
 	mcmcSetup.finetunes.mixing = -1.0;
 
@@ -125,7 +125,7 @@ int readControlFile(char* controlFileName) {
 	int numErrors = 0;
 	FILE *fctl=(FILE*)fopen(controlFileName,"r");
 
-	if(fctl == NULL) {
+	if(fctl == nullptr) {
 		fprintf(stderr, "Error: Could not open control file '%s'.\n", controlFileName);
 		return -1;
 	}
@@ -161,7 +161,6 @@ int readControlFile(char* controlFileName) {
 		fclose(fctl);
 		return -1;
 	}
-
 	
 	fclose(fctl);
 	return 0;
@@ -180,7 +179,7 @@ int readSecondaryControlFile(char* controlFileName) {
 	int numErrors = 0;
 	FILE *fctl=(FILE*)fopen(controlFileName,"r");
 
-	if(fctl == NULL) {
+	if(fctl == nullptr) {
 		fprintf(stderr, "Error: Could not open secondary control file '%s'.\n", controlFileName);
 		return -1;
 	}
@@ -442,7 +441,7 @@ int finalizeNumParameters() {
 	
 	
 	mcmcSetup.printFactors = (double*)realloc(mcmcSetup.printFactors,mcmcSetup.numParameters*sizeof(double));
-	if(mcmcSetup.printFactors == NULL) {
+	if(mcmcSetup.printFactors == nullptr) {
 		fprintf( stderr, "Error: oom reallocating mcmcSetup.printFactors when finalizing parameters.\n");
 		exit(-1);
 	}
@@ -507,9 +506,9 @@ char* getNextToken(FILE* file, char* space) {
 int expectNextToken(FILE* file, const char* expectedToken, char* tokenSpace) 
 {
   int numErrors = 0;
-  if( NULL == expectedToken )
+  if( nullptr == expectedToken )
     return 1;
-  if( NULL == tokenSpace )
+  if( nullptr == tokenSpace )
     return 1;
 
   // read general info
@@ -534,7 +533,7 @@ int expectNextToken(FILE* file, const char* expectedToken, char* tokenSpace)
 /***********************************************************************************
  *	countTokens
  * 	- counts number of occurrences of given token in file until end token is observed
- *	- if end token is NULL, reads through end of file
+ *	- if end token is nullptr, reads through end of file
  *	- rewinds file pointer to starting point
  *	- receives pointer for space
  *	- returns count
@@ -551,7 +550,7 @@ int countTokens(      FILE* file,
 	fgetpos(file, &filePos);
 	while(!feof(file)) {
 		getNextToken(file, tokenSpace);
-		if(endToken == NULL || 0 == strcmp(endToken,tokenSpace)) {
+		if(endToken == nullptr || 0 == strcmp(endToken,tokenSpace)) {
 			break;
 		}
 		if(0 == strcmp(countToken,tokenSpace)) {
@@ -593,12 +592,12 @@ int readGeneralInfo(FILE* fctl) {
 			break;  
    
 		// read next token - value of some argument
-		if(NULL == fgets(line,STRING_LENGTH-1,fctl)) {
+		if(nullptr == fgets(line,STRING_LENGTH-1,fctl)) {
 			fprintf(stderr,"Error: unexpected end of file or other error inside GENERAL-INFO module.\n");
 			return numErrors+1;
 		}
 		token2 = strtokCS(line,parseFileDelims);
-		if(token2 == NULL) {
+		if(token2 == nullptr) {
 			fprintf(stderr,"Error: unable to read value for %s.\n",token);
 			numErrors++;
 			continue;
@@ -697,8 +696,8 @@ int readGeneralInfo(FILE* fctl) {
 			if(0 == strcmp("CONST",token2)) {
 				mcmcSetup.mutRateMode = 0;
 			} else if(0 == strcmp("FIXED",token2)) {
-				token2 = strtokCS(NULL, parseFileDelims);
-				if(token2 == NULL) {
+				token2 = strtokCS(nullptr, parseFileDelims);
+				if(token2 == nullptr) {
 					fprintf(stderr,"Error: unable to read filename for fixed locus mutation rates.\n");
 					numErrors++;
 					continue;
@@ -706,8 +705,8 @@ int readGeneralInfo(FILE* fctl) {
 				strncpy(ioSetup.rateFileName, token2, NAME_LENGTH-1);
 				mcmcSetup.mutRateMode = 2;
 			} else if(0 == strcmp("VAR",token2)) {
-				token2 = strtokCS(NULL, parseFileDelims);
-				if(token2 == NULL ||(sscanf(token2, "%lf", &mcmcSetup.varRatesAlpha) != 1)) {
+				token2 = strtokCS(nullptr, parseFileDelims);
+				if(token2 == nullptr ||(sscanf(token2, "%lf", &mcmcSetup.varRatesAlpha) != 1)) {
 					fprintf(stderr, "Error: unable to read floating point alpha parameter for Dirichlet prior of mutation rate variation in locus-mut-rate.\n");
 					numErrors++;
 				}
@@ -813,13 +812,13 @@ int readCurrentPops(FILE* fctl) {
 
 	// allocate temporary array for print factors, might expand later on, with migrations, etc.
 	mcmcSetup.printFactors = (double*)malloc((3*dataSetup.popTree->numCurPops - 2)*sizeof(double));
-	if(mcmcSetup.printFactors == NULL) {
+	if(mcmcSetup.printFactors == nullptr) {
 		fprintf(stderr, "\n Error: oom allocating printFactors array.\n");
 		exit(-1);
 	}
 	
 	dataSetup.numSamplesPerPop = (int*)malloc(dataSetup.popTree->numCurPops*sizeof(int));
-	if(dataSetup.numSamplesPerPop == NULL) {
+	if(dataSetup.numSamplesPerPop == nullptr) {
 		fprintf(stderr, "\nError: oom allocating maxSamplesPerPop array.\n");
 		exit(-1);
 	}
@@ -849,7 +848,7 @@ int readCurrentPops(FILE* fctl) {
 				break;  
    
 			// read next token - value of some argument
-			if(NULL == fgets(line,STRING_LENGTH-1,fctl)) {
+			if(nullptr == fgets(line,STRING_LENGTH-1,fctl)) {
 				fprintf(stderr,"Error: unexpected end of file or other error inside POP module.\n");
 				return numErrors+1;
 			}
@@ -859,7 +858,7 @@ int readCurrentPops(FILE* fctl) {
 				numErrors += readSampleLine(line,pop);
 			} else {
 				token2 = strtokCS(line, parseFileDelims);
-				if(token2 == NULL) {
+				if(token2 == nullptr) {
 					fprintf(stderr,"Error: unable to read value for %s.\n",token);
 					numErrors++;
 					continue;
@@ -886,7 +885,7 @@ int readCurrentPops(FILE* fctl) {
 						fprintf(stderr,"Error: value for POP age should be floating point number, got %s.\n", token2);
 						numErrors++;
 					}
-					token2 = strtokCS(NULL, parseFileDelims);
+					token2 = strtokCS(nullptr, parseFileDelims);
 					if(strlen(token2)>1 || (token2[0] != 'f' && token2[0] != 'e')) {
 						fprintf(stderr,"Error: POP age can be set to fixed (f) or estimated (e), not %s.\n", token2);
 						numErrors++;
@@ -976,13 +975,13 @@ int readAncestralPops(FILE* fctl) {
 				break;  
    
 			// read next token - value of some argument
-			if(NULL == fgets(line,STRING_LENGTH-1,fctl)) {
+			if(nullptr == fgets(line,STRING_LENGTH-1,fctl)) {
 				fprintf(stderr,"Error: unexpected end of file or other error inside POP module.\n");
 				return numErrors+1;
 			}
 			
 			token2 = strtokCS(line, parseFileDelims);
-			if(token2 == NULL) {
+			if(token2 == nullptr) {
 				fprintf(stderr,"Error: unable to read value for %s.\n",token);
 				numErrors++;
 				continue;
@@ -999,7 +998,7 @@ int readAncestralPops(FILE* fctl) {
 					}
 					
 					dataSetup.popTree->pops[pop]->sons[son] = dataSetup.popTree->pops[pop1];
-					if(dataSetup.popTree->pops[pop1]->father != NULL) {
+					if(dataSetup.popTree->pops[pop1]->father != nullptr) {
 						fprintf(stderr, "Error: population %s already has a parent defined already (%d in addition to %d).\n",
 							dataSetup.popTree->pops[pop1]->name, dataSetup.popTree->pops[pop1]->father->id+1,pop+1);
 						numErrors++;
@@ -1013,8 +1012,8 @@ int readAncestralPops(FILE* fctl) {
 						}
 					}
 
-					token2 = strtokCS(NULL, parseFileDelims);
-					if(son<1 && token2 == NULL) {
+					token2 = strtokCS(nullptr, parseFileDelims);
+					if(son<1 && token2 == nullptr) {
 						fprintf(stderr,"Error: second child of ancestral pop %d is missing.\n",pop+1);
 						numErrors++;
 						break;
@@ -1079,7 +1078,7 @@ int readAncestralPops(FILE* fctl) {
 		
 		// check that both children are set
 		for(son=0; son<2; son++) {
-			if(dataSetup.popTree->pops[pop]->sons[son] == NULL) {
+			if(dataSetup.popTree->pops[pop]->sons[son] == nullptr) {
 				fprintf(stderr, "Error: son #%d is not set for ancestral pop %d.\n", son+1, pop+1);
 				numErrors++;
 			}
@@ -1132,7 +1131,7 @@ int readMigrationBands(FILE* fctl) {
 
 	//reallocate space for print factors
 	mcmcSetup.printFactors = (double*)realloc(mcmcSetup.printFactors, (3*dataSetup.popTree->numCurPops - 2 + dataSetup.popTree->numMigBands)*sizeof(double));
-	if(mcmcSetup.printFactors == NULL) {
+	if(mcmcSetup.printFactors == nullptr) {
 		fprintf( stderr, "Error: oom reallocating mcmcSetup.printFactors for mig bands.\n");
 		exit(-1);
 	}
@@ -1159,13 +1158,13 @@ int readMigrationBands(FILE* fctl) {
 				break;  
    
 			// read next token - value of some argument
-			if(NULL == fgets(line,STRING_LENGTH-1,fctl)) {
+			if(nullptr == fgets(line,STRING_LENGTH-1,fctl)) {
 				fprintf(stderr,"Error: unexpected end of file or other error inside BAND module.\n");
 				return numErrors+1;
 			}
 			
 			token2 = strtokCS(line, parseFileDelims);
-			if(token2 == NULL) {
+			if(token2 == nullptr) {
 				fprintf(stderr,"Error: unable to read value for %s.\n",token);
 				numErrors++;
 				continue;
@@ -1277,7 +1276,7 @@ int readSampleLine(char* sampleLine, int pop) {
 	// determine number of samples - one per haploid, two per diploid
 	str = strtokCS(sampleLine, parseFileDelims);
 	nameORformat = 1;
-	while(str != NULL) {
+	while(str != nullptr) {
 		if(nameORformat == 0) {
 			if(strlen(str) != 1 || (str[0] != 'h' && str[0] != 'd')) {
 				fprintf(stderr, "Error: faulty format %s for sample pop %d. Expected h or d.\n",str,pop+1);
@@ -1289,8 +1288,8 @@ int readSampleLine(char* sampleLine, int pop) {
 			}
 		}
 		nameORformat = !nameORformat;						
-		str = strtokCS(NULL, parseFileDelims);
-	}// end of while(str != NULL)
+		str = strtokCS(nullptr, parseFileDelims);
+	}// end of while(str != nullptr)
 				
 	if(nameORformat != 1) {
 		fprintf(stderr, "Error: uneven terms in sample line for pop %d.\n",pop+1);
@@ -1304,14 +1303,14 @@ int readSampleLine(char* sampleLine, int pop) {
 	// if need to increase allocation for sample data structures
 	if(dataSetup.numSamples+dataSetup.numSamplesPerPop[pop] > dataSetup.maxSamples) {
 		dataSetup.maxSamples += 15+dataSetup.numSamplesPerPop[pop];
-		if(dataSetup.sampleNames == NULL) {
+		if(dataSetup.sampleNames == nullptr) {
 			dataSetup.sampleNames    = (char**)malloc(dataSetup.maxSamples*sizeof(char*));
 			dataSetup.sampleNames[0] = (char*)malloc(dataSetup.maxSamples*NAME_LENGTH*sizeof(char));
 		} else {
 			dataSetup.sampleNames    = (char**)realloc(dataSetup.sampleNames, dataSetup.maxSamples*sizeof(char*));
 			dataSetup.sampleNames[0] = (char*)realloc(dataSetup.sampleNames[0], dataSetup.maxSamples*NAME_LENGTH*sizeof(char));
 		}	
-		if(dataSetup.sampleNames == NULL || dataSetup.sampleNames[0] == NULL) {
+		if(dataSetup.sampleNames == nullptr || dataSetup.sampleNames[0] == nullptr) {
 			fprintf(stderr, "Error: oom allocating sampleNames pointers.\n");
 			exit(-1);
 		}
@@ -1323,7 +1322,7 @@ int readSampleLine(char* sampleLine, int pop) {
 	// read sample names
 	str = strtokCS(saveLine, parseFileDelims);
 	nameORformat = 1;
-	while(str != NULL) {
+	while(str != nullptr) {
 		if(nameORformat == 1) {
 			strncpy(dataSetup.sampleNames[sampleIndex], str, NAME_LENGTH-1);
 			sampleIndex++;
@@ -1332,8 +1331,8 @@ int readSampleLine(char* sampleLine, int pop) {
 			sampleIndex++; // save two samples for diploid
 		}
 		nameORformat = !nameORformat;						
-		str = strtokCS(NULL, parseFileDelims);
-	}// end of while(str != NULL)
+		str = strtokCS(nullptr, parseFileDelims);
+	}// end of while(str != nullptr)
 	
 	if(sampleIndex - dataSetup.numSamples != dataSetup.numSamplesPerPop[pop]) {
 		fprintf(stderr,"Error: expecting to see %d samples in pop %d, but was able to read only %d.\n", 

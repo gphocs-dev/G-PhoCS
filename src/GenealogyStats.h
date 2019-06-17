@@ -26,10 +26,10 @@ struct GenealogyStats {
 
     //reset statistics
     void resetStatsTotal() {
-        for (auto stats : coal)
+        for (auto& stats : coal)
             stats.reset();
 
-        for (auto stats : migs)
+        for (auto& stats : migs)
             stats.reset();
     }
 };

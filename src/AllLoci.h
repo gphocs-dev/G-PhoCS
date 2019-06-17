@@ -24,14 +24,10 @@ class AllLoci {
 
     GenealogyStats statsTotal_; //total statistics for all loci
 
-    std::vector<int> popQueue_; // post-order queue of populations //todo: replace by number of species
-
 public:
 
     //constructor
     AllLoci();
-
-    int populationPostOrder(int pop, std::vector<int>::iterator first);
 
     LocusEmbeddedGenealogy& getLocus(int locusID);
 

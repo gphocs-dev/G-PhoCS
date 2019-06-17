@@ -193,7 +193,7 @@ void allocateCladeMem() {
     clade_stats[clade].mig_stats_total = 0.0;
 
 
-    if ((clade_stats == NULL) ||
+    if ((clade_stats == nullptr) ||
         (!clade_stats[clade].sorted_ages) || (!clade_stats[clade].elapsed_times) ||
         (!clade_stats[clade].num_lineages) || (!clade_stats[clade].event_types)) {
       fprintf(stderr, "\nError: Out Of Memory clade_stats\n");

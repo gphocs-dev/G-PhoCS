@@ -25,9 +25,7 @@
  * 1. Object of locus genealogy.
  * 2. Object of locus pop intervals.
  * 3. Locus ID.
- * 4. Map between leaf to its pop.
- * 5. Map between pop to its leaves.
- * 6. Pointers to old structs
+ * 4. Pointers to old structs
  *===========================================================================*/
 
 class LocusEmbeddedGenealogy {
@@ -38,9 +36,6 @@ private:
     LocusPopIntervals  intervals_; //object of intervals
 
     int locusID_;   //id of locus (genealogy id)
-
-    std::map<int,int> leafToPop_; //map between leaf to its pop
-    std::map<int,std::vector<int>> popToLeaves_; //map between pop to its leaves
 
     DATA_SETUP*     pDataSetup_;       //pointer to DATA_SETUP struct
     PopulationTree* pPopTree_;         //pointer to PopulationTree struct
@@ -63,12 +58,6 @@ public:
     //get locus data
     LocusData* getLocusData();
 
-    //get all leaves of a population
-    std::vector<int>& getPopLeaves(int pop);
-
-    //get population of a leaf
-    int getLeafPop(int leafId);
-
     //get a reference to statistics
     const GenealogyStats& getStats() const;
 
@@ -80,13 +69,7 @@ public:
 
     // **************** print methods ****************
 
-    //print popToLeaves
-    void printPopToLeaves();
-
-    //print leafToPop
-    void printLeafToPop();
-
-    //print all data
+    //print embedded genealogy
     void printEmbeddedGenealogy();
 
     // **************** test methods ****************
