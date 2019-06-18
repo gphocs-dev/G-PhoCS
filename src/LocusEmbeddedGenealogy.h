@@ -25,7 +25,7 @@
  * 1. Object of locus genealogy.
  * 2. Object of locus pop intervals.
  * 3. Locus ID.
- * 4. Pointers to old structs
+ * 4. Pointers to old structs.
  *===========================================================================*/
 
 class LocusEmbeddedGenealogy {
@@ -38,7 +38,6 @@ private:
     int locusID_;   //id of locus (genealogy id)
 
     DATA_SETUP*     pDataSetup_;       //pointer to DATA_SETUP struct
-    PopulationTree* pPopTree_;         //pointer to PopulationTree struct
     DATA_STATE*     pDataState_;       //pointer to DATA_STATE struct
     GENETREE_MIGS*  pGenetreeMigs_;    //pointer to GENETREE_MIGS struct
 
@@ -48,6 +47,9 @@ public:
     LocusEmbeddedGenealogy(int locusID, int numIntervals,
                            DATA_SETUP* pDataSetup, DATA_STATE* pDataState,
                            GENETREE_MIGS* pGenetreeMigs);
+
+    //copy-constructor
+    LocusEmbeddedGenealogy(const LocusEmbeddedGenealogy& other);
 
     //construct both genealogy and intervals and connect between them
     int construct_genealogy_and_intervals();
@@ -66,6 +68,8 @@ public:
 
     //recalculate statistics
     double recalcStats(int pop);
+
+
 
     // **************** print methods ****************
 

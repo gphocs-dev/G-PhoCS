@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
     popPostOrder(dataSetup.popTree, dataSetup.popTree->rootPop,
                  dataSetup.popTree->popsPostOrder);
 
-    //create map between leaf to its pop
+    //create map between leaf to its pop //todo: where to build the popToLeaves and leafToPop?
     // and map between pop to its leaves
     /*for (int node = 0; node < dataSetup.numSamples; node++) {
         int pop = nodePops[0][node];

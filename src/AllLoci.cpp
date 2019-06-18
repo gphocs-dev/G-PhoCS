@@ -8,14 +8,15 @@
     Allocates LocusEmbeddedGenealogy objects,
     each with a unique locus ID.
 */
-AllLoci::AllLoci()
-        : lociVector_(), statsTotal_(dataSetup.popTree->numPops,
-                                     dataSetup.popTree->numMigBands) {
+AllLoci::AllLoci() : lociVector_(),
+                     statsTotal_(dataSetup.popTree->numPops,
+                                 dataSetup.popTree->numMigBands) {
 
     lociVector_.reserve(dataSetup.numLoci);
 
+    //construct N locus embedded genealogy
     for (int locusID = 0; locusID < dataSetup.numLoci; ++locusID) {
-        lociVector_.emplace_back(locusID, MAX_EVENTS, &dataSetup, &dataState, //todo: max events?
+        lociVector_.emplace_back(locusID, MAX_EVENTS, &dataSetup, &dataState,
                                  genetree_migs);
     }
 
@@ -25,7 +26,11 @@ AllLoci::AllLoci()
 }
 
 
-void AllLoci::calcTotalStats() {
+/*
+    calcLociTotalStats
+    Calculates statistics of all loci
+*/
+void AllLoci::calcLociTotalStats() {
 
    statsTotal_.resetStatsTotal();
 
@@ -37,8 +42,8 @@ void AllLoci::calcTotalStats() {
 
         //for each coal statistics
         for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-            statsTotal_.coal[pop].num += stats.coal[pop].num;
-            statsTotal_.coal[pop].stats += stats.coal[pop].stats;
+            statsTotal_.coals[pop].num += stats.coals[pop].num;
+            statsTotal_.coals[pop].stats += stats.coals[pop].stats;
         }
 
         //for each mig statistics
@@ -50,12 +55,16 @@ void AllLoci::calcTotalStats() {
 }
 
 
-void AllLoci::testGenealogyStats() {
+/*
+    testLociTotalStats
+    Test if total statistics are consistent with old version
+*/
+void AllLoci::testLociTotalStats() {
 
     //verify coal statistics are equal
     for (int pop = 0; pop < dataSetup.popTree->numPops; pop++) {
-        assert(statsTotal_.coal[pop].num == genetree_stats_total.num_coals[pop]);
-        assert(fabs(statsTotal_.coal[pop].stats - genetree_stats_total.coal_stats[pop]) < EPSILON);
+        assert(statsTotal_.coals[pop].num == genetree_stats_total.num_coals[pop]);
+        assert(fabs(statsTotal_.coals[pop].stats - genetree_stats_total.coal_stats[pop]) < EPSILON);
     }
 
     //verify migs statistics are equal
@@ -66,6 +75,10 @@ void AllLoci::testGenealogyStats() {
 }
 
 
+/*
+    testLoci
+    Test if all loci data is consistent with old version
+*/
 void AllLoci::testLoci() {
 
     //for each locus
@@ -89,6 +102,12 @@ void AllLoci::testLoci() {
         //test locus statistics
         locus.testGenealogyStats();
 
+
+        //LocusEmbeddedGenealogy copy(locus);
+
+        locus.printEmbeddedGenealogy();
+        //copy.printEmbeddedGenealogy();
+
         //locus.printEmbeddedGenealogy();
         //printGenealogyAndExit(locus.getLocusID(), -1);
         //break;
@@ -96,13 +115,19 @@ void AllLoci::testLoci() {
     }
 
     //calculate total statistics
-    this->calcTotalStats();
+    this->calcLociTotalStats();
 
     //test total statistics
-    this->testGenealogyStats();
+    this->testLociTotalStats();
 }
 
 
+/*
+    getLocus
+    Get locus by id
+    @param: locus id
+    @return: reference to locus embedded genealogy
+*/
 LocusEmbeddedGenealogy& AllLoci::getLocus(int locusID) {
     return lociVector_[locusID];
 }

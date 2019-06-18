@@ -49,8 +49,11 @@ public:
     //constructor
     PopInterval();
 
+    //copy-constructor
+    PopInterval(const PopInterval& other);
+
     //reset members
-    void reset();
+    void resetPopInterval();
 
     //get elapsed time of interval
     double getElapsedTime();

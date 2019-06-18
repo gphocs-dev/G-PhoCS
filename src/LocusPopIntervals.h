@@ -26,8 +26,8 @@
  * 1. Array if intervals objects.
  * 2. Pointer to a pool of free intervals
  * 3. Total number of intervals
- * 4. Statistics vector of coal for each pop
- * 5. Statistics vector of migs for each mig band
+ * 4. Statistics vector of coal/migs for each pop / mig-band
+ * 5. Pointer to popTree.
  *===========================================================================*/
 
 
@@ -35,13 +35,11 @@ class LocusPopIntervals {
 
 private:
 
-    PopInterval* intervalsArray_; //array of PopIntervals
+    PopInterval* intervalsArray_; //array of PopIntervals //todo: replace with vector?
     PopInterval* pIntervalsPool_; //pointer to a pool of free intervals
 
     int numIntervals_; //total number of intervals
 
-    //std::vector<GenStats> coalStats_; //genealogy statistics of coal
-    //std::vector<GenStats> migsStats_; //genealogy statistics of migs
     GenealogyStats stats_; //genealogy statistics of coal and migs
 
     int locusID_; //locus id, for error massages
@@ -51,6 +49,9 @@ public:
 
     //constructor
     LocusPopIntervals(int locusID, int nIntervals);
+
+    //copy-constructor
+    LocusPopIntervals(const LocusPopIntervals& other);
 
     //destructor
     ~LocusPopIntervals();

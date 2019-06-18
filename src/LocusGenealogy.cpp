@@ -7,8 +7,7 @@
 
 
 /*
-    LocusGenealogy .
-    constructor
+    LocusGenealogy - Constructor
     Initialize leafNodes vector with N leaf nodes (N=num samples)
     Initialize coalNodes vector with N-1 leaf nodes
     Reserve place in migNodes_ vector with X nodes (X=MAX_MIGS)
@@ -31,6 +30,71 @@ LocusGenealogy::LocusGenealogy(int numSamples)
 
     //reserve max migrations
     migNodes_.reserve(MAX_MIGS);
+}
+
+
+/*
+    LocusGenealogy - Copy-constructor
+*/
+LocusGenealogy::LocusGenealogy(const LocusGenealogy& other) :
+        leafNodes_(other.leafNodes_),
+        coalNodes_(other.coalNodes_),
+        migNodes_(other.migNodes_),
+        numSamples_(other.numSamples_) {
+
+
+    //the following code copy genealogy logic
+    //(i.e., vectors' copy-constructors copy the tree nodes data, but not pointers)
+
+    TreeNode* pOther;
+
+    //for each tree node:
+    // - get its parent and children pointers in the original LocusGenealogy
+    // - find their position in the original vectors
+    // - set the equivalent pointers of the current LocusGenealogy to point
+    //   same positions of current vectors
+
+    //for each leaf node
+    for (std::size_t i = 0; i < leafNodes_.size(); i++) {
+
+        //set parent
+        pOther = other.leafNodes_[i].getParent();
+        leafNodes_[i].setParent(&leafNodes_[0] + getTreeNodePos(pOther));
+    }
+
+    //for each coal node
+    for (std::size_t i = 0; i < leafNodes_.size(); i++) {
+
+        //set parent
+        pOther = other.leafNodes_[i].getParent();
+        if (pOther)
+            leafNodes_[i].setParent(&leafNodes_[0] + getTreeNodePos(pOther));
+
+        //set left son
+        pOther = other.leafNodes_[i].getLeftSon();
+        leafNodes_[i].setLeftSon(&leafNodes_[0] + getTreeNodePos(pOther));
+
+        //set right son
+        pOther = other.leafNodes_[i].getRightSon();
+        leafNodes_[i].setRightSon(&leafNodes_[0] + getTreeNodePos(pOther));
+    }
+
+    //for each mig node
+    for (std::size_t i = 0; i < migNodes_.size(); i++) {
+
+        //set parent
+        pOther = other.migNodes_[i].getParent();
+        migNodes_[i].setParent(&migNodes_[0] + getTreeNodePos(pOther));
+
+        //set left son
+        pOther = other.migNodes_[i].getLeftSon();
+        migNodes_[i].setLeftSon(&migNodes_[0] + getTreeNodePos(pOther));
+
+        //set right son
+        pOther = other.migNodes_[i].getRightSon();
+        migNodes_[i].setRightSon(&migNodes_[0] + getTreeNodePos(pOther));
+    }
+
 }
 
 
@@ -99,6 +163,29 @@ TreeNode* LocusGenealogy::getTreeNodeByID(int nodeID) {
 
 
 /*
+ * getTreeNodePos
+ * get the position of a tree node pointed by given pointer
+ * @param: pointer to a tree node
+ * @return: position
+*/
+ptrdiff_t LocusGenealogy::getTreeNodePos(TreeNode* pTreeNode) {
+    //switch by tree node type
+    //get position by subtracting vector head pointer from the given pointer
+    switch (pTreeNode->getType()) {
+        case TreeNodeType::LEAF:
+            return (LeafNode*)pTreeNode - &leafNodes_[0];
+
+        case TreeNodeType::COAL:
+            return (CoalNode*)pTreeNode - &coalNodes_[0];
+
+        case TreeNodeType::MIG:
+            return (MigNode*)pTreeNode - &migNodes_[0];
+    }
+
+}
+
+
+/*
     getNumTreeNodes
     @return: num tree nodes in genealogy
 */
@@ -157,7 +244,7 @@ MigNode* LocusGenealogy::addMigNode(TreeNode* pTreeNode, int migBandID) {
     if it's not the last element replace it by the last element and pop back
     @param: pointer to mig that should be removed
 */
-void LocusGenealogy::removeMigNode(MigNode* pMigNode) { //todo: replace loop
+void LocusGenealogy::removeMigNode(MigNode* pMigNode) { //todo: replace loop with iterators
 
     //find the mig that should be removed (skip last element)
     for (int i = 0; i < migNodes_.size(); i++) {
@@ -202,7 +289,7 @@ void LocusGenealogy::constructBranches(LocusData* pLocusData) {
 
             //get parent node id and parent tree node
             int nodeFather = getNodeFather(pLocusData, node);
-            TreeNode *pFather = this->getTreeNodeByID(nodeFather);
+            TreeNode* pFather = this->getTreeNodeByID(nodeFather);
 
             //set pointer
             pNode->setParent(pFather);
@@ -250,6 +337,7 @@ void LocusGenealogy::printGenealogy() {
     for (LeafNode& leafNode : leafNodes_) {
         leafNode.printTreeNode();
     }
+    //todo: std::for_each(v.begin(), v.end(), &foo);
 
     //for each coal node
     for (CoalNode& coalNode : coalNodes_) {
@@ -343,6 +431,10 @@ void LocusGenealogy::testLocusGenealogy(int locusID, LocusData *pLocusData,
         }
 
     }
+}
+
+vector<LeafNode> & LocusGenealogy::getLeafNodes() {
+    return leafNodes_;
 }
 
 

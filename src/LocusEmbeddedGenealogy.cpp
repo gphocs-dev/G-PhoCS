@@ -7,24 +7,67 @@
 #include <iomanip>
 #include <cmath>
 
+
 /*
-	Constructor
+ * LocusEmbeddedGenealogy / constructor
 */
 LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
-        int locusID,
-        int numIntervals,
+        int locusID, int numIntervals,
         DATA_SETUP* pDataSetup,
         DATA_STATE* pDataState,
         GENETREE_MIGS* pGenetreeMigs)
 
         : genealogy_(pDataSetup->numSamples), //construct genealogy
           intervals_(locusID, numIntervals),  //construct intervals
-
           locusID_(locusID),
           pDataSetup_(pDataSetup),
-          pPopTree_(pDataSetup->popTree),
           pDataState_(pDataState),
           pGenetreeMigs_(pGenetreeMigs) {
+
+}
+
+
+/*
+ * LocusEmbeddedGenealogy / copy-constructor
+*/
+LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
+        const LocusEmbeddedGenealogy& other) :
+
+        genealogy_(other.genealogy_), //copy-construct genealogy
+        intervals_(other.intervals_), //copy-construct intervals
+        locusID_(other.locusID_),
+        pDataSetup_(other.pDataSetup_),
+        pDataState_(other.pDataState_),
+        pGenetreeMigs_(other.pGenetreeMigs_) {
+
+    //the following code copy genealogy and intervals logic
+    //(i.e., genealogy's and intervals' copy-constructors copy the data,
+    // but not their inner pointers or the pointers linking between them)
+
+    /*vector<LeafNode>& leavesOther = other.genealogy_.getLeafNodes();
+    vector<LeafNode>& leavesNew = genealogy_.getLeafNodes();
+
+
+
+
+
+    for (std::size_t i = 0; i != leavesNew.size(); ++i) {
+
+        //get type of pointer
+        leavesOther[i].getSamplesStart();
+
+        //get interval position
+
+
+        //get its location
+
+
+        //leavesNew[i].setParent()
+    }*/
+
+
+
+
 
 }
 
@@ -70,12 +113,12 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
     intervals_.createStartEndIntervals();
 
     //create samples start intervals (for ancient samples)
-    for (int pop = 0; pop < pPopTree_->numCurPops; pop++) {
+    for (int pop = 0; pop < pDataSetup_->popTree->numCurPops; pop++) {
 
         //create interval
-        double age = pPopTree_->pops[pop]->sampleAge;
-        PopInterval* pInterval = intervals_.createInterval(pop, age,
-                                                           IntervalType::SAMPLES_START);
+        double age = pDataSetup_->popTree->pops[pop]->sampleAge;
+        PopInterval* pInterval =
+                intervals_.createInterval(pop, age, IntervalType::SAMPLES_START);
         if (!pInterval) {
             INTERVALS_FATAL_0024
         }
@@ -84,7 +127,7 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
     //create coalescent intervals
     //and link intervals to genealogy and vice versa
     int nSamples = pDataSetup_->numSamples;
-    for (int node = 0; node < 2 * nSamples - 1; node++) {
+    for (int node = 0; node < 2*nSamples-1; node++) {
 
         //get population and age of node
         int pop = nodePops[locusID_][node];
@@ -163,7 +206,8 @@ int LocusEmbeddedGenealogy::construct_genealogy_and_intervals() {
             }
 
             //get migration band ID
-            int bandId = getMigBandByPops(pPopTree_, source_pop, target_pop)->id; //todo: is it the right way to get the migBand ID?
+            int bandId = getMigBandByPops(pDataSetup_->popTree, source_pop,
+                                          target_pop)->id;
 
             //add a migration node to genealogy
             MigNode* pMigNode = genealogy_.addMigNode(pTreeNode, bandId);
@@ -217,7 +261,7 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
 void LocusEmbeddedGenealogy::printEmbeddedGenealogy() {
 
     //print population tree
-    printPopulationTree(this->pDataSetup_->popTree, stderr, 1);
+    //printPopulationTree(pDataSetup_->popTree, stderr, 1);
 
     //print genealogy
     std::cout << "------------------------------------------------------"
@@ -270,7 +314,7 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
 
 
 /*
- * testGenealogyStats
+ * testTotalStats
  * verify statistics are equal to statistics of old data structurel
 */
 void LocusEmbeddedGenealogy::testGenealogyStats() {

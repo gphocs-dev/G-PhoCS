@@ -39,6 +39,9 @@ public:
     //constructor
     explicit LocusGenealogy(int numSamples);
 
+    //copy-construct
+    LocusGenealogy(const LocusGenealogy &other);
+
     //reset genealogy
     void resetGenealogy();
 
@@ -48,8 +51,10 @@ public:
     //get a mig node by node id
     CoalNode* getCoalNode(int nodeId);
 
-    //getCoalNode(TreeNode* nodeId);
+    //get the position of a leaf node pointed by given pointer
+    ptrdiff_t getTreeNodePos(TreeNode* pTreeNode);
 
+    vector<LeafNode>& getLeafNodes();
 
     //return true if node is a leaf
     bool isLeaf(int nodeId);

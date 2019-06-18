@@ -29,14 +29,19 @@ public:
     //constructor
     AllLoci();
 
+    //get locus by id
     LocusEmbeddedGenealogy& getLocus(int locusID);
 
-    void calcTotalStats();
+    //calculate statistics of all loci
+    void calcLociTotalStats();
 
-    void testGenealogyStats();
+    //test if total statistics of all loci is consistent with old version
+    void testLociTotalStats();
 
-    //test all loci
+    //test if all loci data are consistent with old version
     void testLoci();
+
+    //
 
 
 };

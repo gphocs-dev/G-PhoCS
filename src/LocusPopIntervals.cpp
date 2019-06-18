@@ -29,6 +29,25 @@ LocusPopIntervals::LocusPopIntervals(int locusID, int nIntervals)
 
 
 /*
+    LocusPopIntervals copy-constructor
+    Allocates popIntervals objects.
+    Links intervals to each other.
+*/
+LocusPopIntervals::LocusPopIntervals(const LocusPopIntervals& other) :
+          numIntervals_(other.numIntervals_),
+          stats_(other.stats_),
+          locusID_(other.locusID_), pPopTree_(other.pPopTree_) {
+
+    //allocate N intervals (N = number of intervals, given as argument)
+    intervalsArray_ = new PopInterval[numIntervals_];
+
+    //intervals pool points to head of intervals array
+    pIntervalsPool_ = intervalsArray_;
+
+}
+
+
+/*
  * LocusPopIntervals
  * LocusPopIntervals class destructor
 */
@@ -45,7 +64,7 @@ LocusPopIntervals::~LocusPopIntervals() {
 void LocusPopIntervals::resetPopIntervals() {
     //reset all intervals
     for (int i = 0; i < numIntervals_; ++i) {
-        intervalsArray_[i].reset();
+        intervalsArray_[i].resetPopInterval();
     }
 }
 
@@ -104,7 +123,7 @@ PopInterval* LocusPopIntervals::getIntervalFromPool() {
 void LocusPopIntervals::returnToPool(PopInterval* pInterval) {
 
     //reset interval content
-    pInterval->reset();
+    pInterval->resetPopInterval();
 
     //set pointers
     pIntervalsPool_->setPrev(pInterval);
@@ -405,7 +424,7 @@ double LocusPopIntervals::recalcStats(int pop) {
 
     //create a map of mig statistics, with mig-band id as a key
     //get only mig-bands which their target pop equal current pop
-    std::map<int, GenStats> migsStats; //todo: dynamic allocation
+    std::map<int, GenStats> migsStats; //todo: replace dynamic allocation
     for (auto pMigBand: pPopTree_->migBandsPerTarget[pop].migBands) {
         migsStats[pMigBand->id] = GenStats();
     }
@@ -509,12 +528,12 @@ double LocusPopIntervals::recalcStats(int pop) {
     }
 
     //update delta ln likelihood of coal statistics
-    deltaLnLd -= (coalStats.stats - stats_.coal[pop].stats) /
+    deltaLnLd -= (coalStats.stats - stats_.coals[pop].stats) /
                   (pPopTree_->pops[pop]->theta * HEREDITY_FACTOR);
 
     //save coal statistics (in the pop location)
-    stats_.coal[pop].num = coalStats.num;
-    stats_.coal[pop].stats = coalStats.stats;
+    stats_.coals[pop].num = coalStats.num;
+    stats_.coals[pop].stats = coalStats.stats;
 
     return deltaLnLd;
 }
@@ -651,10 +670,10 @@ void LocusPopIntervals::testGenealogyStatistics() {
     for (int pop = 0; pop < pPopTree_->numPops; pop++) {
 
         //verify num of coal are equal
-        assert(stats_.coal[pop].num == genetree_stats[locusID_].num_coals[pop]);
+        assert(stats_.coals[pop].num == genetree_stats[locusID_].num_coals[pop]);
 
         //verify statistics are equal
-        assert(fabs(stats_.coal[pop].stats - genetree_stats[locusID_].coal_stats[pop]) < EPSILON);
+        assert(fabs(stats_.coals[pop].stats - genetree_stats[locusID_].coal_stats[pop]) < EPSILON);
     }
 
     //for each mig band
@@ -667,4 +686,3 @@ void LocusPopIntervals::testGenealogyStatistics() {
         assert(fabs(stats_.migs[id].stats - genetree_stats[locusID_].mig_stats[id]) < EPSILON);
     }
 }
-

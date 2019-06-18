@@ -5,7 +5,6 @@
 
 TreeNode::TreeNode() :
         age_(-1),
-        nodeID_(-1),
         pParent_(nullptr),
         pLeftSon_(nullptr),
         pRightSon_(nullptr) {
@@ -14,7 +13,6 @@ TreeNode::TreeNode() :
 
 TreeNode::TreeNode(const TreeNode& treeNode2) : type_(treeNode2.type_),
                                                 age_(treeNode2.age_),
-                                                nodeID_(treeNode2.nodeID_),
                                                 pParent_(nullptr),
                                                 pLeftSon_(nullptr),
                                                 pRightSon_(nullptr) {
@@ -24,11 +22,6 @@ TreeNode::TreeNode(const TreeNode& treeNode2) : type_(treeNode2.type_),
 
 TreeNodeType TreeNode::getType() const {
     return type_;
-}
-
-
-int TreeNode::getNodeId() const {
-    return nodeID_;
 }
 
 
@@ -44,11 +37,6 @@ TreeNode* TreeNode::getLeftSon() const {
 
 TreeNode* TreeNode::getRightSon() const {
     return pRightSon_;
-}
-
-
-void TreeNode::setNodeId(int nodeId) {
-    TreeNode::nodeID_ = nodeId;
 }
 
 
@@ -83,7 +71,10 @@ void TreeNode::printTreeNode() {
     using std::setw;
 
     cout << std::left;
-    cout << "id: " << setw(4) << nodeID_;
+    if (type_ != TreeNodeType ::MIG)
+        cout << "id: " << setw(4) << this->getNodeId();
+    else
+        cout << "id: " << setw(4) << -1;
     cout <<"type: " << setw(6) << this->typeToStr();
 
     int parent = pParent_ ? pParent_->getNodeId() : -1;
@@ -104,13 +95,14 @@ void TreeNode::printTreeNode() {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-LeafNode::LeafNode() : pSamplesStart_(nullptr) {
+LeafNode::LeafNode() : pSamplesStart_(nullptr), nodeID_(-1) {
     type_ = TreeNodeType::LEAF;
 }
 
 
 //copy-constructor
 LeafNode::LeafNode(const LeafNode& leafNode2) : TreeNode(leafNode2),
+                                                nodeID_(leafNode2.nodeID_),
                                                 pSamplesStart_(nullptr) {
 }
 
@@ -125,14 +117,15 @@ void LeafNode::setSamplesInterval(PopInterval* pSamplesStart) {
 }
 
 
-void LeafNode::printTreeNode() {
-
-    TreeNode::printTreeNode();
-
-    //std::cout << std::left;
-    //std::cout << "interval: " << std::setw(18) << pSamplesStart_;
-    //std::cout << std::endl;
+int LeafNode::getNodeId() const {
+    return nodeID_;
 }
+
+
+void LeafNode::setNodeId(int nodeId) {
+    nodeID_ = nodeId;
+}
+
 
 int LeafNode::getPopId() {
     if (pSamplesStart_ == nullptr)
@@ -140,18 +133,21 @@ int LeafNode::getPopId() {
     return pSamplesStart_->getPopID();
 }
 
+
 std::string LeafNode::typeToStr() {
     return "leaf";
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-CoalNode::CoalNode() : pCoal_(nullptr) {
+CoalNode::CoalNode() : pCoal_(nullptr), nodeID_(-1) {
     type_ = TreeNodeType::COAL;
 }
 
 
+//copy-constructor
 CoalNode::CoalNode(const CoalNode& coalNode2) : TreeNode(coalNode2),
+                                                nodeID_(coalNode2.nodeID_),
                                                 pCoal_(nullptr) {
 }
 
@@ -166,16 +162,6 @@ void CoalNode::setCoalInterval(PopInterval* pCoal) {
 }
 
 
-void CoalNode::printTreeNode() {
-
-    TreeNode::printTreeNode();
-
-    //std::cout << std::left;
-    //std::cout << "interval: " << std::setw(18) << pCoal_;
-    //std::cout << std::endl;
-}
-
-
 int CoalNode::getPopId() {
     if (pCoal_ == nullptr)
         return -1;
@@ -185,6 +171,16 @@ int CoalNode::getPopId() {
 
 std::string CoalNode::typeToStr() {
     return "coal";
+}
+
+
+int CoalNode::getNodeId() const {
+    return nodeID_;
+}
+
+
+void CoalNode::setNodeId(int nodeId) {
+    nodeID_ = nodeId;
 }
 
 
@@ -223,17 +219,6 @@ PopInterval* MigNode::getInMigInterval() const {
 
 int MigNode::getMigBandId() const {
     return migBandId_;
-}
-
-
-void MigNode::printTreeNode() {
-
-    TreeNode::printTreeNode();
-
-    //std::cout << std::left;
-    //std::cout << "interval:: " << std::setw(18) << pInMig_;
-    //std::cout << "interval:: " << std::setw(18) << pOutMig_;
-    //std::cout << std::endl;
 }
 
 

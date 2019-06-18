@@ -1,6 +1,3 @@
-//
-// Created by nomihadar on 3/11/19.
-//
 
 #include "PopInterval.h"
 #include "TreeNode.h"
@@ -21,10 +18,27 @@ PopInterval::PopInterval() : type_(IntervalType::DUMMY),
                              pTreeNode_ (nullptr) {
 }
 
+
 /*
-    Resets PopInterval content
+    PopInterval copy-constructor
 */
-void PopInterval::reset() {
+PopInterval::PopInterval(const PopInterval& other)
+        : type_(other.type_),
+          age_(other.age_),
+          nLineages_(other.nLineages_),
+          popID_(other.popID_),
+          pPrevInterval_(nullptr),
+          pNextInterval_(nullptr),
+          pTreeNode_ (nullptr) {
+
+}
+
+
+/*
+ * resetPopInterval
+ * Resets PopInterval content
+*/
+void PopInterval::resetPopInterval() {
 
     type_ = IntervalType::DUMMY;
     age_ = 0;
@@ -37,8 +51,9 @@ void PopInterval::reset() {
 
 
 /*
-    Returns the elapsed time of interval by subtracting previous interval age
-    from current interval age
+ * getElapsedTime
+ * Returns the elapsed time of interval by subtracting previous interval age
+ * from current interval age
 */
 double PopInterval::getElapsedTime() {
     if (pPrevInterval_)
@@ -46,8 +61,10 @@ double PopInterval::getElapsedTime() {
     return 0;
 }
 
+
 /*
-    Returns true if node is of the specified type
+ * isType
+ * Returns true if node is of the specified type
 */
 bool PopInterval::isType(IntervalType type) {
     return type_ == type;
@@ -58,6 +75,7 @@ IntervalType PopInterval::getType() const {
     return type_;
 }
 
+
 void PopInterval::setType(IntervalType type) {
     PopInterval::type_ = type;
 }
@@ -67,51 +85,66 @@ double PopInterval::getAge() const {
     return age_;
 }
 
+
 void PopInterval::setAge(double age) {
     PopInterval::age_ = age;
 }
+
 
 int PopInterval::getNumLineages() const {
     return nLineages_;
 }
 
+
 void PopInterval::setNumLineages(int nLineages) {
     PopInterval::nLineages_ = nLineages;
 }
+
 
 int PopInterval::getPopID() const {
     return popID_;
 }
 
+
 void PopInterval::setPopID(int popID) {
     PopInterval::popID_ = popID;
 }
+
 
 PopInterval* PopInterval::getNext() const {
     return pNextInterval_;
 }
 
+
 void PopInterval::setNext(PopInterval* pNext) {
     PopInterval::pNextInterval_ = pNext;
 }
+
 
 PopInterval* PopInterval::getPrev() const {
     return pPrevInterval_;
 }
 
+
 void PopInterval::setPrev(PopInterval* pPrev) {
     PopInterval::pPrevInterval_ = pPrev;
 }
 
+
 TreeNode* PopInterval::getTreeNode() const {
     return pTreeNode_;
 }
+
 
 void PopInterval::setTreeNode(TreeNode* pTreeNode) {
     PopInterval::pTreeNode_ = pTreeNode;
 }
 
 
+/*
+ * typeToStr
+ * converts type to string
+*/
 std::string PopInterval::typeToStr() {
     switch (type_) {
         case IntervalType::POP_START: return "POP_START";
@@ -124,6 +157,10 @@ std::string PopInterval::typeToStr() {
     }
 }
 
+
+/*
+ * printInterval
+*/
 void PopInterval::printInterval() {
 
     using std::cout;
@@ -136,15 +173,13 @@ void PopInterval::printInterval() {
     cout << "num-lins: " << setw(4) << nLineages_;
     cout << "age: " << setw(15) << age_;
     cout << "elapsed-time: " << setw(15) << this->getElapsedTime();
-    //cout << "prev: " << setw(20) << pPrevInterval_;
-    //cout << "next: " << setw(20) << pNextInterval_;
+
     if (pTreeNode_)
         cout << "tree-node: " << setw(4) << pTreeNode_->getNodeId();
     else
         cout << "tree-node: -";
     cout << endl;
 }
-
 
 
 

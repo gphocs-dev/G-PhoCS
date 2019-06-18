@@ -5,6 +5,15 @@
 #include "PopInterval.h"
 #include <iostream>
 
+/*
+    Types of tree nodes
+*/
+enum class TreeNodeType {
+    LEAF,   //leaf
+    COAL,   //coalescence
+    MIG,    //migration
+};
+
 /*=============================================================================
  *
  * TreeNode class
@@ -23,7 +32,6 @@
  * 5. Pointer(s) to corresponding interval(s).
  *===========================================================================*/
 
-enum class TreeNodeType; //forward declaration
 
 class TreeNode {
 
@@ -31,9 +39,7 @@ protected:
 
     TreeNodeType  type_;    //type of node
 
-    int nodeID_; //id of tree node
-
-    double age_; //tree node age
+    double age_;    //tree node age
 
     TreeNode*  pParent_;    //pointer to parent in genealogy
     TreeNode*  pLeftSon_;   //pointer to left son in genealogy
@@ -47,79 +53,149 @@ public:
     //copy constructor
     TreeNode(const TreeNode& treeNode2);
 
-    //get pop id. A pure virtual method.
-    virtual int getPopId() = 0;
-
     //print tree node
-    virtual void printTreeNode();
+    void printTreeNode();
+
+    //get type
+    TreeNodeType getType() const;
+
+    //get age
+    double getAge() const;
+
+    //set age
+    void setAge(double age);
+
+    //get parent
+    TreeNode* getParent() const;
+
+    //get left son
+    TreeNode* getLeftSon() const;
+
+    //get right son
+    TreeNode* getRightSon() const;
+
+    //set parent
+    void setParent(TreeNode* pParent);
+
+    //set left son
+    void setLeftSon(TreeNode* pLeftSon);
+
+    //set right son
+    void setRightSon(TreeNode* pRightSon);
+
+    //******** Pure virtual methods ********
 
     //get type as string
     virtual std::string typeToStr() = 0;
 
-    //getters
-    TreeNodeType getType() const;
-    int getNodeId() const;
-    double getAge() const;
-    TreeNode* getParent() const;
-    TreeNode* getLeftSon() const;
-    TreeNode* getRightSon() const;
+    //get node id
+    virtual int getNodeId() const = 0;
 
-    //setters
-    void setNodeId(int nodeId);
-    void setAge(double age);
-    void setParent(TreeNode* pParent);
-    void setLeftSon(TreeNode* pLeftSon);
-    void setRightSon(TreeNode* pRightSon);
+    //set node id
+    virtual void setNodeId(int nodeId) = 0;
+
+    //get pop id.
+    virtual int getPopId() = 0;
 
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
+/*=============================================================================
+ * LeafNode class
+ *
+ * LeafNode Contains:
+ * 1. Node id.
+ * 2. Pointer to samplesStart interval.
+ *===========================================================================*/
 class LeafNode : public TreeNode {
 
 private:
+    int nodeID_; //leaf id
     PopInterval* pSamplesStart_; //pointer to samplesStart interval
 
 public:
-    LeafNode(); //constructor
 
-    LeafNode(const LeafNode& leafNode2); //copy-constructor
+    //constructor
+    LeafNode();
 
+    //copy-constructor
+    LeafNode(const LeafNode& leafNode2);
+
+    //get pointer of samplesStart
+    PopInterval* getSamplesStart() const;
+
+    //set pointer of samplesStart
+    void setSamplesInterval(PopInterval* pSamplesStart);
+
+    //******** Override methods ********
+
+    //get node id
+    int getNodeId() const override;
+
+    //set node id
+    void setNodeId(int nodeId) override;
+
+    //get pop id
     int getPopId() override;
 
-    void printTreeNode() override;
-
+    //type to string
     std::string typeToStr() override;
-
-    //getters and setters
-    PopInterval* getSamplesStart() const;
-    void setSamplesInterval(PopInterval* pSamplesStart);
 
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
+/*=============================================================================
+ * CoalNode class
+ *
+ * CoalNode Contains:
+ * 1. Node id.
+ * 2. Pointer to coalescent interval.
+ *===========================================================================*/
 class CoalNode : public TreeNode {
 
 private:
+    int nodeID_; //leaf id
     PopInterval* pCoal_; //pointer to coalescent interval
 
 public:
-    CoalNode(); //constructor
 
-    CoalNode(const CoalNode& coalNode2); //copy-constructor
+    //constructor
+    CoalNode();
 
+    //copy-constructor
+    CoalNode(const CoalNode& coalNode2);
+
+    //get pointer of coalescence
+    PopInterval* getCoalInterval() const;
+
+    //set pointer of coalescence
+    void setCoalInterval(PopInterval* pCoal);
+
+    //******** Override methods ********
+
+    //get node id
+    int getNodeId() const override;
+
+    //set node id
+    void setNodeId(int nodeId) override;
+
+    //get pop id
     int getPopId() override;
 
-    void printTreeNode() override;
-
+    //type to string
     std::string typeToStr() override;
-
-    //getters and setters
-    PopInterval* getCoalInterval() const;
-    void setCoalInterval(PopInterval *pCoal);
 
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
+/*=============================================================================
+ * CoalNode class
+ *
+ * CoalNode Contains:
+ * 1. Node id.
+ * 2. Pointers to in/out intervals.
+ * 3. Id of corresponding id.
+ *===========================================================================*/
 class MigNode : public TreeNode {
 
 private:
@@ -128,33 +204,40 @@ private:
     int migBandId_;         //mig band ID
 
 public:
-    explicit MigNode(int migBandID); //constructor
 
-    MigNode(const MigNode& migNode2); //copy-constructor
+    //constructor
+    explicit MigNode(int migBandID);
 
-    int getPopId() override;
+    //copy-constructor
+    MigNode(const MigNode& migNode2);
 
-    void printTreeNode() override;
-
-    std::string typeToStr() override;
-
-    //getters and setters
+    //get pointer of out migration
     PopInterval* getOutMigInterval() const;
+
+    //get pointer of out migration
     PopInterval* getInMigInterval() const;
-    int getMigBandId() const;
+
+    //get pointer of out migration
     void setOutMigInterval(PopInterval* pOutMig);
+
+    //get pointer of out migration
     void setInMigInterval(PopInterval* pInMig);
 
-};
+    //get corresponding migration band id
+    int getMigBandId() const;
 
+    //******** Override methods ********
 
-/*
-    Types of tree nodes
-*/
-enum class TreeNodeType {
-    LEAF,   //leaf
-    COAL,   //coalescence
-    MIG,    //migration
+    //get pop id
+    int getPopId() override;
+
+    //type to string
+    std::string typeToStr() override;
+
+private:
+    int getNodeId() const override {return -1;}; //pure, must be implemented
+    void setNodeId(int nodeId) override {}; //pure, must be implemented
+
 };
 
 
