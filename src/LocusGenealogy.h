@@ -46,33 +46,39 @@ public:
     void resetGenealogy();
 
     //get a leaf node by node id
-    LeafNode* getLeafNode(int nodeId);
+    LeafNode *getLeafNode(int nodeId) const;
 
-    //get a mig node by node id
-    CoalNode* getCoalNode(int nodeId);
+    //get a coal node by node id
+    CoalNode *getCoalNode(int nodeId) const;
+
+    //get a mig node by index
+    MigNode* getMigNode(int index) const;
 
     //get the position of a leaf node pointed by given pointer
-    ptrdiff_t getTreeNodePos(TreeNode* pTreeNode);
+    TreeNode *getNewPos(const LocusGenealogy &other, TreeNode *pTreeNode);
 
-    vector<LeafNode>& getLeafNodes();
+    vector<LeafNode> &getLeafNodes();
 
     //return true if node is a leaf
     bool isLeaf(int nodeId);
 
     //return a pointer to a tree node of type coal/leaf by node id
-    TreeNode* getTreeNodeByID(int nodeID);
+    TreeNode *getTreeNodeByID(int nodeID);
+
+    //get num migs
+    int getNumMigs() const;
 
     //get total num of nodes in current genealogy
-    int getNumTreeNodes();
+    int getNumTreeNodes() const;
 
     //add a migration node
-    MigNode* addMigNode(TreeNode* treeNode, int migBandID);
+    MigNode *addMigNode(TreeNode *treeNode, int migBandID);
 
     //remove a migration node
-    void removeMigNode(MigNode* pMigNode);
+    void removeMigNode(MigNode *pMigNode);
 
     //construct branches of genealogy
-    void constructBranches(LocusData* pLocusData);
+    void constructBranches(LocusData *pLocusData);
 
     //print genealogy
     void printGenealogy();

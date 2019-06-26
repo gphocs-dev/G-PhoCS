@@ -40,34 +40,45 @@ LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
         pDataState_(other.pDataState_),
         pGenetreeMigs_(other.pGenetreeMigs_) {
 
-    //the following code copy genealogy and intervals logic
-    //(i.e., genealogy's and intervals' copy-constructors copy the data,
-    // but not their inner pointers or the pointers linking between them)
+    //copy pointers linking between genealogy and intervals
 
-    /*vector<LeafNode>& leavesOther = other.genealogy_.getLeafNodes();
-    vector<LeafNode>& leavesNew = genealogy_.getLeafNodes();
+    // ******* set pointers of genealogy -> intervals *******
 
+    //leaf nodes
+    for (int i = 0; i < pDataSetup_->numSamples; i++) {
+        PopInterval* pOri = other.genealogy_.getLeafNode(i)->getSamplesStart();
+        PopInterval* pCopy =  intervals_.getNewPos(other.intervals_, pOri);
+        genealogy_.getLeafNode(i)->setSamplesInterval(pCopy);
+    }
 
+    //coal nodes
+    for (int i = pDataSetup_->numSamples; i < 2*pDataSetup_->numSamples-1; i++) {
+        PopInterval* pOri = other.genealogy_.getCoalNode(i)->getCoalInterval();
+        PopInterval* pCopy =  intervals_.getNewPos(other.intervals_, pOri);
+        genealogy_.getCoalNode(i)->setCoalInterval(pCopy);
+    }
 
+    //mig nodes
+    for (int i = 0; i < other.genealogy_.getNumMigs(); i++) {
+        PopInterval* pOri = other.genealogy_.getMigNode(i)->getInMigInterval();
+        PopInterval* pOri2 = other.genealogy_.getMigNode(i)->getOutMigInterval();
 
+        PopInterval* pCopy =  intervals_.getNewPos(other.intervals_, pOri);
+        PopInterval* pCopy2 =  intervals_.getNewPos(other.intervals_, pOri2);
 
-    for (std::size_t i = 0; i != leavesNew.size(); ++i) {
+        genealogy_.getMigNode(i)->setInMigInterval(pCopy);
+        genealogy_.getMigNode(i)->setOutMigInterval(pCopy2);
+    }
 
-        //get type of pointer
-        leavesOther[i].getSamplesStart();
+    // ******* set pointers of intervals -> genealogy  *******
 
-        //get interval position
-
-
-        //get its location
-
-
-        //leavesNew[i].setParent()
-    }*/
-
-
-
-
+    for (int i = 0; i < intervals_.getNumIntervals(); i++) {
+        TreeNode* pOri = other.intervals_.getInterval(i)->getTreeNode();
+        if (pOri) {
+            TreeNode* pCopy = genealogy_.getNewPos(other.genealogy_, pOri);
+            intervals_.getInterval(i)->setTreeNode(pCopy);
+        }
+    }
 
 }
 
@@ -320,4 +331,7 @@ void LocusEmbeddedGenealogy::testPopIntervals() {
 void LocusEmbeddedGenealogy::testGenealogyStats() {
     intervals_.testGenealogyStatistics();
 }
+
+
+
 

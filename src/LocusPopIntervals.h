@@ -56,6 +56,11 @@ public:
     //destructor
     ~LocusPopIntervals();
 
+    //help-function of copy-constructor
+    PopInterval* getNewPos(const LocusPopIntervals& other, PopInterval* p);
+
+    // **************** test methods ****************
+
     //reset intervals
     void resetPopIntervals();
 
@@ -90,8 +95,14 @@ public:
     //get a reference to statistics
     const GenealogyStats& getStats() const;
 
+    //get interval by index
+    PopInterval* getInterval(int index) const;
+
     //compute genealogy tree statistics
     int computeGenetreeStats();
+
+    //get num intervals
+    int getNumIntervals() const;
 
     //recalculate statistics
     double recalcStats(int pop);

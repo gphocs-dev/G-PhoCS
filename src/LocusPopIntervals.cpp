@@ -33,17 +33,57 @@ LocusPopIntervals::LocusPopIntervals(int locusID, int nIntervals)
     Allocates popIntervals objects.
     Links intervals to each other.
 */
-LocusPopIntervals::LocusPopIntervals(const LocusPopIntervals& other) :
-          numIntervals_(other.numIntervals_),
-          stats_(other.stats_),
-          locusID_(other.locusID_), pPopTree_(other.pPopTree_) {
+LocusPopIntervals::LocusPopIntervals(const LocusPopIntervals &other) :
+        numIntervals_(other.numIntervals_),
+        stats_(other.stats_),
+        locusID_(other.locusID_), pPopTree_(other.pPopTree_) {
 
-    //allocate N intervals (N = number of intervals, given as argument)
+    //allocate N intervals
     intervalsArray_ = new PopInterval[numIntervals_];
 
-    //intervals pool points to head of intervals array
-    pIntervalsPool_ = intervalsArray_;
+    //for each in interval
+    for (int i = 0; i < numIntervals_; i++) {
 
+        //copy data
+        intervalsArray_[i].setType(other.intervalsArray_[i].getType());
+        intervalsArray_[i].setPopID(other.intervalsArray_[i].getPopID());
+        intervalsArray_[i].setAge(other.intervalsArray_[i].getAge());
+        intervalsArray_[i].setNumLineages(
+                other.intervalsArray_[i].getNumLineages());
+
+        //copy next/prev pointers
+        //get pointer, find its position in the original array by subtracting
+        // it from head, than get the same position in the copy array and set
+        //pointer
+
+        //set next
+        PopInterval *pNext = other.intervalsArray_[i].getNext();
+        if (pNext)
+            intervalsArray_[i].setNext(getNewPos(other, pNext));
+
+
+        //set prev
+        PopInterval *pPrev = other.intervalsArray_[i].getPrev();
+        if (pPrev)
+            intervalsArray_[i].setPrev(getNewPos(other, pPrev));
+
+
+    }
+
+    //intervals pool points to head of intervals array
+    pIntervalsPool_ =
+            intervalsArray_ + (other.pIntervalsPool_ - other.intervalsArray_);
+
+}
+
+PopInterval *LocusPopIntervals::getInterval(int index) const {
+    return intervalsArray_ + index;
+}
+
+
+PopInterval *
+LocusPopIntervals::getNewPos(const LocusPopIntervals &other, PopInterval *p) {
+    return intervalsArray_ + (p - other.intervalsArray_);
 }
 
 
@@ -96,9 +136,9 @@ void LocusPopIntervals::linkIntervals() {
     Returns a free interval from the intervals pool
     @return: pointer to a free interval
 */
-PopInterval* LocusPopIntervals::getIntervalFromPool() {
+PopInterval *LocusPopIntervals::getIntervalFromPool() {
 
-    PopInterval* pInterval = pIntervalsPool_;
+    PopInterval *pInterval = pIntervalsPool_;
 
     //if no free intervals
     if (!pInterval) {
@@ -120,7 +160,7 @@ PopInterval* LocusPopIntervals::getIntervalFromPool() {
     Return an interval to the interval pool
     @param: pointer to the free interval
 */
-void LocusPopIntervals::returnToPool(PopInterval* pInterval) {
+void LocusPopIntervals::returnToPool(PopInterval *pInterval) {
 
     //reset interval content
     pInterval->resetPopInterval();
@@ -188,15 +228,15 @@ void LocusPopIntervals::createStartEndIntervals() {
         if (pop == rootPop)
             intervalsArray_[end_index].setAge(OLDAGE);
         else
-            intervalsArray_[end_index].setAge(pPopTree_->pops[pop]->father->age);
+            intervalsArray_[end_index].setAge(
+                    pPopTree_->pops[pop]->father->age);
 
 
         //next of end interval points to the start interval of parent pop.
         //next of root's interval points to NULL
         if (pop == rootPop) {
             intervalsArray_[end_index].setNext(nullptr);
-        }
-        else {
+        } else {
             int parent_pop = pPopTree_->pops[pop]->father->id; //get parent pop
             intervalsArray_[end_index].setNext(intervalsArray_ + parent_pop);
         }
@@ -206,7 +246,7 @@ void LocusPopIntervals::createStartEndIntervals() {
     }
 
     //promote the free intervals pointer to the 2N cell
-    pIntervalsPool_ = intervalsArray_ + 2*nPops;
+    pIntervalsPool_ = intervalsArray_ + 2 * nPops;
     pIntervalsPool_->setPrev(nullptr);
 
 }
@@ -220,11 +260,11 @@ void LocusPopIntervals::createStartEndIntervals() {
     @return: pointer to the new interval
 */
 PopInterval *
-LocusPopIntervals::createIntervalBefore(PopInterval* pInterval, int pop,
+LocusPopIntervals::createIntervalBefore(PopInterval *pInterval, int pop,
                                         double age, IntervalType type) {
 
     //get a new interval from pool (default type is DUMMY)
-    PopInterval* pNewInterval = this->getIntervalFromPool();
+    PopInterval *pNewInterval = this->getIntervalFromPool();
 
     //set population ID
     pNewInterval->setPopID(pop);
@@ -266,8 +306,8 @@ LocusPopIntervals::createInterval(int pop, double age, IntervalType type) {
     }
 
     //check if time specified is greater than age of parent population
-    if(pop != pPopTree_->rootPop &&
-       age > pPopTree_->pops[pop]->father->age + 0.000001) {
+    if (pop != pPopTree_->rootPop &&
+        age > pPopTree_->pops[pop]->father->age + 0.000001) {
         INTERVALS_FATAL_0017
         return nullptr;
     }
@@ -275,9 +315,10 @@ LocusPopIntervals::createInterval(int pop, double age, IntervalType type) {
     //find a spot for a new interval
     //loop while not reaching the end interval of the population
     //and while age of current interval is smaller than time specified
-    PopInterval* pInterval = this->getPopStart(pop)->getNext();
-    while (!pInterval->isType(IntervalType::POP_END) && pInterval->getAge() < age) {
-           pInterval = pInterval->getNext();
+    PopInterval *pInterval = this->getPopStart(pop)->getNext();
+    while (!pInterval->isType(IntervalType::POP_END) &&
+           pInterval->getAge() < age) {
+        pInterval = pInterval->getNext();
     }
 
     //create the new interval in the found slot
@@ -295,7 +336,7 @@ LocusPopIntervals::createInterval(int pop, double age, IntervalType type) {
     @return: pointer to a pop-start interval
 
 */
-PopInterval* LocusPopIntervals::getPopStart(int pop) {
+PopInterval *LocusPopIntervals::getPopStart(int pop) {
     return intervalsArray_ + pop;
 }
 
@@ -309,7 +350,7 @@ PopInterval* LocusPopIntervals::getPopStart(int pop) {
     @return: pointer to a pop-end interval
 
 */
-PopInterval* LocusPopIntervals::getPopEnd(int pop) {
+PopInterval *LocusPopIntervals::getPopEnd(int pop) {
     return intervalsArray_ + pPopTree_->numPops + pop;
 }
 
@@ -320,10 +361,10 @@ PopInterval* LocusPopIntervals::getPopEnd(int pop) {
     @param: population id
     @return: pointer to a SamplesStart interval
 */
-PopInterval* LocusPopIntervals::getSamplesStart(int pop) {
+PopInterval *LocusPopIntervals::getSamplesStart(int pop) {
 
     //iterate over intervals while not pop-end
-    PopInterval* pInterval = this->getPopStart(pop)->getNext();
+    PopInterval *pInterval = this->getPopStart(pop)->getNext();
     while (!pInterval->isType(IntervalType::POP_END)) {
 
         //if interval is a sample start - return it
@@ -342,7 +383,7 @@ PopInterval* LocusPopIntervals::getSamplesStart(int pop) {
     getStats
     @return: reference to statistics object
 */
-const GenealogyStats& LocusPopIntervals::getStats() const {
+const GenealogyStats &LocusPopIntervals::getStats() const {
     return stats_;
 }
 
@@ -355,7 +396,7 @@ void LocusPopIntervals::printIntervals() {
 
     //for each population iterate over all intervals
     for (int pop = 0; pop < pPopTree_->numPops; ++pop) {
-        PopInterval* pInterval = this->getPopStart(pop);
+        PopInterval *pInterval = this->getPopStart(pop);
         //iterate intervals of current pop while not pop-end
         while (true) {
             //print interval
@@ -430,7 +471,7 @@ double LocusPopIntervals::recalcStats(int pop) {
     }
 
     //get pop-start interval
-    PopInterval* pInterval = this->getPopStart(pop);
+    PopInterval *pInterval = this->getPopStart(pop);
 
     //get current age
     double currAge = pInterval->getAge();
@@ -439,7 +480,7 @@ double LocusPopIntervals::recalcStats(int pop) {
     int n = pInterval->getNumLineages();
 
     //get live mig bands
-    TimeMigBands* timeBand = getLiveMigBands(dataSetup.popTree, pop, currAge);
+    TimeMigBands *timeBand = getLiveMigBands(dataSetup.popTree, pop, currAge);
 
     // follow intervals chain and set number of lineages per interval according
     // to previous interval also update statistics
@@ -448,11 +489,11 @@ double LocusPopIntervals::recalcStats(int pop) {
         double t = min2(pInterval->getAge(), timeBand->endTime) - currAge;
 
         //increment coal statistics
-        coalStats.stats +=  n * (n - 1) * t; //todo: more efficient calculation
+        coalStats.stats += n * (n - 1) * t; //todo: more efficient calculation
 
         //for each live mig band update mig statistics
         for (auto pMigBand : timeBand->migBands) {
-            migsStats[pMigBand->id].stats += n*t;
+            migsStats[pMigBand->id].stats += n * t;
         }
 
         //update current age
@@ -489,7 +530,7 @@ double LocusPopIntervals::recalcStats(int pop) {
             case (IntervalType::IN_MIG): {
                 n--;
                 // figure out migration band and update its statistics
-                MigNode* pMigNode = (MigNode*)pInterval->getTreeNode();
+                MigNode *pMigNode = (MigNode *) pInterval->getTreeNode();
                 int mig_band = pMigNode->getMigBandId();
                 migsStats[mig_band].num += 1;
                 break;
@@ -520,7 +561,7 @@ double LocusPopIntervals::recalcStats(int pop) {
 
         //update delta ln likelihood of mig statistics
         deltaLnLd -= (migsStats[id].stats - stats_.migs[id].stats) *
-                      pPopTree_->migBands[id].migRate;
+                     pPopTree_->migBands[id].migRate;
 
         //save mig statistics (in the pop location)
         stats_.migs[id].num = migsStats[id].num;
@@ -529,7 +570,7 @@ double LocusPopIntervals::recalcStats(int pop) {
 
     //update delta ln likelihood of coal statistics
     deltaLnLd -= (coalStats.stats - stats_.coals[pop].stats) /
-                  (pPopTree_->pops[pop]->theta * HEREDITY_FACTOR);
+                 (pPopTree_->pops[pop]->theta * HEREDITY_FACTOR);
 
     //save coal statistics (in the pop location)
     stats_.coals[pop].num = coalStats.num;
@@ -551,7 +592,7 @@ void LocusPopIntervals::testPopIntervals() {
         int event = event_chains[locusID_].first_event[pop];
 
         //get pop-start interval
-        PopInterval* pInterval = this->getPopStart(pop);
+        PopInterval *pInterval = this->getPopStart(pop);
 
         //get pop age
         double eventAge = pPopTree_->pops[pop]->age;
@@ -582,8 +623,9 @@ void LocusPopIntervals::testPopIntervals() {
             //if elapsed time of event is greater than epsilon, compare live mig bands
             if (elapsedTime > 2 * EPSILON) {
 
-                double age = eventAge + elapsedTime/2;
-                TimeMigBands* liveMigsNew = getLiveMigBands(pPopTree_, pop, age);
+                double age = eventAge + elapsedTime / 2;
+                TimeMigBands *liveMigsNew = getLiveMigBands(pPopTree_, pop,
+                                                            age);
 
                 //assert live migs band is not null
                 assert(liveMigsNew != nullptr);
@@ -594,7 +636,7 @@ void LocusPopIntervals::testPopIntervals() {
                 //for each live mig band
                 for (int id : liveMigsOri) {
                     //get pointer to mig band by its id
-                    MigrationBand* migBand = getMigBandByID(pPopTree_, id);
+                    MigrationBand *migBand = getMigBandByID(pPopTree_, id);
                     //verify that current mig is found in the new data structure
                     assert(std::find(liveMigsNew->migBands.begin(),
                                      liveMigsNew->migBands.end(), migBand) !=
@@ -603,7 +645,8 @@ void LocusPopIntervals::testPopIntervals() {
 
                 //verify if time band contains old event
                 assert(liveMigsNew->startTime <= eventAge + EPSILON);
-                assert(eventAge + elapsedTime <= liveMigsNew->endTime + EPSILON);
+                assert(eventAge + elapsedTime <=
+                       liveMigsNew->endTime + EPSILON);
             }
 
             //age
@@ -616,19 +659,24 @@ void LocusPopIntervals::testPopIntervals() {
 
             switch (eventType) {
                 case SAMPLES_START: {
-                    assert(pInterval->isType(IntervalType::SAMPLES_START)); break;
+                    assert(pInterval->isType(IntervalType::SAMPLES_START));
+                    break;
                 }
                 case COAL: {
-                    assert(pInterval->isType(IntervalType::COAL)); break;
+                    assert(pInterval->isType(IntervalType::COAL));
+                    break;
                 }
                 case IN_MIG: {
-                    assert(pInterval->isType(IntervalType::IN_MIG)); break;
+                    assert(pInterval->isType(IntervalType::IN_MIG));
+                    break;
                 }
                 case OUT_MIG: {
-                    assert(pInterval->isType(IntervalType::OUT_MIG)); break;
+                    assert(pInterval->isType(IntervalType::OUT_MIG));
+                    break;
                 }
                 case END_CHAIN: {
-                    assert(pInterval->isType(IntervalType::POP_END)); break;
+                    assert(pInterval->isType(IntervalType::POP_END));
+                    break;
                 }
 
                     //mig bands (don't exist in the new data structure)
@@ -670,10 +718,12 @@ void LocusPopIntervals::testGenealogyStatistics() {
     for (int pop = 0; pop < pPopTree_->numPops; pop++) {
 
         //verify num of coal are equal
-        assert(stats_.coals[pop].num == genetree_stats[locusID_].num_coals[pop]);
+        assert(stats_.coals[pop].num ==
+               genetree_stats[locusID_].num_coals[pop]);
 
         //verify statistics are equal
-        assert(fabs(stats_.coals[pop].stats - genetree_stats[locusID_].coal_stats[pop]) < EPSILON);
+        assert(fabs(stats_.coals[pop].stats -
+                    genetree_stats[locusID_].coal_stats[pop]) < EPSILON);
     }
 
     //for each mig band
@@ -683,6 +733,13 @@ void LocusPopIntervals::testGenealogyStatistics() {
         assert(stats_.migs[id].num == genetree_stats[locusID_].num_migs[id]);
 
         //verify statistics are equal
-        assert(fabs(stats_.migs[id].stats - genetree_stats[locusID_].mig_stats[id]) < EPSILON);
+        assert(fabs(stats_.migs[id].stats -
+                    genetree_stats[locusID_].mig_stats[id]) < EPSILON);
     }
 }
+
+int LocusPopIntervals::getNumIntervals() const {
+    return numIntervals_;
+}
+
+

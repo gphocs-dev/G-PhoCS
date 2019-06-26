@@ -33,6 +33,31 @@ LocusGenealogy::LocusGenealogy(int numSamples)
 }
 
 
+
+/*
+ * getNewPos
+ * help-function of copy-constructor
+ * @param:
+ * @return:
+*/
+TreeNode *
+LocusGenealogy::getNewPos(const LocusGenealogy &other, TreeNode *pTreeNode) {
+    //switch by tree node type
+    //get position by subtracting vector head pointer from the given pointer
+    switch (pTreeNode->getType()) {
+        case TreeNodeType::LEAF:
+            return &leafNodes_[0] + ((LeafNode*)pTreeNode - &other.leafNodes_[0]);
+
+        case TreeNodeType::COAL:
+            return &coalNodes_[0] + ((CoalNode*)pTreeNode - &other.coalNodes_[0]);
+
+        case TreeNodeType::MIG:
+            return &migNodes_[0] + ((MigNode*)pTreeNode - &other.migNodes_[0]);
+    }
+
+}
+
+
 /*
     LocusGenealogy - Copy-constructor
 */
@@ -59,24 +84,24 @@ LocusGenealogy::LocusGenealogy(const LocusGenealogy& other) :
 
         //set parent
         pOther = other.leafNodes_[i].getParent();
-        leafNodes_[i].setParent(&leafNodes_[0] + getTreeNodePos(pOther));
+        leafNodes_[i].setParent(getNewPos(other, pOther));
     }
 
     //for each coal node
-    for (std::size_t i = 0; i < leafNodes_.size(); i++) {
+    for (std::size_t i = 0; i < coalNodes_.size(); i++) {
 
         //set parent
-        pOther = other.leafNodes_[i].getParent();
+        pOther = other.coalNodes_[i].getParent();
         if (pOther)
-            leafNodes_[i].setParent(&leafNodes_[0] + getTreeNodePos(pOther));
+            coalNodes_[i].setParent(getNewPos(other, pOther));
 
         //set left son
-        pOther = other.leafNodes_[i].getLeftSon();
-        leafNodes_[i].setLeftSon(&leafNodes_[0] + getTreeNodePos(pOther));
+        pOther = other.coalNodes_[i].getLeftSon();
+        coalNodes_[i].setLeftSon(getNewPos(other, pOther));
 
         //set right son
-        pOther = other.leafNodes_[i].getRightSon();
-        leafNodes_[i].setRightSon(&leafNodes_[0] + getTreeNodePos(pOther));
+        pOther = other.coalNodes_[i].getRightSon();
+        coalNodes_[i].setRightSon(getNewPos(other, pOther));
     }
 
     //for each mig node
@@ -84,15 +109,15 @@ LocusGenealogy::LocusGenealogy(const LocusGenealogy& other) :
 
         //set parent
         pOther = other.migNodes_[i].getParent();
-        migNodes_[i].setParent(&migNodes_[0] + getTreeNodePos(pOther));
+        migNodes_[i].setParent(getNewPos(other, pOther));
 
         //set left son
         pOther = other.migNodes_[i].getLeftSon();
-        migNodes_[i].setLeftSon(&migNodes_[0] + getTreeNodePos(pOther));
+        migNodes_[i].setLeftSon(getNewPos(other, pOther));
 
         //set right son
         pOther = other.migNodes_[i].getRightSon();
-        migNodes_[i].setRightSon(&migNodes_[0] + getTreeNodePos(pOther));
+        migNodes_[i].setRightSon(getNewPos(other, pOther));
     }
 
 }
@@ -105,8 +130,16 @@ LocusGenealogy::LocusGenealogy(const LocusGenealogy& other) :
     @return: leaf node
 */
 void LocusGenealogy::resetGenealogy() {
-    leafNodes_.clear();
-    coalNodes_.clear();
+
+    //reset leaf nodes
+    for (auto& node : leafNodes_)
+        node.reset();
+
+    //reset coal nodes
+    for (auto& node : coalNodes_)
+        node.reset();
+
+    //clear mig nodes
     migNodes_.clear();
 }
 
@@ -117,8 +150,8 @@ void LocusGenealogy::resetGenealogy() {
     @param: node index
     @return: leaf node
 */
-LeafNode* LocusGenealogy::getLeafNode(int nodeID) {
-    return &leafNodes_[nodeID];
+LeafNode* LocusGenealogy::getLeafNode(int nodeID) const {
+    return (LeafNode*)&leafNodes_[nodeID];
 }
 
 
@@ -128,9 +161,20 @@ LeafNode* LocusGenealogy::getLeafNode(int nodeID) {
     @param: node index
     @return: coal node
 */
-CoalNode* LocusGenealogy::getCoalNode(int nodeID) {
+CoalNode* LocusGenealogy::getCoalNode(int nodeID) const {
     int offset = nodeID - numSamples_;
-    return &coalNodes_[offset];
+    return (CoalNode*)&coalNodes_[offset];
+}
+
+
+/*
+    getCoalNode
+    returns a coal node by id
+    @param: node index
+    @return: coal node
+*/
+MigNode* LocusGenealogy::getMigNode(int index) const {
+    return (MigNode*)&migNodes_[index];
 }
 
 
@@ -163,34 +207,20 @@ TreeNode* LocusGenealogy::getTreeNodeByID(int nodeID) {
 
 
 /*
- * getTreeNodePos
- * get the position of a tree node pointed by given pointer
- * @param: pointer to a tree node
- * @return: position
+    getNumTreeNodes
+    @return: num tree nodes in genealogy
 */
-ptrdiff_t LocusGenealogy::getTreeNodePos(TreeNode* pTreeNode) {
-    //switch by tree node type
-    //get position by subtracting vector head pointer from the given pointer
-    switch (pTreeNode->getType()) {
-        case TreeNodeType::LEAF:
-            return (LeafNode*)pTreeNode - &leafNodes_[0];
-
-        case TreeNodeType::COAL:
-            return (CoalNode*)pTreeNode - &coalNodes_[0];
-
-        case TreeNodeType::MIG:
-            return (MigNode*)pTreeNode - &migNodes_[0];
-    }
-
+int LocusGenealogy::getNumTreeNodes() const {
+    return int(leafNodes_.size() + coalNodes_.size() + migNodes_.size());
 }
 
 
 /*
-    getNumTreeNodes
-    @return: num tree nodes in genealogy
+    getNumMigs
+    @return: num migs in genealogy
 */
-int LocusGenealogy::getNumTreeNodes() {
-    return int(leafNodes_.size() + coalNodes_.size() + migNodes_.size());
+int LocusGenealogy::getNumMigs() const {
+    return int(migNodes_.size());
 }
 
 

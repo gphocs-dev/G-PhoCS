@@ -85,6 +85,9 @@ public:
 
     //******** Pure virtual methods ********
 
+    //reset node
+    virtual void reset();
+
     //get type as string
     virtual std::string typeToStr() = 0;
 
@@ -129,6 +132,9 @@ public:
 
     //******** Override methods ********
 
+    //reset node
+    void reset() override;
+
     //get node id
     int getNodeId() const override;
 
@@ -172,6 +178,9 @@ public:
     void setCoalInterval(PopInterval* pCoal);
 
     //******** Override methods ********
+
+    //reset node
+    void reset() override;
 
     //get node id
     int getNodeId() const override;

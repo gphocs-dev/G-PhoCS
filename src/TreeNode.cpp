@@ -20,6 +20,14 @@ TreeNode::TreeNode(const TreeNode& treeNode2) : type_(treeNode2.type_),
 }
 
 
+void TreeNode::reset()  {
+    age_ = -1;
+    pParent_ = nullptr;
+    pLeftSon_ = nullptr;
+    pRightSon_ = nullptr;
+}
+
+
 TreeNodeType TreeNode::getType() const {
     return type_;
 }
@@ -71,10 +79,7 @@ void TreeNode::printTreeNode() {
     using std::setw;
 
     cout << std::left;
-    if (type_ != TreeNodeType ::MIG)
-        cout << "id: " << setw(4) << this->getNodeId();
-    else
-        cout << "id: " << setw(4) << -1;
+    cout << "id: " << setw(4) << this->getNodeId();
     cout <<"type: " << setw(6) << this->typeToStr();
 
     int parent = pParent_ ? pParent_->getNodeId() : -1;
@@ -139,6 +144,11 @@ std::string LeafNode::typeToStr() {
 }
 
 
+void LeafNode::reset() {
+    pSamplesStart_ = nullptr;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 CoalNode::CoalNode() : pCoal_(nullptr), nodeID_(-1) {
     type_ = TreeNodeType::COAL;
@@ -181,6 +191,11 @@ int CoalNode::getNodeId() const {
 
 void CoalNode::setNodeId(int nodeId) {
     nodeID_ = nodeId;
+}
+
+
+void CoalNode::reset() {
+    pCoal_ = nullptr;
 }
 
 
@@ -232,6 +247,8 @@ int MigNode::getPopId() {
 std::string MigNode::typeToStr() {
     return "mig";
 }
+
+
 
 
 

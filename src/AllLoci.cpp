@@ -93,22 +93,21 @@ void AllLoci::testLoci() {
         //compute genealogy statistics
         locus.computeGenetreeStats();
 
+        //copy locus
+        LocusEmbeddedGenealogy copy(locus);
+
         //test locus genealogy
-        locus.testLocusGenealogy();
+        copy.testLocusGenealogy();
 
         //test locus intervals
-        locus.testPopIntervals();
+        copy.testPopIntervals();
 
         //test locus statistics
-        locus.testGenealogyStats();
+        copy.testGenealogyStats();
 
-
-        //LocusEmbeddedGenealogy copy(locus);
-
-        locus.printEmbeddedGenealogy();
-        //copy.printEmbeddedGenealogy();
 
         //locus.printEmbeddedGenealogy();
+        //copy.printEmbeddedGenealogy();
         //printGenealogyAndExit(locus.getLocusID(), -1);
         //break;
 
