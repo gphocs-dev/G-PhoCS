@@ -88,7 +88,7 @@ void AllLoci::testLoci() {
         constructMigBandsTimes(dataSetup.popTree);
 
         //construct genealogy and intervals
-        locus.construct_genealogy_and_intervals();
+        locus.constructEmbeddedGenealogy();
 
         //compute genealogy statistics
         locus.computeGenetreeStats();

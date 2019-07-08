@@ -30,20 +30,19 @@
  * 5. Pointer to popTree.
  *===========================================================================*/
 
-
 class LocusPopIntervals {
 
 private:
 
-    PopInterval* intervalsArray_; //array of PopIntervals //todo: replace with vector?
-    PopInterval* pIntervalsPool_; //pointer to a pool of free intervals
+    PopInterval *intervalsArray_; //array of PopIntervals //todo: replace with vector?
+    PopInterval *pIntervalsPool_; //pointer to a pool of free intervals
 
     int numIntervals_; //total number of intervals
 
     GenealogyStats stats_; //genealogy statistics of coal and migs
 
-    int locusID_; //locus id, for error massages
-    PopulationTree* pPopTree_; //pointer to PopulationTree struct
+    const int locusID_; //locus id, for error massages
+    PopulationTree *pPopTree_; //pointer to PopulationTree struct
 
 public:
 
@@ -51,15 +50,55 @@ public:
     LocusPopIntervals(int locusID, int nIntervals);
 
     //copy-constructor
-    LocusPopIntervals(const LocusPopIntervals& other);
+    LocusPopIntervals(const LocusPopIntervals &other);
+
+    //copy without construction
+    void copy(const LocusPopIntervals &other);
 
     //destructor
     ~LocusPopIntervals();
 
     //help-function of copy-constructor
-    PopInterval* getNewPos(const LocusPopIntervals& other, PopInterval* p);
+    PopInterval *getNewPos(const LocusPopIntervals &other, PopInterval *p);
 
-    // **************** test methods ****************
+public:
+
+    // ********************* MAIN methods *********************
+
+    //create a new interval in specified population at given time
+    PopInterval *createInterval(int pop, double age, IntervalType type);
+
+    //create a new interval before a given interval
+    PopInterval *createIntervalBefore(PopInterval *pInterval,
+                                      int pop, double age, IntervalType type);
+
+    //compute genealogy tree statistics
+    int computeGenetreeStats();
+
+    //recalculate statistics
+    double recalcStats(int pop);
+
+    // ********************* GET methods *********************
+
+    //get a pointer to a samples start interval of a given population
+    PopInterval *getSamplesStart(int pop);
+
+    //get a pointer to a pop start interval of a given population
+    PopInterval *getPopStart(int pop);
+
+    //get a pointer to a end start interval of a given population
+    PopInterval *getPopEnd(int pop);
+
+    //get a reference to statistics
+    const GenealogyStats &getStats() const;
+
+    //get interval by index
+    PopInterval *getInterval(int index) const;
+
+    //get num intervals
+    int getNumIntervals() const;
+
+    // ********************* OTHER methods *********************
 
     //reset intervals
     void resetPopIntervals();
@@ -71,44 +110,17 @@ public:
     void createStartEndIntervals();
 
     //get a free interval from intervals pool
-    PopInterval* getIntervalFromPool();
+    PopInterval *getIntervalFromPool();
 
     //return a free interval to intervals pool
-    void returnToPool(PopInterval* pInterval);
+    void returnToPool(PopInterval *pInterval);
 
-    //create a new interval before a given interval
-    PopInterval* createIntervalBefore(PopInterval* pInterval,
-            int pop, double age, IntervalType type);
-
-    //create a new interval in specified population at given time
-    PopInterval* createInterval(int pop, double age, IntervalType type);
-
-    //get a pointer to a samples start interval of a given population
-    PopInterval* getSamplesStart(int pop);
-
-    //get a pointer to a pop start interval of a given population
-    PopInterval* getPopStart(int pop);
-
-    //get a pointer to a end start interval of a given population
-    PopInterval* getPopEnd(int pop);
-
-    //get a reference to statistics
-    const GenealogyStats& getStats() const;
-
-    //get interval by index
-    PopInterval* getInterval(int index) const;
-
-    //compute genealogy tree statistics
-    int computeGenetreeStats();
-
-    //get num intervals
-    int getNumIntervals() const;
-
-    //recalculate statistics
-    double recalcStats(int pop);
+    // ********************* PRINT methods *********************
 
     //for each pop print all intervals
     void printIntervals();
+
+    // ********************* TEST methods *********************
 
     //verify intervals are equal to old data structure
     void testPopIntervals();

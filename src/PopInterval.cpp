@@ -34,6 +34,21 @@ PopInterval::PopInterval(const PopInterval& other)
 }
 
 
+
+/*
+    Copy without construction
+*/
+void PopInterval::copy(const PopInterval &other) {
+    type_ = other.type_;
+    age_ = other.age_;
+    nLineages_ = other.nLineages_;
+    popID_ = other.popID_;
+    pPrevInterval_ = nullptr;
+    pNextInterval_ = nullptr;
+    pTreeNode_ = nullptr;
+}
+
+
 /*
  * resetPopInterval
  * Resets PopInterval content
@@ -180,6 +195,8 @@ void PopInterval::printInterval() {
         cout << "tree-node: -";
     cout << endl;
 }
+
+
 
 
 

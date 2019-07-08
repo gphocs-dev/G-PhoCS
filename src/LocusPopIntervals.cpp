@@ -45,42 +45,82 @@ LocusPopIntervals::LocusPopIntervals(const LocusPopIntervals &other) :
     for (int i = 0; i < numIntervals_; i++) {
 
         //copy data
-        intervalsArray_[i].setType(other.intervalsArray_[i].getType());
-        intervalsArray_[i].setPopID(other.intervalsArray_[i].getPopID());
-        intervalsArray_[i].setAge(other.intervalsArray_[i].getAge());
-        intervalsArray_[i].setNumLineages(
-                other.intervalsArray_[i].getNumLineages());
+        intervalsArray_[i].copy(other.intervalsArray_[i]);
 
         //copy next/prev pointers
-        //get pointer, find its position in the original array by subtracting
-        // it from head, than get the same position in the copy array and set
-        //pointer
 
         //set next
         PopInterval *pNext = other.intervalsArray_[i].getNext();
         if (pNext)
             intervalsArray_[i].setNext(getNewPos(other, pNext));
 
+        //set prev
+        PopInterval *pPrev = other.intervalsArray_[i].getPrev();
+        if (pPrev)
+            intervalsArray_[i].setPrev(getNewPos(other, pPrev));
+
+    }
+    //set pointer to pool intervals
+    pIntervalsPool_ =
+            intervalsArray_ + (other.pIntervalsPool_ - other.intervalsArray_);
+}
+
+
+/*
+    copy without construction
+*/
+void LocusPopIntervals::copy(const LocusPopIntervals &other) {
+
+    //copy num intervals
+    numIntervals_ = other.numIntervals_;
+
+    //copy statistics
+    stats_ = other.stats_; //todo: implement copy?
+
+    //for each in interval
+    for (int i = 0; i < numIntervals_; i++) {
+
+        //copy data
+        intervalsArray_[i].copy(other.intervalsArray_[i]);
+
+        //copy next/prev pointers
+
+        //set next
+        PopInterval *pNext = other.intervalsArray_[i].getNext();
+        if (pNext)
+            intervalsArray_[i].setNext(getNewPos(other, pNext));
 
         //set prev
         PopInterval *pPrev = other.intervalsArray_[i].getPrev();
         if (pPrev)
             intervalsArray_[i].setPrev(getNewPos(other, pPrev));
 
-
     }
-
-    //intervals pool points to head of intervals array
+    //set pointer to pool intervals
     pIntervalsPool_ =
             intervalsArray_ + (other.pIntervalsPool_ - other.intervalsArray_);
-
 }
 
+
+
+/*
+ * getInterval
+ * get interval by index
+ * @param: index of interval
+ * @return: pointer to an interval
+*/
 PopInterval *LocusPopIntervals::getInterval(int index) const {
     return intervalsArray_ + index;
 }
 
 
+/*
+ * getNewPos
+ * get pointer, find its position in the original array by subtracting it from
+ * head, than get the same position in the copy array
+ * @param: other, pointer of current
+ * @return: pointer to an interval
+*/
 PopInterval *
 LocusPopIntervals::getNewPos(const LocusPopIntervals &other, PopInterval *p) {
     return intervalsArray_ + (p - other.intervalsArray_);

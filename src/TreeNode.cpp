@@ -3,6 +3,8 @@
 
 #include <iomanip>
 
+
+//constructor
 TreeNode::TreeNode() :
         age_(-1),
         pParent_(nullptr),
@@ -11,12 +13,23 @@ TreeNode::TreeNode() :
 }
 
 
-TreeNode::TreeNode(const TreeNode& treeNode2) : type_(treeNode2.type_),
-                                                age_(treeNode2.age_),
+//copy constructor
+TreeNode::TreeNode(const TreeNode& other) : type_(other.type_),
+                                                age_(other.age_),
                                                 pParent_(nullptr),
                                                 pLeftSon_(nullptr),
                                                 pRightSon_(nullptr) {
 
+}
+
+
+//copy without construction
+void TreeNode::copy(const TreeNode& other)  {
+    type_ = other.type_;
+    age_ = other.age_;
+    pParent_ = nullptr;
+    pLeftSon_ = nullptr;
+    pRightSon_ = nullptr;
 }
 
 
@@ -99,16 +112,34 @@ void TreeNode::printTreeNode() {
 }
 
 
+
 ////////////////////////////////////////////////////////////////////////////////
+
+//constructor
 LeafNode::LeafNode() : pSamplesStart_(nullptr), nodeID_(-1) {
     type_ = TreeNodeType::LEAF;
 }
 
 
 //copy-constructor
-LeafNode::LeafNode(const LeafNode& leafNode2) : TreeNode(leafNode2),
-                                                nodeID_(leafNode2.nodeID_),
+LeafNode::LeafNode(const LeafNode& other) : TreeNode(other),
+                                                nodeID_(other.nodeID_),
                                                 pSamplesStart_(nullptr) {
+}
+
+
+//copy without construction
+void LeafNode::copy(const LeafNode& other) {
+    TreeNode::copy(other);
+    nodeID_ = other.nodeID_;
+    pSamplesStart_ = nullptr;
+}
+
+
+//reset
+void LeafNode::reset() {
+    TreeNode::reset();
+    pSamplesStart_ = nullptr;
 }
 
 
@@ -132,7 +163,7 @@ void LeafNode::setNodeId(int nodeId) {
 }
 
 
-int LeafNode::getPopId() {
+int LeafNode::getPop() {
     if (pSamplesStart_ == nullptr)
         return -1;
     return pSamplesStart_->getPopID();
@@ -144,11 +175,6 @@ std::string LeafNode::typeToStr() {
 }
 
 
-void LeafNode::reset() {
-    pSamplesStart_ = nullptr;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 CoalNode::CoalNode() : pCoal_(nullptr), nodeID_(-1) {
     type_ = TreeNodeType::COAL;
@@ -156,9 +182,23 @@ CoalNode::CoalNode() : pCoal_(nullptr), nodeID_(-1) {
 
 
 //copy-constructor
-CoalNode::CoalNode(const CoalNode& coalNode2) : TreeNode(coalNode2),
-                                                nodeID_(coalNode2.nodeID_),
+CoalNode::CoalNode(const CoalNode& other) : TreeNode(other),
+                                                nodeID_(other.nodeID_),
                                                 pCoal_(nullptr) {
+}
+
+
+//copy without construction
+void CoalNode::copy(const CoalNode& other) {
+    TreeNode::copy(other);
+    nodeID_ = other.nodeID_;
+    pCoal_ = nullptr;
+}
+
+
+void CoalNode::reset() {
+    TreeNode::reset();
+    pCoal_ = nullptr;
 }
 
 
@@ -172,7 +212,7 @@ void CoalNode::setCoalInterval(PopInterval* pCoal) {
 }
 
 
-int CoalNode::getPopId() {
+int CoalNode::getPop() {
     if (pCoal_ == nullptr)
         return -1;
     return pCoal_->getPopID();
@@ -194,10 +234,6 @@ void CoalNode::setNodeId(int nodeId) {
 }
 
 
-void CoalNode::reset() {
-    pCoal_ = nullptr;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 MigNode::MigNode(int migBandID) : pOutMig_(nullptr), pInMig_(nullptr),
@@ -206,9 +242,27 @@ MigNode::MigNode(int migBandID) : pOutMig_(nullptr), pInMig_(nullptr),
 }
 
 
-MigNode::MigNode(const MigNode& migNode2) : TreeNode(migNode2),
+//copy construction
+MigNode::MigNode(const MigNode& other) : TreeNode(other),
                                             pInMig_(nullptr),
                                             pOutMig_(nullptr) {
+}
+
+
+//copy without construction
+void MigNode::copy(const MigNode& other) {
+    TreeNode::copy(other);
+    pInMig_ = nullptr;
+    pOutMig_ = nullptr;
+
+}
+
+
+//reset
+void MigNode::reset() {
+    TreeNode::reset();
+    pInMig_ = nullptr;
+    pOutMig_ = nullptr;
 }
 
 
@@ -237,7 +291,7 @@ int MigNode::getMigBandId() const {
 }
 
 
-int MigNode::getPopId() {
+int MigNode::getPop() {
     if (!pInMig_)
         return -1;
     return pInMig_->getPopID();

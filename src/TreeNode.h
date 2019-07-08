@@ -37,7 +37,7 @@ class TreeNode {
 
 protected:
 
-    TreeNodeType  type_;    //type of node
+    TreeNodeType type_;    //type of node
 
     double age_;    //tree node age
 
@@ -51,7 +51,10 @@ public:
     TreeNode();
 
     //copy constructor
-    TreeNode(const TreeNode& treeNode2);
+    TreeNode(const TreeNode& other);
+
+    //copy without construction
+    void copy(const TreeNode& other);
 
     //print tree node
     void printTreeNode();
@@ -85,8 +88,11 @@ public:
 
     //******** Pure virtual methods ********
 
+    //get left/right son
+    //TreeNode* getSon(int side=0) const = 0; //left is 0, right is 1
+
     //reset node
-    virtual void reset();
+    virtual void reset() = 0;
 
     //get type as string
     virtual std::string typeToStr() = 0;
@@ -98,7 +104,7 @@ public:
     virtual void setNodeId(int nodeId) = 0;
 
     //get pop id.
-    virtual int getPopId() = 0;
+    virtual int getPop() = 0;
 
 };
 
@@ -122,7 +128,10 @@ public:
     LeafNode();
 
     //copy-constructor
-    LeafNode(const LeafNode& leafNode2);
+    LeafNode(const LeafNode& other);
+
+    //copy without construction
+    void copy(const LeafNode& other);
 
     //get pointer of samplesStart
     PopInterval* getSamplesStart() const;
@@ -142,7 +151,7 @@ public:
     void setNodeId(int nodeId) override;
 
     //get pop id
-    int getPopId() override;
+    int getPop() override;
 
     //type to string
     std::string typeToStr() override;
@@ -169,7 +178,10 @@ public:
     CoalNode();
 
     //copy-constructor
-    CoalNode(const CoalNode& coalNode2);
+    CoalNode(const CoalNode& other);
+
+    //copy without construction
+    void copy(const CoalNode& other);
 
     //get pointer of coalescence
     PopInterval* getCoalInterval() const;
@@ -189,7 +201,7 @@ public:
     void setNodeId(int nodeId) override;
 
     //get pop id
-    int getPopId() override;
+    int getPop() override;
 
     //type to string
     std::string typeToStr() override;
@@ -218,7 +230,10 @@ public:
     explicit MigNode(int migBandID);
 
     //copy-constructor
-    MigNode(const MigNode& migNode2);
+    MigNode(const MigNode& other);
+
+    //copy without construction
+    void copy(const MigNode& other);
 
     //get pointer of out migration
     PopInterval* getOutMigInterval() const;
@@ -237,8 +252,11 @@ public:
 
     //******** Override methods ********
 
+    //reset
+    void reset() override;
+
     //get pop id
-    int getPopId() override;
+    int getPop() override;
 
     //type to string
     std::string typeToStr() override;

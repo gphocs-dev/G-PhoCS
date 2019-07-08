@@ -30,7 +30,8 @@ public:
     AllLoci();
 
     //get locus by id
-    LocusEmbeddedGenealogy& getLocus(int locusID);
+    LocusEmbeddedGenealogy&
+    getLocus(int locusID);
 
     //calculate statistics of all loci
     void calcLociTotalStats();

@@ -16,7 +16,7 @@
  * Class LocusGenealogy is a tree structure containing the sampled leaves,
  * coalescent nodes, and migration nodes.
  * Each element in the tree will be of class TreeNode with two children
- * and a parent. TreeNodes have tree types (leaf, mig, coal).
+ * and a parent. TreeNodes have three types (leaf, mig, coal).
  *
  * Contains:
  * 1. Vector of leaf nodes. Constant size.
@@ -32,7 +32,7 @@ private:
     std::vector<CoalNode> coalNodes_;  //vector of tree nodes of type coal
     std::vector<MigNode> migNodes_;    //vector of tree nodes of type mig
 
-    int numSamples_; //num samples
+    const int numSamples_; //num samples
 
 public:
 
@@ -42,8 +42,20 @@ public:
     //copy-construct
     LocusGenealogy(const LocusGenealogy &other);
 
-    //reset genealogy
-    void resetGenealogy();
+    //copy without construction
+    void copy(const LocusGenealogy &other);
+
+    //help-function of the copy methods
+    TreeNode *getNewPos(const LocusGenealogy &other, TreeNode *pTreeNode);
+
+public:
+
+    // ********************* MAIN methods *********************
+
+    //construct branches of genealogy
+    void constructBranches(LocusData *pLocusData);
+
+    // ********************* GET methods *********************
 
     //get a leaf node by node id
     LeafNode *getLeafNode(int nodeId) const;
@@ -54,14 +66,6 @@ public:
     //get a mig node by index
     MigNode* getMigNode(int index) const;
 
-    //get the position of a leaf node pointed by given pointer
-    TreeNode *getNewPos(const LocusGenealogy &other, TreeNode *pTreeNode);
-
-    vector<LeafNode> &getLeafNodes();
-
-    //return true if node is a leaf
-    bool isLeaf(int nodeId);
-
     //return a pointer to a tree node of type coal/leaf by node id
     TreeNode *getTreeNodeByID(int nodeID);
 
@@ -71,17 +75,28 @@ public:
     //get total num of nodes in current genealogy
     int getNumTreeNodes() const;
 
+    const vector<LeafNode> &getLeafNodes() const;//todo: use or remove
+
+    // ********************* OTHER methods *********************
+
+    //reset genealogy
+    void resetGenealogy();
+
+    //return true if node is a leaf
+    bool isLeaf(int nodeId);
+
     //add a migration node
     MigNode *addMigNode(TreeNode *treeNode, int migBandID);
 
     //remove a migration node
     void removeMigNode(MigNode *pMigNode);
 
-    //construct branches of genealogy
-    void constructBranches(LocusData *pLocusData);
+    // ********************* PRINT methods *********************
 
     //print genealogy
     void printGenealogy();
+
+    // ********************* TEST methods *********************
 
     //verify genealogy is consistent with previous version
     void testLocusGenealogy(int locusID, LocusData *pLocusData,

@@ -51,17 +51,15 @@ public:
     //copy-constructor
     LocusEmbeddedGenealogy(const LocusEmbeddedGenealogy& other);
 
+    //copy without construction
+    void copy(const LocusEmbeddedGenealogy& other);
+
+public:
+
+    // ********************* MAIN methods *********************
+
     //construct both genealogy and intervals and connect between them
-    int construct_genealogy_and_intervals();
-
-    //get locus ID
-    int getLocusID();
-
-    //get locus data
-    LocusData* getLocusData();
-
-    //get a reference to statistics
-    const GenealogyStats& getStats() const;
+    int constructEmbeddedGenealogy();
 
     //compute genealogy tree statistics
     int computeGenetreeStats();
@@ -69,14 +67,25 @@ public:
     //recalculate statistics
     double recalcStats(int pop);
 
+    int updateGB_InternalNode(double finetune);
 
+    // ********************* GET methods *********************
 
-    // **************** print methods ****************
+    //get a reference to statistics
+    const GenealogyStats& getStats() const;
+
+    //get locus ID
+    int getLocusID();
+
+    //get locus data
+    LocusData* getLocusData();
+
+    // ********************* PRINT methods *********************
 
     //print embedded genealogy
     void printEmbeddedGenealogy();
 
-    // **************** test methods ****************
+    // ********************* TEST methods *********************
 
     //test if the new genealogy data structure is consistent with the original
     void testLocusGenealogy();
@@ -86,7 +95,6 @@ public:
 
     //test if statistics are consistent with the original
     void testGenealogyStats();
-
 
 };
 

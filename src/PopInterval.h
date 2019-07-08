@@ -52,11 +52,47 @@ public:
     //copy-constructor
     PopInterval(const PopInterval& other);
 
-    //reset members
-    void resetPopInterval();
+    //copy without construction
+    void copy(const PopInterval& other);
+
+public:
+
+    // ********************* GET/SET methods *********************
+
+    //get/set type
+    IntervalType getType() const;
+    void setType(IntervalType type);
+
+    //get/set age
+    double getAge() const;
+    void setAge(double age);
+
+    //get/set num lineages
+    int getNumLineages() const;
+    void setNumLineages(int nLineages);
+
+    //get/set pop ID
+    int getPopID() const;
+    void setPopID(int popID);
+
+    //get/set next pointer
+    PopInterval* getNext() const;
+    void setNext(PopInterval* pNext);
+
+    //get/set prev pointer
+    PopInterval* getPrev() const;
+    void setPrev(PopInterval* pPrev);
+
+    //get/set treeNode pointer
+    TreeNode* getTreeNode() const;
+    void setTreeNode(TreeNode* pTreeNode);
 
     //get elapsed time of interval
     double getElapsedTime();
+
+    // ********************* OTHER methods *********************
+    //reset members
+    void resetPopInterval();
 
     //return true if interval is of the specified type
     bool isType(IntervalType type);
@@ -64,31 +100,10 @@ public:
     //convert type to string
     std::string typeToStr();
 
+    // ********************* PRINT methods *********************
+
     //print interval
     void printInterval();
-
-public:
-    //getters / setters
-    IntervalType getType() const;
-    void setType(IntervalType type);
-
-    double getAge() const;
-    void setAge(double age);
-
-    int getNumLineages() const;
-    void setNumLineages(int nLineages);
-
-    int getPopID() const;
-    void setPopID(int popID);
-
-    PopInterval* getNext() const;
-    void setNext(PopInterval* pNext);
-
-    PopInterval* getPrev() const;
-    void setPrev(PopInterval* pPrev);
-
-    TreeNode* getTreeNode() const;
-    void setTreeNode(TreeNode* pTreeNode);
 
 };
 

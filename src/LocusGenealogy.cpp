@@ -37,6 +37,7 @@ LocusGenealogy::LocusGenealogy(int numSamples)
 /*
  * getNewPos
  * help-function of copy-constructor
+ *  get the position of a tree node pointed by given pointer
  * @param:
  * @return:
 */
@@ -121,6 +122,83 @@ LocusGenealogy::LocusGenealogy(const LocusGenealogy& other) :
     }
 
 }
+
+
+/*
+    copy without construction
+*/
+void LocusGenealogy::copy(const LocusGenealogy& other) {
+
+    migNodes_ = other.migNodes_;
+
+
+    //the following code copy genealogy logic
+    //(i.e., vectors' copy-constructors copy the tree nodes data, but not pointers)
+
+    TreeNode* pOther;
+
+    //for each tree node:
+    // - get its parent and children pointers in the original LocusGenealogy
+    // - find their position in the original vectors
+    // - set the equivalent pointers of the current LocusGenealogy to point
+    //   same positions of current vectors
+
+    //for each leaf node
+    for (std::size_t i = 0; i < leafNodes_.size(); i++) {
+
+        //copy data
+        leafNodes_[i].copy(other.leafNodes_[i]);
+
+        //set parent
+        pOther = other.leafNodes_[i].getParent();
+        leafNodes_[i].setParent(getNewPos(other, pOther));
+    }
+
+    //for each coal node
+    for (std::size_t i = 0; i < coalNodes_.size(); i++) {
+
+        //copy data
+        coalNodes_[i].copy(other.coalNodes_[i]);
+
+        //set parent
+        pOther = other.coalNodes_[i].getParent();
+        if (pOther)
+            coalNodes_[i].setParent(getNewPos(other, pOther));
+
+        //set left son
+        pOther = other.coalNodes_[i].getLeftSon();
+        coalNodes_[i].setLeftSon(getNewPos(other, pOther));
+
+        //set right son
+        pOther = other.coalNodes_[i].getRightSon();
+        coalNodes_[i].setRightSon(getNewPos(other, pOther));
+    }
+
+
+    //mig nodes can be of different in size
+    migNodes_ = other.migNodes_;
+
+    //for each mig node
+    for (std::size_t i = 0; i < other.migNodes_.size(); i++) {
+
+        //copy data
+        migNodes_[i].copy(other.migNodes_[i]); //todo: should not be necessary
+
+        //set parent
+        pOther = other.migNodes_[i].getParent();
+        migNodes_[i].setParent(getNewPos(other, pOther));
+
+        //set left son
+        pOther = other.migNodes_[i].getLeftSon();
+        migNodes_[i].setLeftSon(getNewPos(other, pOther));
+
+        //set right son
+        pOther = other.migNodes_[i].getRightSon();
+        migNodes_[i].setRightSon(getNewPos(other, pOther));
+    }
+
+}
+
 
 
 /*
@@ -258,7 +336,7 @@ MigNode* LocusGenealogy::addMigNode(TreeNode* pTreeNode, int migBandID) {
     if (pParent->getLeftSon() == pTreeNode){
         pParent->setLeftSon(pMigNode);
     }
-    //if given node is a right son set the left son
+    //if given node is a right son set the right son
     if (pParent->getRightSon() == pTreeNode){
         pParent->setRightSon(pMigNode);
     }
@@ -277,7 +355,7 @@ MigNode* LocusGenealogy::addMigNode(TreeNode* pTreeNode, int migBandID) {
 void LocusGenealogy::removeMigNode(MigNode* pMigNode) { //todo: replace loop with iterators
 
     //find the mig that should be removed (skip last element)
-    for (int i = 0; i < migNodes_.size(); i++) {
+    for (std::size_t i = 0; i < migNodes_.size(); i++) {
         //if mig found
         if (&migNodes_[i] == pMigNode) {
 
@@ -463,7 +541,7 @@ void LocusGenealogy::testLocusGenealogy(int locusID, LocusData *pLocusData,
     }
 }
 
-vector<LeafNode> & LocusGenealogy::getLeafNodes() {
+const vector<LeafNode> & LocusGenealogy::getLeafNodes() const {
     return leafNodes_;
 }
 
