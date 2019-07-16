@@ -90,20 +90,19 @@ void AllLoci::testLoci() {
         //construct genealogy and intervals
         locus.constructEmbeddedGenealogy();
 
+
         //compute genealogy statistics
         locus.computeGenetreeStats();
 
-        //copy locus
-        LocusEmbeddedGenealogy copy(locus);
 
         //test locus genealogy
-        copy.testLocusGenealogy();
+        //copy.testLocusGenealogy();
 
         //test locus intervals
-        copy.testPopIntervals();
+        //copy.testPopIntervals();
 
         //test locus statistics
-        copy.testGenealogyStats();
+        //copy.testGenealogyStats();
 
 
         //locus.printEmbeddedGenealogy();
@@ -132,3 +131,10 @@ LocusEmbeddedGenealogy& AllLoci::getLocus(int locusID) {
 }
 
 
+/*
+    getLociVector
+    @return: reference to loci embedded genealogy vector
+*/
+const vector<LocusEmbeddedGenealogy> &AllLoci::getLociVector() const {
+    return lociVector_;
+}

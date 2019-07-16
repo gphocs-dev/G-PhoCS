@@ -49,17 +49,9 @@ public:
     //constructor
     LocusPopIntervals(int locusID, int nIntervals);
 
-    //copy-constructor
-    LocusPopIntervals(const LocusPopIntervals &other);
-
-    //copy without construction
-    void copy(const LocusPopIntervals &other);
-
     //destructor
     ~LocusPopIntervals();
 
-    //help-function of copy-constructor
-    PopInterval *getNewPos(const LocusPopIntervals &other, PopInterval *p);
 
 public:
 
@@ -76,7 +68,24 @@ public:
     int computeGenetreeStats();
 
     //recalculate statistics
-    double recalcStats(int pop);
+    void recalcStats(int pop);
+
+    //computeStatsDelta
+    int computeStatsDelta(PopInterval *pBottom, PopInterval *pTop, int deltaNLin);
+
+    //compute log likelihood
+    double computeLogLikelihood(LocusPopIntervals *pOther = nullptr);
+
+
+    // ********************* Copy methods *********************
+    //copy without construction
+    void copy(const LocusPopIntervals &other);
+
+    //help-function of copy-constructor
+    PopInterval *getNewPos(const LocusPopIntervals &other, PopInterval *p);
+
+    //copy intervals
+    void copyIntervals(const LocusPopIntervals &other, bool flag=false);
 
     // ********************* GET methods *********************
 

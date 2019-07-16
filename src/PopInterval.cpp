@@ -20,22 +20,6 @@ PopInterval::PopInterval() : type_(IntervalType::DUMMY),
 
 
 /*
-    PopInterval copy-constructor
-*/
-PopInterval::PopInterval(const PopInterval& other)
-        : type_(other.type_),
-          age_(other.age_),
-          nLineages_(other.nLineages_),
-          popID_(other.popID_),
-          pPrevInterval_(nullptr),
-          pNextInterval_(nullptr),
-          pTreeNode_ (nullptr) {
-
-}
-
-
-
-/*
     Copy without construction
 */
 void PopInterval::copy(const PopInterval &other) {

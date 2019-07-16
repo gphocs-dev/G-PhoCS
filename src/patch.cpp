@@ -827,7 +827,7 @@ double considerEventMove(int gen, int instance, int event_id, int source_pop,
   }
 
 #ifdef LOG_STEPS
-  fprintf(ioSetup.debugFile, "considerEventMove: gen %d, event %d, pops %d--> %d, ages %g --> %g. New event %d.\n",
+  fprintf(ioSetup.debugFile, "considerIntervalMove: gen %d, event %d, pops %d--> %d, ages %g --> %g. New event %d.\n",
           gen, event_id, source_pop,target_pop, original_age, new_age, new_event);
 #endif
 

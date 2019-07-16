@@ -13,10 +13,11 @@
     Reserve place in migNodes_ vector with X nodes (X=MAX_MIGS)
     Set ids of leafNodes and coalNodes
 */
-LocusGenealogy::LocusGenealogy(int numSamples)
+LocusGenealogy::LocusGenealogy(int numSamples, LocusData *pLocusData)
         : numSamples_(numSamples),
           leafNodes_(numSamples),
-          coalNodes_(numSamples-1) {
+          coalNodes_(numSamples - 1),
+          pLocusData_(pLocusData) {
 
     //set leaf nodes id
     for (int i = 0; i < leafNodes_.size(); i++) {
@@ -25,7 +26,7 @@ LocusGenealogy::LocusGenealogy(int numSamples)
 
     //set coal nodes id
     for (int i = 0; i < coalNodes_.size(); i++) {
-        coalNodes_[i].setNodeId(i+numSamples_);
+        coalNodes_[i].setNodeId(i + numSamples_);
     }
 
     //reserve max migrations
@@ -54,71 +55,6 @@ LocusGenealogy::getNewPos(const LocusGenealogy &other, TreeNode *pTreeNode) {
 
         case TreeNodeType::MIG:
             return &migNodes_[0] + ((MigNode*)pTreeNode - &other.migNodes_[0]);
-    }
-
-}
-
-
-/*
-    LocusGenealogy - Copy-constructor
-*/
-LocusGenealogy::LocusGenealogy(const LocusGenealogy& other) :
-        leafNodes_(other.leafNodes_),
-        coalNodes_(other.coalNodes_),
-        migNodes_(other.migNodes_),
-        numSamples_(other.numSamples_) {
-
-
-    //the following code copy genealogy logic
-    //(i.e., vectors' copy-constructors copy the tree nodes data, but not pointers)
-
-    TreeNode* pOther;
-
-    //for each tree node:
-    // - get its parent and children pointers in the original LocusGenealogy
-    // - find their position in the original vectors
-    // - set the equivalent pointers of the current LocusGenealogy to point
-    //   same positions of current vectors
-
-    //for each leaf node
-    for (std::size_t i = 0; i < leafNodes_.size(); i++) {
-
-        //set parent
-        pOther = other.leafNodes_[i].getParent();
-        leafNodes_[i].setParent(getNewPos(other, pOther));
-    }
-
-    //for each coal node
-    for (std::size_t i = 0; i < coalNodes_.size(); i++) {
-
-        //set parent
-        pOther = other.coalNodes_[i].getParent();
-        if (pOther)
-            coalNodes_[i].setParent(getNewPos(other, pOther));
-
-        //set left son
-        pOther = other.coalNodes_[i].getLeftSon();
-        coalNodes_[i].setLeftSon(getNewPos(other, pOther));
-
-        //set right son
-        pOther = other.coalNodes_[i].getRightSon();
-        coalNodes_[i].setRightSon(getNewPos(other, pOther));
-    }
-
-    //for each mig node
-    for (std::size_t i = 0; i < migNodes_.size(); i++) {
-
-        //set parent
-        pOther = other.migNodes_[i].getParent();
-        migNodes_[i].setParent(getNewPos(other, pOther));
-
-        //set left son
-        pOther = other.migNodes_[i].getLeftSon();
-        migNodes_[i].setLeftSon(getNewPos(other, pOther));
-
-        //set right son
-        pOther = other.migNodes_[i].getRightSon();
-        migNodes_[i].setRightSon(getNewPos(other, pOther));
     }
 
 }
@@ -376,10 +312,10 @@ void LocusGenealogy::removeMigNode(MigNode* pMigNode) { //todo: replace loop wit
    Constructs branches of genealogy by iterating leaf and coalescent nodes
    and link each node to its parent and sons
 */
-void LocusGenealogy::constructBranches(LocusData* pLocusData) {
+void LocusGenealogy::constructBranches() {
 
     //get root node
-    int rootNode = getLocusRoot(pLocusData);
+    int rootNode = getLocusRoot(pLocusData_);
 
     //for each node set its parent and sons in genealogy
     for (int node = 0; node < 2*numSamples_-1; node++) {
@@ -388,7 +324,7 @@ void LocusGenealogy::constructBranches(LocusData* pLocusData) {
         TreeNode* pNode = this->getTreeNodeByID(node);
 
         //set age of tree node
-        double age = getNodeAge(pLocusData, node);
+        double age = this->getNodeAgeWrap(node);
         pNode->setAge(age);
 
         //set parent pointer
@@ -396,7 +332,7 @@ void LocusGenealogy::constructBranches(LocusData* pLocusData) {
         if (node != rootNode) {
 
             //get parent node id and parent tree node
-            int nodeFather = getNodeFather(pLocusData, node);
+            int nodeFather = getNodeFather(pLocusData_, node);
             TreeNode* pFather = this->getTreeNodeByID(nodeFather);
 
             //set pointer
@@ -411,8 +347,8 @@ void LocusGenealogy::constructBranches(LocusData* pLocusData) {
         if (!this->isLeaf(node)) {
 
             //get sons node ids
-            int nodeLeftSon = getNodeSon(pLocusData, node, 0);
-            int nodeRightSon = getNodeSon(pLocusData, node, 1);
+            int nodeLeftSon = getNodeSon(pLocusData_, node, 0);
+            int nodeRightSon = getNodeSon(pLocusData_, node, 1);
 
             //get sons tree nodes (son can be a leaf or a tree node)
             TreeNode* pLeftSon = this->getTreeNodeByID(nodeLeftSon);
@@ -464,13 +400,13 @@ void LocusGenealogy::printGenealogy() {
    testLocusGenealogy
    verify genealogy is consistent with previous version
 */
-void LocusGenealogy::testLocusGenealogy(int locusID, LocusData *pLocusData,
-                                        GENETREE_MIGS *pGenetreeMigs) {
+void
+LocusGenealogy::testLocusGenealogy(int locusID, GENETREE_MIGS *pGenetreeMigs) {
 
     //get all migs into a map: <node,[migsAges]>
     std::map<int, std::vector<double>> migsMap;
     for (int node = 0; node < 2 * numSamples_ - 1; node++) {
-        int mig = findFirstMig(locusID, node, getNodeAge(pLocusData, node));
+        int mig = findFirstMig(locusID, node, this->getNodeAgeWrap(node));
         while (mig != -1) {
             double age = pGenetreeMigs[locusID].mignodes[mig].age;
             migsMap[node].emplace_back(age);
@@ -485,7 +421,7 @@ void LocusGenealogy::testLocusGenealogy(int locusID, LocusData *pLocusData,
         TreeNode* pNode = this->getTreeNodeByID(node);
 
         //get ages
-        double age = getNodeAge(pLocusData, node);
+        double age = this->getNodeAgeWrap(node);
         double ageNew = pNode->getAge();
 
         //compare ages
@@ -504,10 +440,10 @@ void LocusGenealogy::testLocusGenealogy(int locusID, LocusData *pLocusData,
         }
 
         //compare parents ages
-        int parent = getNodeFather(pLocusData, node);
+        int parent = getNodeFather(pLocusData_, node);
         parentNew = parentNew->getParent();
         if (parent != -1) {
-            double age = getNodeAge(pLocusData, parent);
+            double age = this->getNodeAgeWrap(parent);
             double ageNew = parentNew->getAge();
             //compare ages
             assert(fabs(age - ageNew) < EPSILON);
@@ -515,7 +451,7 @@ void LocusGenealogy::testLocusGenealogy(int locusID, LocusData *pLocusData,
 
         //compare sons ages
         for (int son = 0; son < 2; son++) {
-            int lSon = getNodeSon(pLocusData, node, son);
+            int lSon = getNodeSon(pLocusData_, node, son);
             TreeNode *pSonNew = pNode;
 
             //reverse vector
@@ -531,7 +467,7 @@ void LocusGenealogy::testLocusGenealogy(int locusID, LocusData *pLocusData,
 
             pSonNew = son ? pSonNew->getRightSon() : pSonNew->getLeftSon();
             if (lSon != -1) {
-                double age = getNodeAge(pLocusData, lSon);
+                double age = this->getNodeAgeWrap(lSon);
                 double ageNew = pSonNew->getAge();
                 //compare ages
                 assert(fabs(age - ageNew) < EPSILON);
@@ -541,8 +477,72 @@ void LocusGenealogy::testLocusGenealogy(int locusID, LocusData *pLocusData,
     }
 }
 
+
+
+/*
+   getLocusData
+   @return: pointer to locus data
+*/
+LocusData *LocusGenealogy::getLocusData() const {
+    return pLocusData_;
+}
+
+
 const vector<LeafNode> & LocusGenealogy::getLeafNodes() const {
     return leafNodes_;
 }
+
+
+/*
+   getLocusRootWrap
+   @return: locus root id warper
+*/
+int LocusGenealogy::getLocusRootWrap() {
+    return getLocusRoot(pLocusData_);
+}
+
+
+/*
+   computeLocusDataLikelihoodWrap
+   @return: locus root id warper
+*/
+double
+LocusGenealogy::computeLocusDataLikelihoodWrap(
+        unsigned short useOldConditionals) {
+    return computeLocusDataLikelihood(pLocusData_, useOldConditionals);
+}
+
+
+/*
+   adjustGenNodeAgeWrap
+   @return:
+*/
+int LocusGenealogy::adjustGenNodeAgeWrap(int nodeId, double age) {
+    return adjustGenNodeAge(pLocusData_, nodeId, age);
+}
+
+
+/*
+   getNodeAgeWrap
+   @return: node age
+*/
+double LocusGenealogy::getNodeAgeWrap(int nodeId) {
+    return getNodeAge(pLocusData_, nodeId);
+}
+
+
+/*
+   getLocusDataLikelihoodWrap
+   @return: log likelihood of the locus as last recorded
+*/
+double LocusGenealogy::getLocusDataLikelihoodWrap() {
+    return getLocusDataLikelihood(pLocusData_);
+}
+
+
+
+
+
+
 
 

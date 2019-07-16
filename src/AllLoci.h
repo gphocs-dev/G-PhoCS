@@ -30,8 +30,9 @@ public:
     AllLoci();
 
     //get locus by id
-    LocusEmbeddedGenealogy&
-    getLocus(int locusID);
+    LocusEmbeddedGenealogy &getLocus(int locusID);
+
+    const vector<LocusEmbeddedGenealogy> &getLociVector() const;
 
     //calculate statistics of all loci
     void calcLociTotalStats();

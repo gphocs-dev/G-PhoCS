@@ -23,6 +23,7 @@
  * 2. Vector of coal nodes. Constant size.
  * 3. Vector of mig nodes. Variable size.
  * 4. Num samples.
+ * 5. Pointer to locus data likelihood.
  *===========================================================================*/
 class LocusGenealogy {
 
@@ -34,13 +35,12 @@ private:
 
     const int numSamples_; //num samples
 
+    LocusData *pLocusData_; //pointer to locus data
+
 public:
 
     //constructor
-    explicit LocusGenealogy(int numSamples);
-
-    //copy-construct
-    LocusGenealogy(const LocusGenealogy &other);
+    explicit LocusGenealogy(int numSamples, LocusData *pLocusData);
 
     //copy without construction
     void copy(const LocusGenealogy &other);
@@ -53,7 +53,7 @@ public:
     // ********************* MAIN methods *********************
 
     //construct branches of genealogy
-    void constructBranches(LocusData *pLocusData);
+    void constructBranches();
 
     // ********************* GET methods *********************
 
@@ -91,6 +91,27 @@ public:
     //remove a migration node
     void removeMigNode(MigNode *pMigNode);
 
+    // ********************* LOCUS DATA methods *********************
+
+    //get pointer to locus data
+    LocusData* getLocusData() const;
+
+    //getNodeAge
+    double getNodeAgeWrap(int nodeId);
+
+    //get locus root
+    int getLocusRootWrap();
+
+    //get locus likelihood
+    double getLocusDataLikelihoodWrap();
+
+    //compute locus data likelihood
+    double computeLocusDataLikelihoodWrap(unsigned short useOldConditionals);
+
+    //adjust gen node age
+    int	adjustGenNodeAgeWrap(int nodeId, double age);
+
+
     // ********************* PRINT methods *********************
 
     //print genealogy
@@ -99,8 +120,7 @@ public:
     // ********************* TEST methods *********************
 
     //verify genealogy is consistent with previous version
-    void testLocusGenealogy(int locusID, LocusData *pLocusData,
-                            GENETREE_MIGS *pGenetreeMigs);
+    void testLocusGenealogy(int locusID, GENETREE_MIGS *pGenetreeMigs);
 
 };
 

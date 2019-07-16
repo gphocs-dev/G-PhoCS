@@ -49,9 +49,6 @@ public:
     //constructor
     PopInterval();
 
-    //copy-constructor
-    PopInterval(const PopInterval& other);
-
     //copy without construction
     void copy(const PopInterval& other);
 

@@ -113,8 +113,8 @@ typedef struct _POPULATION_TREE
 	int popsPostOrder[2 * NSPECIES - 1]; // post-order queue of populations
 	//std::vector<int> popQueue; //version with vector
 
-    std::map<int,int> leafToPop; //map between leaf to its pop
-    std::map<int,std::vector<int>> popToLeaves; //map between pop to its leaves
+    std::map<int,int> leafToPop; //map between leaf to its pop //todo: initialize this
+    std::map<int,std::vector<int>> popToLeaves; //map between pop to its leaves//todo: initialize this
 
 } PopulationTree;
 
@@ -146,8 +146,9 @@ typedef struct TIME_MIG_BANDS
 ***********************************************************************************/
 typedef struct MIG_BANDS_PER_TARGET_POP
 {
-    std::vector<MigrationBand*> migBands;
+    std::vector<MigrationBand*> pMigBands;
     std::vector<TimeMigBands> timeMigBands;
+    std::vector<int> migBandsIDs;
 } MigBandsPerTarget;
 
 

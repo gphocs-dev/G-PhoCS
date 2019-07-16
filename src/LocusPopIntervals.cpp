@@ -29,19 +29,17 @@ LocusPopIntervals::LocusPopIntervals(int locusID, int nIntervals)
 
 
 /*
-    LocusPopIntervals copy-constructor
-    Allocates popIntervals objects.
-    Links intervals to each other.
+    copy without construction
 */
-LocusPopIntervals::LocusPopIntervals(const LocusPopIntervals &other) :
-        numIntervals_(other.numIntervals_),
-        stats_(other.stats_),
-        locusID_(other.locusID_), pPopTree_(other.pPopTree_) {
+void LocusPopIntervals::copy(const LocusPopIntervals &other) {
 
-    //allocate N intervals
-    intervalsArray_ = new PopInterval[numIntervals_];
+    //copy num intervals
+    numIntervals_ = other.numIntervals_;
 
-    //for each in interval
+    //copy statistics
+    stats_ = other.stats_; //todo: implement copy?
+
+    //for each interval
     for (int i = 0; i < numIntervals_; i++) {
 
         //copy data
@@ -67,40 +65,27 @@ LocusPopIntervals::LocusPopIntervals(const LocusPopIntervals &other) :
 
 
 /*
-    copy without construction
+ * copyIntervals
+ * All is copied in DEEP copy EXCEPT of tree nodes pointers
+ * which are copied in a SHALLOW copy
+ * If verifyPointers flag is on, then verify that the tree node's pointers
+ * to interval indeed point to the right intervals
+ * @param: other locus pop intervals, flag
 */
-void LocusPopIntervals::copy(const LocusPopIntervals &other) {
+void LocusPopIntervals::copyIntervals(const LocusPopIntervals &other,
+                                      bool verifyPointers) {
+    this->copy(other);
 
-    //copy num intervals
-    numIntervals_ = other.numIntervals_;
-
-    //copy statistics
-    stats_ = other.stats_; //todo: implement copy?
-
-    //for each in interval
+    //for each interval copy pointer to tree node
     for (int i = 0; i < numIntervals_; i++) {
+        TreeNode* pNode = other.intervalsArray_[i].getTreeNode();
+        intervalsArray_[i].setTreeNode(pNode);
 
-        //copy data
-        intervalsArray_[i].copy(other.intervalsArray_[i]);
-
-        //copy next/prev pointers
-
-        //set next
-        PopInterval *pNext = other.intervalsArray_[i].getNext();
-        if (pNext)
-            intervalsArray_[i].setNext(getNewPos(other, pNext));
-
-        //set prev
-        PopInterval *pPrev = other.intervalsArray_[i].getPrev();
-        if (pPrev)
-            intervalsArray_[i].setPrev(getNewPos(other, pPrev));
-
+        if (verifyPointers)
+            pNode->setInterval(&intervalsArray_[i]);
     }
-    //set pointer to pool intervals
-    pIntervalsPool_ =
-            intervalsArray_ + (other.pIntervalsPool_ - other.intervalsArray_);
-}
 
+}
 
 
 /*
@@ -197,15 +182,23 @@ PopInterval *LocusPopIntervals::getIntervalFromPool() {
 
 /*
     returnToPool
-    Return an interval to the interval pool
+    Detach an interval from chain and return it to pool
     @param: pointer to the free interval
 */
 void LocusPopIntervals::returnToPool(PopInterval *pInterval) {
 
+    //detach from chain by connecting prev and next intervals
+
+    //set next of prev interval to next of current
+    pInterval->getPrev()->setNext(pInterval->getNext());
+
+    //set prev of next interval to prev of current
+    pInterval->getNext()->setPrev(pInterval->getPrev());
+
     //reset interval content
     pInterval->resetPopInterval();
 
-    //set pointers
+    //return to head of pool
     pIntervalsPool_->setPrev(pInterval);
     pInterval->setNext(pIntervalsPool_);
     pIntervalsPool_ = pInterval;
@@ -496,18 +489,15 @@ int LocusPopIntervals::computeGenetreeStats() {
 /* recalcStats
    Re-calculates stats for a given population
 */
-double LocusPopIntervals::recalcStats(int pop) {
+void LocusPopIntervals::recalcStats(int pop) {
 
-    //define local copy of statistics
+    //get a list of mig-bands IDs whose target pop equal to current pop
+    auto & migBandsIDs = pPopTree_->migBandsPerTarget[pop].migBandsIDs;
 
-    //coal statistics (a single instance for current pop)
-    GenStats coalStats;
-
-    //create a map of mig statistics, with mig-band id as a key
-    //get only mig-bands which their target pop equal current pop
-    std::map<int, GenStats> migsStats; //todo: replace dynamic allocation
-    for (auto pMigBand: pPopTree_->migBandsPerTarget[pop].migBands) {
-        migsStats[pMigBand->id] = GenStats();
+    //reset statistics
+    stats_.coals[pop].reset(); //reset coal statistics
+    for (int id: migBandsIDs) { //reset migs statistics
+        stats_.migs[id].reset();
     }
 
     //get pop-start interval
@@ -529,11 +519,11 @@ double LocusPopIntervals::recalcStats(int pop) {
         double t = min2(pInterval->getAge(), timeBand->endTime) - currAge;
 
         //increment coal statistics
-        coalStats.stats += n * (n - 1) * t; //todo: more efficient calculation
+        stats_.coals[pop].stats += n * (n - 1) * t; //todo: more efficient calculation
 
         //for each live mig band update mig statistics
         for (auto pMigBand : timeBand->migBands) {
-            migsStats[pMigBand->id].stats += n * t;
+            stats_.migs[pMigBand->id].stats += n * t;
         }
 
         //update current age
@@ -564,15 +554,14 @@ double LocusPopIntervals::recalcStats(int pop) {
             }
             case (IntervalType::COAL): {
                 n--;
-                coalStats.num += 1;
+                stats_.coals[pop].num += 1;
                 break;
             }
             case (IntervalType::IN_MIG): {
                 n--;
-                // figure out migration band and update its statistics
-                MigNode *pMigNode = (MigNode *) pInterval->getTreeNode();
-                int mig_band = pMigNode->getMigBandId();
-                migsStats[mig_band].num += 1;
+                // figure out migration band and update its number
+                auto *pMigNode = (MigNode *) pInterval->getTreeNode();
+                stats_.migs[pMigNode->getMigBandId()].num += 1;
                 break;
             }
             case (IntervalType::OUT_MIG): {
@@ -592,31 +581,76 @@ double LocusPopIntervals::recalcStats(int pop) {
 
     }// end of while
 
-    double HEREDITY_FACTOR = 1;
-    double deltaLnLd = 0.0;
+}
 
-    //for each mig statistics
-    for (auto key_value : migsStats) {
-        int id = key_value.first; //mig band id
 
-        //update delta ln likelihood of mig statistics
-        deltaLnLd -= (migsStats[id].stats - stats_.migs[id].stats) *
-                     pPopTree_->migBands[id].migRate;
+/* computeStatsDelta
+ * Computes the difference in coalescence and migration statistics caused by
+ * changing the number of lineages in a series of consecutive intervals by
+ * some constant number (typically +1 or -1).
 
-        //save mig statistics (in the pop location)
-        stats_.migs[id].num = migsStats[id].num;
-        stats_.migs[id].stats = migsStats[id].stats;
-    }
+*/
+int
+LocusPopIntervals::computeStatsDelta(PopInterval *pBottom, PopInterval *pTop,
+                                     int deltaNLin) {
 
-    //update delta ln likelihood of coal statistics
-    deltaLnLd -= (coalStats.stats - stats_.coals[pop].stats) /
-                 (pPopTree_->pops[pop]->theta * HEREDITY_FACTOR);
+    //get current age
+    double currAge = pBottom->getAge();
 
-    //save coal statistics (in the pop location)
-    stats_.coals[pop].num = coalStats.num;
-    stats_.coals[pop].stats = coalStats.stats;
+    //set bottom interval as the next of given bottom interval
+    PopInterval *pInterval = pBottom->getNext();
 
-    return deltaLnLd;
+    //get pop of interval
+    int pop = pInterval->getPopID();
+
+    //get live mig bands
+    TimeMigBands *timeBand = getLiveMigBands(dataSetup.popTree, pop, currAge);
+
+    //to save computation
+    double mult = deltaNLin * deltaNLin - deltaNLin;
+
+    // follow intervals chain and set number of lineages per interval according
+    // to previous interval also update statistics
+    while (true) {
+
+        double t = min2(pInterval->getAge(), timeBand->endTime) - currAge;
+
+        //get num lineages of interval
+        int n = pInterval->getNumLineages();
+
+        //update coal statistics using the equation:
+        //delta_time * (2*n*x + x*x - x)
+        //where n is num lineages, and x is delta num lineages
+        stats_.coals[pop].stats += t * (2 * n * deltaNLin + mult);
+
+        //for each live mig band update mig statistics
+        for (auto pMigBand : timeBand->migBands) {
+            stats_.migs[pMigBand->id].stats += deltaNLin * t;
+        }
+
+        //update current age
+        currAge += t;
+
+        //if interval age is larger than end of time band - get next time band
+        if (timeBand->endTime <= pInterval->getAge()) {
+            timeBand = getLiveMigBands(dataSetup.popTree, pop, currAge);
+            assert (timeBand);
+            continue;
+        }
+
+        //set num lineages
+        pInterval->setNumLineages(n + deltaNLin);
+
+        //break if arrived to top interval
+        if (pInterval == pTop)
+            break;
+
+        //get next interval
+        pInterval = pInterval->getNext();
+
+    }// end of while
+
+    return 0;
 }
 
 
@@ -647,7 +681,7 @@ void LocusPopIntervals::testPopIntervals() {
         pInterval = pInterval->getNext();
 
         //iterate both old and new structures (events VS intervals)
-        for (event; event >= 0;
+        for (; event >= 0;
              event = event_chains[locusID_].events[event].getNextIdx()) {
 
             EventType eventType = event_chains[locusID_].events[event].getType();
@@ -778,8 +812,77 @@ void LocusPopIntervals::testGenealogyStatistics() {
     }
 }
 
+
+/* getNumIntervals
+  @return: num intervals
+*/
 int LocusPopIntervals::getNumIntervals() const {
     return numIntervals_;
+}
+
+
+/* computeLogLikelihood
+ * Computes log-likelihood of locus. Assumes statistics are already computed.
+ * @param: other Locus pop intervals. if other locus is specified then compute
+ * the delta log-likelihood between self and other.
+ * @return: calculated value
+*/
+double LocusPopIntervals::computeLogLikelihood(LocusPopIntervals *pOther) {
+
+    double HEREDITY_FACTOR = 1;
+    double lnLd = 0.0;
+
+    GenealogyStats zeroStats = GenealogyStats(pPopTree_->numPops,
+                                              pPopTree_->numMigBands);
+    const GenealogyStats &other = pOther ? pOther->getStats() : zeroStats;
+
+    //GenealogyStats other = pOther ? pOther->stats_ : GenealogyStats(
+     //       pPopTree_->numPops, pPopTree_->numMigBands);
+
+    int numOther = 0;
+    double statsOther = 0;
+
+    //calculate log-likelihood of coal statistics
+    for (int pop = 0; pop < pPopTree_->numPops; pop++) {
+
+        //define theta
+        double theta = pPopTree_->pops[pop]->theta * HEREDITY_FACTOR;
+
+        //if other specified, get its values to compute delta
+        if (pOther) {
+            numOther = pOther->stats_.coals[pop].num;
+            statsOther = pOther->stats_.coals[pop].stats;
+        }
+
+
+        //lnLd += (stats_.coals[pop].num - numOther) * log(2 / theta) -
+        //        (stats_.coals[pop].stats - statsOther) / theta;
+
+
+        lnLd += (stats_.coals[pop].num - other.coals[pop].num) *
+                log(2 / theta) -
+                (stats_.coals[pop].stats - other.coals[pop].stats) / theta;
+    }
+
+    //calculate log-likelihood of mig statistics
+    for (int bandID = 0; bandID < pPopTree_->numMigBands; bandID++) {
+
+        //get mig rate
+        double migRate = pPopTree_->migBands[bandID].migRate;
+
+        //if other specified, get its values to compute delta
+        //if (pOther) {
+        //    numOther = pOther->stats_.migs[bandID].num;
+        //   statsOther = pOther->stats_.migs[bandID].stats;
+        //}
+
+        lnLd += (stats_.migs[bandID].num - other.migs[bandID].num) *
+                log(migRate) -
+                (stats_.migs[bandID].stats - other.migs[bandID].stats) *
+                migRate;
+    }
+
+    return lnLd;
 }
 
 

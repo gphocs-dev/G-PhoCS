@@ -1,88 +1,30 @@
 
 #include "LocusEmbeddedGenealogy.h"
 #include "DbgErrMsgIntervals.h"
-#include "PopulationTree.h"
-
-#include <iostream>
-#include <iomanip>
-#include <cmath>
-
 
 /*
  * LocusEmbeddedGenealogy / constructor
 */
 LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
         int locusID, int numIntervals,
-        DATA_SETUP *pDataSetup,
-        DATA_STATE *pDataState,
+        DATA_SETUP *pSetup,
+        DATA_STATE *pState,
         GENETREE_MIGS *pGenetreeMigs)
 
-        : genealogy_(pDataSetup->numSamples), //construct genealogy
-          intervals_(locusID, numIntervals),  //construct intervals
-          locusID_(locusID),
-          pDataSetup_(pDataSetup),
-          pDataState_(pDataState),
-          pGenetreeMigs_(pGenetreeMigs) {
+        : locusID_(locusID),
 
-}
+          genealogy_(pSetup->numSamples,
+                     pState->lociData[locusID]), //construct genealogy
+          intervalsPro_(locusID, numIntervals),  //construct proposal intervals
+          intervalsOri_(locusID, numIntervals),  //construct original intervals
 
+          //assign pointers
+          pSetup_(pSetup),
+          pState_(pState),
+          pGenetreeMigs_(pGenetreeMigs),
 
-/*
- * LocusEmbeddedGenealogy / copy-constructor
-*/
-LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
-        const LocusEmbeddedGenealogy &other) :
-
-        genealogy_(other.genealogy_), //copy-construct genealogy
-        intervals_(other.intervals_), //copy-construct intervals
-        locusID_(other.locusID_),
-        pDataSetup_(other.pDataSetup_),
-        pDataState_(other.pDataState_),
-        pGenetreeMigs_(other.pGenetreeMigs_) {
-
-    //copy pointers linking between genealogy and intervals
-
-    // ******* set pointers of genealogy -> intervals *******
-
-    PopInterval *pOri, *pCopy;
-
-    //leaf nodes
-    for (int i = 0; i < pDataSetup_->numSamples; i++) {
-        pOri = other.genealogy_.getLeafNode(i)->getSamplesStart();
-        pCopy = intervals_.getNewPos(other.intervals_, pOri);
-        genealogy_.getLeafNode(i)->setSamplesInterval(pCopy);
-    }
-
-    //coal nodes
-    for (int i = pDataSetup_->numSamples; i < 2*pDataSetup_->numSamples-1; i++) {
-        pOri = other.genealogy_.getCoalNode(i)->getCoalInterval();
-        pCopy = intervals_.getNewPos(other.intervals_, pOri);
-        genealogy_.getCoalNode(i)->setCoalInterval(pCopy);
-    }
-
-    //mig nodes
-    for (int i = 0; i < other.genealogy_.getNumMigs(); i++) {
-
-        //set in migration
-        pOri = other.genealogy_.getMigNode(i)->getInMigInterval();
-        pCopy = intervals_.getNewPos(other.intervals_, pOri);
-        genealogy_.getMigNode(i)->setInMigInterval(pCopy);
-
-        //set out migration
-        pOri = other.genealogy_.getMigNode(i)->getOutMigInterval();
-        pCopy = intervals_.getNewPos(other.intervals_, pOri);
-        genealogy_.getMigNode(i)->setOutMigInterval(pCopy);
-    }
-
-    // ******* set pointers of intervals -> genealogy  *******
-
-    for (int i = 0; i < intervals_.getNumIntervals(); i++) {
-        TreeNode *pOri = other.intervals_.getInterval(i)->getTreeNode();
-        if (pOri) {
-            TreeNode *pCopy = genealogy_.getNewPos(other.genealogy_, pOri);
-            intervals_.getInterval(i)->setTreeNode(pCopy);
-        }
-    }
+          //initialize likelihoods
+          genLogLikelihood_(0), dataLogLikelihood_(0) {
 
 }
 
@@ -93,7 +35,7 @@ LocusEmbeddedGenealogy::LocusEmbeddedGenealogy(
 void LocusEmbeddedGenealogy::copy(const LocusEmbeddedGenealogy &other) {
 
     genealogy_.copy(other.genealogy_); //copy genealogy
-    intervals_.copy(other.intervals_); //copy intervals
+    intervalsPro_.copy(other.intervalsPro_); //copy intervals
 
     //copy pointers linking between genealogy and intervals
 
@@ -102,43 +44,57 @@ void LocusEmbeddedGenealogy::copy(const LocusEmbeddedGenealogy &other) {
     PopInterval *pOri, *pCopy;
 
     //leaf nodes
-    for (int i = 0; i < pDataSetup_->numSamples; i++) {
-        pOri = other.genealogy_.getLeafNode(i)->getSamplesStart();
-        pCopy = intervals_.getNewPos(other.intervals_, pOri);
-        genealogy_.getLeafNode(i)->setSamplesInterval(pCopy);
+    for (int i = 0; i < pSetup_->numSamples; i++) {
+        pOri = other.genealogy_.getLeafNode(i)->getInterval();
+        pCopy = intervalsPro_.getNewPos(other.intervalsPro_, pOri);
+        genealogy_.getLeafNode(i)->setInterval(pCopy);
     }
 
     //coal nodes
-    for (int i = pDataSetup_->numSamples; i < 2*pDataSetup_->numSamples-1; i++) {
-        pOri = other.genealogy_.getCoalNode(i)->getCoalInterval();
-        pCopy = intervals_.getNewPos(other.intervals_, pOri);
-        genealogy_.getCoalNode(i)->setCoalInterval(pCopy);
+    for (int i = pSetup_->numSamples; i < 2 * pSetup_->numSamples - 1; i++) {
+        pOri = other.genealogy_.getCoalNode(i)->getInterval();
+        pCopy = intervalsPro_.getNewPos(other.intervalsPro_, pOri);
+        genealogy_.getCoalNode(i)->setInterval(pCopy);
     }
 
     //mig nodes
     for (int i = 0; i < other.genealogy_.getNumMigs(); i++) {
-
-        //set in migration
-        pOri = other.genealogy_.getMigNode(i)->getInMigInterval();
-        pCopy = intervals_.getNewPos(other.intervals_, pOri);
-        genealogy_.getMigNode(i)->setInMigInterval(pCopy);
-
-        //set out migration
-        pOri = other.genealogy_.getMigNode(i)->getOutMigInterval();
-        pCopy = intervals_.getNewPos(other.intervals_, pOri);
-        genealogy_.getMigNode(i)->setOutMigInterval(pCopy);
+        //set in/out migration
+        for (int iInterval = 0; iInterval < 2; iInterval++) {
+            pOri = other.genealogy_.getMigNode(i)->getInterval(iInterval);
+            pCopy = intervalsPro_.getNewPos(other.intervalsPro_, pOri);
+            genealogy_.getMigNode(i)->setInterval(pCopy, iInterval);
+        }
     }
 
     // ******* set pointers of intervals -> genealogy  *******
 
-    for (int i = 0; i < intervals_.getNumIntervals(); i++) {
-        TreeNode *pOri = other.intervals_.getInterval(i)->getTreeNode();
+    for (int i = 0; i < intervalsPro_.getNumIntervals(); i++) {
+        TreeNode *pOri = other.intervalsPro_.getInterval(i)->getTreeNode();
         if (pOri) {
             TreeNode *pCopy = genealogy_.getNewPos(other.genealogy_, pOri);
-            intervals_.getInterval(i)->setTreeNode(pCopy);
+            intervalsPro_.getInterval(i)->setTreeNode(pCopy);
         }
     }
 
+}
+
+
+/*
+ * copyIntervals
+*/
+void
+LocusEmbeddedGenealogy::copyIntervals(bool accepted) {
+
+    //if accepted is true, copy intervals from proposal to original
+    //o.w., copy from original to proposal
+    LocusPopIntervals & source = accepted? intervalsPro_ : intervalsOri_;
+    LocusPopIntervals & copy = accepted? intervalsOri_ : intervalsPro_;
+
+    //tree nodes (and only them) are copied by shallow copy
+    copy.copyIntervals(source, false);
+
+    //todo: copy back pointers, in another method
 }
 
 
@@ -147,7 +103,25 @@ void LocusEmbeddedGenealogy::copy(const LocusEmbeddedGenealogy &other) {
  * @return: a pointer to locus data of current locus
 */
 LocusData *LocusEmbeddedGenealogy::getLocusData() {
-    return pDataState_->lociData[locusID_];
+    return genealogy_.getLocusData();
+}
+
+
+/*
+ * getLogLikelihood
+ * @return: locus gen log-likelihood
+*/
+double LocusEmbeddedGenealogy::getGenLogLikelihood() const {
+    return genLogLikelihood_;
+}
+
+
+/*
+ * getDataLogLikelihood
+ * @return: locus data log-likelihood
+*/
+double LocusEmbeddedGenealogy::getDataLogLikelihood() const {
+    return dataLogLikelihood_;
 }
 
 
@@ -171,24 +145,24 @@ int LocusEmbeddedGenealogy::constructEmbeddedGenealogy() {
     genealogy_.resetGenealogy();
 
     //construct genealogy branches (edges between tree nodes)
-    genealogy_.constructBranches(this->getLocusData());
+    genealogy_.constructBranches();
 
     //reset intervals
-    intervals_.resetPopIntervals();
+    intervalsPro_.resetPopIntervals();
 
     //link intervals to each other
-    intervals_.linkIntervals();
+    intervalsPro_.linkIntervals();
 
     //add start and end intervals
-    intervals_.createStartEndIntervals();
+    intervalsPro_.createStartEndIntervals();
 
     //create samples start intervals (for ancient samples)
-    for (int pop = 0; pop < pDataSetup_->popTree->numCurPops; pop++) {
+    for (int pop = 0; pop < pSetup_->popTree->numCurPops; pop++) {
 
         //create interval
-        double age = pDataSetup_->popTree->pops[pop]->sampleAge;
+        double age = pSetup_->popTree->pops[pop]->sampleAge;
         PopInterval *pInterval =
-                intervals_.createInterval(pop, age,
+                intervalsPro_.createInterval(pop, age,
                                           IntervalType::SAMPLES_START);
         if (!pInterval) {
             INTERVALS_FATAL_0024
@@ -197,32 +171,32 @@ int LocusEmbeddedGenealogy::constructEmbeddedGenealogy() {
 
     //create coalescent intervals
     //and link intervals to genealogy and vice versa
-    int nSamples = pDataSetup_->numSamples;
+    int nSamples = pSetup_->numSamples;
     for (int node = 0; node < 2 * nSamples - 1; node++) {
 
         //get population and age of node
         int pop = nodePops[locusID_][node];
-        double age = getNodeAge(getLocusData(), node);
+        double age = genealogy_.getNodeAgeWrap(node);
 
         // if node is a leaf - link it to its sampleStart interval
         if (genealogy_.isLeaf(node)) {
 
             //get samples start interval of pop
-            PopInterval *pInterval = intervals_.getSamplesStart(pop);
+            PopInterval *pInterval = intervalsPro_.getSamplesStart(pop);
 
             //get leaf node by current node id
             LeafNode *pNode = genealogy_.getLeafNode(node);
 
             //leaf node points to samplesStart interval (but samplesStart
             // interval points to null since there are several leaves)
-            pNode->setSamplesInterval(pInterval);
+            pNode->setInterval(pInterval);
 
 
         } else { //if node is not a leaf create a coal interval and link to node
 
             //create a coalescent interval
             PopInterval *pInterval =
-                    intervals_.createInterval(pop, age, IntervalType::COAL);
+                    intervalsPro_.createInterval(pop, age, IntervalType::COAL);
 
             if (!pInterval) {
                 INTERVALS_FATAL_0025
@@ -235,7 +209,7 @@ int LocusEmbeddedGenealogy::constructEmbeddedGenealogy() {
             pInterval->setTreeNode(pNode);
 
             //coal node points to coal interval
-            pNode->setCoalInterval(pInterval);
+            pNode->setInterval(pInterval);
         }
     }
 
@@ -248,7 +222,7 @@ int LocusEmbeddedGenealogy::constructEmbeddedGenealogy() {
 
         //find migration above current node and after specified time
         int mig = findFirstMig(locusID_, node,
-                               getNodeAge(getLocusData(), node));
+                               genealogy_.getNodeAgeWrap(node));
 
         //while there are migration events on the edge above current node
         while (mig != -1) {
@@ -262,7 +236,7 @@ int LocusEmbeddedGenealogy::constructEmbeddedGenealogy() {
 
             //create an incoming migration interval
             PopInterval *pMigIn =
-                    intervals_.createInterval(target_pop, age,
+                    intervalsPro_.createInterval(target_pop, age,
                                               IntervalType::IN_MIG);
             if (!pMigIn) {
                 INTERVALS_FATAL_0022
@@ -270,14 +244,14 @@ int LocusEmbeddedGenealogy::constructEmbeddedGenealogy() {
 
             //create an outgoing migration interval
             PopInterval *pMigOut =
-                    intervals_.createInterval(source_pop, age,
+                    intervalsPro_.createInterval(source_pop, age,
                                               IntervalType::OUT_MIG);
             if (!pMigOut) {
                 INTERVALS_FATAL_0023
             }
 
             //get migration band ID
-            int bandId = getMigBandByPops(pDataSetup_->popTree, source_pop,
+            int bandId = getMigBandByPops(pSetup_->popTree, source_pop,
                                           target_pop)->id;
 
             //add a migration node to genealogy
@@ -291,8 +265,8 @@ int LocusEmbeddedGenealogy::constructEmbeddedGenealogy() {
             pMigOut->setTreeNode(pMigNode);
 
             //mig node points to incoming and outgoing intervals
-            pMigNode->setInMigInterval(pMigIn);
-            pMigNode->setOutMigInterval(pMigOut);
+            pMigNode->setInterval(pMigIn, 0);
+            pMigNode->setInterval(pMigOut, 1);
 
             //update tree node
             pTreeNode = pMigNode;
@@ -312,7 +286,7 @@ int LocusEmbeddedGenealogy::constructEmbeddedGenealogy() {
 */
 
 int LocusEmbeddedGenealogy::computeGenetreeStats() {
-    return intervals_.computeGenetreeStats();
+    return intervalsPro_.computeGenetreeStats();
 }
 
 
@@ -320,8 +294,8 @@ int LocusEmbeddedGenealogy::computeGenetreeStats() {
  * recalcStats
  * recalculate statistics
 */
-double LocusEmbeddedGenealogy::recalcStats(int pop) {
-    return intervals_.recalcStats(pop);
+void LocusEmbeddedGenealogy::recalcStats(int pop) {
+    intervalsPro_.recalcStats(pop);
 }
 
 
@@ -332,7 +306,7 @@ double LocusEmbeddedGenealogy::recalcStats(int pop) {
 void LocusEmbeddedGenealogy::printEmbeddedGenealogy() {
 
     //print population tree
-    //printPopulationTree(pDataSetup_->popTree, stderr, 1);
+    printPopulationTree(pSetup_->popTree, stderr, 1);
 
     //print genealogy
     std::cout << "------------------------------------------------------"
@@ -342,7 +316,7 @@ void LocusEmbeddedGenealogy::printEmbeddedGenealogy() {
     //print intervals
     std::cout << "------------------------------------------------------"
               << std::endl;
-    intervals_.printIntervals();
+    intervalsPro_.printIntervals();
 
 }
 
@@ -360,7 +334,7 @@ int LocusEmbeddedGenealogy::getLocusID() {
  * get a reference to statistics
 */
 const GenealogyStats &LocusEmbeddedGenealogy::getStats() const {
-    return intervals_.getStats();
+    return intervalsPro_.getStats();
 }
 
 
@@ -369,8 +343,7 @@ const GenealogyStats &LocusEmbeddedGenealogy::getStats() const {
  * verify new genealogy data structure is consistent with the original
 */
 void LocusEmbeddedGenealogy::testLocusGenealogy() {
-    genealogy_.testLocusGenealogy(locusID_, this->getLocusData(),
-                                  pGenetreeMigs_);
+    genealogy_.testLocusGenealogy(locusID_, pGenetreeMigs_);
 }
 
 
@@ -379,20 +352,45 @@ void LocusEmbeddedGenealogy::testLocusGenealogy() {
  * verify new events data structure is consistent with the original
 */
 void LocusEmbeddedGenealogy::testPopIntervals() {
-    intervals_.testPopIntervals();
+    intervalsPro_.testPopIntervals();
 }
 
 
 /*
  * testTotalStats
- * verify statistics are equal to statistics of old data structurel
+ * verify statistics are equal to statistics of old data structure
 */
 void LocusEmbeddedGenealogy::testGenealogyStats() {
-    intervals_.testGenealogyStatistics();
+    intervalsPro_.testGenealogyStatistics();
 }
 
 
-/******************************************************************************
+/*
+ * testLogLikelihood
+ * verify genealogy and data likelihood values are consistent with original
+*/
+void LocusEmbeddedGenealogy::testLogLikelihood() {
+
+    assert(genLogLikelihood_ == genealogy_.getLocusDataLikelihoodWrap());
+    //todo: replace global locus_data
+    assert(dataLogLikelihood_ == locus_data[locusID_].genLogLikelihood);
+}
+
+
+/*
+ * testLocusEmbeddedGenealogy
+ * verify
+*/
+void LocusEmbeddedGenealogy::testLocusEmbeddedGenealogy() {
+
+    this->testLocusGenealogy();
+    this->testPopIntervals();
+    this->testGenealogyStats();
+    this->testLogLikelihood();
+}
+
+
+/*
  *	UpdateGB_InternalNode
  *	- perturbs times of all coalescent nodes in all gene trees
  *	- does not change the population of the node
@@ -400,104 +398,309 @@ void LocusEmbeddedGenealogy::testGenealogyStats() {
  *	  (migration/coalescent)
  *		directly above or below that node, as well as population boundaries.
  *	- records new data log likelihood in *pointerToLnLd
- *****************************************************************************/
+ */
 int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
+
+    double epsilon = 1e-15;
 
     if (finetune <= 0.0)
         return 0;
 
-#ifdef THREAD_UpdateGB_InternalNode
-#pragma omp parallel for private(gen) schedule(THREAD_SCHEDULING_STRATEGY)
-#endif
-
+    //counter of num accepted of change proposals
     int accepted = 0;
-    double lnLd = 0;
-    double dataLogLikelihood_mt = 0;
-    double logLikelihood_mt = 0;
+
+    //save current values of likelihood
+    double genLogLd = genLogLikelihood_;
+    double dataLogLd = dataLogLikelihood_;
 
     //for each coal node
-    for (int inode = pDataSetup_->numSamples;
-         inode < 2 * pDataSetup_->numSamples - 1; inode++) {
+    int nSamples = pSetup_->numSamples;
+    for (int inode = nSamples; inode < 2 * nSamples - 1; inode++) {
 
         //get coal node
-        CoalNode* pNode = genealogy_.getCoalNode(inode);
+        CoalNode *pNode = genealogy_.getCoalNode(inode);
 
         //get its pop
         int pop = pNode->getPop();
 
-        // set lower and upper bounds for new age
-        double tb[2]; //time bound
+        //get lower time bound for new age
+        double lowerBound = pSetup_->popTree->pops[pop]->age;
+        lowerBound = max2(lowerBound, pNode->getLeftSon()->getAge());
+        lowerBound = max2(lowerBound, pNode->getRightSon()->getAge());
 
-        //set initial values
-        tb[0] = pDataSetup_->popTree->pops[pop]->age;
-        if (pop != pDataSetup_->popTree->rootPop) //if  pop is not the root pop
-            tb[1] = pDataSetup_->popTree->pops[pop]->father->age;
-        else
-            tb[1] = OLDAGE;
+        //get upper time bound for new age
+        double upperBound = pop == pSetup_->popTree->rootPop
+                       ? pSetup_->popTree->pops[pop]->father->age : OLDAGE;
+        if (inode != genealogy_.getLocusRootWrap()) //if node is not root node
+            upperBound = min2(upperBound, pNode->getParent()->getAge());
 
-        //update upper
-        if (inode != getLocusRoot(this->getLocusData())) //if node is not root node
-            tb[1] = min2(tb[1], pNode->getParent()->getAge());
-
-        //update lower
-        tb[0] = max2(tb[0], pNode->getLeftSon()->getAge());
-        tb[0] = max2(tb[0], pNode->getRightSon()->getAge());
+        //get current age
+        double t = pNode->getAge();
 
         //calculate new age
-        double t = pNode->getAge();
         double tnew = t + finetune * rnd2normal8(locusID_);
-
-        tnew = reflect(tnew, tb[0], tb[1]);
+        tnew = reflect(tnew, lowerBound, upperBound);
 
         //continue if difference is not significant
-        if (fabs(tnew - t) < 1e-15) {
+        if (fabs(tnew - t) < epsilon) {
             accepted++;
             continue;
         }
 
-        // update node's age, and compute delta log-likelihood
-        adjustGenNodeAge(this->getLocusData(), inode, tnew);
-        lnLd = -getLocusDataLikelihood(this->getLocusData());
-        lnLd += computeLocusDataLikelihood(
-                this->getLocusData(), /*reuse old conditionals*/ 1);
+        //consider interval move
+        double lnAcceptance = this->considerIntervalMove(pNode, tnew);
 
-        double genetree_lnLd_delta = considerEventMove(locusID_, 0,
-                /*nodeEvents[locusID_][inode]*/, pop, t, pop, tnew);//todo: rewrite consider event
-        double lnacceptance = genetree_lnLd_delta + lnLd;
+        //if proposal is accepted
+        bool isAccepted = lnAcceptance >= 0 || rndu(locusID_) < exp(lnAcceptance);
+        if (isAccepted) {
 
-        if (lnacceptance >= 0 || rndu(locusID_) < exp(lnacceptance)) {
-
+            //increase counter
             accepted++;
-            locus_data[locusID_].genLogLikelihood += genetree_lnLd_delta;////////////////////
-            dataLogLikelihood_mt += lnLd;
-            logLikelihood_mt +=
-                    (genetree_lnLd_delta + lnLd) / pDataSetup_->numLoci;
-            acceptEventChainChanges(locusID_, 0);
+
+            //copy proposal into original
+            intervalsOri_.copyIntervals(intervalsPro_, false);
+
+            genLogLikelihood_ = intervalsPro_.computeLogLikelihood();
+            dataLogLikelihood_ = genealogy_.getLocusDataLikelihoodWrap();
+
             resetSaved(this->getLocusData());
 
-        } else {
+        } else { // reject changes and revert to saved version
 
-            // reject changes and revert to saved version
-            rejectEventChainChanges(locusID_, 0);
+            //copy original into proposal
+            intervalsPro_.copyIntervals(intervalsOri_, true);//todo: what about node age?
+
             revertToSaved(this->getLocusData());
         }
 
+        //test this function
+        //revert changes
+        genealogy_.adjustGenNodeAgeWrap(pNode->getNodeId(), t);
+        genealogy_.computeLocusDataLikelihoodWrap(1);
+        //call test function
+        test_updateGB_InternalNode(lowerBound, upperBound, tnew, lnAcceptance,
+                                   isAccepted);
+
+
     } // end of loop
+
+    dataLogLd = (dataLogLikelihood_ - dataLogLd);
+    genLogLd = (genLogLikelihood_ - genLogLd);
 
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-    dataState.dataLogLikelihood += dataLogLikelihood_mt;////////////////////////////////////////
+
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
-    dataState.logLikelihood += logLikelihood_mt;/////////////////////////////////////
+    pState_->dataLogLikelihood += dataLogLd;
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
+    pState_->logLikelihood += (genLogLd + dataLogLd) / pSetup_->numLoci;
+
+
+//todo: add another pragma code for "number of acceptance" (see original code)
 
     return (accepted);
 }
+
+
+
+int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
+                                                       double upperBound,
+                                                       double tnew,
+                                                       double lnAcceptance,
+                                                       bool wasAccepted) {
+    int accepted = 0;
+
+    int pop, i, son;
+    double t, lnacceptance, lnLd;
+    double genetree_lnLd_delta;
+    int mig;
+    double tb[2];
+
+    int accepted_mt = 0;
+    double dataLogLikelihood_mt = 0;
+    double logLikelihood_mt = 0;
+
+    for (int inode = dataSetup.numSamples;
+         inode < 2 * dataSetup.numSamples - 1; inode++) {
+
+        t = getNodeAge(dataState.lociData[locusID_], inode);
+        pop = nodePops[locusID_][inode];
+
+        // set lower and upper bounds for new age
+        tb[0] = dataSetup.popTree->pops[pop]->age;
+        if (pop != dataSetup.popTree->rootPop)
+            tb[1] = dataSetup.popTree->pops[pop]->father->age;
+        else
+            tb[1] = OLDAGE;
+
+        mig = findFirstMig(locusID_, inode, -1);
+        if (mig >= 0)
+            tb[1] = min2(tb[1], genetree_migs[locusID_].mignodes[mig].age);
+        else if (inode != getLocusRoot(dataState.lociData[locusID_]))
+            tb[1] = min2(tb[1], getNodeAge(dataState.lociData[locusID_],
+                                           getNodeFather(
+                                                   dataState.lociData[locusID_],
+                                                   inode)));
+
+        //assert upper bound is as calculated by new method
+        assert(tb[1] == upperBound);
+
+        for (i = 0; i < 2; i++) {
+            son = getNodeSon(dataState.lociData[locusID_], inode, i);
+            mig = findLastMig(locusID_, son, -1);
+            if (mig >= 0)
+                tb[0] = max2(tb[0], genetree_migs[locusID_].mignodes[mig].age);
+            else
+                tb[0] = max2(tb[0],
+                             getNodeAge(dataState.lociData[locusID_], son));
+        }
+
+        //assert lower bound is as calculated by new method
+        assert(tb[0] == lowerBound);
+
+        //get tnew as parameter
+        if (fabs(tnew - t) < 1e-15) {
+            accepted_mt++;
+            continue;
+        }
+
+        // update node's age, and compute delta log-likelihood
+        adjustGenNodeAge(dataState.lociData[locusID_], inode, tnew);
+        lnLd = -getLocusDataLikelihood(dataState.lociData[locusID_]);
+        lnLd += computeLocusDataLikelihood(
+                dataState.lociData[locusID_], 1);
+
+        genetree_lnLd_delta = considerEventMove(locusID_, 0,
+                                                nodeEvents[locusID_][inode],
+                                                pop, t, pop, tnew);
+        lnacceptance = genetree_lnLd_delta + lnLd;
+
+        //assert acceptance bound is as calculated by new method
+        assert(lnacceptance == lnAcceptance);
+
+        if (wasAccepted) {
+            accepted_mt++;
+            locus_data[locusID_].genLogLikelihood += genetree_lnLd_delta;
+            dataLogLikelihood_mt += lnLd;
+            logLikelihood_mt +=
+                    (genetree_lnLd_delta + lnLd) / dataSetup.numLoci;
+            acceptEventChainChanges(locusID_, 0);
+            resetSaved(dataState.lociData[locusID_]);
+        } else {
+            // reject changes and revert to saved version
+            rejectEventChainChanges(locusID_, 0);
+            revertToSaved(dataState.lociData[locusID_]);
+        }
+
+    }
+
+#ifdef ENABLE_OMP_THREADS
+#pragma omp atomic
+#endif
+    dataState.dataLogLikelihood += dataLogLikelihood_mt;
+#ifdef ENABLE_OMP_THREADS
+#pragma omp atomic
+#endif
+    dataState.logLikelihood += logLikelihood_mt;
+#ifdef ENABLE_OMP_THREADS
+#pragma omp atomic
+#endif
+    accepted += accepted_mt;
+
+    return accepted;
+}
+
+
+/*
+ * considerIntervalMove
+ * computes the modifications required for changing a specific genetree
+   by moving an interval to a new position (in populations ancestral or
+   descendant to source population). Interval can be a coalescence or migration
+   event. Computes change in interval chains (by adding
+   new interval and not removing the original one), and changes in statistics
+   required for fast computation of genetree likelihood.
+   This procedure	updates all fields of genetree_stats_delta and returns the
+   delta in log-likelihood of genetree due to this step.
+*/
+double
+LocusEmbeddedGenealogy::considerIntervalMove(TreeNode *pNode, double newAge) {
+
+    //compute delta log-likelihood
+    double lnLd = -genealogy_.getLocusDataLikelihoodWrap();
+    genealogy_.adjustGenNodeAgeWrap(pNode->getNodeId(), newAge);
+    lnLd += genealogy_.computeLocusDataLikelihoodWrap(1);
+
+    //get interval pointed by tree node
+    PopInterval* pInterval = pNode->getInterval();
+
+    //get interval type
+    IntervalType  type = pInterval->getType();
+
+    //create new interval
+    PopInterval *pNewInterval = intervalsPro_.createInterval(pNode->getPop(),
+                                                             newAge, type);
+
+    int deltaNLin; //delta num lineages
+    PopInterval *pBottomInterval, *pTopInterval; //bottom and top intervals
+
+    //if new age is greater than original age
+    if (newAge > pNode->getAge()) {
+        deltaNLin = type == IntervalType::OUT_MIG ? -1 : 1;
+        pBottomInterval = pInterval;
+        pTopInterval = pNewInterval;
+
+    } else {
+        deltaNLin = type == IntervalType::OUT_MIG ? 1 : -1;
+        pBottomInterval = pNewInterval;
+        pTopInterval = pInterval;
+    }
+
+    //compute changes in coalescence and migration statistics
+    intervalsPro_.computeStatsDelta(pBottomInterval, pTopInterval, deltaNLin);
+
+    //compute delta log-likelihood
+    double delta_lnLd = this->computeLogLikelihood(false);
+
+    //set age of tree node to new age
+    pNode->setAge(newAge);
+
+    //set pointer of new interval to current node
+    pNewInterval->setTreeNode(pNode);
+
+    //set pointer of tree node to the new interval
+    int intervalIndex = type == IntervalType::OUT_MIG ? 1 : 0;
+    pNode->setInterval(pNewInterval, intervalIndex);
+
+    //detach old interval from chain and return it to pool
+    intervalsPro_.returnToPool(pInterval);
+
+    //return log acceptance
+    return delta_lnLd + lnLd;
+
+}
+
+
+/*
+ * computeLogLikelihood
+ * Computes log-likelihood of genetree using locus statistics.
+ * If computeDelta flag is on, then compute delta log-likelihood
+ * between proposal and original (proposal-original)
+ * @return: computed value
+*/
+double LocusEmbeddedGenealogy::computeLogLikelihood(bool computeDelta) {
+
+    if (computeDelta)
+        return intervalsPro_.computeLogLikelihood(&intervalsOri_);
+    else
+        return intervalsPro_.computeLogLikelihood();
+}
+
+
 
 
 

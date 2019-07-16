@@ -535,8 +535,8 @@ void initializeMigBandTimes(PopulationTree* popTree) {
         popTree->migBandsPerTarget.emplace_back();
     }
 
-    //for each mig band, save it in the MigBandsPerTarget element located in the i'th
-    // place, where i is the id of the mig band's target pop
+    //for each mig band, save it in the MigBandsPerTarget element located in the
+    // i'th place, where i is the id of the mig band's target pop
     for (int i=0; i < popTree->numMigBands; i++) {
 
         //get target pop of current mig band
@@ -544,7 +544,11 @@ void initializeMigBandTimes(PopulationTree* popTree) {
 
         //add pointer
         MigrationBand* pMigBand = &popTree->migBands[i];
-        popTree->migBandsPerTarget[targetPop].migBands.push_back(pMigBand);
+        popTree->migBandsPerTarget[targetPop].pMigBands.push_back(pMigBand);
+
+        //add mig band ID
+        int id = pMigBand->id;
+        popTree->migBandsPerTarget[targetPop].migBandsIDs.push_back(id);
     }
 }
 
@@ -570,7 +574,7 @@ void constructMigBandsTimes(PopulationTree* popTree) {
         //create a vector of time points and fill with pop start and end,
         // and the start and end times of each mig band
         std::vector<double> timePoints;
-        timePoints.reserve(2*popBands.migBands.size() + 2);
+        timePoints.reserve(2*popBands.pMigBands.size() + 2);
 
         //pop times
         timePoints.push_back(popTree->pops[pop]->age);
@@ -580,7 +584,7 @@ void constructMigBandsTimes(PopulationTree* popTree) {
             timePoints.push_back(OLDAGE);//todo: what age?
 
         //mig bands times
-        for (MigrationBand* pMigBand : popBands.migBands) {
+        for (MigrationBand* pMigBand : popBands.pMigBands) {
             timePoints.push_back(pMigBand->startTime);
             timePoints.push_back(pMigBand->endTime);
         }
@@ -600,7 +604,7 @@ void constructMigBandsTimes(PopulationTree* popTree) {
             TimeMigBands timeMigBand{*it, *next};
 
             //find mig-bands which intersect with current time band
-            for (MigrationBand* pMigBand : popBands.migBands) {
+            for (MigrationBand* pMigBand : popBands.pMigBands) {
 
                 //if time-band is contained in current mig-band
                 if (pMigBand->startTime <= timeMigBand.startTime &&
