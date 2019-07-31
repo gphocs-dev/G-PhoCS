@@ -1446,7 +1446,7 @@ int performMCMC()
 #ifdef RECORD_METHOD_TIMES
       setStartTimeMethod(T_UpdateGB_InternalNode);
 #endif
-      acceptCount = UpdateGB_InternalNode(mcmcSetup.finetunes.coalTime);
+      //acceptCount = UpdateGB_InternalNode(mcmcSetup.finetunes.coalTime);//todo:uncomment and remove
 
 
       //NEW code section July 2019 /////////////////////////////////////////////
@@ -1454,7 +1454,7 @@ int performMCMC()
 #pragma omp parallel for private(locus) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
       //for each locus
-      for (auto locus : lociVector) {
+      for (auto &locus : lociVector) {
 
         //construct mig bands times
         constructMigBandsTimes(dataSetup.popTree);
@@ -1465,11 +1465,23 @@ int performMCMC()
         //compute genealogy statistics
         locus.computeGenetreeStats();
 
+        //copy intervals from original to original
+        locus.copyIntervals(true);
+
+        //test genealogy, intervals, statistics, likelihood
+        //locus.testLocusEmbeddedGenealogy();
+
+        locus.testLocusGenealogy();
+        locus.testPopIntervals();
+        locus.testGenealogyStats();
+
         //update internal nodes+test
         locus.updateGB_InternalNode(mcmcSetup.finetunes.coalTime);
 
+
         //test genealogy, intervals, statistics, likelihood
         locus.testLocusEmbeddedGenealogy();
+
       }
 
 
@@ -2149,9 +2161,7 @@ int performMCMC()
       }
 
     } // print log
-
-    //lociEmbedded.testLoci();
-
+    int nomi=0;
   } // end of main loop - for(iteration)
 
 

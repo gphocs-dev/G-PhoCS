@@ -130,7 +130,8 @@ public:
                                    double upperbound,
                                    double tnew,
                                    double lnacceptance,
-                                   bool accepted);
+                                   bool accepted,
+                                   int inode);
 
 };
 

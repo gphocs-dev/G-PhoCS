@@ -445,6 +445,12 @@ LocusGenealogy::testLocusGenealogy(int locusID, GENETREE_MIGS *pGenetreeMigs) {
         if (parent != -1) {
             double age = this->getNodeAgeWrap(parent);
             double ageNew = parentNew->getAge();
+
+            if (fabs(age - ageNew) > EPSILON) {//todo:remove
+                this->printGenealogy();
+                printGenealogyAndExit(locusID,0);
+            }
+
             //compare ages
             assert(fabs(age - ageNew) < EPSILON);
         }

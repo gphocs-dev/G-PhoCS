@@ -371,9 +371,11 @@ void LocusEmbeddedGenealogy::testGenealogyStats() {
 */
 void LocusEmbeddedGenealogy::testLogLikelihood() {
 
-    assert(genLogLikelihood_ == genealogy_.getLocusDataLikelihoodWrap());
+    assert(fabs(dataLogLikelihood_ - genealogy_.getLocusDataLikelihoodWrap()) <
+           EPSILON);
     //todo: replace global locus_data
-    assert(dataLogLikelihood_ == locus_data[locusID_].genLogLikelihood);
+    assert(fabs(genLogLikelihood_ - locus_data[locusID_].genLogLikelihood) <
+           EPSILON);
 }
 
 
@@ -429,7 +431,7 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
         lowerBound = max2(lowerBound, pNode->getRightSon()->getAge());
 
         //get upper time bound for new age
-        double upperBound = pop == pSetup_->popTree->rootPop
+        double upperBound = pop != pSetup_->popTree->rootPop
                        ? pSetup_->popTree->pops[pop]->father->age : OLDAGE;
         if (inode != genealogy_.getLocusRootWrap()) //if node is not root node
             upperBound = min2(upperBound, pNode->getParent()->getAge());
@@ -451,7 +453,8 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
         double lnAcceptance = this->considerIntervalMove(pNode, tnew);
 
         //if proposal is accepted
-        bool isAccepted = lnAcceptance >= 0 || rndu(locusID_) < exp(lnAcceptance);
+        bool isAccepted =
+                lnAcceptance >= 0 or rndu(locusID_) < exp(lnAcceptance);
         if (isAccepted) {
 
             //increase counter
@@ -467,20 +470,28 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
 
         } else { // reject changes and revert to saved version
 
+            //set back node age
+            pNode->setAge(t);
+
             //copy original into proposal
-            intervalsPro_.copyIntervals(intervalsOri_, true);//todo: what about node age?
+            intervalsPro_.copyIntervals(intervalsOri_, true);
 
             revertToSaved(this->getLocusData());
         }
 
-        //test this function
+        //Below code, untill END, is just for testing this function
+        // should be removed later
+
         //revert changes
-        genealogy_.adjustGenNodeAgeWrap(pNode->getNodeId(), t);
+        genealogy_.adjustGenNodeAgeWrap(inode, t);
         genealogy_.computeLocusDataLikelihoodWrap(1);
+        resetSaved(this->getLocusData());
         //call test function
         test_updateGB_InternalNode(lowerBound, upperBound, tnew, lnAcceptance,
-                                   isAccepted);
-
+                                   isAccepted, inode);
+        //test all
+        this->testLocusEmbeddedGenealogy();
+        //END of test
 
     } // end of loop
 
@@ -512,10 +523,11 @@ int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
                                                        double upperBound,
                                                        double tnew,
                                                        double lnAcceptance,
-                                                       bool wasAccepted) {
+                                                       bool wasAccepted,
+                                                       int inode) {
     int accepted = 0;
 
-    int pop, i, son;
+    int pop, son;
     double t, lnacceptance, lnLd;
     double genetree_lnLd_delta;
     int mig;
@@ -525,8 +537,6 @@ int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
     double dataLogLikelihood_mt = 0;
     double logLikelihood_mt = 0;
 
-    for (int inode = dataSetup.numSamples;
-         inode < 2 * dataSetup.numSamples - 1; inode++) {
 
         t = getNodeAge(dataState.lociData[locusID_], inode);
         pop = nodePops[locusID_][inode];
@@ -548,9 +558,9 @@ int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
                                                    inode)));
 
         //assert upper bound is as calculated by new method
-        assert(tb[1] == upperBound);
+        assert(fabs(tb[1] - upperBound) < EPSILON);
 
-        for (i = 0; i < 2; i++) {
+        for (int i = 0; i < 2; i++) {
             son = getNodeSon(dataState.lociData[locusID_], inode, i);
             mig = findLastMig(locusID_, son, -1);
             if (mig >= 0)
@@ -561,13 +571,10 @@ int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
         }
 
         //assert lower bound is as calculated by new method
-        assert(tb[0] == lowerBound);
+        assert(fabs(tb[0] - lowerBound) < EPSILON);
 
-        //get tnew as parameter
-        if (fabs(tnew - t) < 1e-15) {
-            accepted_mt++;
-            continue;
-        }
+        //
+        assert(abs(tnew - t) >= 1e-15);
 
         // update node's age, and compute delta log-likelihood
         adjustGenNodeAge(dataState.lociData[locusID_], inode, tnew);
@@ -581,7 +588,7 @@ int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
         lnacceptance = genetree_lnLd_delta + lnLd;
 
         //assert acceptance bound is as calculated by new method
-        assert(lnacceptance == lnAcceptance);
+        assert(fabs(lnacceptance - lnAcceptance) < EPSILON);
 
         if (wasAccepted) {
             accepted_mt++;
@@ -594,10 +601,11 @@ int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
         } else {
             // reject changes and revert to saved version
             rejectEventChainChanges(locusID_, 0);
-            revertToSaved(dataState.lociData[locusID_]);
+            revertToSaved(dataState.lociData[locusID_]);//->this changes node again
+
         }
 
-    }
+
 
 #ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
@@ -664,7 +672,7 @@ LocusEmbeddedGenealogy::considerIntervalMove(TreeNode *pNode, double newAge) {
     intervalsPro_.computeStatsDelta(pBottomInterval, pTopInterval, deltaNLin);
 
     //compute delta log-likelihood
-    double delta_lnLd = this->computeLogLikelihood(false);
+    double delta_lnLd = this->computeLogLikelihood(true);
 
     //set age of tree node to new age
     pNode->setAge(newAge);
@@ -680,7 +688,7 @@ LocusEmbeddedGenealogy::considerIntervalMove(TreeNode *pNode, double newAge) {
     intervalsPro_.returnToPool(pInterval);
 
     //return log acceptance
-    return delta_lnLd + lnLd;
+    return lnLd + delta_lnLd;
 
 }
 

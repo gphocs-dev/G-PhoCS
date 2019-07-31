@@ -81,8 +81,13 @@ void LocusPopIntervals::copyIntervals(const LocusPopIntervals &other,
         TreeNode* pNode = other.intervalsArray_[i].getTreeNode();
         intervalsArray_[i].setTreeNode(pNode);
 
-        if (verifyPointers)
-            pNode->setInterval(&intervalsArray_[i]);
+        if (verifyPointers and pNode) {
+            int intervalIndex =
+                    intervalsArray_[i].getType() == IntervalType::OUT_MIG ? 1
+                                                                          : 0;
+            pNode->setInterval(&intervalsArray_[i], intervalIndex);
+        }
+
     }
 
 }
@@ -590,7 +595,7 @@ void LocusPopIntervals::recalcStats(int pop) {
  * some constant number (typically +1 or -1).
 
 */
-int
+void
 LocusPopIntervals::computeStatsDelta(PopInterval *pBottom, PopInterval *pTop,
                                      int deltaNLin) {
 
@@ -634,7 +639,7 @@ LocusPopIntervals::computeStatsDelta(PopInterval *pBottom, PopInterval *pTop,
         //if interval age is larger than end of time band - get next time band
         if (timeBand->endTime <= pInterval->getAge()) {
             timeBand = getLiveMigBands(dataSetup.popTree, pop, currAge);
-            assert (timeBand);
+            assert (timeBand != nullptr);
             continue;
         }
 
@@ -650,7 +655,6 @@ LocusPopIntervals::computeStatsDelta(PopInterval *pBottom, PopInterval *pTop,
 
     }// end of while
 
-    return 0;
 }
 
 
@@ -829,15 +833,8 @@ int LocusPopIntervals::getNumIntervals() const {
 */
 double LocusPopIntervals::computeLogLikelihood(LocusPopIntervals *pOther) {
 
-    double HEREDITY_FACTOR = 1;
+    double heredity_factor = 1.0;
     double lnLd = 0.0;
-
-    GenealogyStats zeroStats = GenealogyStats(pPopTree_->numPops,
-                                              pPopTree_->numMigBands);
-    const GenealogyStats &other = pOther ? pOther->getStats() : zeroStats;
-
-    //GenealogyStats other = pOther ? pOther->stats_ : GenealogyStats(
-     //       pPopTree_->numPops, pPopTree_->numMigBands);
 
     int numOther = 0;
     double statsOther = 0;
@@ -846,7 +843,7 @@ double LocusPopIntervals::computeLogLikelihood(LocusPopIntervals *pOther) {
     for (int pop = 0; pop < pPopTree_->numPops; pop++) {
 
         //define theta
-        double theta = pPopTree_->pops[pop]->theta * HEREDITY_FACTOR;
+        double theta = pPopTree_->pops[pop]->theta * heredity_factor;
 
         //if other specified, get its values to compute delta
         if (pOther) {
@@ -854,14 +851,8 @@ double LocusPopIntervals::computeLogLikelihood(LocusPopIntervals *pOther) {
             statsOther = pOther->stats_.coals[pop].stats;
         }
 
-
-        //lnLd += (stats_.coals[pop].num - numOther) * log(2 / theta) -
-        //        (stats_.coals[pop].stats - statsOther) / theta;
-
-
-        lnLd += (stats_.coals[pop].num - other.coals[pop].num) *
-                log(2 / theta) -
-                (stats_.coals[pop].stats - other.coals[pop].stats) / theta;
+        lnLd += (stats_.coals[pop].num - numOther) * log(2 / theta) -
+                (stats_.coals[pop].stats - statsOther) / theta;
     }
 
     //calculate log-likelihood of mig statistics
@@ -871,15 +862,16 @@ double LocusPopIntervals::computeLogLikelihood(LocusPopIntervals *pOther) {
         double migRate = pPopTree_->migBands[bandID].migRate;
 
         //if other specified, get its values to compute delta
-        //if (pOther) {
-        //    numOther = pOther->stats_.migs[bandID].num;
-        //   statsOther = pOther->stats_.migs[bandID].stats;
-        //}
+        if (pOther) {
+            numOther = pOther->stats_.migs[bandID].num;
+            statsOther = pOther->stats_.migs[bandID].stats;
+        }
 
-        lnLd += (stats_.migs[bandID].num - other.migs[bandID].num) *
-                log(migRate) -
-                (stats_.migs[bandID].stats - other.migs[bandID].stats) *
-                migRate;
+        if (migRate) {
+            lnLd += (stats_.migs[bandID].num - numOther) * log(migRate) -
+                    (stats_.migs[bandID].stats - statsOther) * migRate;
+        }
+
     }
 
     return lnLd;

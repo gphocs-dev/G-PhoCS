@@ -126,7 +126,7 @@ class LeafNode : public TreeNode {
 
 private:
     int nodeID_; //leaf id
-    //PopInterval* pSamplesStart_[1];
+    //PopInterval* pInterval_[1]; //samples start interval
 
 public:
 
@@ -160,7 +160,8 @@ public:
 class CoalNode : public TreeNode {
 
 private:
-    int nodeID_; //leaf id
+    int nodeID_; //coal id
+    //PopInterval* pInterval_[1]; //coalescent interval
 
 public:
 
@@ -196,6 +197,7 @@ class MigNode : public TreeNode {
 
 private:
     int migBandId_; //mig band ID
+    //PopInterval* pIntervals_[2]; // in/out migrations
 
 public:
 

@@ -71,7 +71,8 @@ public:
     void recalcStats(int pop);
 
     //computeStatsDelta
-    int computeStatsDelta(PopInterval *pBottom, PopInterval *pTop, int deltaNLin);
+    void computeStatsDelta(PopInterval *pBottom, PopInterval *pTop,
+                           int deltaNLin);
 
     //compute log likelihood
     double computeLogLikelihood(LocusPopIntervals *pOther = nullptr);
