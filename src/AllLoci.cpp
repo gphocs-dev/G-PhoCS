@@ -135,6 +135,6 @@ LocusEmbeddedGenealogy& AllLoci::getLocus(int locusID) {
     getLociVector
     @return: reference to loci embedded genealogy vector
 */
-const vector<LocusEmbeddedGenealogy> &AllLoci::getLociVector() const {
+vector<LocusEmbeddedGenealogy> & AllLoci::getLociVector()  {
     return lociVector_;
 }

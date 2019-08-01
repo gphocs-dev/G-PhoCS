@@ -1465,15 +1465,15 @@ int performMCMC()
         //compute genealogy statistics
         locus.computeGenetreeStats();
 
+        //update genealogy statistics
+        locus.updateGenLogLikelihood();
+
         //copy intervals from original to original
         locus.copyIntervals(true);
 
         //test genealogy, intervals, statistics, likelihood
-        //locus.testLocusEmbeddedGenealogy();
+        locus.testLocusEmbeddedGenealogy();
 
-        locus.testLocusGenealogy();
-        locus.testPopIntervals();
-        locus.testGenealogyStats();
 
         //update internal nodes+test
         locus.updateGB_InternalNode(mcmcSetup.finetunes.coalTime);

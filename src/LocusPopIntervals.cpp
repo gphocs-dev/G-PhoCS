@@ -81,6 +81,8 @@ void LocusPopIntervals::copyIntervals(const LocusPopIntervals &other,
         TreeNode* pNode = other.intervalsArray_[i].getTreeNode();
         intervalsArray_[i].setTreeNode(pNode);
 
+        //verify that the tree node's pointers point to interval
+        // indeed point to the right intervals
         if (verifyPointers and pNode) {
             int intervalIndex =
                     intervalsArray_[i].getType() == IntervalType::OUT_MIG ? 1

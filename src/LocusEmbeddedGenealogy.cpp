@@ -93,8 +93,6 @@ LocusEmbeddedGenealogy::copyIntervals(bool accepted) {
 
     //tree nodes (and only them) are copied by shallow copy
     copy.copyIntervals(source, false);
-
-    //todo: copy back pointers, in another method
 }
 
 
@@ -276,6 +274,9 @@ int LocusEmbeddedGenealogy::constructEmbeddedGenealogy() {
         }
     }
 
+    //compute data likelihood
+    dataLogLikelihood_ = genealogy_.getLocusDataLikelihoodWrap();
+
     return 0;
 }
 
@@ -376,6 +377,9 @@ void LocusEmbeddedGenealogy::testLogLikelihood() {
     //todo: replace global locus_data
     assert(fabs(genLogLikelihood_ - locus_data[locusID_].genLogLikelihood) <
            EPSILON);
+
+
+
 }
 
 
@@ -498,7 +502,7 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
     dataLogLd = (dataLogLikelihood_ - dataLogLd);
     genLogLd = (genLogLikelihood_ - genLogLd);
 
-#ifdef ENABLE_OMP_THREADS
+#ifdef ENABLE_OMP_THREADS //todo: where this ifdef is defined
 #pragma omp atomic
 #endif
 
@@ -532,11 +536,6 @@ int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
     double genetree_lnLd_delta;
     int mig;
     double tb[2];
-
-    int accepted_mt = 0;
-    double dataLogLikelihood_mt = 0;
-    double logLikelihood_mt = 0;
-
 
         t = getNodeAge(dataState.lociData[locusID_], inode);
         pop = nodePops[locusID_][inode];
@@ -591,11 +590,7 @@ int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
         assert(fabs(lnacceptance - lnAcceptance) < EPSILON);
 
         if (wasAccepted) {
-            accepted_mt++;
             locus_data[locusID_].genLogLikelihood += genetree_lnLd_delta;
-            dataLogLikelihood_mt += lnLd;
-            logLikelihood_mt +=
-                    (genetree_lnLd_delta + lnLd) / dataSetup.numLoci;
             acceptEventChainChanges(locusID_, 0);
             resetSaved(dataState.lociData[locusID_]);
         } else {
@@ -604,21 +599,6 @@ int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
             revertToSaved(dataState.lociData[locusID_]);//->this changes node again
 
         }
-
-
-
-#ifdef ENABLE_OMP_THREADS
-#pragma omp atomic
-#endif
-    dataState.dataLogLikelihood += dataLogLikelihood_mt;
-#ifdef ENABLE_OMP_THREADS
-#pragma omp atomic
-#endif
-    dataState.logLikelihood += logLikelihood_mt;
-#ifdef ENABLE_OMP_THREADS
-#pragma omp atomic
-#endif
-    accepted += accepted_mt;
 
     return accepted;
 }
@@ -706,6 +686,10 @@ double LocusEmbeddedGenealogy::computeLogLikelihood(bool computeDelta) {
         return intervalsPro_.computeLogLikelihood(&intervalsOri_);
     else
         return intervalsPro_.computeLogLikelihood();
+}
+
+void LocusEmbeddedGenealogy::updateGenLogLikelihood() {
+    genLogLikelihood_ = this->computeLogLikelihood();
 }
 
 

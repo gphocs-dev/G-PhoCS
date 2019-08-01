@@ -581,7 +581,7 @@ void constructMigBandsTimes(PopulationTree* popTree) {
         if (pop != popTree->rootPop)
             timePoints.push_back(popTree->pops[pop]->father->age);
         else
-            timePoints.push_back(OLDAGE);//todo: what age?
+            timePoints.push_back(OLDAGE);
 
         //mig bands times
         for (MigrationBand* pMigBand : popBands.pMigBands) {

@@ -381,7 +381,6 @@ void LocusGenealogy::printGenealogy() {
     for (LeafNode& leafNode : leafNodes_) {
         leafNode.printTreeNode();
     }
-    //todo: std::for_each(v.begin(), v.end(), &foo);
 
     //for each coal node
     for (CoalNode& coalNode : coalNodes_) {
