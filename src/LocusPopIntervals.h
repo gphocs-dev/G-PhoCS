@@ -34,7 +34,7 @@ class LocusPopIntervals {
 
 private:
 
-    PopInterval *intervalsArray_; //array of PopIntervals //todo: replace with vector?
+    PopInterval *intervalsArray_; //array of PopIntervals
     PopInterval *pIntervalsPool_; //pointer to a pool of free intervals
 
     int numIntervals_; //total number of intervals

@@ -2,6 +2,7 @@
 #include "LocusEmbeddedGenealogy.h"
 #include "DbgErrMsgIntervals.h"
 
+
 /*
  * LocusEmbeddedGenealogy / constructor
 */
@@ -490,11 +491,16 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
         genealogy_.adjustGenNodeAgeWrap(inode, t);
         genealogy_.computeLocusDataLikelihoodWrap(1);
         resetSaved(this->getLocusData());
+
         //call test function
         test_updateGB_InternalNode(lowerBound, upperBound, tnew, lnAcceptance,
                                    isAccepted, inode);
+
+#ifdef TEST_NEW_DATA_STRUCTURE
         //test all
         this->testLocusEmbeddedGenealogy();
+#endif
+
         //END of test
 
     } // end of loop
@@ -522,7 +528,7 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
 }
 
 
-
+//test the new updateGB_InternalNode function and also call old inner functions
 int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
                                                        double upperBound,
                                                        double tnew,

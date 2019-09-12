@@ -6,7 +6,7 @@
 
  ============================================================================*/
 
-//TODO: remove, for debugging only
+
 #include "AllLoci.h"
 
 //
@@ -40,6 +40,7 @@
 #include "CladePrinter.h"
 #include "HypothesisPrinter.h"
 #include "patch.h"
+
 
 static struct option long_options[] = {{"help",     no_argument, 0, 'h'},
                                        {"verbose",  no_argument, 0, 'v'},
@@ -109,7 +110,7 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-  debug = 1;//TODO: change
+  debug = 1;//TODO: change back to 0
 
   while (1)
   {
@@ -1446,15 +1447,16 @@ int performMCMC()
 #ifdef RECORD_METHOD_TIMES
       setStartTimeMethod(T_UpdateGB_InternalNode);
 #endif
-      //acceptCount = UpdateGB_InternalNode(mcmcSetup.finetunes.coalTime);//todo:uncomment and remove
-
 
       //NEW code section July 2019 /////////////////////////////////////////////
 #ifdef THREAD_UpdateGB_InternalNode
 #pragma omp parallel for private(locus) schedule(THREAD_SCHEDULING_STRATEGY)
 #endif
-      //for each locus
-      for (auto &locus : lociVector) {
+
+        int acceptCounter;
+
+        //for each locus
+        for (auto &locus : lociVector) {
 
         //construct mig bands times
         constructMigBandsTimes(dataSetup.popTree);
@@ -1472,28 +1474,29 @@ int performMCMC()
         locus.copyIntervals(true);
 
         //test genealogy, intervals, statistics, likelihood
+        #ifdef TEST_NEW_DATA_STRUCTURE
         locus.testLocusEmbeddedGenealogy();
-
+        #endif
 
         //update internal nodes+test
-        locus.updateGB_InternalNode(mcmcSetup.finetunes.coalTime);
+        acceptCounter = locus.updateGB_InternalNode(mcmcSetup.finetunes.coalTime);
+
+#pragma omp atomic
+        acceptanceCounts.coalTime += acceptCounter;
 
 
+        #ifdef TEST_NEW_DATA_STRUCTURE
         //test genealogy, intervals, statistics, likelihood
         locus.testLocusEmbeddedGenealogy();
+        #endif
 
-      }
-
-
-
+        }
       //END of NEW code section/////////////////////////////////////////////////
-
-
 
 #ifdef RECORD_METHOD_TIMES
       setEndTimeMethod(T_UpdateGB_InternalNode);
 #endif
-      acceptanceCounts.coalTime += acceptCount;
+
 
 #ifdef CHECKALL
       if (!checkAll())
@@ -2161,7 +2164,7 @@ int performMCMC()
       }
 
     } // print log
-    int nomi=0;
+
   } // end of main loop - for(iteration)
 
 
