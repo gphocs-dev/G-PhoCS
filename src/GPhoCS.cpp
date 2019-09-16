@@ -41,8 +41,6 @@
 #include "HypothesisPrinter.h"
 #include "patch.h"
 
-std::chrono::duration<double> timeDuration = std::chrono::seconds(0);
-
 
 static struct option long_options[] = {{"help",     no_argument, 0, 'h'},
                                        {"verbose",  no_argument, 0, 'v'},
@@ -1460,14 +1458,8 @@ int performMCMC()
         //for each locus
         for (auto &locus : lociVector) {
 
-            auto t1 = std::chrono::high_resolution_clock::now();
-
             //construct mig bands times
             constructMigBandsTimes(dataSetup.popTree);
-
-            auto t2 = std::chrono::high_resolution_clock::now();
-
-            timeDuration += t2 - t1;
 
             //construct genealogy and intervals
             locus.constructEmbeddedGenealogy();
@@ -2184,10 +2176,6 @@ int performMCMC()
   free(doubleArray);
   free(acceptCountArray);
   printf("\nMCMC finished. Time used: %s\n", printtime(timeString));
-
-  std::cout << "Time duration of construct function: ";
-  printDuration(std::cout,timeDuration);
-  std::cout << endl;
 
   printMethodTimes();
   return 0;
