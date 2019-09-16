@@ -16,6 +16,7 @@
 #include <limits.h>
 #include <float.h>
 #include <time.h>
+#include <chrono>
 
 
 int debug;
@@ -300,6 +301,30 @@ char* printtime (char timestr[])
   if(h)  sprintf(timestr,"%d:%02d:%02d", h,m,s);
   else   sprintf(timestr,"%2d:%02d", m,s);
   return(timestr);
+}
+
+
+
+std::ostream &printDuration(std::ostream &os, std::chrono::duration<double> sec) {
+    using namespace std;
+    using namespace std::chrono;
+    typedef duration<int, ratio<86400>> days;// #num seconds in a day
+    char fill = os.fill();
+    os.fill('0');
+    auto d = duration_cast<days>(sec);
+    sec -= d;
+    auto h = duration_cast<hours>(sec);
+    sec -= h;
+    auto m = duration_cast<minutes>(sec);
+    sec -= m;
+    auto s = duration_cast<seconds>(sec);
+    os << d.count() << " days, "
+        << setw(2) << h.count() << ":"
+        << setw(2) << m.count() << ":"
+       << setw(2) << s.count(); //<< 's';
+
+    os.fill(fill);
+    return os;
 }
 
 
