@@ -62,7 +62,7 @@ set(SOURCE_FILES
         src/CombAssertions.cpp
         src/CombAssertions.h
         src/HypothesisPrinter.cpp
-        src/HypothesisPrinter.h src/GenealogyStats.h)
+        src/HypothesisPrinter.h src/GenealogyStats.h src/TimersVariabels.cpp src/TimersVariabels.h)
 
 add_executable(G_PhoCS ${SOURCE_FILES})
 

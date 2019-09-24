@@ -41,7 +41,9 @@
 #include "HypothesisPrinter.h"
 #include "patch.h"
 
-std::chrono::duration<double> timeDuration = std::chrono::seconds(0);
+#include "TimersVariabels.h"
+
+
 
 
 static struct option long_options[] = {{"help",     no_argument, 0, 'h'},
@@ -1427,12 +1429,17 @@ int performMCMC()
   setStartTimeMethod(T_MCMCIterations);
 #endif
 
+  auto tTotal1 = std::chrono::high_resolution_clock::now();
+
   AllLoci lociEmbedded;
   auto & lociVector = lociEmbedded.getLociVector();
 
   for (iteration = -mcmcSetup.burnin; iteration < mcmcSetup.numSamples;
        iteration++)
   {
+
+    auto tIter1 = std::chrono::high_resolution_clock::now();
+
 #ifdef RECORD_METHOD_TIMES
     if(iteration > 0 && iteration % 5000 == 0)
 		{
@@ -1460,14 +1467,10 @@ int performMCMC()
         //for each locus
         for (auto &locus : lociVector) {
 
-            auto t1 = std::chrono::high_resolution_clock::now();
+            auto tConstruct1 = std::chrono::high_resolution_clock::now();
 
             //construct mig bands times
             constructMigBandsTimes(dataSetup.popTree);
-
-            auto t2 = std::chrono::high_resolution_clock::now();
-
-            timeDuration += t2 - t1;
 
             //construct genealogy and intervals
             locus.constructEmbeddedGenealogy();
@@ -1486,8 +1489,18 @@ int performMCMC()
             locus.testLocusEmbeddedGenealogy();
             #endif
 
+            auto tConstruct2 = std::chrono::high_resolution_clock::now();
+
+            timeConstruct += tConstruct2 - tConstruct1;
+
+            auto tProposal1 = std::chrono::high_resolution_clock::now();
+
             //update internal nodes+test
             acceptCounter = locus.updateGB_InternalNode(mcmcSetup.finetunes.coalTime);
+
+            auto tProposal2 = std::chrono::high_resolution_clock::now();
+
+            timeProposal += tProposal2 - tProposal1;
 
 #pragma omp atomic
             acceptanceCounts.coalTime += acceptCounter;
@@ -2173,8 +2186,13 @@ int performMCMC()
 
     } // print log
 
+    auto tIter2 = std::chrono::high_resolution_clock::now();
+
+    timeIter += tIter2 - tIter1;
+
   } // end of main loop - for(iteration)
 
+  auto tTotal2 = std::chrono::high_resolution_clock::now();
 
 
 #ifdef RECORD_METHOD_TIMES
@@ -2185,9 +2203,45 @@ int performMCMC()
   free(acceptCountArray);
   printf("\nMCMC finished. Time used: %s\n", printtime(timeString));
 
-  std::cout << "Time duration of construct function: ";
-  printDuration(std::cout,timeDuration);
-  std::cout << endl;
+
+  std::cout << endl; std::cout << "---- Times ----"; std::cout << endl <<endl;
+
+  std::cout << "Total time: ";
+  printDuration(std::cout, tTotal2 - tTotal1); std::cout << endl;
+
+  std::cout << "Control: Sum of iterations: ";
+  printDuration(std::cout, timeIter); std::cout << endl <<endl;
+
+  std::cout << "\t* Construction functions: ";
+  printDuration(std::cout, timeConstruct); std::cout << endl <<endl;
+
+  std::cout << "\t* Proposal updateGB_InternalNode function: ";
+  printDuration(std::cout, timeProposal); std::cout << endl;
+
+  std::cout << "\t\t** OLD proposal function: ";
+  printDuration(std::cout, timeProposalOri); std::cout << endl;
+
+  std::cout << "\t\t** NEW proposal function: (total-OLD): ";
+  printDuration(std::cout, timeProposal-timeProposalOri); std::cout << endl;
+
+  std::cout << "\t\t\t- Start section: ";
+  printDuration(std::cout, timeUpdateGBStart); std::cout << endl;
+
+  std::cout << "\t\t\t- considerIntervalMove function: ";
+  printDuration(std::cout, timeConsiderInterval); std::cout << endl;
+
+  std::cout << "\t\t\t- isAccepted section: ";
+  printDuration(std::cout, timeIsAccepted); std::cout << endl;
+
+  std::cout << "\t\t\t\t~ copy: ";
+  printDuration(std::cout, timeA); std::cout << endl;
+
+  std::cout << "\t\t\t- rejected section: ";
+  printDuration(std::cout, timeRejected); std::cout << endl;
+
+  std::cout << "\t\t\t\t~ copy: ";
+  printDuration(std::cout, timeB); std::cout << endl;
+
 
   printMethodTimes();
   return 0;

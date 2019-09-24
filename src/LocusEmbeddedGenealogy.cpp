@@ -2,6 +2,7 @@
 #include "LocusEmbeddedGenealogy.h"
 #include "DbgErrMsgIntervals.h"
 
+#include "TimersVariabels.h"
 
 /*
  * LocusEmbeddedGenealogy / constructor
@@ -424,6 +425,9 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
     int nSamples = pSetup_->numSamples;
     for (int inode = nSamples; inode < 2 * nSamples - 1; inode++) {
 
+
+        auto tUpdateGBStart1 = std::chrono::high_resolution_clock::now();
+
         //get coal node
         CoalNode *pNode = genealogy_.getCoalNode(inode);
 
@@ -454,38 +458,74 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
             continue;
         }
 
+        auto tUpdateGBStart2 = std::chrono::high_resolution_clock::now();
+
+        timeUpdateGBStart += tUpdateGBStart2 - tUpdateGBStart1;
+
+        auto tConsider1 = std::chrono::high_resolution_clock::now();
+
         //consider interval move
         double lnAcceptance = this->considerIntervalMove(pNode, tnew);
+
+        auto tConsider2 = std::chrono::high_resolution_clock::now();
+
+        timeConsiderInterval += tConsider2 - tConsider1;
 
         //if proposal is accepted
         bool isAccepted =
                 lnAcceptance >= 0 or rndu(locusID_) < exp(lnAcceptance);
         if (isAccepted) {
 
+            auto tIsAccepted1 = std::chrono::high_resolution_clock::now();
+
             //increase counter
             accepted++;
 
+            auto tA1 = std::chrono::high_resolution_clock::now();
+
             //copy proposal into original
             intervalsOri_.copyIntervals(intervalsPro_, false);
+
+            auto tA2 = std::chrono::high_resolution_clock::now();
+
+            timeA += tA2 - tA1;
 
             genLogLikelihood_ = intervalsPro_.computeLogLikelihood();
             dataLogLikelihood_ = genealogy_.getLocusDataLikelihoodWrap();
 
             resetSaved(this->getLocusData());
 
+            auto tIsAccepted2 = std::chrono::high_resolution_clock::now();
+
+            timeIsAccepted += tIsAccepted2 - tIsAccepted1;
+
         } else { // reject changes and revert to saved version
+
+            auto tRejected1 = std::chrono::high_resolution_clock::now();
 
             //set back node age
             pNode->setAge(t);
 
+            auto tB1 = std::chrono::high_resolution_clock::now();
+
             //copy original into proposal
             intervalsPro_.copyIntervals(intervalsOri_, true);
 
+            auto tB2 = std::chrono::high_resolution_clock::now();
+
+            timeB += tB2 - tB1;
+
             revertToSaved(this->getLocusData());
+
+            auto tRejected2 = std::chrono::high_resolution_clock::now();
+
+            timeRejected += tRejected2 - tRejected1;
         }
 
-        //Below code, untill END, is just for testing this function
+        //Below code, until END, is just for testing this function
         // should be removed later
+
+        auto tProposalOri1 = std::chrono::high_resolution_clock::now();
 
         //revert changes
         genealogy_.adjustGenNodeAgeWrap(inode, t);
@@ -496,6 +536,10 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
         test_updateGB_InternalNode(lowerBound, upperBound, tnew, lnAcceptance,
                                    isAccepted, inode);
 
+        auto tProposalOri2 = std::chrono::high_resolution_clock::now();
+
+        timeProposalOri += tProposalOri2 - tProposalOri1;
+
 #ifdef TEST_NEW_DATA_STRUCTURE
         //test all
         this->testLocusEmbeddedGenealogy();
@@ -504,6 +548,7 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
         //END of test
 
     } // end of loop
+
 
     dataLogLd = (dataLogLikelihood_ - dataLogLd);
     genLogLd = (genLogLikelihood_ - genLogLd);
