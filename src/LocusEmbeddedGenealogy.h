@@ -41,12 +41,7 @@ private:
     LocusPopIntervals  intervalsPro_; //object of intervals - proposal
     LocusPopIntervals  intervalsOri_; //object of intervals - original
 
-    double genLogLikelihood_;
-public:
-    void updateGenLogLikelihood();
-
-private:
-    //genealogy log-likelihood - P(gen|Model)
+    double genLogLikelihood_; //genealogy log-likelihood - P(gen|Model)
     double dataLogLikelihood_; //data log-likelihood - P(data|gen)
 
     DATA_SETUP*     pSetup_;       //pointer to DATA_SETUP struct
@@ -81,6 +76,8 @@ public:
 
     //compute delta log likelihood
     double computeLogLikelihood(bool computeDelta=false);
+
+    void updateGenLogLikelihood();
 
 
     // ********************* Copy methods *********************

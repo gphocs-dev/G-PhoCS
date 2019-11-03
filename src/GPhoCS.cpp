@@ -1470,7 +1470,7 @@ int performMCMC()
             //update genealogy statistics
             locus.updateGenLogLikelihood();
 
-            //copy intervals from original to original
+            //copy intervals from proposal to original
             locus.copyIntervals(true);
 
             //test genealogy, intervals, statistics, likelihood

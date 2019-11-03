@@ -29,7 +29,6 @@ struct GenealogyStats {
     std::vector<GenStats> coals; //vector of coal statistics
     std::vector<GenStats> migs; //vector of migs statistics
 
-
     //constructor
     GenealogyStats(int nCoal, int nMigs) : coals(nCoal), migs(nMigs) {}
 

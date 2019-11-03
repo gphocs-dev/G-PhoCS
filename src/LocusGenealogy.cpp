@@ -288,7 +288,7 @@ MigNode* LocusGenealogy::addMigNode(TreeNode* pTreeNode, int migBandID) {
     if it's not the last element replace it by the last element and pop back
     @param: pointer to mig that should be removed
 */
-void LocusGenealogy::removeMigNode(MigNode* pMigNode) { //todo: replace loop with iterators
+void LocusGenealogy::removeMigNode(MigNode* pMigNode) {
 
     //find the mig that should be removed (skip last element)
     for (std::size_t i = 0; i < migNodes_.size(); i++) {
@@ -444,11 +444,6 @@ LocusGenealogy::testLocusGenealogy(int locusID, GENETREE_MIGS *pGenetreeMigs) {
         if (parent != -1) {
             double age = this->getNodeAgeWrap(parent);
             double ageNew = parentNew->getAge();
-
-            if (fabs(age - ageNew) > EPSILON) {//todo:remove
-                this->printGenealogy();
-                printGenealogyAndExit(locusID,0);
-            }
 
             //compare ages
             assert(fabs(age - ageNew) < EPSILON);

@@ -57,7 +57,7 @@ public:
 
     // ********************* MAIN methods *********************
 
-    //create a new interval in specified population at given time
+    //create a new interval in a specified population at given time
     PopInterval *createInterval(int pop, double age, IntervalType type);
 
     //create a new interval before a given interval

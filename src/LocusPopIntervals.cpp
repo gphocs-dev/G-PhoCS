@@ -68,7 +68,7 @@ void LocusPopIntervals::copy(const LocusPopIntervals &other) {
  * copyIntervals
  * All is copied in DEEP copy EXCEPT of tree nodes pointers
  * which are copied in a SHALLOW copy
- * If verifyPointers flag is on, then verify that the tree node's pointers
+ * If verifyPointers flag is on, then verify that the tree nodes' pointers
  * to interval indeed point to the right intervals
  * @param: other locus pop intervals, flag
 */
@@ -81,7 +81,7 @@ void LocusPopIntervals::copyIntervals(const LocusPopIntervals &other,
         TreeNode* pNode = other.intervalsArray_[i].getTreeNode();
         intervalsArray_[i].setTreeNode(pNode);
 
-        //verify that the tree node's pointers point to interval
+        //verify that the tree node's pointers pointing to interval
         // indeed point to the right intervals
         if (verifyPointers and pNode) {
             int intervalIndex =

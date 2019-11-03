@@ -75,7 +75,7 @@ public:
     //get total num of nodes in current genealogy
     int getNumTreeNodes() const;
 
-    const vector<LeafNode> &getLeafNodes() const;//todo: use or remove
+    const vector<LeafNode> &getLeafNodes() const;
 
     // ********************* OTHER methods *********************
 

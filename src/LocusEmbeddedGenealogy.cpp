@@ -92,7 +92,7 @@ LocusEmbeddedGenealogy::copyIntervals(bool accepted) {
     LocusPopIntervals & source = accepted? intervalsPro_ : intervalsOri_;
     LocusPopIntervals & copy = accepted? intervalsOri_ : intervalsPro_;
 
-    //tree nodes (and only them) are copied by shallow copy
+    //tree nodes (and only them) are copied by a shallow copy
     copy.copyIntervals(source, false);
 }
 
@@ -128,7 +128,7 @@ double LocusEmbeddedGenealogy::getDataLogLikelihood() const {
 	constructEmbeddedGenealogy
 	Genealogy: construct branches and link to corresponding intervals,
                 add mig nodes to tree
-    Intervals: reset intervals, ling them to each other
+    Intervals: reset intervals, link them to each other
                 initialize with start and end intervals,
                 create samples start intervals,
                 create coalescent and migration intervals,
@@ -399,7 +399,7 @@ void LocusEmbeddedGenealogy::testLocusEmbeddedGenealogy() {
 
 /*
  *	UpdateGB_InternalNode
- *	- perturbs times of all coalescent nodes in all gene trees
+ *	- perturbs times of all coalescent nodes
  *	- does not change the population of the node
  *	- upper and lower bounds for new time are determined by nodes
  *	  (migration/coalescent)
@@ -508,7 +508,7 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
     dataLogLd = (dataLogLikelihood_ - dataLogLd);
     genLogLd = (genLogLikelihood_ - genLogLd);
 
-#ifdef ENABLE_OMP_THREADS //todo: where this ifdef is defined
+#ifdef ENABLE_OMP_THREADS
 #pragma omp atomic
 #endif
 
@@ -520,9 +520,6 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
 #pragma omp atomic
 #endif
     pState_->logLikelihood += (genLogLd + dataLogLd) / pSetup_->numLoci;
-
-
-//todo: add another pragma code for "number of acceptance" (see original code)
 
     return (accepted);
 }
