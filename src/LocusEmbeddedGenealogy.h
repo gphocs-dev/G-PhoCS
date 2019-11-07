@@ -127,13 +127,13 @@ public:
     //
     void testLocusEmbeddedGenealogy();
 
-    //test if update internal node is consistent
-    int test_updateGB_InternalNode(double lowerBound,
-                                   double upperbound,
-                                   double tnew,
-                                   double lnacceptance,
-                                   bool accepted,
-                                   int inode);
+    //updates old data structures (DS) by calling to old inner functions
+    int updateGB_InternalNode_oldDS(double lowerBound,
+                                    double upperbound,
+                                    double tnew,
+                                    double lnacceptance,
+                                    bool accepted,
+                                    int inode);
 
 };
 

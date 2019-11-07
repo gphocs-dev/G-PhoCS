@@ -493,8 +493,8 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
         resetSaved(this->getLocusData());
 
         //call test function
-        test_updateGB_InternalNode(lowerBound, upperBound, tnew, lnAcceptance,
-                                   isAccepted, inode);
+        updateGB_InternalNode_oldDS(lowerBound, upperBound, tnew, lnAcceptance,
+                                    isAccepted, inode);
 
 #ifdef TEST_NEW_DATA_STRUCTURE
         //test all
@@ -525,13 +525,14 @@ int LocusEmbeddedGenealogy::updateGB_InternalNode(double finetune) {
 }
 
 
-//test the new updateGB_InternalNode function and also call old inner functions
-int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
-                                                       double upperBound,
-                                                       double tnew,
-                                                       double lnAcceptance,
-                                                       bool wasAccepted,
-                                                       int inode) {
+//updates old data structures (DS) by calling to old inner functions
+//as well as verifies consistency of values computed
+int LocusEmbeddedGenealogy::updateGB_InternalNode_oldDS(double lowerBound,
+                                                        double upperBound,
+                                                        double tnew,
+                                                        double lnAcceptance,
+                                                        bool wasAccepted,
+                                                        int inode) {
     int accepted = 0;
 
     int pop, son;
@@ -540,68 +541,68 @@ int LocusEmbeddedGenealogy::test_updateGB_InternalNode(double lowerBound,
     int mig;
     double tb[2];
 
-        t = getNodeAge(dataState.lociData[locusID_], inode);
-        pop = nodePops[locusID_][inode];
+    t = getNodeAge(dataState.lociData[locusID_], inode);
+    pop = nodePops[locusID_][inode];
 
-        // set lower and upper bounds for new age
-        tb[0] = dataSetup.popTree->pops[pop]->age;
-        if (pop != dataSetup.popTree->rootPop)
-            tb[1] = dataSetup.popTree->pops[pop]->father->age;
-        else
-            tb[1] = OLDAGE;
+    // set lower and upper bounds for new age
+    tb[0] = dataSetup.popTree->pops[pop]->age;
+    if (pop != dataSetup.popTree->rootPop)
+        tb[1] = dataSetup.popTree->pops[pop]->father->age;
+    else
+        tb[1] = OLDAGE;
 
-        mig = findFirstMig(locusID_, inode, -1);
+    mig = findFirstMig(locusID_, inode, -1);
+    if (mig >= 0)
+        tb[1] = min2(tb[1], genetree_migs[locusID_].mignodes[mig].age);
+    else if (inode != getLocusRoot(dataState.lociData[locusID_]))
+        tb[1] = min2(tb[1], getNodeAge(dataState.lociData[locusID_],
+                                       getNodeFather(
+                                               dataState.lociData[locusID_],
+                                               inode)));
+
+    //assert upper bound is as calculated by new method
+    assert(fabs(tb[1] - upperBound) < EPSILON);
+
+    for (int i = 0; i < 2; i++) {
+        son = getNodeSon(dataState.lociData[locusID_], inode, i);
+        mig = findLastMig(locusID_, son, -1);
         if (mig >= 0)
-            tb[1] = min2(tb[1], genetree_migs[locusID_].mignodes[mig].age);
-        else if (inode != getLocusRoot(dataState.lociData[locusID_]))
-            tb[1] = min2(tb[1], getNodeAge(dataState.lociData[locusID_],
-                                           getNodeFather(
-                                                   dataState.lociData[locusID_],
-                                                   inode)));
+            tb[0] = max2(tb[0], genetree_migs[locusID_].mignodes[mig].age);
+        else
+            tb[0] = max2(tb[0],
+                         getNodeAge(dataState.lociData[locusID_], son));
+    }
 
-        //assert upper bound is as calculated by new method
-        assert(fabs(tb[1] - upperBound) < EPSILON);
+    //assert lower bound is as calculated by new method
+    assert(fabs(tb[0] - lowerBound) < EPSILON);
 
-        for (int i = 0; i < 2; i++) {
-            son = getNodeSon(dataState.lociData[locusID_], inode, i);
-            mig = findLastMig(locusID_, son, -1);
-            if (mig >= 0)
-                tb[0] = max2(tb[0], genetree_migs[locusID_].mignodes[mig].age);
-            else
-                tb[0] = max2(tb[0],
-                             getNodeAge(dataState.lociData[locusID_], son));
-        }
+    //
+    assert(abs(tnew - t) >= 1e-15);
 
-        //assert lower bound is as calculated by new method
-        assert(fabs(tb[0] - lowerBound) < EPSILON);
+    // update node's age, and compute delta log-likelihood
+    adjustGenNodeAge(dataState.lociData[locusID_], inode, tnew);
+    lnLd = -getLocusDataLikelihood(dataState.lociData[locusID_]);
+    lnLd += computeLocusDataLikelihood(
+            dataState.lociData[locusID_], 1);
 
-        //
-        assert(abs(tnew - t) >= 1e-15);
+    genetree_lnLd_delta = considerEventMove(locusID_, 0,
+                                            nodeEvents[locusID_][inode],
+                                            pop, t, pop, tnew);
+    lnacceptance = genetree_lnLd_delta + lnLd;
 
-        // update node's age, and compute delta log-likelihood
-        adjustGenNodeAge(dataState.lociData[locusID_], inode, tnew);
-        lnLd = -getLocusDataLikelihood(dataState.lociData[locusID_]);
-        lnLd += computeLocusDataLikelihood(
-                dataState.lociData[locusID_], 1);
+    //assert acceptance bound is as calculated by new method
+    assert(fabs(lnacceptance - lnAcceptance) < EPSILON);
 
-        genetree_lnLd_delta = considerEventMove(locusID_, 0,
-                                                nodeEvents[locusID_][inode],
-                                                pop, t, pop, tnew);
-        lnacceptance = genetree_lnLd_delta + lnLd;
+    if (wasAccepted) {
+        locus_data[locusID_].genLogLikelihood += genetree_lnLd_delta;
+        acceptEventChainChanges(locusID_, 0);
+        resetSaved(dataState.lociData[locusID_]);
+    } else {
+        // reject changes and revert to saved version
+        rejectEventChainChanges(locusID_, 0);
+        revertToSaved(dataState.lociData[locusID_]);//->this changes node again
 
-        //assert acceptance bound is as calculated by new method
-        assert(fabs(lnacceptance - lnAcceptance) < EPSILON);
-
-        if (wasAccepted) {
-            locus_data[locusID_].genLogLikelihood += genetree_lnLd_delta;
-            acceptEventChainChanges(locusID_, 0);
-            resetSaved(dataState.lociData[locusID_]);
-        } else {
-            // reject changes and revert to saved version
-            rejectEventChainChanges(locusID_, 0);
-            revertToSaved(dataState.lociData[locusID_]);//->this changes node again
-
-        }
+    }
 
     return accepted;
 }
