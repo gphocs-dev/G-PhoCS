@@ -174,46 +174,46 @@ int	initAlignmentData(int numLoci, int numSamples, int initSeqLength, int initNu
   AlignmentData.numLoci = numLoci;
   AlignmentData.numPatterns = 0;
 	
-  AlignmentData.sampleNames = NULL;
-  AlignmentData.isDiploid = NULL;
-  AlignmentData.patternArray = NULL;
-  AlignmentData.locusProfiles = NULL;
+  AlignmentData.sampleNames = nullptr;
+  AlignmentData.isDiploid = nullptr;
+  AlignmentData.patternArray = nullptr;
+  AlignmentData.locusProfiles = nullptr;
 	
   AlignmentGlobal.errorMessageEnd = AlignmentGlobal.errorMessage;
   AlignmentGlobal.maxSeqLength = initSeqLength;
   AlignmentGlobal.maxNumPatterns = initNumPatterns;
 	
-  AlignmentGlobal.seqSpace = NULL;
-  //	AlignmentGlobal.patternSpace = NULL;
-  AlignmentGlobal.intArray = NULL;
-  AlignmentGlobal.fourColumns = NULL;
+  AlignmentGlobal.seqSpace = nullptr;
+  //	AlignmentGlobal.patternSpace = nullptr;
+  AlignmentGlobal.intArray = nullptr;
+  AlignmentGlobal.fourColumns = nullptr;
 	
   PhasedPatterns.numLoci = 0;
   PhasedPatterns.numHaploids = 0;
   PhasedPatterns.numPhasedPatterns = 0;
-  PhasedPatterns.numPhases = NULL;
-  PhasedPatterns.patternArray = NULL;
-  PhasedPatterns.locusProfiles = NULL;
+  PhasedPatterns.numPhases = nullptr;
+  PhasedPatterns.patternArray = nullptr;
+  PhasedPatterns.locusProfiles = nullptr;
 
   // allocate space
 	
   AlignmentData.isDiploid = (unsigned short*)malloc(numSamples*sizeof(unsigned short));
-  if(AlignmentData.isDiploid == NULL) {
+  if(AlignmentData.isDiploid == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory AlignmentData.isDiploid at initAlignmentData.\n");
     return -1;
   }			
 	
-  if(sampleNames != NULL) {
+  if(sampleNames != nullptr) {
     AlignmentData.sampleNames = (char**)malloc(numSamples*sizeof(char*));
-    if(AlignmentData.sampleNames == NULL) {
+    if(AlignmentData.sampleNames == nullptr) {
       AlignmentGlobal.errorMessageEnd += 
         sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory AlignmentData.sampleNames at initAlignmentData.\n");
       return -1;
     }			
 	
     AlignmentData.sampleNames[0] = (char*)malloc(numSamples*NAME_LENGTH*sizeof(char));
-    if(AlignmentData.sampleNames[0] == NULL) {
+    if(AlignmentData.sampleNames[0] == nullptr) {
       AlignmentGlobal.errorMessageEnd += 
         sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory AlignmentData.sampleNames[0] at initAlignmentData.\n");
       return -1;
@@ -223,7 +223,7 @@ int	initAlignmentData(int numLoci, int numSamples, int initSeqLength, int initNu
       AlignmentData.sampleNames[sample] = AlignmentData.sampleNames[0] + sample*NAME_LENGTH;
       strncpy(AlignmentData.sampleNames[sample],sampleNames[sample], NAME_LENGTH-1);
       //			printf("Sample %d is %s.\n", sample+1, AlignmentData.sampleNames[sample]);
-	  if(sampleNames[sample] == NULL || sampleNames[sample][0] == '\0') {
+	  if(sampleNames[sample] == nullptr || sampleNames[sample][0] == '\0') {
 		  if(sample == 0) {
       		AlignmentGlobal.errorMessageEnd += 
         		sprintf(AlignmentGlobal.errorMessageEnd,"First sample must have a name specified.\n");
@@ -240,50 +240,50 @@ int	initAlignmentData(int numLoci, int numSamples, int initSeqLength, int initNu
 
 
   AlignmentData.locusProfiles = (LocusProfile*)malloc(numLoci*sizeof(LocusProfile));
-  if(AlignmentData.locusProfiles == NULL) {
+  if(AlignmentData.locusProfiles == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory AlignmentData.locusProfiles at initAlignmentData.\n");
     return -1;
   }			
 
   AlignmentData.patternArray = (char**)malloc(initNumPatterns*sizeof(char*));
-  if(AlignmentData.patternArray == NULL) {
+  if(AlignmentData.patternArray == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory AlignmentData.patternArray at initAlignmentData.\n");
     return -1;
   }			
 
   AlignmentData.patternArray[0] = (char*)malloc(initNumPatterns*numSamples*sizeof(char));
-  if(AlignmentData.patternArray[0] == NULL) {
+  if(AlignmentData.patternArray[0] == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory AlignmentData.patternArray[0] at initAlignmentData.\n");
     return -1;
   }			
 
   AlignmentGlobal.seqSpace = (char*)malloc(initSeqLength*numSamples*sizeof(char));
-  if(AlignmentGlobal.seqSpace == NULL) {
+  if(AlignmentGlobal.seqSpace == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory AlignmentGlobal.seqSpace at initAlignmentData.\n");
     return -1;
   }			
 
   AlignmentGlobal.fourColumns = (char*)malloc(4*(numSamples+1)*sizeof(char));
-  if(AlignmentGlobal.fourColumns == NULL) {
+  if(AlignmentGlobal.fourColumns == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory AlignmentGlobal.fourColumns at initAlignmentData.\n");
     return -1;
   }			
 	
   AlignmentGlobal.intArray = (int*)malloc(initSeqLength*2*sizeof(int));
-  if(AlignmentGlobal.intArray == NULL) {
+  if(AlignmentGlobal.intArray == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory AlignmentGlobal.intArray at initAlignmentData.\n");
     return -1;
   }
 
   for(sample = 0; sample<numLoci; sample++) {
-    AlignmentData.locusProfiles[sample].patternIds = NULL;
-    AlignmentData.locusProfiles[sample].patternCounts = NULL;
+    AlignmentData.locusProfiles[sample].patternIds = nullptr;
+    AlignmentData.locusProfiles[sample].patternCounts = nullptr;
   }
 		
   // compute all base transformations
@@ -320,82 +320,82 @@ int	freeAlignmentData() {
   int locus;
 	
   // frees locus Profiles arrays
-  if(AlignmentData.locusProfiles != NULL) {
+  if(AlignmentData.locusProfiles != nullptr) {
     for(locus = 0; locus<AlignmentData.numLoci; locus++) {
-      if(AlignmentData.locusProfiles[locus].patternIds != NULL) {
+      if(AlignmentData.locusProfiles[locus].patternIds != nullptr) {
         free(AlignmentData.locusProfiles[locus].patternIds);
       }
     }
     free(AlignmentData.locusProfiles);
   }
-  AlignmentData.locusProfiles = NULL;
+  AlignmentData.locusProfiles = nullptr;
 	
-  if(AlignmentData.isDiploid != NULL) {
+  if(AlignmentData.isDiploid != nullptr) {
     free(AlignmentData.isDiploid);
   }			
-  AlignmentData.isDiploid = NULL;
+  AlignmentData.isDiploid = nullptr;
 	
-  if(AlignmentData.sampleNames != NULL) {
-    if(AlignmentData.sampleNames[0] != NULL) {
+  if(AlignmentData.sampleNames != nullptr) {
+    if(AlignmentData.sampleNames[0] != nullptr) {
       free(AlignmentData.sampleNames[0]);
     }
     free(AlignmentData.sampleNames);
   }			
-  AlignmentData.sampleNames = NULL;
+  AlignmentData.sampleNames = nullptr;
 	
 	
-  if(AlignmentData.patternArray != NULL) {
-    if(AlignmentData.patternArray[0] != NULL) {
+  if(AlignmentData.patternArray != nullptr) {
+    if(AlignmentData.patternArray[0] != nullptr) {
       free(AlignmentData.patternArray[0]);
     }			
-    AlignmentData.patternArray[0] = NULL;
+    AlignmentData.patternArray[0] = nullptr;
     free(AlignmentData.patternArray);
   }			
-  AlignmentData.patternArray = NULL;
+  AlignmentData.patternArray = nullptr;
 
-  if(PhasedPatterns.numPhases != NULL) {
+  if(PhasedPatterns.numPhases != nullptr) {
     free(PhasedPatterns.numPhases);
   }			
-  PhasedPatterns.numPhases = NULL;
+  PhasedPatterns.numPhases = nullptr;
 
-  if(PhasedPatterns.numPhases != NULL) {
+  if(PhasedPatterns.numPhases != nullptr) {
     free(PhasedPatterns.numPhases);
   }			
-  PhasedPatterns.numPhases = NULL;
+  PhasedPatterns.numPhases = nullptr;
 
-  if(PhasedPatterns.patternArray != NULL) {
-    if(PhasedPatterns.patternArray[0] != NULL) {
+  if(PhasedPatterns.patternArray != nullptr) {
+    if(PhasedPatterns.patternArray[0] != nullptr) {
       free(PhasedPatterns.patternArray[0]);
     }			
-    PhasedPatterns.patternArray[0] = NULL;
+    PhasedPatterns.patternArray[0] = nullptr;
     free(PhasedPatterns.patternArray);
   }			
-  PhasedPatterns.patternArray = NULL;
+  PhasedPatterns.patternArray = nullptr;
 
-  if(PhasedPatterns.locusProfiles != NULL) {
+  if(PhasedPatterns.locusProfiles != nullptr) {
     for(locus = 0; locus<PhasedPatterns.numLoci; locus++) {
-      if(PhasedPatterns.locusProfiles[locus].patternIds != NULL) {
+      if(PhasedPatterns.locusProfiles[locus].patternIds != nullptr) {
         free(PhasedPatterns.locusProfiles[locus].patternIds);
       }
     }
     free(PhasedPatterns.locusProfiles);
   }
-  PhasedPatterns.locusProfiles = NULL;
+  PhasedPatterns.locusProfiles = nullptr;
 	
-  if(AlignmentGlobal.seqSpace != NULL) {
+  if(AlignmentGlobal.seqSpace != nullptr) {
     free(AlignmentGlobal.seqSpace);
   }			
-  AlignmentGlobal.seqSpace = NULL;
+  AlignmentGlobal.seqSpace = nullptr;
 	
-  if(AlignmentGlobal.fourColumns != NULL) {
+  if(AlignmentGlobal.fourColumns != nullptr) {
     free(AlignmentGlobal.fourColumns);
   }			
-  AlignmentGlobal.fourColumns = NULL;
+  AlignmentGlobal.fourColumns = nullptr;
 	
-  if(AlignmentGlobal.intArray != NULL) {
+  if(AlignmentGlobal.intArray != nullptr) {
     free(AlignmentGlobal.intArray);
   }
-  AlignmentGlobal.intArray = NULL;
+  AlignmentGlobal.intArray = nullptr;
 
   return 0;
 }
@@ -478,24 +478,24 @@ int	readSeqFile(const char* seqFileName, int numSamples, char** sampleNames, int
   int locus, seqLength, numLocusSamples;
   int res;
   
-  int* sampleSeqInFile = NULL;
+  int* sampleSeqInFile = nullptr;
   
   char line[STRING_LENGTH];
   
-  if(fseq == NULL) {
+  if(fseq == nullptr) {
     fprintf(stderr, "Error: Could not find sequence file '%s' in readSeqFile().\n",seqFileName);
     return -1;
   }
   
   seqArray = (char**)malloc(numSamples*sizeof(char*));
-  if(seqArray == NULL) {
+  if(seqArray == nullptr) {
     fprintf(stderr, "Error: Out Of Memory allocating seqArray in readSeqFile().\n");
 	fclose(fseq);
     return -1;
   }
   
   sampleSeqInFile = (int*)malloc(numSamples*sizeof(int));
-  if(sampleSeqInFile == NULL) {
+  if(sampleSeqInFile == nullptr) {
     fprintf(stderr, "Error: Out Of Memory allocating sampleSeqInFile in readSeqFile().\n");
     free(seqArray);
     fclose(fseq);
@@ -503,7 +503,7 @@ int	readSeqFile(const char* seqFileName, int numSamples, char** sampleNames, int
   }
   
   for(sample=0; sample<numSamples; sample++) {
-	  if(sampleNames[sample] == NULL || sampleNames[sample][0] == '\0') {
+	  if(sampleNames[sample] == nullptr || sampleNames[sample][0] == '\0') {
 		  // for second sample reserved for diploid genomes
 		  sampleSeqInFile[sample] = 1;
 	  } else {
@@ -513,11 +513,11 @@ int	readSeqFile(const char* seqFileName, int numSamples, char** sampleNames, int
 		  
   
   //Discard empty lines at beginning of file
-  while(fgets(line, STRING_LENGTH, fseq) == NULL && !feof(fseq));
+  while(fgets(line, STRING_LENGTH, fseq) == nullptr && !feof(fseq));
 
   //Get first string of non-empty line
   token = strtokCS(line, parseFileDelims);
-  if(token == NULL) {
+  if(token == nullptr) {
     fprintf(stderr, "\nError: Unexpected End of File when trying to read number of loci from seq file.\n");
     free(seqArray);
     free(sampleSeqInFile);
@@ -563,18 +563,18 @@ int	readSeqFile(const char* seqFileName, int numSamples, char** sampleNames, int
   printf("Reading loci (.=100 loci): ");
   for(locus=0; locus<numLoci; locus++) {
     
-    token = NULL;
+    token = nullptr;
     while(!feof(fseq)) {
-      if (fgets(line, STRING_LENGTH, fseq) == NULL) {
-       token = NULL;
+      if (fgets(line, STRING_LENGTH, fseq) == nullptr) {
+       token = nullptr;
        break;
       }
       token = strtokCS(line, parseFileDelims); 
-      if (token != NULL)
+      if (token != nullptr)
         break;
     }
 
-    if(token == NULL) {
+    if(token == nullptr) {
       	fprintf(stderr, "\nError: Sequence file says to use %d loci, but the sequence file only contains %d loci.\n", numLoci, locus);
     	printAlignmentError();
     	freeAlignmentData();
@@ -586,8 +586,8 @@ int	readSeqFile(const char* seqFileName, int numSamples, char** sampleNames, int
       fprintf(stderr, "\nWarning: Locus names can only be %d characters long. Truncated loci name for loci #%d.\n", NAME_LENGTH-1, locus+1);
     strncpy(AlignmentData.locusProfiles[locus].name, token, NAME_LENGTH);
 
-    token = strtokCS(NULL, parseFileDelims);
-    if(token == NULL) {
+    token = strtokCS(nullptr, parseFileDelims);
+    if(token == nullptr) {
 		fprintf(stderr, "\nError: Unexpected end of file when trying to read number of samples for locus %d.\n", locus+1);
     	freeAlignmentData();
     	free(seqArray);
@@ -614,8 +614,8 @@ int	readSeqFile(const char* seqFileName, int numSamples, char** sampleNames, int
  		return -1;
     }
     
-    token = strtokCS(NULL, parseFileDelims);
-    if(token == NULL) {
+    token = strtokCS(nullptr, parseFileDelims);
+    if(token == nullptr) {
      	fprintf(stderr, "\nError: Unexpected end of file when trying to read sequence length for locus %d.\n", locus+1);
     	freeAlignmentData();
     	free(seqArray);
@@ -656,7 +656,7 @@ int	readSeqFile(const char* seqFileName, int numSamples, char** sampleNames, int
       return -1;
     } else {
       for(sample = 0; sample<AlignmentData.numSamples; sample++) {
-        if(sampleNames[sample] != NULL && sampleNames[sample][0] != '\0' && seqArray[sample] != NULL)	
+        if(sampleNames[sample] != nullptr && sampleNames[sample][0] != '\0' && seqArray[sample] != nullptr)	
           sampleSeqInFile[sample] = 1;
       }
     }
@@ -746,14 +746,14 @@ int	readSeqs(FILE* seqFile, int numSeqs, int seqLength, char** seqArray, int loc
     AlignmentGlobal.maxSeqLength = seqLength;
     free(AlignmentGlobal.seqSpace);
     AlignmentGlobal.seqSpace = (char*)malloc(seqLength*numTotalSamples*sizeof(char));
-    if(AlignmentGlobal.seqSpace == NULL) {
+    if(AlignmentGlobal.seqSpace == nullptr) {
       AlignmentGlobal.errorMessageEnd += 
         sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory reallocating AlignmentGlobal.seqSpace with seq length %d.\n",seqLength);
       return -1;
     }			
     free(AlignmentGlobal.intArray);
     AlignmentGlobal.intArray = (int*)malloc(2*seqLength*sizeof(int));
-    if(AlignmentGlobal.intArray == NULL) {
+    if(AlignmentGlobal.intArray == nullptr) {
       AlignmentGlobal.errorMessageEnd += 
         sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory reallocating AlignmentGlobal.intArray with seq length %d.\n",seqLength);
       return -1;
@@ -763,9 +763,9 @@ int	readSeqs(FILE* seqFile, int numSeqs, int seqLength, char** seqArray, int loc
   seqSpace = AlignmentGlobal.seqSpace;
 	
   // initialize pointers to sequences
-  // NULL will indicate a sequence to a specific sample was not read ('N')
+  // nullptr will indicate a sequence to a specific sample was not read ('N')
   for(seq = 0; seq<numTotalSamples; seq++) {
-    seqArray[seq] = NULL;
+    seqArray[seq] = nullptr;
   }// end of for(seq)
 	
   for(seq = 0; seq<numSeqs; seq++) {
@@ -779,7 +779,7 @@ int	readSeqs(FILE* seqFile, int numSeqs, int seqLength, char** seqArray, int loc
       fprintf(stderr, "\nWarning: sample names can only be %d characters long, name of sample %d was truncated to %s.\n", (NAME_LENGTH-1), seq+1, sampleName);
     }
     
-    if(AlignmentData.sampleNames == NULL) {
+    if(AlignmentData.sampleNames == nullptr) {
 		seqIndex = seq;
 	} else {
 		for(seqIndex = 0; seqIndex<numTotalSamples; seqIndex++) {
@@ -892,7 +892,7 @@ int	processLocusAlignment(char** seqArray, int seqLength, LocusProfile* locusPro
     // extract column (and augment with missing data)
     notAllNs = 0;
     for(seq=0; seq<numSamples; seq++) {
-      if(seqArray[seq] == NULL) {
+      if(seqArray[seq] == nullptr) {
         column[seq] = 'N';
       } else {
         column[seq] = seqArray[seq][site];
@@ -956,19 +956,19 @@ int	processLocusAlignment(char** seqArray, int seqLength, LocusProfile* locusPro
   } // end of for(site)
 	
 	
-  if(locusProfile == NULL) {
+  if(locusProfile == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
-      sprintf(AlignmentGlobal.errorMessageEnd,"Supplied locus profile data structure is NULL.\n");
+      sprintf(AlignmentGlobal.errorMessageEnd,"Supplied locus profile data structure is nullptr.\n");
     return -1;
   }
   locusProfile->numPatterns = numPatterns;
   if(numPatterns == 0) {
     //		printf("no patterns??\n");
-    locusProfile->patternCounts = locusProfile->patternIds = NULL;
+    locusProfile->patternCounts = locusProfile->patternIds = nullptr;
     fflush(stdout);
   } else {
     locusProfile->patternIds  = (int*)malloc(2*numPatterns*sizeof(int));
-    if(locusProfile->patternIds == NULL) {
+    if(locusProfile->patternIds == nullptr) {
       AlignmentGlobal.errorMessageEnd += 
         sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory int array for locusProfile");
       return -1;
@@ -1010,20 +1010,20 @@ int	processHetPatterns(char** patternArray, int* patternCounts, int numPatterns,
   BASE_TYPE baseType;
 	
   char*	haploidColumn;
-  unsigned short*	perturbHaploid = NULL;
+  unsigned short*	perturbHaploid = nullptr;
 	
-  unsigned short** symmetryBreaks = NULL;
+  unsigned short** symmetryBreaks = nullptr;
 	
   // allocate auxilliary memory for symmetry breaking
   symmetryBreaks = (unsigned short**)malloc(numPatterns*sizeof(unsigned short*));
-  if(symmetryBreaks == NULL) {
+  if(symmetryBreaks == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory allocating symmetryBreaks in processHetPatterns().\n");
     return -1;
   }
 
   perturbHaploid = (unsigned short*)malloc((numPatterns+2)*numSamples*sizeof(unsigned short));
-  if(perturbHaploid == NULL) {
+  if(perturbHaploid == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory allocating perturbHaploid in processHetPatterns().\n");
     free(symmetryBreaks);
@@ -1034,7 +1034,7 @@ int	processHetPatterns(char** patternArray, int* patternCounts, int numPatterns,
   }
 	
   haploidColumn = (char*)malloc(numSamples*sizeof(char));
-  if(haploidColumn == NULL) {
+  if(haploidColumn == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory allocating haploidColumn in processHetPatterns().\n");
     free(perturbHaploid);
@@ -1079,7 +1079,7 @@ int	processHetPatterns(char** patternArray, int* patternCounts, int numPatterns,
     free(phasedPatternArray);
    free(numPhasesArray);
     numPhasesArray = (int*)malloc(numPhasedPatterns*sizeof(int));
-    if(numPhasesArray == NULL) {
+    if(numPhasesArray == nullptr) {
       AlignmentGlobal.errorMessageEnd += 
         sprintf(AlignmentGlobal.errorMessageEnd,"Error while reallocating numPhasesArray.\n");
       free(haploidColumn);
@@ -1088,7 +1088,7 @@ int	processHetPatterns(char** patternArray, int* patternCounts, int numPatterns,
       return -1;
     }
     phasedPatternArray = (char**)malloc(numPhasedPatterns*sizeof(char*));
-    if(phasedPatternArray == NULL) {
+    if(phasedPatternArray == nullptr) {
       AlignmentGlobal.errorMessageEnd += 
         sprintf(AlignmentGlobal.errorMessageEnd,"Error while reallocating phasedPatternArray.\n");
       free(haploidColumn);
@@ -1097,7 +1097,7 @@ int	processHetPatterns(char** patternArray, int* patternCounts, int numPatterns,
       return -1;
     }
     phasedPatternArray[0] = (char*)malloc(numPhasedPatterns*numSamples*sizeof(char));
-    if(phasedPatternArray[0] == NULL) {
+    if(phasedPatternArray[0] == nullptr) {
       AlignmentGlobal.errorMessageEnd += 
         sprintf(AlignmentGlobal.errorMessageEnd,"Error while reallocating space for phasedPatternArray.\n");
       free(haploidColumn);
@@ -1221,14 +1221,14 @@ int	getPhasedPatternTypes() {
 	
 	
   patternTypes = (int**)malloc(numPatterns*sizeof(int*));
-  if(patternTypes == NULL) {
+  if(patternTypes == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory patternTypes array in getPatternTypes()");
     return -1;
   }
 	
   patternTypes[0] = (int*)malloc(numPatterns*6*sizeof(int));
-  if(patternTypes[0] == NULL) {
+  if(patternTypes[0] == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory patternTypes[0] array in getPatternTypes()");
     free(patternTypes);
@@ -1350,7 +1350,7 @@ int	fourGameteTest() {
   int locus, patt1, patt2, pattId1, pattId2;
 	
   patternStatus = (unsigned short*)malloc(numPatterns*sizeof(unsigned short));
-  if(patternStatus == NULL) {
+  if(patternStatus == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory patternStatus array in fourGameteTest()");
     return -1;
@@ -1469,7 +1469,7 @@ BASE_TYPE getBaseType(char base)
 {
   char* ptr = strchr((char*) cannonizedBaseSymbols, (int) base);
 	
-  if(ptr == NULL)		return NO_BASE;
+  if(ptr == nullptr)		return NO_BASE;
   if(ptr<cannonizedBaseSymbols+4) 	return NUCLEOTIDE;
   if(ptr<cannonizedBaseSymbols+14)	return PARTIAL_AMBIG;
 	
@@ -1611,7 +1611,7 @@ int cannonizeJCpattern(const char* column, char* pattern, int numSeqs)	{
 	
   for(seq=0; seq<numSeqs; seq++) {
     ptr = strchr((char*)cannonizedBaseSymbols,column[seq]);
-    if(ptr == NULL) {
+    if(ptr == nullptr) {
       AlignmentGlobal.errorMessageEnd += 
         sprintf(AlignmentGlobal.errorMessageEnd,"Illegal base symbol %c.\n",column[seq]);
       return -1;
@@ -1674,7 +1674,7 @@ int increasePatternArraySize()
                                             AlignmentGlobal.maxNumPatterns
                                           * AlignmentData.numSamples
                                           * sizeof(char));
-  if(AlignmentData.patternArray[0] == NULL)
+  if(AlignmentData.patternArray[0] == nullptr)
   {
     AlignmentGlobal.errorMessageEnd += 
       sprintf( AlignmentGlobal.errorMessageEnd,
@@ -1686,7 +1686,7 @@ int increasePatternArraySize()
   AlignmentData.patternArray = (char**) realloc(AlignmentData.patternArray,
                                          AlignmentGlobal.maxNumPatterns
                                        * sizeof(char*));
-  if(AlignmentData.patternArray == NULL) {
+  if(AlignmentData.patternArray == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory reallocating AlignmentData.patternArray to %d patterns.\n",AlignmentGlobal.maxNumPatterns);
     return -1;
@@ -1730,14 +1730,14 @@ int	computeHetSymmetryBreaks(char** patternArray, int* patternCounts, int numPat
 	
   // allocate auxiliary memory
   pattScores = (double*)malloc(numPatterns*sizeof(double));
-  if(pattScores == NULL) {
+  if(pattScores == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory allocating pattScores in computeHetSymmetryBreaks().\n");
     return -1;
   }
 	
   liveHets = (int**)malloc(numPatterns*sizeof(int*));
-  if(liveHets == NULL) {
+  if(liveHets == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory allocating liveHets in computeHetSymmetryBreaks().\n");
     free(pattScores);
@@ -1745,7 +1745,7 @@ int	computeHetSymmetryBreaks(char** patternArray, int* patternCounts, int numPat
   }
 	
   liveHets[0] = (int*)malloc(numPatterns*(3+numSamples)*sizeof(int));
-  if(liveHets[0] == NULL) {
+  if(liveHets[0] == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory allocating liveHets[0] in computeHetSymmetryBreaks().\n");
     free(pattScores);
@@ -1937,14 +1937,14 @@ int	computeHetSymmetryBreaks_allLoci(char** patternArray, int numPatterns, int n
 	
   // allocate auxiliary memory
   patternCoexist = (unsigned short**)malloc(numPatterns*sizeof(unsigned short*));
-  if(patternCoexist == NULL) {
+  if(patternCoexist == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory allocating patternCoexist in computeHetSymmetryBreaks().\n");
     return -1;
   }			
 	
   patternCoexist[0] = (unsigned short*)malloc(numPatterns*numPatterns*sizeof(unsigned short));
-  if(patternCoexist[0] == NULL) {
+  if(patternCoexist[0] == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory allocating patternCoexist[0] in computeHetSymmetryBreaks().\n");
     free(patternCoexist);
@@ -1952,7 +1952,7 @@ int	computeHetSymmetryBreaks_allLoci(char** patternArray, int numPatterns, int n
   }
 	
   pattScores = (double*)malloc(numPatterns*sizeof(double));
-  if(pattScores == NULL) {
+  if(pattScores == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory allocating pattScores in computeHetSymmetryBreaks().\n");
     free(patternCoexist[0]);
@@ -1961,7 +1961,7 @@ int	computeHetSymmetryBreaks_allLoci(char** patternArray, int numPatterns, int n
   }
 	
   liveHets = (int**)malloc(2*numPatterns*sizeof(int*));
-  if(liveHets == NULL) {
+  if(liveHets == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory allocating liveHets in computeHetSymmetryBreaks().\n");
     free(patternCoexist[0]);
@@ -1972,7 +1972,7 @@ int	computeHetSymmetryBreaks_allLoci(char** patternArray, int numPatterns, int n
   pattern2locus = liveHets + numPatterns;
 	
   liveHets[0] = (int*)malloc(numPatterns*(4+numSamples+numLoci)*sizeof(int));
-  if(liveHets[0] == NULL) {
+  if(liveHets[0] == nullptr) {
     AlignmentGlobal.errorMessageEnd += 
       sprintf(AlignmentGlobal.errorMessageEnd,"Out Of Memory allocating liveHets[0] in computeHetSymmetryBreaks().\n");
     free(patternCoexist[0]);

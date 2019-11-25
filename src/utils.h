@@ -17,7 +17,9 @@
 #include <limits.h>
 #include <float.h>
 #include <time.h>
-
+#include <chrono>
+#include <iostream>
+#include <iomanip>
 
 #define STRING_LENGTH 	500
 #define NAME_LENGTH		200
@@ -67,6 +69,7 @@ double rndgamma2( int nLocusIdx, double s );
 
 double PointChi2 (double prob, double v);
 char* printtime(char timestr[]);
+std::ostream &printDuration(std::ostream &os, std::chrono::duration<double> sec);
 void starttime(void);
 void resetBooleanArray(unsigned short* booleanArray, int arrayLength);
 void turnOnBooleanArray(unsigned short* booleanArray, int arrayLength);

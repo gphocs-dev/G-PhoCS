@@ -147,46 +147,46 @@ LocusData* createLocusData (int numLeaves, unsigned short hetMode) {
 //  printf("Creating locus with %d leaves and %d nodes.\n", numLeaves, numNodes);
   
   locusData = (LocusData*)malloc(sizeof(LocusData));
-  if(locusData == NULL) {
+  if(locusData == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory when allocating space for locusData ");
-    return NULL;
+    return nullptr;
   }
 
   intArray = (int*)malloc(2*numNodes*sizeof(int));
-  if(intArray == NULL) {
+  if(intArray == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory when allocating space for locusData array of integers (for changed node ids) ");
-    return NULL;
+    return nullptr;
   }
   locusData->savedVersion.changedNodeIds = intArray;
   locusData->savedVersion.changedCondIds = intArray+numNodes;
 
  	
   locusData->savedVersion.recalcConditionals = (unsigned short*)malloc(numNodes*sizeof(unsigned short));
-  if(locusData->savedVersion.recalcConditionals == NULL) {
+  if(locusData->savedVersion.recalcConditionals == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory when allocating space for locusData recalcConditionals boolean array ");
-    return NULL;
+    return nullptr;
   }
 
 	
   // every vertex has two copies - for genealogy changes
   locusData->nodeArray_m = (LikelihoodNode*)malloc(2*numNodes*sizeof(LikelihoodNode));
-  if(locusData->nodeArray_m == NULL) {
+  if(locusData->nodeArray_m == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory when allocating space for locusData array of nodes ");
-    return NULL;
+    return nullptr;
   }
 
 	
   locusData->nodeArray = (LikelihoodNode**)malloc((numNodes*sizeof(LikelihoodNode*)));
-  if(locusData->nodeArray == NULL) {
+  if(locusData->nodeArray == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory when allocating space for locusData array of node pointers ");
-    return NULL;
+    return nullptr;
   }
 
 	
   locusData->savedVersion.savedNodes = (LikelihoodNode**)malloc((numNodes*sizeof(LikelihoodNode*)));
-  if(locusData->savedVersion.savedNodes == NULL) {
+  if(locusData->savedVersion.savedNodes == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory when allocating space for locusData array of saved node pointers ");
-    return NULL;
+    return nullptr;
   }
 
 	
@@ -195,7 +195,7 @@ LocusData* createLocusData (int numLeaves, unsigned short hetMode) {
   locusData->numLeaves = numLeaves;
   locusData->mutationRate = 1.0;
   locusData->root = -1;
-  locusData->doubleArray_m = NULL;
+  locusData->doubleArray_m = nullptr;
   locusData->dataLogLikelihood = 0.0;
   locusData->savedVersion.dataLogLikelihood = 0.0;
 
@@ -203,7 +203,7 @@ LocusData* createLocusData (int numLeaves, unsigned short hetMode) {
 
   // initialize node data structures (other than conditional array
   for(node=0; node<2*numNodes; node++) {
-    locusData->nodeArray_m[node].conditionalProbs = NULL;
+    locusData->nodeArray_m[node].conditionalProbs = nullptr;
     locusData->nodeArray_m[node].age = 0.0;
     locusData->nodeArray_m[node].father = -1;
     locusData->nodeArray_m[node].leftSon = -1;
@@ -233,7 +233,7 @@ LocusData* createLocusData (int numLeaves, unsigned short hetMode) {
  *	initializeLocusData
  * 	- initializes all data structures for locus data
  *	- computes leaf likelihoods for all phased patterns
- * 	- if patternCounts != NULL, sets all pattern counts (otherwise, set them to 0).
+ * 	- if patternCounts != nullptr, sets all pattern counts (otherwise, set them to 0).
  *	- returns 0 if all OK, and -1 otherwise
  ***********************************************************************************/
 int initializeLocusData(LocusData* locusData, char** patternArray, int numPatterns, int* numPhases, int* patternCounts)	{
@@ -243,19 +243,19 @@ int initializeLocusData(LocusData* locusData, char** patternArray, int numPatter
   // auxiliary arrays
   char *patternString;
 	
-  if(locusData == NULL)		return -1;
+  if(locusData == nullptr)		return -1;
 	
   //	printf("Initializing locus data likelihood with %d patterns.\n",numPatterns);
 	
   // allocate seqData memory (pattern frequencies, conditional arrays, and numPhases)
   locusData->doubleArray_m = (double*)malloc(2*(2*locusData->numLeaves-1)*CODE_SIZE*numPatterns*sizeof(double));
-  if(locusData->doubleArray_m == NULL) {
+  if(locusData->doubleArray_m == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory when allocating space for locusData array of doubles (for conditional probabilities of genealogy nodes) in initializeLocusData().\n");
     return -1;
   }
 	
   locusData->intArray_m = (int*)malloc(numPatterns*3*sizeof(int));
-  if(locusData->intArray_m == NULL) {
+  if(locusData->intArray_m == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory when alloating space for locusData->intArray_m in initializeLocusData().\n");
     return -1;
   }
@@ -276,7 +276,7 @@ int initializeLocusData(LocusData* locusData, char** patternArray, int numPatter
   for(patt=0; patt<numPatterns; patt++) {
     locusData->seqData.numPhases[patt] = numPhases[patt];
     patternString = patternArray[patt];
-    if(patternCounts != NULL && numPhases[patt]> 0) {
+    if(patternCounts != nullptr && numPhases[patt]> 0) {
       locusData->seqData.patternCount[patt] = patternCounts[unphasedPatt];
       unphasedPatt++;
     } else {
@@ -291,7 +291,7 @@ int initializeLocusData(LocusData* locusData, char** patternArray, int numPatter
       return -1;
     }
   }
-  if(patternCounts != NULL) {
+  if(patternCounts != nullptr) {
     locusData->seqData.numLivePatterns = numPatterns;
   } else {
     locusData->seqData.numLivePatterns = 0;
@@ -312,8 +312,8 @@ int initializeLocusData(LocusData* locusData, char** patternArray, int numPatter
  ***********************************************************************************/
 int freeLocusData (LocusData* locusData) {
 	
-  if(locusData->doubleArray_m != NULL) free(locusData->doubleArray_m);
-  if(locusData->intArray_m != NULL) free(locusData->intArray_m);
+  if(locusData->doubleArray_m != nullptr) free(locusData->doubleArray_m);
+  if(locusData->intArray_m != nullptr) free(locusData->intArray_m);
   free(locusData->nodeArray);
   free(locusData->nodeArray_m);
   free(locusData->savedVersion.savedNodes);
@@ -1073,8 +1073,7 @@ void printLocusGenTree(LocusData* locusData, FILE* stream, int* nodePops, int* n
     }
     fprintf(stream, "\n---------------------------------------------------------------\n");
   }
-			
-  return;
+
 }
 /** end of printLocusGenTree **/
 
@@ -1094,7 +1093,7 @@ void printLocusDataStats(LocusData* locusData, int maxStat)	{
   int patt, numHetsPerPatt, numPhases;
   int *numColArray, *numPattArray = (int*)malloc(2*(maxStat+1)*sizeof(int));
 	
-  if(numPattArray == NULL) {
+  if(numPattArray == nullptr) {
     fprintf(stderr, "Error: Out Of Memory het stats array in printLocusDataStats().\n");
     exit(-1);
   }
@@ -1675,8 +1674,7 @@ void computeSubtreeConditionals_new (double* sonConditionals, double* parentCond
       parentConditionals[base] *= (probSumTimesSubst + sonConditionals[base]*edgeSubstProb[1]);
       //			printf(" %3lf",parentConditionals[fatherBase]);
   }
-		
-  return;
+
 }
 /** end of computeSubtreeConditionals_new **/
 

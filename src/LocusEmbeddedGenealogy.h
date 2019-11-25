@@ -7,7 +7,6 @@
 
 #include "LocusGenealogy.h"
 #include "LocusPopIntervals.h"
-
 #include "MCMCcontrol.h"
 #include "GPhoCS.h"
 #include "MemoryMng.h"
@@ -23,46 +22,82 @@
  * intervals
  *
  * Contains:
- * 1. Object of locus genealogy.
- * 2. Object of locus pop intervals.
- * 3. Locus ID.
- * 4. Map between leaf to its pop.
- * 5. Map between pop to its leaves.
- * 6. Pointers to old structs
+ * 1. Locus ID.
+ * 2. Object of locus genealogy.
+ * 3. Two Objects of locus pop intervals - one for proposals and one is original.
+ * 4. Log-likelihood of locus genealogy - P(gen|Model).
+ * 5. Log-likelihood of locus data - P(data|gen).
+ * 6. Pointers to old structs.
  *===========================================================================*/
 
 class LocusEmbeddedGenealogy {
 
 private:
 
+    int locusID_;   //id of locus
+
     LocusGenealogy     genealogy_; //object of genealogy
-    LocusPopIntervals  intervals_; //object of intervals
 
-    int locusID_;   //id of locus (genealogy id)
+    LocusPopIntervals  intervalsPro_; //object of intervals - proposal
+    LocusPopIntervals  intervalsOri_; //object of intervals - original
 
-    std::map<int,int> leafToPop_; //map between leaf to its pop
-    std::map<int,std::vector<int>> popToLeaves_; //map between pop to its leaves
+    double genLogLikelihood_; //genealogy log-likelihood - P(gen|Model)
+    double dataLogLikelihood_; //data log-likelihood - P(data|gen)
 
-    int pop_queue_[2 * NSPECIES - 1]; // post-order queue of populations //todo
-
-    DATA_SETUP*     pDataSetup_;       //pointer to DATA_SETUP struct
-    PopulationTree* pPopTree_;         //pointer to PopulationTree struct
-    DATA_STATE*     pDataState_;       //pointer to DATA_STATE struct
-    GENETREE_MIGS*  pGenetreeMigs_;    //pointer to GENETREE_MIGS struct
+    DATA_SETUP*     pSetup_;       //pointer to DATA_SETUP struct
+    DATA_STATE*     pState_;       //pointer to DATA_STATE struct
+    GENETREE_MIGS*  pGenetreeMigs_;//pointer to GENETREE_MIGS struct
 
 public:
 
     //constructor
     LocusEmbeddedGenealogy(int locusID, int numIntervals,
-                           DATA_SETUP* pDataSetup, DATA_STATE* pDataState,
+                           DATA_SETUP* pSetup, DATA_STATE* pState,
                            GENETREE_MIGS* pGenetreeMigs);
 
-    //construct both genealogy and intervals and connect between them
-    int construct_genealogy_and_intervals();
+public:
 
+    // ********************* MAIN methods *********************
+
+    //construct both genealogy and intervals and connect between them
+    int constructEmbeddedGenealogy();
+
+    //compute genealogy tree statistics
     int computeGenetreeStats();
 
-    double recalcStats(int pop);
+    //recalculate statistics
+    void recalcStats(int pop);
+
+    //
+    int updateGB_InternalNode(double finetune);
+
+    //
+    double considerIntervalMove(TreeNode *pNode, double newAge);
+
+    //compute delta log likelihood
+    double computeLogLikelihood(bool computeDelta=false);
+
+    void updateGenLogLikelihood();
+
+
+    // ********************* Copy methods *********************
+
+    //copy without construction
+    void copy(const LocusEmbeddedGenealogy& other);
+
+    //copy intervals from proposal to original and vise versa
+    void copyIntervals(bool accepted);
+
+    // ********************* GET methods *********************
+
+    //get a reference to statistics
+    const GenealogyStats& getStats() const;
+
+    //get log likelihood
+    double getGenLogLikelihood() const;
+
+    //get log likelihood
+    double getDataLogLikelihood() const;
 
     //get locus ID
     int getLocusID();
@@ -70,20 +105,12 @@ public:
     //get locus data
     LocusData* getLocusData();
 
-    //print popToLeaves
-    void printPopToLeaves();
+    // ********************* PRINT methods *********************
 
-    //print leafToPop
-    void printLeafToPop();
-
-    //print all
+    //print embedded genealogy
     void printEmbeddedGenealogy();
 
-    //get all leaves of a population
-    std::vector<int>& getPopLeaves(int pop);
-
-    //get population of a leaf
-    int getLeafPop(int leafId);
+    // ********************* TEST methods *********************
 
     //test if the new genealogy data structure is consistent with the original
     void testLocusGenealogy();
@@ -91,6 +118,22 @@ public:
     //test if the new events data structure is consistent with the original
     void testPopIntervals();
 
+    //test if statistics are consistent with the original
+    void testGenealogyStats();
+
+    //test if likelihood is consistent with the original
+    void testLogLikelihood();
+
+    //
+    void testLocusEmbeddedGenealogy();
+
+    //updates old data structures (DS) by calling to old inner functions
+    int updateGB_InternalNode_oldDS(double lowerBound,
+                                    double upperbound,
+                                    double tnew,
+                                    double lnacceptance,
+                                    bool accepted,
+                                    int inode);
 
 };
 

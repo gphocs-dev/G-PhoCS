@@ -16,6 +16,7 @@
 #include <limits.h>
 #include <float.h>
 #include <time.h>
+#include <chrono>
 
 
 int debug;
@@ -28,7 +29,7 @@ char parseFileDelims[] = " \t\n";
  *	logSumOfExponents
  * 	- takes an array of (log) values and returns the log of the sums of the exponents of the log-values
  *	- does this by exponentiating only ratios, to prevent under/over flow.
- *	- indsToSum is a boolean array indicating for each index whether to sum it or not. (if NULL, then sum all)
+ *	- indsToSum is a boolean array indicating for each index whether to sum it or not. (if nullptr, then sum all)
  ***********************************************************************************/
 double logSumOfExponents(double* logArray, int arrayLength, unsigned short* indsToSum) {
 
@@ -47,7 +48,7 @@ double logSumOfExponents(double* logArray, int arrayLength, unsigned short* inds
   maxLog = 0.0;
   maxInd = -1;
   for(ind=0; ind<arrayLength; ind++) {
-    if(indsToSum != NULL && !indsToSum[ind]) {
+    if(indsToSum != nullptr && !indsToSum[ind]) {
       continue;
     }
     if(maxInd< 0 || logArray[ind] > maxLog) {
@@ -63,7 +64,7 @@ double logSumOfExponents(double* logArray, int arrayLength, unsigned short* inds
 	
   sumExpRatios = 1;	// contribution of maxInd
   for(ind=0; ind<arrayLength; ind++) {
-    if((ind == maxInd) || (indsToSum != NULL && !indsToSum[ind])) {
+    if((ind == maxInd) || (indsToSum != nullptr && !indsToSum[ind])) {
       continue;
     }
 		
@@ -207,7 +208,7 @@ static time_t time_start;
 
 void starttime (void)
 {
-	time_start=time(NULL);
+	time_start=time(nullptr);
 }
 
 
@@ -215,7 +216,7 @@ static TIMERS runTimes;
 
 void setStartTimeMethod(enum METHOD_NAME method)
 {
-	time_t tic = time(NULL);
+	time_t tic = time(nullptr);
 	switch(method)
 	{
 		case T_UpdateGB_InternalNode: runTimes.UpdateGB_InternalNode.start = tic; break;
@@ -233,7 +234,7 @@ void setStartTimeMethod(enum METHOD_NAME method)
 
 void setEndTimeMethod(enum METHOD_NAME method)
 {
-	time_t toc = time(NULL);
+	time_t toc = time(nullptr);
 	switch(method)
 	{
 		case T_UpdateGB_InternalNode: runTimes.UpdateGB_InternalNode.accumulated += (toc - runTimes.UpdateGB_InternalNode.start); break;
@@ -295,11 +296,35 @@ char* printtime (char timestr[])
   time_t t;
   int h, m, s;
 
-  t=time(NULL)-time_start;
+  t=time(nullptr)-time_start;
   h=t/3600; m=(t%3600)/60; s=t-(t/60)*60;
   if(h)  sprintf(timestr,"%d:%02d:%02d", h,m,s);
   else   sprintf(timestr,"%2d:%02d", m,s);
   return(timestr);
+}
+
+
+
+std::ostream &printDuration(std::ostream &os, std::chrono::duration<double> sec) {
+    using namespace std;
+    using namespace std::chrono;
+    typedef duration<int, ratio<86400>> days;// #num seconds in a day
+    char fill = os.fill();
+    os.fill('0');
+    auto d = duration_cast<days>(sec);
+    sec -= d;
+    auto h = duration_cast<hours>(sec);
+    sec -= h;
+    auto m = duration_cast<minutes>(sec);
+    sec -= m;
+    auto s = duration_cast<seconds>(sec);
+    os << d.count() << " days, "
+        << setw(2) << h.count() << ":"
+        << setw(2) << m.count() << ":"
+       << setw(2) << s.count(); //<< 's';
+
+    os.fill(fill);
+    return os;
 }
 
 
@@ -380,7 +405,7 @@ RandGeneratorContext RndCtx;
 //-----------------------------------------------------------------------------
 #define MALLOC_AND_ASSIGN(ptr, t, sz, val) \
   ptr = (t*) malloc(sz); \
-  if (NULL == ptr ) \
+  if (nullptr == ptr ) \
     printf("Error on Random context allocation"); \
   for(i=0; i < RndCtx.nOfSlots; ++i) \
     ptr[i] = val;
@@ -659,7 +684,7 @@ void flushLine(FILE* readFile)
 {
   static char restOfLine[16000] = {'\0'};
   char* p_res = fgets(restOfLine, 16000, readFile);
-  if(NULL == p_res)
+  if(nullptr == p_res)
 	// Just to please the compiler. We might do some error logging here.
     return;
 }
@@ -667,14 +692,14 @@ void flushLine(FILE* readFile)
 /*-----------------------------------------------------------------------------
  * Comment Aware version of strtok
  * If string retrieved starts with '#' it is a comment
- * and this function returns NULL
+ * and this function returns nullptr
  ----------------------------------------------------------------------------*/
 char *strtokCS( char * str, const char * delimiters)
 {
   char * result;
   result = strtok(str, delimiters);
-  if (result == NULL || result[0] == '#')
-    return NULL;
+  if (result == nullptr || result[0] == '#')
+    return nullptr;
   else
     return result;
 }

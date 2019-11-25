@@ -9,7 +9,7 @@
 	for handling a population tree with migration bands.	
 */
 
-
+#include "DataLayerConstants.h"
 #include "utils.h"
 #include <map>
 #include <vector>
@@ -110,6 +110,12 @@ typedef struct _POPULATION_TREE
     //contains MigBandsPerTarget structs.
     std::vector<MigBandsPerTarget> migBandsPerTarget;
 
+	int popsPostOrder[2 * NSPECIES - 1]; // post-order queue of populations
+	//std::vector<int> popQueue; //version with vector
+
+    std::map<int,int> leafToPop; //map between leaf to its pop //todo: initialize this
+    std::map<int,std::vector<int>> popToLeaves; //map between pop to its leaves//todo: initialize this
+
 } PopulationTree;
 
 
@@ -140,8 +146,9 @@ typedef struct TIME_MIG_BANDS
 ***********************************************************************************/
 typedef struct MIG_BANDS_PER_TARGET_POP
 {
-    std::vector<MigrationBand*> migBands;
+    std::vector<MigrationBand*> pMigBands;
     std::vector<TimeMigBands> timeMigBands;
+    std::vector<int> migBandsIDs;
 } MigBandsPerTarget;
 
 
@@ -150,6 +157,15 @@ typedef struct MIG_BANDS_PER_TARGET_POP
 /******                               EXTERNAL FUNCTION DECLARATIONS                                      ******/
 /***************************************************************************************************************/
 
+
+/***********************************************************************************
+*	populationPostOrder
+*	Computes pots-order for population subtreetree rooted at pop.
+   Writes down the post order in specified array.
+   Returns size of subtree.
+   A recursive procedure.
+***********************************************************************************/
+int popPostOrder(PopulationTree *popTree, int pop, int *ordered_pops);
 
 
 /***********************************************************************************
@@ -226,11 +242,17 @@ int computeMigrationBandTimes(PopulationTree* popTree);
 
 /***********************************************************************************
 *	getMigBandByPops
-*	- returns pointer to mig band with the given source and target populations
-* 	- returns pointer to migration band
+*	- returns pointer to a mig band with the given source and target populations
 ***********************************************************************************/
 MigrationBand *
 getMigBandByPops(PopulationTree* popTree, int sourcePop, int targetPop);
+
+
+/***********************************************************************************
+*	getMigBandById
+*	- returns pointer to a mig band with the given ID
+***********************************************************************************/
+MigrationBand * getMigBandByID(PopulationTree* popTree, int id);
 
 
 /*******************************************************************************
@@ -259,6 +281,35 @@ void constructMigBandsTimes(PopulationTree* popTree);
 TimeMigBands *
 getLiveMigBands(PopulationTree* popTree, int target_pop, double age);
 
+
+/*******************************************************************************
+ *	getPopLeaves
+ *	return leaves of a given pop
+    @param: popTree, pop, age
+    @return: vector of leaves ids
+ ******************************************************************************/
+std::vector<int> & getPopLeaves(PopulationTree* popTree, int pop);
+
+
+/*******************************************************************************
+ *	getLeafPop
+ *	return pop of a given leaf
+    @param: popTree, leaf id
+    @return: pop id
+ ******************************************************************************/
+int getLeafPop(PopulationTree* popTree, int leafId);
+
+
+/*******************************************************************************
+ *	printPopToLeaves
+ ******************************************************************************/
+void printPopToLeaves(PopulationTree* popTree);
+
+
+/*******************************************************************************
+ *	printLeafToPop
+ ******************************************************************************/
+void printLeafToPop(PopulationTree* popTree);
 
 
 /***************************************************************************************************************/

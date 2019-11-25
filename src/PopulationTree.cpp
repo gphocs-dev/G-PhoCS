@@ -7,6 +7,7 @@
 */
 
 
+#include "LocusEmbeddedGenealogy.h"
 #include "PopulationTree.h"
 #include "DataLayerConstants.h"
 
@@ -54,26 +55,26 @@ PopulationTree* createPopTree(int numCurPops)
   int pop, migBand, numPops = 2*numCurPops-1;
 
   PopulationTree* popTree = (PopulationTree*) malloc( sizeof(PopulationTree) );
-  if(popTree == NULL)
+  if(popTree == nullptr)
   {
     fprintf(stderr, "\nError: Out Of Memory population tree.\n");
     exit(-1);
   }
 	
   popTree->popArray = (Population*) malloc( numPops * sizeof(Population) );
-  if(popTree->popArray == NULL) {
+  if(popTree->popArray == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory population array in population tree.\n");
     exit(-1);
   }
 	
   popTree->pops = (Population**) malloc( numPops * sizeof(Population*) );
-  if(popTree->pops == NULL) {
+  if(popTree->pops == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory population array in population tree.\n");
     exit(-1);
   }
 	
   popTree->isAncestralArray = (unsigned short*) malloc( numPops * numPops * sizeof(unsigned short));
-  if(popTree->isAncestralArray == NULL) {
+  if(popTree->isAncestralArray == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory boolean 2D array for isAncestrals in population tree.\n");
     exit(-1);
   }
@@ -83,13 +84,13 @@ PopulationTree* createPopTree(int numCurPops)
 
   // allocate initial memory for migration bands
   popTree->migBands = (MigrationBand*)malloc(numPops*(numPops-1)*sizeof(MigrationBand));
-  if(popTree->migBands == NULL) {
+  if(popTree->migBands == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory migration band array in population tree.\n");
     exit(-1);
   }
 
   popTree->migBandIdArray = (int*)malloc(2*numPops*(numPops-1)*sizeof(int));
-  if(popTree->migBandIdArray == NULL) {
+  if(popTree->migBandIdArray == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory migration band id's array in population tree.\n");
     exit(-1);
   }
@@ -119,9 +120,9 @@ PopulationTree* createPopTree(int numCurPops)
     popTree->pops[pop]->numSamples     = 0;
     popTree->pops[pop]->sampleAge      = 0.0;
     popTree->pops[pop]->theta          = 0.0;
-    popTree->pops[pop]->father         = NULL;
-    popTree->pops[pop]->sons[0]        = NULL;
-    popTree->pops[pop]->sons[1]        = NULL;
+    popTree->pops[pop]->father         = nullptr;
+    popTree->pops[pop]->sons[0]        = nullptr;
+    popTree->pops[pop]->sons[1]        = nullptr;
     popTree->pops[pop]->thetaPrior.alpha       = 0.0;
     popTree->pops[pop]->thetaPrior.beta        = 0.0;
     popTree->pops[pop]->thetaPrior.sampleStart = 0.0;
@@ -168,6 +169,53 @@ int freePopTree(PopulationTree* popTree) {
 
 
 /***********************************************************************************
+*	populationPostOrder
+*	Computes pots-order for population subtreetree rooted at pop.
+   Writes down the post order in specified array.
+   Returns size of subtree.
+   A recursive procedure.
+***********************************************************************************/
+int popPostOrder(PopulationTree *popTree, int pop, int *ordered_pops) {
+    int size;
+
+    // halting condition
+    if (pop < popTree->numCurPops) {
+        ordered_pops[0] = pop;
+        return 1;
+    }
+
+    // compute post-order for every subtree and add root
+    size = popPostOrder(popTree, popTree->pops[pop]->sons[0]->id,
+                        ordered_pops);
+    size += popPostOrder(popTree, popTree->pops[pop]->sons[1]->id,
+                         ordered_pops + size);
+    ordered_pops[size] = pop;
+
+    return size + 1;
+}
+
+/* populationPostOrder - vector version
+
+int AllLoci::populationPostOrder(int pop, std::vector<int>::iterator it) {
+    int size;
+    // halting condition
+    if (pop < dataSetup.popTree->numCurPops) {
+        *it = pop;
+        return 1;
+    }
+    // compute post-order for every subtree and add root
+    size = populationPostOrder(dataSetup.popTree->pops[pop]->sons[0]->id,
+                               it);
+    size += populationPostOrder(dataSetup.popTree->pops[pop]->sons[1]->id,
+                                it + size);
+    popQueue_[size] = pop;
+
+    return size + 1;
+}
+*/
+
+
+/***********************************************************************************
  *	printPopulationTree
  *	- prints population tree
  ***********************************************************************************/
@@ -176,7 +224,7 @@ void printPopulationTree(PopulationTree* popTree, FILE* stream, int printTauThet
   size_t maxNameLen=0;
   char formatStr[100];
 	
-  if ((!(printTauTheta == 0) || (printTauTheta == 1))) //If user specified something other than boolean don't print tau & theta
+  if (printTauTheta != 0 || printTauTheta == 1) //If user specified something other than boolean don't print tau & theta
     printTauTheta = 0;
 
   fprintf(stream, "---------------------------------------------------------------\n");
@@ -280,7 +328,7 @@ int samplePopParameters(PopulationTree* popTree)
 	
 	
   popQueue = (Population**) malloc(popTree->numPops * sizeof(Population*));
-  if( NULL == popQueue )
+  if( nullptr == popQueue )
   {
     fprintf(stderr,
             "\nError: Out Of Memory popQueue in samplePopParameters.\n");
@@ -302,7 +350,7 @@ int samplePopParameters(PopulationTree* popTree)
     //		mean =  pop->thetaPrior.alpha / pop->thetaPrior.beta;
     mean =  pop->thetaPrior.sampleStart;
     pop->theta = mean * ( 0.9 + 0.2*rndu( RAND_GENERAL_SLOT ) );
-    if( NULL != pop->sons[0] )
+    if( nullptr != pop->sons[0] )
     {
       // sample age for ancestral population
       //			mean =  pop->agePrior.alpha / pop->agePrior.beta;
@@ -310,7 +358,7 @@ int samplePopParameters(PopulationTree* popTree)
       pop->age = mean * ( 0.9 + 0.2*rndu( RAND_GENERAL_SLOT ) );
       //			printf("-Tau = %f\n", pop->age);
       // if inconsistent with father's age, resample within 93% and 97% of father's age
-      if(    pop->father != NULL
+      if(    pop->father != nullptr
           && pop->father->age < pop->age)
       {
         // first drop age to max age of sons. 
@@ -462,6 +510,18 @@ MigrationBand* getMigBandByPops(PopulationTree* popTree, int sourcePop, int targ
 }
 
 
+/***********************************************************************************
+*	getMigBandById
+*	- returns pointer to a mig band with the given ID
+***********************************************************************************/
+MigrationBand * getMigBandByID(PopulationTree* popTree, int id) {
+
+    if (id < popTree->numMigBands)
+        return &popTree->migBands[id];
+    return nullptr;
+}
+
+
 /*******************************************************************************
  *	initializeLivingMigBands
  *	create N elements in livingMigBands vector, where N is num of pops
@@ -475,8 +535,8 @@ void initializeMigBandTimes(PopulationTree* popTree) {
         popTree->migBandsPerTarget.emplace_back();
     }
 
-    //for each mig band, save it in the MigBandsPerTarget element located in the i'th
-    // place, where i is the id of the mig band's target pop
+    //for each mig band, save it in the MigBandsPerTarget element located in the
+    // i'th place, where i is the id of the mig band's target pop
     for (int i=0; i < popTree->numMigBands; i++) {
 
         //get target pop of current mig band
@@ -484,7 +544,11 @@ void initializeMigBandTimes(PopulationTree* popTree) {
 
         //add pointer
         MigrationBand* pMigBand = &popTree->migBands[i];
-        popTree->migBandsPerTarget[targetPop].migBands.push_back(pMigBand);
+        popTree->migBandsPerTarget[targetPop].pMigBands.push_back(pMigBand);
+
+        //add mig band ID
+        int id = pMigBand->id;
+        popTree->migBandsPerTarget[targetPop].migBandsIDs.push_back(id);
     }
 }
 
@@ -510,17 +574,17 @@ void constructMigBandsTimes(PopulationTree* popTree) {
         //create a vector of time points and fill with pop start and end,
         // and the start and end times of each mig band
         std::vector<double> timePoints;
-        timePoints.reserve(2*popBands.migBands.size() + 2);
+        timePoints.reserve(2*popBands.pMigBands.size() + 2);
 
         //pop times
         timePoints.push_back(popTree->pops[pop]->age);
         if (pop != popTree->rootPop)
             timePoints.push_back(popTree->pops[pop]->father->age);
         else
-            timePoints.push_back(OLDAGE);//todo: what age?
+            timePoints.push_back(OLDAGE);
 
         //mig bands times
-        for (MigrationBand* pMigBand : popBands.migBands) {
+        for (MigrationBand* pMigBand : popBands.pMigBands) {
             timePoints.push_back(pMigBand->startTime);
             timePoints.push_back(pMigBand->endTime);
         }
@@ -540,7 +604,7 @@ void constructMigBandsTimes(PopulationTree* popTree) {
             TimeMigBands timeMigBand{*it, *next};
 
             //find mig-bands which intersect with current time band
-            for (MigrationBand* pMigBand : popBands.migBands) {
+            for (MigrationBand* pMigBand : popBands.pMigBands) {
 
                 //if time-band is contained in current mig-band
                 if (pMigBand->startTime <= timeMigBand.startTime &&
@@ -568,22 +632,60 @@ void constructMigBandsTimes(PopulationTree* popTree) {
 TimeMigBands *
 getLiveMigBands(PopulationTree* popTree, int target_pop, double age) {
 
-    double EPSILON = 0.00000000000001;
-
     for (auto& timeBand : popTree->migBandsPerTarget[target_pop].timeMigBands) {
         if (timeBand.startTime <= age && age < timeBand.endTime)
             return &timeBand;
-
-        //fabs(eventAge - intervalAge) < EPSILON
-        //if (timeBand.startTime <= (age + EPSILON) && (age + EPSILON ) < timeBand.endTime)
-         //   return &timeBand;
-
     }
-
     return nullptr;
 }
 
 
+/*
+ * getPopLeaves
+ * get all leaves of a population
+*/
+std::vector<int> & getPopLeaves(PopulationTree* popTree, int pop) {
+    return popTree->popToLeaves[pop];
+}
+
+
+/*
+ * getLeafPop
+ * get population of a leaf
+*/
+int getLeafPop(PopulationTree* popTree, int leafId) {
+    return popTree->leafToPop[leafId];
+}
+
+
+/*
+ * printPopToLeaves
+ * print pop to leaves map
+*/
+void printPopToLeaves(PopulationTree* popTree) {
+
+    std::cout << "Pop to leaves: " << std::endl;
+    for (auto &x : popTree->popToLeaves) {
+        std::cout << "pop " << x.first << ", leaves: ";
+        for (int leaf : x.second) {
+            std::cout << leaf << ", ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+
+/*
+ * printLeafToPop
+ * print leaf to map
+*/
+void printLeafToPop(PopulationTree* popTree) {
+    std::cout << "Leaf to pop: " << std::endl;
+    for (auto &x : popTree->leafToPop) {
+        std::cout << "leaf " << x.first << ", "
+             << "pop: " << x.second << std::endl;
+    }
+}
 /***************************************************************************************************************/
 /******                                        END OF FILE                                                ******/
 /***************************************************************************************************************/

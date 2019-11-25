@@ -44,36 +44,36 @@ GenericBinaryTree*	createGenericTree(int numLeaves)	{
   int leaf, numNodes = 2*numLeaves-1;
 	
   GenericBinaryTree* tree = (GenericBinaryTree*)malloc(sizeof(GenericBinaryTree));
-  if(tree == NULL) {
+  if(tree == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory generic tree.\n");
-    return NULL;
+    return nullptr;
   }
 	
   tree->father = (int*)malloc(3*numNodes*sizeof(int));
-  if(tree->father == NULL) {
+  if(tree->father == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory id arrays for generic tree.\n");
-    return NULL;
+    return nullptr;
   }
   tree->leftSon = tree->father + numNodes;
   tree->rightSon = tree->father + 2*numNodes;
 	
   tree->label1 = (double*)malloc(2*numNodes*sizeof(double));
-  if(tree->father == NULL) {
+  if(tree->father == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory label arrays for generic tree.\n");
-    return NULL;
+    return nullptr;
   }
   tree->label2 = tree->label1 + numNodes;
 	
   tree->leafNames = (char**)malloc(numLeaves*sizeof(char*));
-  if(tree->leafNames == NULL) {
+  if(tree->leafNames == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory name array for generic tree.\n");
-    return NULL;
+    return nullptr;
   }
   // leaf names are restricted to NAME_LENGTH chars
   tree->leafNames[0] = (char*)malloc(numLeaves*NAME_LENGTH*sizeof(char));
-  if(tree->leafNames[0] == NULL) {
+  if(tree->leafNames[0] == nullptr) {
     fprintf(stderr, "\nError: Out Of Memory name space for generic tree.\n");
-    return NULL;
+    return nullptr;
   }
   for(leaf=0; leaf<numLeaves; leaf++) {
     tree->leafNames[leaf] = tree->leafNames[0] + leaf*NAME_LENGTH;
@@ -345,7 +345,7 @@ int readGenericTree(FILE* file, GenericBinaryTree* tree, unsigned short readLeaf
             fprintf(stderr, "\nUnexpected End of File when reading generic tree from file.\n");
             return -1;
           }
-          if(isspace(ch) || NULL != strchr(newickSavedChars,ch)) {
+          if(isspace(ch) || nullptr != strchr(newickSavedChars,ch)) {
             tree->leafNames[node][nameIndex+1] = '\0';
             ungetc(ch,file);
             break;

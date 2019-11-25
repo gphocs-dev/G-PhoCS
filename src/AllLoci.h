@@ -3,6 +3,8 @@
 #define G_PHOCS_LOCIEMBEDDED_H
 
 #include "LocusEmbeddedGenealogy.h"
+#include "GenealogyStats.h"
+
 #include <vector>
 
 
@@ -13,25 +15,37 @@
  * Class AllLoci contains all loci embedded genealogies
  *
  * Contains:
- * Vector of LocusEmbeddedGenealogy objects
-
+ * 1. Vector of LocusEmbeddedGenealogy objects.
+ * 2. Object of total statistics.
  *===========================================================================*/
 class AllLoci {
 
     std::vector<LocusEmbeddedGenealogy> lociVector_; //vector of loci
 
+    GenealogyStats statsTotal_; //total statistics for all loci
+
 public:
 
-    //contructor
+    //constructor
     AllLoci();
 
-    LocusEmbeddedGenealogy& getLocus(int locusID);
+    //get locus by id
+    LocusEmbeddedGenealogy &getLocus(int locusID);
 
-    //test locus
-    void testLocus(int locusID);
+    vector<LocusEmbeddedGenealogy> & getLociVector();
 
-    //test all loci
+    //calculate statistics of all loci
+    void calcLociTotalStats();
+
+    //test if total statistics of all loci is consistent with old version
+    void testLociTotalStats();
+
+    //test if all loci data are consistent with old version
     void testLoci();
+
+    //
+
+
 };
 
 

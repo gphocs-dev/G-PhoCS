@@ -1,6 +1,7 @@
 #pragma once
 
 
+#define EPSILON         1e-10       // epsilon for double comparision
 #define MAX_MIG_BANDS	40			// max migration bands in the population tree
 #define MAX_MIGS		10			// max migration events per genealogy
 #define NSPECIES		20			// max # of species

@@ -6,7 +6,7 @@
 
  ============================================================================*/
 
-//TODO: remove, for debugging only
+
 #include "AllLoci.h"
 
 //
@@ -40,6 +40,7 @@
 #include "CladePrinter.h"
 #include "HypothesisPrinter.h"
 #include "patch.h"
+
 
 static struct option long_options[] = {{"help",     no_argument, 0, 'h'},
                                        {"verbose",  no_argument, 0, 'v'},
@@ -109,7 +110,7 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-  debug = 1;//TODO: change
+  debug = 1;//TODO: change back to 0
 
   while (1)
   {
@@ -145,7 +146,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  if (argv[optind] == NULL)
+  if (argv[optind] == nullptr)
   {
     printUsage(argv[0]);
     exit(-1);
@@ -174,8 +175,21 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
+  //order populations by post order
+    popPostOrder(dataSetup.popTree, dataSetup.popTree->rootPop,
+                 dataSetup.popTree->popsPostOrder);
+
+    //create map between leaf to its pop //todo: where to build the popToLeaves and leafToPop?
+    // and map between pop to its leaves
+    /*for (int node = 0; node < dataSetup.numSamples; node++) {
+        int pop = nodePops[0][node];
+        dataSetup.popTree->leafToPop[node] = pop;
+        //dataSetup.popTree[pop].push_back(node); //todo reserve?
+    }*/
+
+
   // secondary control file
-  if (argv[optind + 1] != NULL)
+  if (argv[optind + 1] != nullptr)
   {
     printf("Reading control settings from secondary file %s...\n",
            argv[optind + 1]);
@@ -217,7 +231,7 @@ int main(int argc, char *argv[])
 
   if (mcmcSetup.randomSeed < 0)
   {
-    mcmcSetup.randomSeed = abs(2 * (int) time(NULL) + 1);
+    mcmcSetup.randomSeed = abs(2 * (int) time(nullptr) + 1);
   }
   if (verbose)
   {
@@ -308,7 +322,7 @@ int processAlignments()
   maxNumPatterns = 4 * AlignmentData.numPatterns;
 
   patternArray = (char **) malloc(AlignmentData.numPatterns * sizeof(char *));
-  if (patternArray == NULL)
+  if (patternArray == nullptr)
   {
     fprintf(stderr,
             "Error: Out Of Memory when trying to allocate patternArray in "
@@ -317,7 +331,7 @@ int processAlignments()
     return -1;
   }
   phasedPatternArray = (char **) malloc(maxNumPatterns * sizeof(char *));
-  if (phasedPatternArray == NULL)
+  if (phasedPatternArray == nullptr)
   {
     fprintf(stderr,
             "Error: Out Of Memory when trying to allocate phasedPatternArray"
@@ -329,7 +343,7 @@ int processAlignments()
 
   phasedPatternArray[0] = (char *) malloc(
       dataSetup.numSamples * maxNumPatterns * sizeof(char));
-  if (phasedPatternArray[0] == NULL)
+  if (phasedPatternArray[0] == nullptr)
   {
     fprintf(stderr,
             "Error: Out Of Memory when trying to allocate phasedPatternArray"
@@ -341,7 +355,7 @@ int processAlignments()
   }
 
   numPhasesArray = (int *) malloc(maxNumPatterns * sizeof(int));
-  if (numPhasesArray == NULL)
+  if (numPhasesArray == nullptr)
   {
     fprintf(stderr,
             "Error: Out Of Memory when trying to allocate numPhasesArray "
@@ -362,7 +376,7 @@ int processAlignments()
 
   dataState.lociData = (LocusData **) malloc(
       dataSetup.numLoci * sizeof(LocusData *));
-  if (dataState.lociData == NULL)
+  if (dataState.lociData == nullptr)
   {
     fprintf(stderr,
             "Error: Out Of Memory when trying to allocate lociData array.\n");
@@ -377,7 +391,7 @@ int processAlignments()
   for (gen = 0; gen < dataSetup.numLoci; gen++)
   {
     dataState.lociData[gen] = createLocusData(dataSetup.numSamples, 1);
-    if (dataState.lociData[gen] == NULL)
+    if (dataState.lociData[gen] == nullptr)
     {
       fprintf(stderr, "Error: Out Of Memory when creating genealogy %d.\n",
               gen + 1);
@@ -484,7 +498,7 @@ int initLociWithoutData()
 
   dataState.lociData = (LocusData **) malloc(
       dataSetup.numLoci * sizeof(LocusData *));
-  if (dataState.lociData == NULL)
+  if (dataState.lociData == nullptr)
   {
     fprintf(stderr, "\n Error: Out Of Memory array of locus data pointers.\n");
     return (-1);
@@ -494,7 +508,7 @@ int initLociWithoutData()
   for (locus = 0; locus < dataSetup.numLoci; locus++)
   {
     dataState.lociData[locus] = createLocusData(dataSetup.numSamples, 0);
-    if (dataState.lociData[locus] == NULL)
+    if (dataState.lociData[locus] == nullptr)
     {
       fprintf(stderr,
               "\n Error: Unable to create locus data formatting for locus %d.\n",
@@ -521,13 +535,13 @@ int readRateFile(const char *fileName)
   double *rates = (double *) malloc(dataSetup.numLoci * sizeof(double));
 
 
-  if (frate == NULL)
+  if (frate == nullptr)
   {
     fprintf(stderr, "Error: Could not find/read rate file %s.\n", fileName);
     exit(-1);
   }
 
-  if (rates == NULL)
+  if (rates == nullptr)
   {
     fprintf(stderr,
             "Error: Out Of Memory: Could not allocate rates array in "
@@ -628,10 +642,10 @@ int freeAllMemory()
   int gen, i;
 
   //Closing files
-  if (ioSetup.debugFile != NULL) fclose(ioSetup.debugFile);
-  if (ioSetup.traceFile != NULL) fclose(ioSetup.traceFile);
-  if (ioSetup.coalStatsFile != NULL) fclose(ioSetup.coalStatsFile);
-  if (ioSetup.nodeStatsFile != NULL)
+  if (ioSetup.debugFile != nullptr) fclose(ioSetup.debugFile);
+  if (ioSetup.traceFile != nullptr) fclose(ioSetup.traceFile);
+  if (ioSetup.coalStatsFile != nullptr) fclose(ioSetup.coalStatsFile);
+  if (ioSetup.nodeStatsFile != nullptr)
   {
     for (i = 0; i < 3 * dataSetup.popTree->numPops; i++)
     {
@@ -932,9 +946,9 @@ int printCoalStats(int iteration)
       for (leaf1 = 0; leaf1 < dataSetup.numSamples; leaf1++)
       {
         sampleName1 = dataSetup.sampleNames[leaf1];
-        if (sampleName1 == NULL)
+        if (sampleName1 == nullptr)
         {
-          if (leaf1 <= 0 || dataSetup.sampleNames[leaf1 - 1] == NULL)
+          if (leaf1 <= 0 || dataSetup.sampleNames[leaf1 - 1] == nullptr)
           {
             sampleName1 = noName;
           }
@@ -946,9 +960,9 @@ int printCoalStats(int iteration)
         for (leaf2 = 0; leaf2 < dataSetup.numSamples; leaf2++)
         {
           sampleName2 = dataSetup.sampleNames[leaf2];
-          if (sampleName2 == NULL)
+          if (sampleName2 == nullptr)
           {
-            if (leaf2 <= 0 || dataSetup.sampleNames[leaf2 - 1] == NULL)
+            if (leaf2 <= 0 || dataSetup.sampleNames[leaf2 - 1] == nullptr)
             {
               sampleName2 = noName;
             }
@@ -1103,7 +1117,7 @@ int initializeMCMC()
   dataState.logLikelihood = 0.0;
   dataState.dataLogLikelihood = 0.0;
   tree = createGenericTree(dataSetup.numSamples);
-  if (tree == NULL)
+  if (tree == nullptr)
   {
     fprintf(stderr,
             "\nError:Out Of Memory generic tree at beginning of MCMC.\n");
@@ -1179,7 +1193,7 @@ int performMCMC()
   char timeString[STRING_LENGTH];
 
   ioSetup.traceFile = fopen(ioSetup.traceFileName, "w");
-  if (ioSetup.traceFile == NULL)
+  if (ioSetup.traceFile == nullptr)
   {
     fprintf(stderr, "Error: Could not open trace file %s.\n",
             ioSetup.traceFileName);
@@ -1191,7 +1205,7 @@ int performMCMC()
     ioSetup.combStatsFile = fopen(ioSetup.combStatsFileName, "w");
 //		  ioSetup.combDebugStatsFile = fopen("out/combDebugStats.tsv", "w"); // TODO - remove debug stats
 
-    if (ioSetup.combStatsFile == NULL) {
+    if (ioSetup.combStatsFile == nullptr) {
       fprintf(stderr, "Error: Could not open comb stats file %s.\n",
               ioSetup.combStatsFileName);
       return (-1);
@@ -1201,7 +1215,7 @@ int performMCMC()
   if (isCladeStatsActivated()) {
     ioSetup.cladeStatsFile = fopen(ioSetup.cladeStatsFileName, "w");
 
-    if (ioSetup.cladeStatsFile == NULL) {
+    if (ioSetup.cladeStatsFile == nullptr) {
       fprintf(stderr, "Error: Could not open clade stats file %s.\n",
               ioSetup.cladeStatsFileName);
       return (-1);
@@ -1211,7 +1225,7 @@ int performMCMC()
   if (isCladeStatsActivated() || isCombStatsActivated()) {
     ioSetup.hypStatsFile = fopen(ioSetup.hypStatsFileName, "w");
 
-    if (ioSetup.cladeStatsFile == NULL) {
+    if (ioSetup.cladeStatsFile == nullptr) {
       fprintf(stderr, "Error: Could not open clade stats file %s.\n",
               ioSetup.cladeStatsFileName);
       return (-1);
@@ -1275,7 +1289,7 @@ int performMCMC()
   doubleArray = (double *) malloc(
       (2 * mcmcSetup.numParameters + 4 * dataSetup.popTree->numPops) *
       sizeof(double));
-  if (doubleArray == NULL)
+  if (doubleArray == nullptr)
   {
     fprintf(stderr,
             "\nError: Out Of Memory while allocating double "
@@ -1412,6 +1426,7 @@ int performMCMC()
 #endif
 
   AllLoci lociEmbedded;
+  auto & lociVector = lociEmbedded.getLociVector();
 
   for (iteration = -mcmcSetup.burnin; iteration < mcmcSetup.numSamples;
        iteration++)
@@ -1432,11 +1447,56 @@ int performMCMC()
 #ifdef RECORD_METHOD_TIMES
       setStartTimeMethod(T_UpdateGB_InternalNode);
 #endif
-      acceptCount = UpdateGB_InternalNode(mcmcSetup.finetunes.coalTime);
+
+      //NEW code section July 2019 /////////////////////////////////////////////
+#ifdef THREAD_UpdateGB_InternalNode
+#pragma omp parallel for private(locus) schedule(THREAD_SCHEDULING_STRATEGY)
+#endif
+
+        int acceptCounter;
+
+        //for each locus
+        for (auto &locus : lociVector) {
+
+            //construct mig bands times
+            constructMigBandsTimes(dataSetup.popTree);
+
+            //construct genealogy and intervals
+            locus.constructEmbeddedGenealogy();
+
+            //compute genealogy statistics
+            locus.computeGenetreeStats();
+
+            //update genealogy statistics
+            locus.updateGenLogLikelihood();
+
+            //copy intervals from proposal to original
+            locus.copyIntervals(true);
+
+            //test genealogy, intervals, statistics, likelihood
+            #ifdef TEST_NEW_DATA_STRUCTURE
+            locus.testLocusEmbeddedGenealogy();
+            #endif
+
+            //update internal nodes+test
+            acceptCounter = locus.updateGB_InternalNode(mcmcSetup.finetunes.coalTime);
+
+#pragma omp atomic
+            acceptanceCounts.coalTime += acceptCounter;
+
+            #ifdef TEST_NEW_DATA_STRUCTURE
+            //test genealogy, intervals, statistics, likelihood
+            locus.testLocusEmbeddedGenealogy();
+            #endif
+
+        }
+
+      //END of NEW code section/////////////////////////////////////////////////
+
 #ifdef RECORD_METHOD_TIMES
       setEndTimeMethod(T_UpdateGB_InternalNode);
 #endif
-      acceptanceCounts.coalTime += acceptCount;
+
 
 #ifdef CHECKALL
       if (!checkAll())
@@ -2104,10 +2164,6 @@ int performMCMC()
       }
 
     } // print log
-
-    lociEmbedded.testLoci();
-
-      //exit(0);
 
   } // end of main loop - for(iteration)
 
