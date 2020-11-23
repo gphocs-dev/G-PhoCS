@@ -119,14 +119,15 @@ int main (int argc, char*argv[]) {
     fprintf(stderr, "Unable to discard header of the trace file\n");
     return -1;
   }
-  while(!feof(traceFile))
+  while(NULL != fgets(line, bufferLen, traceFile))
   {
-    if(NULL == fgets(line, bufferLen, traceFile))
+/**    if(NULL == fgets(line, bufferLen, traceFile))
     {
       fprintf(stderr, "Unable to count lines of the trace file\n");
       return -1;
     }
-    numLines++;
+**/
+      numLines++;
   } 
   //If user didn't specify a block size, then set the block size to be the number of lines in the file
   if (blockSize < 0) {
@@ -151,14 +152,14 @@ int main (int argc, char*argv[]) {
   token = strtok(line, delims);
   numCols = 0;
   while (token != NULL) {
-//	  printf("column %s.\n",token);
+	  // printf("column %s.\n",token);
     numCols++;
 	token = strtok(NULL, delims);
   }
   // remove first column from considerations
   numCols--;   
 
-//	printf("Reading trace for file %s with %d columns.\n",argv[optind], numCols);
+	// printf("Reading trace for file %s with %d columns.\n",argv[optind], numCols);
 
 
   width = (int*)malloc(sizeof(int) * numCols);
@@ -196,14 +197,14 @@ int main (int argc, char*argv[]) {
   //For each line in trace file
   count = 0;
   blockCount = 0;
-  while (1) {
-    //Get the next line from the file
+  while (NULL != fgets(line, bufferLen, traceFile)) {
+/**    //Get the next line from the file
     if(NULL == fgets(line, bufferLen, traceFile))
     {
-      fprintf(stderr, "Unable to read a lline for the trace file\n");
+      fprintf(stderr, "Unable to read a line for the trace file\n");
       return -1;
     }
-    
+**/    
     //If we are at the end of the file stop
     if (feof(traceFile))
       break;
@@ -234,6 +235,7 @@ int main (int argc, char*argv[]) {
     if(count == blockSize) {
       count = 0;
       blockCount++;
+      //printf("block count %d\n",blockCount);
     }
     
     //Update line number
